@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sommelin — ワインをもっとスマートに</title>
+<style>
+:root {
+  --burgundy: #9B1B4B;
+  --wine-dark: #5C0E2A;
+  --burgundy-pale: #f9f0f3;
+  --gold: #C9973A;
+  --gold-light: #fdf6e8;
+  --line: #06C755;
+  --text: #2C1A1D;
+  --text-sub: #7A5A62;
+  --border: #ecdde2;
+  --bg: #F5F3F0;
+  --white: #ffffff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, 'Hiragino Sans', 'Yu Gothic', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  max-width: 430px;
+  margin: 0 auto;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+.site-header {
+  background: var(--wine-dark);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+.logo-icon {
+  width: 30px;
+  height: 30px;
+}
+.logo-text {
+  font-size: 18px;
+  font-weight: 900;
+  color: white;
+  letter-spacing: 0.5px;
+}
+.logo-text span { color: var(--gold); }
+.header-login {
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 20px;
+  padding: 7px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+/* ── HERO ── */
+.hero {
+  background: linear-gradient(170deg, var(--wine-dark) 0%, #7A1535 55%, #9B2B4B 100%);
+  padding: 40px 24px 48px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 200px; height: 200px;
+  background: rgba(201,151,58,0.12);
+  border-radius: 50%;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -40px; left: -40px;
+  width: 150px; height: 150px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 50%;
+}
+.hero-character {
+  width: min(260px, 72vw);
+  aspect-ratio: 1797 / 1214;
+  margin: 0 auto 20px;
+  position: relative;
+  z-index: 1;
+  background-image: url("assets/sommelin/sommelin-expression-sheet.png");
+  background-size: 100% 850%;
+  background-position: center 70%;
+  background-repeat: no-repeat;
+}
+.hero-character svg { display: none; }
+.logo-icon {
+  background: url("assets/sommelin/sommelin-logo.png") center / contain no-repeat;
+}
+.logo-icon * { display: none; }
+.hero h1 {
+  font-size: 24px;
+  font-weight: 900;
+  color: white;
+  line-height: 1.4;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 1;
+}
+.hero h1 em {
+  font-style: normal;
+  color: var(--gold);
+}
+.hero-sub {
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
+  line-height: 1.7;
+  margin-bottom: 28px;
+  position: relative;
+  z-index: 1;
+}
+.hero-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+.btn-primary {
+  background: var(--line);
+  color: white;
+  border: none;
+  border-radius: 28px;
+  padding: 16px 24px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.btn-primary:active { opacity: 0.85; }
+.btn-secondary {
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 28px;
+  padding: 14px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.btn-secondary:active { opacity: 0.85; }
+
+/* ── SECTION COMMON ── */
+section { padding: 36px 20px; }
+.section-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--burgundy);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.section-title {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+.section-desc {
+  font-size: 13px;
+  color: var(--text-sub);
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+/* ── USER TYPES ── */
+.user-types { background: white; }
+.type-cards { display: flex; flex-direction: column; gap: 14px; }
+.type-card {
+  background: var(--burgundy-pale);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.15s, box-shadow 0.15s;
+  cursor: pointer;
+}
+.type-card:active { transform: scale(0.98); box-shadow: 0 2px 8px rgba(155,27,75,0.15); }
+.type-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+.type-icon.store { background: var(--wine-dark); }
+.type-icon.importer { background: var(--gold); }
+.type-icon.individual { background: #7B3F8C; }
+.type-body { flex: 1; }
+.type-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.type-desc {
+  font-size: 12px;
+  color: var(--text-sub);
+  line-height: 1.6;
+}
+.type-arrow {
+  color: var(--text-sub);
+  font-size: 18px;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+/* ── FEATURES ── */
+.features { background: var(--bg); }
+.feature-list { display: flex; flex-direction: column; gap: 16px; }
+.feature-item {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  border: 1px solid var(--border);
+}
+.feature-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--burgundy-pale);
+  border-radius: 12px;
+}
+.feature-body {}
+.feature-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 5px;
+}
+.feature-desc {
+  font-size: 12px;
+  color: var(--text-sub);
+  line-height: 1.6;
+}
+
+/* ── HOW IT WORKS ── */
+.how { background: white; }
+.steps { display: flex; flex-direction: column; gap: 0; }
+.step {
+  display: flex;
+  gap: 16px;
+  position: relative;
+  padding-bottom: 24px;
+}
+.step:last-child { padding-bottom: 0; }
+.step-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+.step-num {
+  width: 36px;
+  height: 36px;
+  background: var(--burgundy);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+.step-line {
+  width: 2px;
+  flex: 1;
+  background: var(--border);
+  margin: 6px 0;
+  min-height: 24px;
+}
+.step:last-child .step-line { display: none; }
+.step-body { padding-top: 6px; }
+.step-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.step-desc {
+  font-size: 12px;
+  color: var(--text-sub);
+  line-height: 1.6;
+}
+
+/* ── LINE BANNER ── */
+.line-banner {
+  background: linear-gradient(135deg, #05a847 0%, #06C755 100%);
+  margin: 0 20px;
+  border-radius: 20px;
+  padding: 24px 20px;
+  text-align: center;
+  color: white;
+}
+.line-banner h3 {
+  font-size: 17px;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+.line-banner p {
+  font-size: 12px;
+  opacity: 0.9;
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+.btn-line {
+  background: white;
+  color: #06C755;
+  border: none;
+  border-radius: 24px;
+  padding: 14px 28px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+/* ── DEMO SECTION ── */
+.demo-section {
+  background: var(--bg);
+  padding: 36px 20px;
+}
+.demo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 20px;
+}
+.demo-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 14px;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  transition: transform 0.15s;
+}
+.demo-card:active { transform: scale(0.97); }
+.demo-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+.demo-card-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.4;
+}
+.demo-card-badge {
+  font-size: 10px;
+  color: var(--burgundy);
+  background: var(--burgundy-pale);
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-weight: 700;
+}
+
+/* ── FOOTER ── */
+footer {
+  background: var(--wine-dark);
+  padding: 32px 20px 40px;
+  text-align: center;
+}
+.footer-logo {
+  font-size: 22px;
+  font-weight: 900;
+  color: white;
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+}
+.footer-logo span { color: var(--gold); }
+.footer-tagline {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 24px;
+}
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+.footer-links a {
+  color: rgba(255,255,255,0.6);
+  text-decoration: none;
+  font-size: 12px;
+}
+.footer-links a:hover { color: white; }
+.footer-copy {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+}
+
+/* ── FLOATING CTA ── */
+.float-cta {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+  max-width: 390px;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.float-cta.visible { opacity: 1; pointer-events: all; }
+.float-cta a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--burgundy);
+  color: white;
+  border-radius: 28px;
+  padding: 16px 24px;
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 8px 24px rgba(155,27,75,0.4);
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <a class="logo" href="#">
+    <svg class="logo-icon" viewBox="0 0 30 30" fill="none">
+      <!-- wine glass -->
+      <path d="M8 4 L22 4 L19 16 Q15 22 15 25 L10 25 Q10 22 11 16 Z" fill="none" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+      <line x1="15" y1="25" x2="15" y2="28" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      <line x1="11" y1="28" x2="19" y2="28" stroke="white" stroke-width="2" stroke-linecap="round"/>
+      <path d="M8 10 L22 10" stroke="rgba(255,255,255,0.5)" stroke-width="1" stroke-linecap="round"/>
+    </svg>
+    <span class="logo-text">Som<span>me</span>lin</span>
+  </a>
+  <a href="login.html" class="header-login">ログイン</a>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <!-- ソムリン君 SVG -->
+  <div class="hero-character">
+    <svg viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- 台座 / wine glass base -->
+      <ellipse cx="55" cy="100" rx="22" ry="5" fill="rgba(255,255,255,0.1)"/>
+      <line x1="55" y1="88" x2="55" y2="100" stroke="rgba(255,255,255,0.4)" stroke-width="3" stroke-linecap="round"/>
+      <line x1="42" y1="100" x2="68" y2="100" stroke="rgba(255,255,255,0.4)" stroke-width="3" stroke-linecap="round"/>
+      <!-- 体（蝶ネクタイ付きスーツ） -->
+      <rect x="36" y="72" width="38" height="22" rx="8" fill="#4A0D20"/>
+      <!-- 蝶ネクタイ -->
+      <polygon points="55,77 49,82 55,84 61,82" fill="#C9973A"/>
+      <circle cx="55" cy="80" r="2" fill="#E8B554"/>
+      <!-- 首 -->
+      <rect x="49" y="65" width="12" height="10" rx="4" fill="#F5D5B8"/>
+      <!-- 顔 -->
+      <ellipse cx="55" cy="52" rx="22" ry="24" fill="#F5D5B8"/>
+      <!-- 頬 -->
+      <ellipse cx="40" cy="56" rx="5" ry="4" fill="rgba(220,100,100,0.25)"/>
+      <ellipse cx="70" cy="56" rx="5" ry="4" fill="rgba(220,100,100,0.25)"/>
+      <!-- 目 -->
+      <ellipse cx="47" cy="50" rx="4" ry="5" fill="white"/>
+      <ellipse cx="63" cy="50" rx="4" ry="5" fill="white"/>
+      <ellipse cx="48" cy="51" rx="2.5" ry="3" fill="#2C1A1D"/>
+      <ellipse cx="64" cy="51" rx="2.5" ry="3" fill="#2C1A1D"/>
+      <circle cx="49" cy="50" r="1" fill="white"/>
+      <circle cx="65" cy="50" r="1" fill="white"/>
+      <!-- ハンドルバーひげ -->
+      <path d="M44 63 Q47 61 52 63 Q55 64 58 63 Q63 61 66 63" stroke="#4A0D20" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M44 63 Q41 65 40 67" stroke="#4A0D20" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M66 63 Q69 65 70 67" stroke="#4A0D20" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <!-- 鼻 -->
+      <ellipse cx="55" cy="58" rx="3" ry="2" fill="#E8C0A0"/>
+      <!-- 口 -->
+      <path d="M50 62 Q55 66 60 62" stroke="#C07050" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <!-- ポマード -->
+      <path d="M35 40 Q38 22 55 20 Q72 22 75 40 Q72 28 65 26 Q58 22 55 23 Q50 22 45 26 Q38 30 35 40Z" fill="#2C1A1D"/>
+      <path d="M35 40 Q30 30 38 25 Q42 22 45 26" fill="#3A2020"/>
+      <!-- ポマードのツヤ -->
+      <path d="M45 26 Q52 20 60 24" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <!-- 眉毛 -->
+      <path d="M43 44 Q47 42 51 44" stroke="#3A2020" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M59 44 Q63 42 67 44" stroke="#3A2020" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <!-- ワイングラス（持っている） -->
+      <path d="M78 55 L88 55 L86 67 Q82 72 82 76 L78 76 Q78 72 80 67 Z" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M79 60 L87 60" stroke="rgba(201,151,58,0.6)" stroke-width="1"/>
+      <path d="M79 62 L87 61 L86 67 Q82 70 80 67 Z" fill="rgba(155,27,75,0.5)"/>
+      <line x1="82" y1="76" x2="82" y2="80" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+      <line x1="79" y1="80" x2="85" y2="80" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+    </svg>
+  </div>
+
+  <h1>ワインをもっと<br><em>スマートに。</em></h1>
+  <p class="hero-sub">
+    ワインリスト管理・試飲会情報配信・<br>飲酒記録をひとつのアプリで完結。<br>
+    LINEと連携してリアルタイムに届ける。
+  </p>
+  <div class="hero-cta">
+    <a href="login.html" class="btn-primary">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2C5.58 2 2 5.36 2 9.5c0 2.18.94 4.15 2.45 5.54L3.5 18l3.19-1.06A8.2 8.2 0 0010 17c4.42 0 8-3.36 8-7.5S14.42 2 10 2z" fill="white"/></svg>
+      LINEで無料登録
+    </a>
+    <a href="login.html" class="btn-secondary">
+      メールアドレスで始める →
+    </a>
+  </div>
+</section>
+
+<!-- USER TYPES -->
+<section class="user-types">
+  <p class="section-label">Who it's for</p>
+  <h2 class="section-title">あなたに合った使い方で</h2>
+  <p class="section-desc">3種類のアカウントから選んでスタート。</p>
+  <div class="type-cards">
+    <a href="login.html" class="type-card">
+      <div class="type-icon store">🏪</div>
+      <div class="type-body">
+        <div class="type-name">飲食店・ホテル</div>
+        <div class="type-desc">ワインリスト管理・QRコード配布・試飲会RSVP・在庫管理。カメラでラベルを読み込むだけ。</div>
+      </div>
+      <span class="type-arrow">›</span>
+    </a>
+    <a href="login.html" class="type-card">
+      <div class="type-icon importer">📦</div>
+      <div class="type-body">
+        <div class="type-name">インポーター・卸</div>
+        <div class="type-desc">試飲会情報をLINEで一斉配信。配信先・除外先を柔軟に選択。業界カレンダーで情報共有。</div>
+      </div>
+      <span class="type-arrow">›</span>
+    </a>
+    <a href="login.html" class="type-card">
+      <div class="type-icon individual">🍷</div>
+      <div class="type-body">
+        <div class="type-name">個人・ワイン愛好家</div>
+        <div class="type-desc">飲んだワインの記録・ホームセラー管理・お気に入りレストランのリストをチェック。</div>
+      </div>
+      <span class="type-arrow">›</span>
+    </a>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features">
+  <p class="section-label">Features</p>
+  <h2 class="section-title">できること</h2>
+  <p class="section-desc">現場のワインプロが設計した機能が揃っています。</p>
+  <div class="feature-list">
+    <div class="feature-item">
+      <div class="feature-icon">📷</div>
+      <div class="feature-body">
+        <div class="feature-title">カメラでラベルスキャン</div>
+        <div class="feature-desc">ボトルを撮るだけでワイン情報を自動入力。複数本まとめて読み込みも可能。昔のワインリストの写真からも一括取り込み。</div>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">📲</div>
+      <div class="feature-body">
+        <div class="feature-title">LINEで試飲会情報が届く</div>
+        <div class="feature-desc">インポーターが登録した試飲会・セミナー・フェア情報が、LINEにリアルタイムで届く。種別・タイミングを自由に設定。</div>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">📅</div>
+      <div class="feature-body">
+        <div class="feature-title">業界カレンダー</div>
+        <div class="feature-desc">インポーター全員の試飲会スケジュールを一覧で確認。Googleカレンダーとも連携可能。</div>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">🔗</div>
+      <div class="feature-body">
+        <div class="feature-title">QRコードで簡単共有</div>
+        <div class="feature-desc">テーブルに置くだけでお客様がワインリストを閲覧。そのままLINE登録・再来店につなげる。</div>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">📊</div>
+      <div class="feature-body">
+        <div class="feature-title">在庫・記録管理</div>
+        <div class="feature-desc">店舗の在庫本数をリアルタイム把握。個人はホームセラーのワインを記録・評価・管理。</div>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">🔒</div>
+      <div class="feature-body">
+        <div class="feature-title">公開範囲を細かく設定</div>
+        <div class="feature-desc">ワインリストは公開/非公開を選択可。試飲会情報はインポーター全体・特定店舗・非公開と3段階で制御。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how">
+  <p class="section-label">How to start</p>
+  <h2 class="section-title">3ステップで始められる</h2>
+  <p class="section-desc">LINEアカウントがあれば、今すぐスタート。</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-left">
+        <div class="step-num">1</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-body">
+        <div class="step-title">LINEまたはメールで登録</div>
+        <div class="step-desc">「Sommelin」をLINEで友達追加、またはメールアドレスで新規登録。飲食店・インポーター・個人からアカウント種別を選択。</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-left">
+        <div class="step-num">2</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-body">
+        <div class="step-title">店舗・会社情報を入力</div>
+        <div class="step-desc">店名・住所・業種など基本情報を登録。飲食店はこれでワインリストの公開ページが自動生成されます。</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-left">
+        <div class="step-num">3</div>
+      </div>
+      <div class="step-body">
+        <div class="step-title">すぐに使い始められる</div>
+        <div class="step-desc">ワインを追加・管理、試飲会情報の受け取り、業界カレンダーの確認。すべての機能がすぐ使えます。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LINE BANNER -->
+<div style="padding: 0 0 36px;">
+  <div class="line-banner">
+    <h3>🍷 LINEで試飲会情報を受け取ろう</h3>
+    <p>国内インポーターが登録する試飲会・セミナー情報をLINEでお知らせ。見逃しがなくなります。</p>
+    <a href="line_liff_register.html" class="btn-line">
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2C5.58 2 2 5.36 2 9.5c0 2.18.94 4.15 2.45 5.54L3.5 18l3.19-1.06A8.2 8.2 0 0010 17c4.42 0 8-3.36 8-7.5S14.42 2 10 2z" fill="#06C755"/></svg>
+      LINE登録ページへ
+    </a>
+  </div>
+</div>
+
+<!-- DEMO SECTION -->
+<section class="demo-section" style="padding-top: 0;">
+  <p class="section-label">Demo</p>
+  <h2 class="section-title">デモを試す</h2>
+  <p class="section-desc">各画面のプロトタイプを直接確認できます。</p>
+  <div class="demo-grid">
+    <a href="restaurant_admin.html" class="demo-card">
+      <div class="demo-card-icon" style="background:#f9f0f3;">🏪</div>
+      <div class="demo-card-title">店舗管理画面</div>
+      <div class="demo-card-badge">Bistrot Lumière</div>
+    </a>
+    <a href="importer_admin.html" class="demo-card">
+      <div class="demo-card-icon" style="background:#fdf6e8;">📦</div>
+      <div class="demo-card-title">インポーター管理</div>
+      <div class="demo-card-badge">山田商店</div>
+    </a>
+    <a href="prototype.html" class="demo-card">
+      <div class="demo-card-icon" style="background:#f0eef9;">🍷</div>
+      <div class="demo-card-title">個人向け画面</div>
+      <div class="demo-card-badge">ユーザー</div>
+    </a>
+    <a href="line_liff_register.html" class="demo-card">
+      <div class="demo-card-icon" style="background:#e8f9ef;">💬</div>
+      <div class="demo-card-title">LINE登録フロー</div>
+      <div class="demo-card-badge">LIFF</div>
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Som<span>me</span>lin</div>
+  <div class="footer-tagline">ワインをもっとスマートに — sommelin.app</div>
+  <div class="footer-links">
+    <a href="login.html">ログイン</a>
+    <a href="privacy.html">プライバシー</a>
+    <a href="terms.html">利用規約</a>
+  </div>
+  <div class="footer-copy">© 2026 Sommelin. All rights reserved.</div>
+</footer>
+
+<!-- FLOATING CTA (scrollで出現) -->
+<div class="float-cta" id="floatCta">
+  <a href="login.html">🍷 無料で始める</a>
+</div>
+
+<script>
+// ヒーローが画面外に出たらフローティングCTAを表示
+const hero = document.querySelector('.hero');
+const floatCta = document.getElementById('floatCta');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    floatCta.classList.toggle('visible', !e.isIntersecting);
+  });
+}, { threshold: 0 });
+observer.observe(hero);
+</script>
+</body>
+</html>

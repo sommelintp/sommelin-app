@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ワイン検索 — ソムリン</title>
+  <style>
+    :root {
+      --burgundy: #9B1B4B;
+      --wine-dark: #5C0E2A;
+      --gold: #C9973A;
+      --gold-light: #F5E6C8;
+      --bg: #FDFAF7;
+      --text: #2C1810;
+      --gray: #888;
+      --light-gray: #F0EDE8;
+      --card: #fff;
+      --rakuten: #BF0000;
+      --amazon: #FF9900;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100dvh;
+    }
+
+    /* ── HERO HEADER ── */
+    .hero {
+      background: linear-gradient(165deg, var(--wine-dark) 0%, #7A1535 60%, #9B2545 100%);
+      padding: 52px 20px 28px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 70% 30%, rgba(201,151,58,.2) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-label {
+      font-size: 11px; font-weight: 700;
+      color: var(--gold); letter-spacing: .1em;
+      text-transform: uppercase; margin-bottom: 8px;
+    }
+    .hero-title {
+      font-size: 22px; font-weight: 800; color: #fff;
+      line-height: 1.35; margin-bottom: 6px;
+    }
+    .hero-sub { font-size: 12px; color: rgba(255,255,255,.65); line-height: 1.6; margin-bottom: 22px; }
+
+    /* SEARCH BOX */
+    .search-box {
+      background: #fff;
+      border-radius: 16px;
+      display: flex; align-items: center;
+      padding: 4px 6px 4px 14px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.2);
+      gap: 6px;
+    }
+    .search-icon { font-size: 18px; flex-shrink: 0; }
+    .search-input {
+      flex: 1; border: none; outline: none;
+      font-size: 15px; color: var(--text);
+      background: transparent; padding: 10px 0;
+      -webkit-appearance: none;
+    }
+    .search-input::placeholder { color: #bbb; }
+    .search-go {
+      padding: 10px 16px;
+      background: var(--burgundy); color: #fff;
+      border: none; border-radius: 12px;
+      font-size: 14px; font-weight: 700;
+      cursor: pointer; flex-shrink: 0;
+      transition: background .15s;
+    }
+    .search-go:active { background: var(--wine-dark); }
+
+    /* QUICK CHIPS */
+    .quick-area {
+      padding: 14px 20px 6px;
+      background: var(--wine-dark);
+    }
+    .quick-label { font-size: 10px; color: rgba(255,255,255,.55); margin-bottom: 8px; letter-spacing: .05em; }
+    .quick-row {
+      display: flex; gap: 7px; flex-wrap: wrap;
+    }
+    .quick-chip {
+      padding: 5px 12px;
+      border-radius: 20px; border: 1px solid rgba(255,255,255,.3);
+      background: rgba(255,255,255,.1); color: rgba(255,255,255,.85);
+      font-size: 12px; cursor: pointer; transition: all .15s;
+    }
+    .quick-chip:active { background: var(--gold); border-color: var(--gold); color: #fff; }
+
+    /* MAIN CONTENT */
+    .content { padding: 20px 16px 100px; }
+
+    /* ── RESULTS ── */
+    .results-header {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 16px;
+    }
+    .results-query {
+      font-size: 14px; font-weight: 700; color: var(--wine-dark);
+      flex: 1; word-break: break-all;
+    }
+    .results-query span { color: var(--burgundy); }
+    .results-clear {
+      font-size: 12px; color: var(--gray);
+      background: none; border: none; cursor: pointer;
+      padding: 4px 8px; border-radius: 8px;
+      border: 1px solid var(--light-gray);
+    }
+
+    /* SECTION HEADER */
+    .sec-head {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 14px; font-weight: 700;
+      color: var(--wine-dark); margin-bottom: 10px;
+    }
+    .sec-badge {
+      font-size: 10px; font-weight: 700; padding: 2px 7px;
+      border-radius: 10px; background: var(--gold-light); color: var(--gold);
+    }
+    .sec-divider { margin: 20px 0 14px; border: none; border-top: 1px solid var(--light-gray); }
+
+    /* ONLINE STORE CARD */
+    .ol-card {
+      background: var(--card); border-radius: 14px;
+      padding: 14px; margin-bottom: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .ol-logo {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; flex-shrink: 0;
+    }
+    .ol-info { flex: 1; min-width: 0; }
+    .ol-name {
+      font-size: 14px; font-weight: 700; margin-bottom: 3px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .aff-pill {
+      font-size: 9px; font-weight: 700; padding: 2px 6px;
+      border-radius: 4px; letter-spacing: .03em;
+    }
+    .ol-sub { font-size: 11px; color: var(--gray); line-height: 1.5; }
+    .ol-btn {
+      padding: 10px 16px; border: none; border-radius: 20px;
+      font-size: 13px; font-weight: 700; color: #fff;
+      cursor: pointer; flex-shrink: 0; white-space: nowrap;
+      transition: opacity .15s;
+    }
+    .ol-btn:active { opacity: .8; }
+
+    /* AFFILIATE NOTICE */
+    .aff-notice {
+      background: var(--gold-light); border-radius: 12px;
+      padding: 12px 14px; margin-top: 6px;
+      font-size: 11px; color: #7A5C2A; line-height: 1.7;
+    }
+    .aff-notice strong { display: block; font-size: 12px; margin-bottom: 2px; }
+
+    /* REAL STORE — COMING SOON */
+    .store-coming {
+      background: var(--card); border-radius: 14px;
+      padding: 24px 20px; text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    }
+    .store-coming-emoji { font-size: 36px; margin-bottom: 12px; }
+    .store-coming h3 { font-size: 15px; font-weight: 700; color: var(--wine-dark); margin-bottom: 8px; }
+    .store-coming p { font-size: 13px; color: var(--gray); line-height: 1.7; }
+    .store-register-btn {
+      margin-top: 14px;
+      display: inline-block; padding: 10px 22px;
+      background: var(--burgundy); color: #fff;
+      border: none; border-radius: 20px;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+    .register-note {
+      margin-top: 10px; font-size: 11px; color: var(--gray); line-height: 1.6;
+    }
+
+    /* ── LOCAL STORE INVENTORY RESULTS ── */
+    .lstore-count {
+      font-size: 12px; color: var(--burgundy); font-weight: 700;
+      margin-bottom: 10px; padding: 6px 12px;
+      background: rgba(155,27,75,.08); border-radius: 20px;
+      display: inline-block;
+    }
+    .lstore-card {
+      background: var(--card); border-radius: 14px;
+      padding: 16px; margin-bottom: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.07);
+      border-left: 3px solid var(--burgundy);
+    }
+    .lstore-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .lstore-name {
+      font-size: 15px; font-weight: 700; color: var(--wine-dark);
+    }
+    .lstore-meta {
+      font-size: 11px; color: var(--gray); margin-top: 2px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .lstore-dist {
+      background: var(--burgundy); color: #fff;
+      font-size: 10px; font-weight: 700;
+      padding: 2px 7px; border-radius: 10px;
+    }
+    .lstore-inquiry {
+      background: var(--burgundy); color: #fff;
+      border: none; border-radius: 16px;
+      font-size: 11px; font-weight: 700;
+      padding: 6px 14px; cursor: pointer;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .lstore-wine {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 0;
+      border-top: 1px solid rgba(0,0,0,.06);
+    }
+    .lstore-wine-info { flex: 1; min-width: 0; }
+    .lstore-wine-name {
+      font-size: 13px; font-weight: 600; color: var(--wine-dark);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .lstore-wine-meta {
+      font-size: 11px; color: var(--gray); margin-top: 2px;
+    }
+    .lstore-wine-right {
+      text-align: right; flex-shrink: 0; margin-left: 10px;
+    }
+    .lstore-price {
+      font-size: 13px; font-weight: 700; color: var(--burgundy);
+    }
+    .lstore-type {
+      font-size: 10px; color: var(--gray);
+      background: rgba(0,0,0,.05); border-radius: 8px;
+      padding: 2px 6px; margin-top: 3px; display: inline-block;
+    }
+
+    /* ── IMPORTER CATALOG SECTION ── */
+    .imp-section-label {
+      font-size: 12px; font-weight: 700; color: var(--gray);
+      text-transform: uppercase; letter-spacing: .04em;
+      margin: 16px 0 8px;
+    }
+    .imp-card {
+      background: var(--card); border-radius: 14px;
+      padding: 16px; margin-bottom: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.07);
+      border-left: 3px solid var(--gold);
+    }
+    .imp-card .lstore-name { color: #7a5a00; }
+    .imp-btn {
+      background: var(--gold); color: #fff;
+      border: none; border-radius: 16px;
+      font-size: 11px; font-weight: 700;
+      padding: 6px 14px; cursor: pointer;
+      white-space: nowrap; flex-shrink: 0;
+    }
+
+    /* ── EMPTY / INITIAL STATE ── */
+    .initial-state { padding-top: 10px; }
+
+    .intro-card {
+      background: var(--card); border-radius: 16px;
+      padding: 20px; margin-bottom: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    }
+    .intro-card-title {
+      font-size: 14px; font-weight: 700; color: var(--wine-dark);
+      margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+    }
+    .intro-flow {
+      display: flex; align-items: center; gap: 6px;
+      flex-wrap: wrap;
+    }
+    .flow-step {
+      padding: 7px 12px;
+      background: var(--light-gray); border-radius: 10px;
+      font-size: 12px; font-weight: 500; color: var(--text);
+    }
+    .flow-arrow { font-size: 14px; color: var(--gray); flex-shrink: 0; }
+
+    .use-cases { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+    .use-case {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: var(--card); border-radius: 12px;
+      padding: 12px 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    }
+    .uc-icon { font-size: 22px; flex-shrink: 0; }
+    .uc-body { }
+    .uc-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+    .uc-desc { font-size: 12px; color: var(--gray); line-height: 1.5; }
+
+    /* EXAMPLE SEARCHES */
+    .ex-label {
+      font-size: 12px; font-weight: 700; color: var(--gray);
+      margin: 18px 0 10px;
+    }
+    .ex-list { display: flex; flex-direction: column; gap: 6px; }
+    .ex-item {
+      background: var(--card); border-radius: 12px;
+      padding: 12px 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+      display: flex; align-items: center; gap: 10px;
+      cursor: pointer; transition: background .15s;
+    }
+    .ex-item:active { background: var(--gold-light); }
+    .ex-cat { font-size: 18px; flex-shrink: 0; }
+    .ex-info { flex: 1; min-width: 0; }
+    .ex-name { font-size: 13px; font-weight: 700; }
+    .ex-meta { font-size: 11px; color: var(--gray); margin-top: 2px; }
+    .ex-arrow { font-size: 14px; color: #ccc; }
+  </style>
+</head>
+<body>
+
+<!-- HERO HEADER -->
+<div class="hero">
+  <div class="hero-label">🔍 ワイン検索</div>
+  <div class="hero-title">飲みたいワインを<br>どこで買う？どこで飲む？</div>
+  <div class="hero-sub">ワイン名・生産者・産地を入力すると<br>購入先・飲めるお店が見つかります</div>
+  <div class="search-box">
+    <span class="search-icon">🍷</span>
+    <input class="search-input" id="searchInput" type="search"
+      placeholder="例: Sassicaia, シャトー・マルゴー..." autocomplete="off" spellcheck="false">
+    <button class="search-go" id="searchBtn">検索</button>
+  </div>
+</div>
+
+<!-- QUICK SUGGESTION CHIPS -->
+<div class="quick-area">
+  <div class="quick-label">POPULAR SEARCHES</div>
+  <div class="quick-row" id="quickRow">
+    <button class="quick-chip" onclick="doSearch('シャトー・マルゴー')">シャトー・マルゴー</button>
+    <button class="quick-chip" onclick="doSearch('バローロ')">バローロ</button>
+    <button class="quick-chip" onclick="doSearch('ドン・ペリニヨン')">ドン・ペリニヨン</button>
+    <button class="quick-chip" onclick="doSearch('Opus One')">Opus One</button>
+    <button class="quick-chip" onclick="doSearch('プイィ・フュメ')">プイィ・フュメ</button>
+    <button class="quick-chip" onclick="doSearch('コート・デュ・ローヌ')">コート・デュ・ローヌ</button>
+    <button class="quick-chip" onclick="doSearch('カベルネ・ソーヴィニヨン')">カベルネ・ソーヴィニヨン</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="content" id="content">
+  <!-- Initial state is rendered by JS -->
+</div>
+
+<script>
+// ================================================================
+// ONLINE STORES
+// ================================================================
+const STORES = [
+  {
+    id: 'rakuten', name: '楽天市場', sub: '楽天ポイント最大10倍 · 送料無料対象あり',
+    emoji: '🛍️', color: '#BF0000', affiliate: true,
+    url: q => `https://hb.afl.rakuten.co.jp/ichiba/54fd9c11.81f2fbf7.54fd9c12.f3705f45/?pc=${encodeURIComponent('https://search.rakuten.co.jp/search/mall/' + encodeURIComponent(q + ' ワイン') + '/100433/')}`
+  },
+  {
+    id: 'amazon', name: 'Amazon', sub: 'Prime対象は翌日お届け · 最安値比較あり',
+    emoji: '📦', color: '#FF9900', affiliate: true,
+    url: q => `https://www.amazon.co.jp/s?k=${encodeURIComponent(q + ' ワイン')}&tag=sommelin0f-22`
+  },
+  {
+    id: 'enoteca', name: 'エノテカ オンライン', sub: 'ソムリエ厳選 · ギフト包装対応',
+    emoji: '🍾', color: '#9B1B4B', affiliate: false,
+    url: q => `https://www.enoteca.co.jp/search/?keyword=${encodeURIComponent(q)}`
+  },
+  {
+    id: 'wbs', name: 'ワインバザール', sub: '豊富な品揃え · 1本から購入OK',
+    emoji: '🏪', color: '#2E7D32', affiliate: false,
+    url: q => `https://winebazaar.jp/search?q=${encodeURIComponent(q)}`
+  },
+];
+
+// ================================================================
+// EXAMPLE WINES (デモ用 — DBとは無関係)
+// ================================================================
+const EXAMPLES = [
+  { emoji:'🍷', name:'サッシカイア 2018',         meta:'Sassicaia · イタリア トスカーナ · 赤ワイン',         q:'Sassicaia 2018' },
+  { emoji:'🥂', name:'シャトー・ムートン・ロートシルト', meta:'Ch.Mouton Rothschild · フランス ボルドー · 赤', q:'Château Mouton Rothschild' },
+  { emoji:'✨', name:'クリュッグ グランド・キュヴェ',   meta:'Krug Grande Cuvée · フランス シャンパーニュ',      q:'Krug Grande Cuvée' },
+  { emoji:'🥂', name:'バタール・モンラッシェ',         meta:'Bâtard-Montrachet · フランス ブルゴーニュ · 白', q:'Bâtard-Montrachet' },
+  { emoji:'🍷', name:'アマローネ・デッラ・ヴァルポリチェッラ', meta:'Amarone · イタリア ヴェネト · 赤ワイン',   q:'Amarone della Valpolicella' },
+  { emoji:'🌸', name:'プロヴァンス・ロゼ',            meta:'Provence Rosé · フランス · ロゼワイン',            q:'Provence Rosé ワイン' },
+];
+
+// ================================================================
+// STATE
+// ================================================================
+let currentQuery = '';
+
+// ================================================================
+// RENDER
+// ================================================================
+window.addEventListener('DOMContentLoaded', renderInitial);
+
+document.getElementById('searchBtn').addEventListener('click', () => {
+  const q = document.getElementById('searchInput').value.trim();
+  if (q) doSearch(q);
+});
+document.getElementById('searchInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const q = document.getElementById('searchInput').value.trim();
+    if (q) doSearch(q);
+  }
+});
+
+function doSearch(q) {
+  currentQuery = q;
+  document.getElementById('searchInput').value = q;
+  renderResults(q);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderInitial() {
+  // Auto-search if launched with ?q= (e.g. from AR scanner "購入先を探す")
+  const params = new URLSearchParams(window.location.search);
+  const qParam = params.get('q');
+  if (qParam && qParam.trim()) {
+    doSearch(qParam.trim());
+    return;
+  }
+
+  document.getElementById('content').innerHTML = `
+    <div class="initial-state">
+
+      <div class="intro-card">
+        <div class="intro-card-title">🗺️ こんなふうに使えます</div>
+        <div class="intro-flow">
+          <span class="flow-step">🍷 ワイン名を入力</span>
+          <span class="flow-arrow">→</span>
+          <span class="flow-step">🏪 ネットで購入</span>
+          <span class="flow-arrow">·</span>
+          <span class="flow-step">📍 お近くのお店へ</span>
+        </div>
+      </div>
+
+      <div class="use-cases">
+        <div class="use-case">
+          <div class="uc-icon">🛒</div>
+          <div class="uc-body">
+            <div class="uc-title">ネット購入（楽天・Amazon）</div>
+            <div class="uc-desc">ワイン名を検索すると楽天市場・Amazonの商品ページへ直接アクセス。最安値をすぐ比較できます。</div>
+          </div>
+        </div>
+        <div class="use-case">
+          <div class="uc-icon">🏪</div>
+          <div class="uc-body">
+            <div class="uc-title">近くのワインショップで買う</div>
+            <div class="uc-desc">登録済みのワインショップから在庫情報を検索。今後、店舗が増えるほど充実します。</div>
+          </div>
+        </div>
+        <div class="use-case">
+          <div class="uc-icon">🍽️</div>
+          <div class="uc-body">
+            <div class="uc-title">飲めるレストランを探す</div>
+            <div class="uc-desc">「このワインが飲めるお店」を地図で探せる機能を準備中。レストランが自店のワインリストを登録します。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ex-label">🍾 このワインを探してみる</div>
+      <div class="ex-list">
+        ${EXAMPLES.map(e => `
+          <div class="ex-item" onclick="doSearch('${e.q.replace(/'/g, "\\'")}')">
+            <span class="ex-cat">${e.emoji}</span>
+            <div class="ex-info">
+              <div class="ex-name">${e.name}</div>
+              <div class="ex-meta">${e.meta}</div>
+            </div>
+            <span class="ex-arrow">›</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderResults(q) {
+  document.getElementById('content').innerHTML = `
+    <div class="results-header">
+      <div class="results-query">「<span>${escHtml(q)}</span>」の検索結果</div>
+      <button class="results-clear" onclick="clearResults()">✕ クリア</button>
+    </div>
+
+    <!-- ONLINE PURCHASE -->
+    <div class="sec-head">
+      🛒 ネットで購入
+      <span class="sec-badge">アフィリエイト</span>
+    </div>
+    ${STORES.map(s => `
+      <div class="ol-card">
+        <div class="ol-logo" style="background:${s.color}15">${s.emoji}</div>
+        <div class="ol-info">
+          <div class="ol-name">
+            ${s.name}
+            ${s.affiliate ? `<span class="aff-pill" style="background:${s.color}18;color:${s.color}">提携</span>` : ''}
+          </div>
+          <div class="ol-sub">${s.sub}</div>
+        </div>
+        <button class="ol-btn" style="background:${s.color}"
+          onclick="window.open('${s.url(q)}', '_blank')">
+          見る →
+        </button>
+      </div>
+    `).join('')}
+
+    <div class="aff-notice">
+      <strong>💡 アフィリエイトリンクについて</strong>
+      楽天市場・Amazonのリンクはアフィリエイトリンクです。このリンク経由でご購入いただくと、手数料がソムリンの運営費になります（お客様のお支払い金額に変化はありません）。
+    </div>
+
+    <hr class="sec-divider">
+
+    <!-- REAL STORES -->
+    <div class="sec-head">
+      🏪 近くのお店で買う・飲む
+    </div>
+    ${renderLocalStores(q)}
+  `;
+}
+
+// ── ローカル在庫検索（localStorage連携） ───────────────────────
+function normalizeWineName(s) {
+  return (s || '').toLowerCase().replace(/[\s\-\.]/g, '');
+}
+
+function matchWine(wineName, query) {
+  const wn = normalizeWineName(wineName);
+  const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+  // 全単語がワイン名に含まれるか、またはワイン名の一部がクエリに含まれるか
+  return terms.every(t => wn.includes(t.replace(/[\s\-\.]/g,''))) ||
+    terms.some(t => t.length >= 4 && wn.includes(t.replace(/[\s\-\.]/g,'')));
+}
+
+function getLocalStoreInventory() {
+  try { return JSON.parse(localStorage.getItem('sommelin_store_inventory') || '[]'); } catch(e){ return []; }
+}
+function getImporterCatalog() {
+  try { return JSON.parse(localStorage.getItem('sommelin_importer_catalog') || '[]'); } catch(e){ return []; }
+}
+
+// デモデータをseed（wine_search.html単独で開いた時にデータが無い場合）
+function seedDemoDataIfNeeded() {
+  if (!getLocalStoreInventory().length) {
+    const demo = [
+      { id:'si1', storeId:'bistrot-lumiere', storeName:'Bistrot Lumière', storeAddr:'渋谷区神宮前3-5-6', storeType:'restaurant',
+        name:'Alex Gambal Charmes-Chambertin', vintage:'2019', region:'Bourgogne, France', price:36000, qty:2, type:'bottle', inStock:true },
+      { id:'si2', storeId:'bistrot-lumiere', storeName:'Bistrot Lumière', storeAddr:'渋谷区神宮前3-5-6', storeType:'restaurant',
+        name:'Maison Leroy Nuits-Saint-Georges', vintage:'2018', region:'Bourgogne, France', price:68000, qty:1, type:'bottle', inStock:true },
+      { id:'si4', storeId:'bistrot-lumiere', storeName:'Bistrot Lumière', storeAddr:'渋谷区神宮前3-5-6', storeType:'restaurant',
+        name:'Opus One', vintage:'2020', region:'Napa Valley, USA', price:52000, qty:3, type:'bottle', inStock:true },
+      { id:'si5', storeId:'bistrot-lumiere', storeName:'Bistrot Lumière', storeAddr:'渋谷区神宮前3-5-6', storeType:'restaurant',
+        name:'Sassicaia', vintage:'2020', region:'Bolgheri, Italy', price:24000, qty:2, type:'both', inStock:true },
+      { id:'sk1', storeId:'wine-bar-vinho', storeName:'ワインバル ヴィーニョ', storeAddr:'港区南青山5-3-10', storeType:'restaurant',
+        name:'Sassicaia', vintage:'2019', region:'Bolgheri, Italy', price:26000, qty:1, type:'bottle', inStock:true },
+      { id:'sk2', storeId:'wine-bar-vinho', storeName:'ワインバル ヴィーニョ', storeAddr:'港区南青山5-3-10', storeType:'restaurant',
+        name:'Château Mouton Rothschild', vintage:'2018', region:'Pauillac, France', price:65000, qty:1, type:'bottle', inStock:true },
+    ];
+    localStorage.setItem('sommelin_store_inventory', JSON.stringify(demo));
+  }
+  if (!getImporterCatalog().length) {
+    const demo = [
+      { id:'ic1', importerId:'yamada-shoten', importerName:'山田商店（インポーター）',
+        name:'Alex Gambal Charmes-Chambertin', producer:'Alex Gambal', vintage:'2019', region:'Bourgogne, France', price:36000, available:true, desc:'ブルゴーニュの新星。緻密なタンニンと赤果実の香り。' },
+      { id:'ic2', importerId:'yamada-shoten', importerName:'山田商店（インポーター）',
+        name:'David Duband Gevrey-Chambertin', producer:'David Duband', vintage:'2020', region:'Bourgogne, France', price:18000, available:true, desc:'コスパ優秀な村名格。飲みやすくエレガント。' },
+      { id:'ic3', importerId:'yamada-shoten', importerName:'山田商店（インポーター）',
+        name:'Maison Leroy Nuits-Saint-Georges', producer:'Maison Leroy', vintage:'2018', region:'Bourgogne, France', price:68000, available:true, desc:'ルロワの最高峰。圧倒的な存在感と長い余韻。' },
+      { id:'ic4', importerId:'yamada-shoten', importerName:'山田商店（インポーター）',
+        name:'Sassicaia', producer:'Tenuta San Guido', vintage:'2020', region:'Bolgheri, Italy', price:24000, available:true, desc:'イタリアのスーパータスカンの王様。' },
+      { id:'ic5', importerId:'yamada-shoten', importerName:'山田商店（インポーター）',
+        name:'Opus One', producer:'Mondavi × Rothschild', vintage:'2020', region:'Napa Valley, USA', price:52000, available:true, desc:'カリフォルニアとボルドーの夢のコラボ。' },
+    ];
+    localStorage.setItem('sommelin_importer_catalog', JSON.stringify(demo));
+  }
+}
+
+const STORE_DISTS = {
+  'bistrot-lumiere': '0.3km',
+  'wine-bar-vinho':  '1.2km',
+};
+
+function renderLocalStores(q) {
+  seedDemoDataIfNeeded();
+  const inv = getLocalStoreInventory().filter(i => i.inStock && matchWine(i.name, q));
+  const cat = getImporterCatalog().filter(i => i.available && matchWine(i.name, q));
+
+  // ── 近くのお店（在庫あり） ──
+  let html = '';
+
+  if (inv.length === 0 && cat.length === 0) {
+    html += `<div class="store-coming">
+      <div class="store-coming-emoji">🗺️</div>
+      <h3>「${escHtml(q)}」を取り扱うお店を募集中</h3>
+      <p>ワインショップ・レストランが在庫情報を<br>登録することで、ここに表示されます。</p>
+      <button class="store-register-btn" onclick="location.href='restaurant_admin.html'">
+        🏪 店舗として登録する
+      </button>
+      <div class="register-note">※ 登録は無料です。掲載後はソムリンユーザーへ公開されます。</div>
+    </div>`;
+    return html;
+  }
+
+  // 在庫ありのお店をまとめる（store単位にグループ化）
+  if (inv.length > 0) {
+    const byStore = {};
+    inv.forEach(i => {
+      if (!byStore[i.storeId]) byStore[i.storeId] = { name:i.storeName, addr:i.storeAddr, type:i.storeType, wines:[] };
+      byStore[i.storeId].wines.push(i);
+    });
+
+    html += `<div class="lstore-count">📍 ${Object.keys(byStore).length}軒で在庫を確認</div>`;
+
+    Object.entries(byStore).forEach(([sid, store]) => {
+      const dist = STORE_DISTS[sid] || '近隣';
+      const typeLabel = store.type === 'restaurant' ? '🍽 レストラン' : '🏪 ワインショップ';
+      html += `<div class="lstore-card">
+        <div class="lstore-head">
+          <div>
+            <div class="lstore-name">${escHtml(store.name)}</div>
+            <div class="lstore-meta">${typeLabel}　📍 ${escHtml(store.addr)}　<span class="lstore-dist">${dist}</span></div>
+          </div>
+          <button class="lstore-inquiry" onclick="inquireStore('${sid}','${escHtml(store.name)}')">問い合わせ</button>
+        </div>
+        ${store.wines.map(w => `
+        <div class="lstore-wine">
+          <div class="lstore-wine-info">
+            <div class="lstore-wine-name">${escHtml(w.name)}</div>
+            <div class="lstore-wine-meta">${w.vintage}　${w.region}</div>
+          </div>
+          <div class="lstore-wine-right">
+            <div class="lstore-price">¥${(w.price||0).toLocaleString()}</div>
+            <div class="lstore-type">${w.type==='bottle'?'ボトル':w.type==='glass'?'グラス':'ボトル/グラス'}</div>
+          </div>
+        </div>`).join('')}
+      </div>`;
+    });
+  }
+
+  // ── インポーターから直接購入 ──
+  if (cat.length > 0) {
+    html += `<div class="imp-section-label">📦 インポーターから直接問い合わせ</div>`;
+    const byImp = {};
+    cat.forEach(i => {
+      if (!byImp[i.importerId]) byImp[i.importerId] = { name:i.importerName, wines:[] };
+      byImp[i.importerId].wines.push(i);
+    });
+    Object.entries(byImp).forEach(([iid, imp]) => {
+      html += `<div class="lstore-card imp-card">
+        <div class="lstore-head">
+          <div>
+            <div class="lstore-name">${escHtml(imp.name)}</div>
+            <div class="lstore-meta">🏢 輸入元　飲食店・酒販店向け卸売</div>
+          </div>
+          <button class="lstore-inquiry imp-btn" onclick="inquireImporter('${iid}','${escHtml(imp.name)}')">問い合わせ</button>
+        </div>
+        ${imp.wines.map(w => `
+        <div class="lstore-wine">
+          <div class="lstore-wine-info">
+            <div class="lstore-wine-name">${escHtml(w.name)}</div>
+            <div class="lstore-wine-meta">${w.producer}　${w.vintage}　${w.region}</div>
+            ${w.desc ? `<div style="font-size:11px;color:#888;margin-top:2px;">${escHtml(w.desc)}</div>` : ''}
+          </div>
+          <div class="lstore-wine-right">
+            <div class="lstore-price">¥${(w.price||0).toLocaleString()}</div>
+            <div class="lstore-type">卸値別途</div>
+          </div>
+        </div>`).join('')}
+      </div>`;
+    });
+  }
+
+  return html;
+}
+
+function inquireStore(sid, storeName) {
+  showQuickModal(`📞 ${storeName} に問い合わせ`, `ご来店予約・在庫確認のお問い合わせを\nLINEまたは電話でお受けしています。\n\n🍷 ソムリンから問い合わせ機能は\n近日公開予定です！`);
+}
+function inquireImporter(iid, name) {
+  showQuickModal(`📦 ${name} に問い合わせ`, `インポーターへのお問い合わせ（卸値・最小発注数など）を\nソムリン経由でお送りできます。\n\n近日公開予定です。しばらくお待ちください。`);
+}
+function showQuickModal(title, msg) {
+  const m = document.createElement('div');
+  m.style.cssText = 'position:fixed;inset:0;z-index:999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.5);';
+  m.innerHTML = `<div style="background:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:24px 20px 36px;">
+    <div style="font-size:15px;font-weight:800;color:#2C1810;margin-bottom:8px;">${title}</div>
+    <div style="font-size:13px;color:#555;line-height:1.75;white-space:pre-line;margin-bottom:20px;">${msg}</div>
+    <button onclick="this.closest('[style]').remove()" style="width:100%;padding:14px;background:#9B1B4B;color:#fff;font-size:14px;font-weight:800;border:none;border-radius:14px;cursor:pointer;">閉じる</button>
+  </div>`;
+  document.body.appendChild(m);
+  m.addEventListener('click', e => { if(e.target===m) m.remove(); });
+}
+
+function clearResults() {
+  currentQuery = '';
+  document.getElementById('searchInput').value = '';
+  renderInitial();
+}
+
+function escHtml(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>

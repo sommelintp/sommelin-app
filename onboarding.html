@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ソムリン君を育てよう — Sommelin</title>
+<style>
+  :root {
+    --burgundy: #9B1B4B;
+    --wine-dark: #5C0E2A;
+    --gold: #C9973A;
+    --gold-light: #F5E6C8;
+    --line: #06C755;
+    --bg: #F8F4EF;
+    --card: #FFFFFF;
+    --text: #2C1810;
+    --sub: #7A6055;
+    --border: #E8DDD5;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    font-family: -apple-system,'Hiragino Sans',sans-serif;
+    background: var(--bg);
+    min-height:100dvh;
+    max-width:430px;
+    margin:0 auto;
+    padding-bottom: 32px;
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    background: linear-gradient(160deg, var(--wine-dark) 0%, var(--burgundy) 60%, #C45070 100%);
+    padding: 28px 20px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content:'';
+    position:absolute; inset:0;
+    background: radial-gradient(circle at 50% 120%, rgba(201,151,58,0.3) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  .hero-label {
+    color: rgba(255,255,255,0.65);
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.15em;
+    margin-bottom: 14px;
+  }
+
+  /* ソムリン君 */
+  .sommelin-wrap {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .sommelin-aura {
+    position: absolute; inset: -16px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,151,58,0.35) 0%, transparent 70%);
+    animation: aura-pulse 3s ease-in-out infinite;
+    transition: opacity 0.5s;
+  }
+  @keyframes aura-pulse {
+    0%,100%{transform:scale(1);opacity:0.6} 50%{transform:scale(1.15);opacity:1}
+  }
+  .sommelin-char {
+    font-size: 72px; line-height: 1; position: relative; z-index: 1;
+    transition: all 0.6s cubic-bezier(0.34,1.56,0.64,1);
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+  }
+  .sommelin-char.lvup { animation: lvup-bounce 0.7s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes lvup-bounce {
+    0%{transform:scale(1)} 40%{transform:scale(1.4) rotate(-5deg)} 70%{transform:scale(0.95)} 100%{transform:scale(1)}
+  }
+  .sommelin-title {
+    color: var(--gold); font-size: 14px; font-weight: 800;
+    letter-spacing: 0.05em; margin-top: 8px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.3); position:relative; z-index:1;
+  }
+  .sommelin-desc {
+    color: rgba(255,255,255,0.75); font-size: 12px; line-height: 1.5;
+    margin: 6px 0 0; max-width: 260px; position:relative; z-index:1;
+  }
+
+  /* スコアバー */
+  .score-section {
+    background: rgba(0,0,0,0.2); border-radius: 16px;
+    padding: 12px 16px; margin-top: 16px; position:relative; z-index:1;
+  }
+  .score-row {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+  }
+  .score-label { color: rgba(255,255,255,0.7); font-size: 12px; }
+  .score-num { color: #fff; font-size: 22px; font-weight: 800; }
+  .score-num span { font-size: 13px; color: rgba(255,255,255,0.6); font-weight: 400; }
+  .progress-track {
+    height: 10px; background: rgba(255,255,255,0.15); border-radius: 5px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--gold), #F5C842);
+    border-radius: 5px; transition: width 0.7s cubic-bezier(0.34,1.2,0.64,1);
+    position: relative;
+  }
+  .progress-fill::after {
+    content:''; position:absolute; top:0; right:0; width:20px; height:100%;
+    background: linear-gradient(90deg,transparent,rgba(255,255,255,0.5));
+    border-radius: 0 5px 5px 0;
+  }
+  .stage-ticks { display:flex; justify-content:space-between; margin-top:5px; padding:0 2px; }
+  .stage-tick { font-size:9px; color:rgba(255,255,255,0.45); line-height:1; }
+  .stage-tick.reached { color:var(--gold); font-weight:700; }
+
+  /* ===== CONTENT ===== */
+  .content { padding: 16px 16px 0; }
+  .section-head {
+    display:flex; align-items:center; gap:8px; margin-bottom:10px; margin-top:20px;
+  }
+  .section-head:first-child { margin-top:0; }
+  .section-icon { font-size:18px; }
+  .section-title { font-size:14px; font-weight:800; color:var(--text); }
+  .section-pts { margin-left:auto; font-size:11px; color:var(--sub); background:var(--border); border-radius:20px; padding:2px 8px; }
+
+  /* ===== MISSION CARD ===== */
+  .mission-card {
+    background:var(--card); border-radius:14px; padding:14px; margin-bottom:8px;
+    display:flex; align-items:center; gap:12px;
+    box-shadow:0 1px 4px rgba(0,0,0,0.06); cursor:pointer;
+    transition:transform 0.15s,box-shadow 0.15s; border:1.5px solid transparent; position:relative; overflow:hidden;
+  }
+  .mission-card:active { transform:scale(0.98); box-shadow:0 1px 2px rgba(0,0,0,0.08); }
+  .mission-card.done { background:#F2FBF5; border-color:rgba(6,199,85,0.3); }
+  .mission-card.locked { opacity:0.55; cursor:not-allowed; }
+  .mission-card.done::after {
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(135deg,rgba(6,199,85,0.04) 0%,transparent 60%); pointer-events:none;
+  }
+  .mission-icon-wrap {
+    width:44px; height:44px; border-radius:12px; background:var(--bg);
+    display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;
+  }
+  .mission-card.done .mission-icon-wrap { background:rgba(6,199,85,0.12); }
+  .mission-body { flex:1; min-width:0; }
+  .mission-title { font-size:14px; font-weight:700; color:var(--text); margin-bottom:2px; line-height:1.3; }
+  .mission-desc { font-size:11px; color:var(--sub); line-height:1.4; }
+  .mission-right { flex-shrink:0; display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+  .mission-pts {
+    background:var(--gold-light); color:#8A5F1A; font-size:12px; font-weight:800;
+    border-radius:20px; padding:3px 10px; white-space:nowrap;
+  }
+  .mission-card.done .mission-pts { background:rgba(6,199,85,0.15); color:#1A7A40; }
+  .mission-check { font-size:18px; display:none; }
+  .mission-card.done .mission-check { display:block; }
+  .mission-card.done .mission-pts { display:none; }
+  .mission-lock { font-size:14px; color:var(--sub); }
+
+  /* Photo progress inside card */
+  .photo-progress-row { display:flex; gap:4px; margin-top:6px; flex-wrap:wrap; }
+  .photo-slot {
+    width:28px; height:28px; border-radius:6px; background:var(--bg);
+    border:1.5px dashed var(--border); display:flex; align-items:center; justify-content:center;
+    font-size:10px; color:var(--sub); cursor:pointer; transition:all 0.2s; overflow:hidden;
+  }
+  .photo-slot.filled { border-style:solid; border-color:var(--gold); background:var(--gold-light); font-size:14px; }
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:100;
+    display:flex; align-items:flex-end;
+    opacity:0; pointer-events:none; transition:opacity 0.25s;
+  }
+  .modal-overlay.open { opacity:1; pointer-events:auto; }
+  .modal-sheet {
+    background:var(--card); border-radius:24px 24px 0 0;
+    padding:0 0 40px; width:100%; max-width:430px;
+    transform:translateY(100%); transition:transform 0.35s cubic-bezier(0.32,0.72,0,1);
+    max-height:90dvh; overflow-y:auto;
+  }
+  .modal-overlay.open .modal-sheet { transform:translateY(0); }
+  .modal-handle { width:40px; height:4px; background:var(--border); border-radius:2px; margin:12px auto 0; }
+  .modal-header { padding:16px 20px 0; display:flex; align-items:center; justify-content:space-between; }
+  .modal-title { font-size:18px; font-weight:800; color:var(--text); }
+  .modal-close {
+    width:32px; height:32px; border-radius:50%; background:var(--bg); border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; font-size:16px; color:var(--sub);
+  }
+  .modal-body { padding:16px 20px; }
+
+  /* ===== PHOTO GRID ===== */
+  .photo-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-bottom:16px; }
+  .photo-cell {
+    aspect-ratio:1; border-radius:10px; background:var(--bg);
+    border:2px dashed var(--border); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s;
+    font-size:11px; color:var(--sub); gap:3px; overflow:hidden; position:relative;
+  }
+  .photo-cell:hover { border-color:var(--burgundy); background:rgba(155,27,75,0.04); }
+  .photo-cell.uploaded { border-style:solid; border-color:var(--gold); background:var(--gold-light); font-size:28px; }
+  .photo-cell .add-icon { font-size:18px; line-height:1; }
+  .photo-cell .cell-num { font-size:9px; color:var(--sub); }
+  .photo-upload-note { font-size:12px; color:var(--sub); text-align:center; margin-bottom:16px; line-height:1.5; }
+  .photo-milestone-row { display:flex; gap:6px; margin-bottom:16px; }
+  .photo-milestone {
+    flex:1; background:var(--bg); border-radius:10px; padding:8px;
+    text-align:center; border:1.5px solid var(--border); transition:all 0.3s;
+  }
+  .photo-milestone.reached { background:rgba(6,199,85,0.1); border-color:rgba(6,199,85,0.4); }
+  .photo-milestone-num { font-size:13px; font-weight:800; color:var(--text); }
+  .photo-milestone-pts { font-size:10px; color:var(--gold); font-weight:700; }
+  .photo-milestone-check { font-size:14px; display:none; }
+  .photo-milestone.reached .photo-milestone-check { display:block; }
+
+  /* ===== FORMS ===== */
+  .form-label { font-size:12px; font-weight:700; color:var(--sub); letter-spacing:0.05em; margin-bottom:6px; display:block; }
+  .form-input {
+    width:100%; border:1.5px solid var(--border); border-radius:12px;
+    padding:12px 14px; font-size:14px; font-family:inherit; color:var(--text);
+    background:var(--bg); outline:none; margin-bottom:14px; transition:border-color 0.2s;
+  }
+  .form-input:focus { border-color:var(--burgundy); }
+  .shop-type-row { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
+  .shop-type-chip {
+    border:1.5px solid var(--border); border-radius:20px; padding:6px 12px;
+    font-size:12px; cursor:pointer; transition:all 0.15s; background:var(--card); color:var(--text);
+  }
+  .shop-type-chip.sel { background:var(--burgundy); color:#fff; border-color:var(--burgundy); }
+
+  /* ===== CHIPS ===== */
+  .chip-grid { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+  .choice-chip {
+    border:1.5px solid var(--border); border-radius:20px; padding:7px 14px;
+    font-size:13px; cursor:pointer; transition:all 0.15s; background:var(--card); color:var(--text); font-weight:600;
+  }
+  .choice-chip.sel { background:var(--burgundy); color:#fff; border-color:var(--burgundy); }
+
+  /* ===== PRICE OPTIONS ===== */
+  .price-options { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+  .price-option {
+    display:flex; align-items:center; gap:12px; border:1.5px solid var(--border);
+    border-radius:12px; padding:12px 14px; cursor:pointer; transition:all 0.15s; background:var(--card);
+  }
+  .price-option.sel { border-color:var(--burgundy); background:rgba(155,27,75,0.04); }
+  .price-option-icon { font-size:20px; flex-shrink:0; }
+  .price-option-text { flex:1; }
+  .price-option-label { font-size:14px; font-weight:700; color:var(--text); }
+  .price-option-sub { font-size:11px; color:var(--sub); }
+  .price-option-radio {
+    width:18px; height:18px; border-radius:50%; border:2px solid var(--border); flex-shrink:0; transition:all 0.15s;
+  }
+  .price-option.sel .price-option-radio { border-color:var(--burgundy); background:var(--burgundy); box-shadow:inset 0 0 0 3px #fff; }
+
+  /* ===== SNS ===== */
+  .sns-option {
+    display:flex; align-items:center; gap:14px; background:var(--bg); border-radius:14px;
+    padding:14px; margin-bottom:10px; cursor:pointer; border:1.5px solid var(--border); transition:all 0.2s;
+  }
+  .sns-option:hover { border-color:var(--burgundy); }
+  .sns-option.connected { background:rgba(6,199,85,0.08); border-color:rgba(6,199,85,0.4); }
+  .sns-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; }
+  .sns-icon.ig { background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); }
+  .sns-icon.li { background:var(--line); }
+  .sns-info { flex:1; }
+  .sns-name { font-size:15px; font-weight:700; color:var(--text); }
+  .sns-desc { font-size:11px; color:var(--sub); margin-top:2px; }
+  .sns-pts { font-size:12px; font-weight:800; color:var(--gold); }
+
+  /* ===== INVITE ===== */
+  .invite-box {
+    background:var(--bg); border-radius:14px; border:1.5px dashed var(--border);
+    padding:20px; text-align:center; margin-bottom:14px;
+  }
+  .invite-code { font-size:28px; font-weight:800; letter-spacing:8px; color:var(--burgundy); margin:12px 0; }
+
+  /* ===== BUTTONS ===== */
+  .btn-primary {
+    width:100%; padding:14px;
+    background:linear-gradient(135deg,var(--wine-dark),var(--burgundy));
+    color:#fff; border:none; border-radius:14px;
+    font-size:15px; font-weight:800; cursor:pointer; font-family:inherit;
+    transition:opacity 0.2s; box-shadow:0 4px 12px rgba(155,27,75,0.35);
+  }
+  .btn-primary:hover { opacity:0.92; }
+  .btn-primary:disabled { opacity:0.4; cursor:not-allowed; }
+  .btn-secondary {
+    width:100%; padding:13px; background:none; border:1.5px solid var(--border);
+    border-radius:14px; font-size:14px; color:var(--sub); cursor:pointer; font-family:inherit; margin-top:8px;
+  }
+
+  /* ===== BIG INPUT ===== */
+  .big-input {
+    width:100%; border:2px solid var(--border); border-radius:14px;
+    padding:14px 16px; font-size:18px; font-family:inherit; color:var(--text);
+    background:var(--bg); outline:none; margin-bottom:14px;
+    text-align:center; font-weight:700; transition:border-color 0.2s;
+  }
+  .big-input:focus { border-color:var(--burgundy); }
+
+  /* ===== AVATAR ===== */
+  .avatar-upload-area {
+    width:100px; height:100px; border-radius:50%; background:var(--bg);
+    border:3px dashed var(--border); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; cursor:pointer;
+    margin:0 auto 16px; font-size:32px; transition:all 0.2s;
+  }
+  .avatar-upload-area:hover { border-color:var(--burgundy); background:rgba(155,27,75,0.05); }
+  .avatar-upload-area.uploaded { border-style:solid; border-color:var(--gold); }
+  .avatar-label { font-size:10px; color:var(--sub); margin-top:4px; }
+
+  /* ===== LEVEL UP SPLASH ===== */
+  .lvup-splash {
+    position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:200;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity 0.3s;
+  }
+  .lvup-splash.show { opacity:1; pointer-events:auto; }
+  .lvup-box {
+    background:linear-gradient(135deg,var(--wine-dark),var(--burgundy));
+    border-radius:24px; padding:32px 28px; text-align:center;
+    margin:20px; box-shadow:0 16px 48px rgba(0,0,0,0.4);
+    animation:splash-in 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes splash-in { from{transform:scale(0.7);opacity:0} to{transform:scale(1);opacity:1} }
+  .lvup-emoji { font-size:72px; margin-bottom:12px; display:block; animation:spin-in 0.6s ease-out; }
+  @keyframes spin-in { from{transform:rotate(-30deg) scale(0)} to{transform:rotate(0) scale(1)} }
+  .lvup-stars { font-size:24px; letter-spacing:6px; margin-bottom:6px; }
+  .lvup-lv-label { color:var(--gold); font-size:12px; font-weight:800; letter-spacing:0.15em; margin-bottom:6px; }
+  .lvup-title { color:#fff; font-size:22px; font-weight:800; margin-bottom:8px; }
+  .lvup-desc { color:rgba(255,255,255,0.75); font-size:13px; line-height:1.5; margin-bottom:20px; }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position:fixed; top:-60px; left:50%; transform:translateX(-50%);
+    background:#1A3A2A; color:#fff; padding:10px 20px; border-radius:30px;
+    font-size:13px; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,0.3);
+    transition:top 0.35s cubic-bezier(0.34,1.2,0.64,1); z-index:300; white-space:nowrap;
+  }
+  .toast.show { top:20px; }
+
+  /* ===== COMPLETE ===== */
+  .complete-banner {
+    background:linear-gradient(135deg,#1A4A2A,#1E6B3A); border-radius:20px;
+    padding:24px; text-align:center; margin:20px 16px 0; display:none;
+  }
+  .complete-banner.visible { display:block; }
+  .complete-banner h2 { color:var(--gold); font-size:22px; margin-bottom:8px; }
+  .complete-banner p { color:rgba(255,255,255,0.85); font-size:13px; line-height:1.6; }
+
+  /* pt badge */
+  .pt-badge-wrap { text-align:center; margin-bottom:16px; }
+  .pt-badge {
+    background:var(--gold-light); color:#8A5F1A; font-size:13px; font-weight:800;
+    border-radius:20px; padding:5px 14px; display:inline-block;
+  }
+
+  .modal-sheet::-webkit-scrollbar { width:3px; }
+  .modal-sheet::-webkit-scrollbar-track { background:transparent; }
+  .modal-sheet::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-label">🍷 Sommelin — ソムリン君を育てよう</div>
+  <div class="sommelin-wrap">
+    <div class="sommelin-aura" id="sommelinAura"></div>
+    <div class="sommelin-char" id="sommelinChar">🥚</div>
+  </div>
+  <div class="sommelin-title" id="sommelinTitle">たまごソムリン</div>
+  <div class="sommelin-desc" id="sommelinDesc">ミッションをこなして、ソムリン君を成長させよう！</div>
+  <div class="score-section">
+    <div class="score-row">
+      <div class="score-label">🏅 達成スコア</div>
+      <div class="score-num"><span id="scoreNum">0</span> <span>/ 100点</span></div>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="stage-ticks">
+      <span class="stage-tick" id="tick0">🥚</span>
+      <span class="stage-tick" id="tick20">20</span>
+      <span class="stage-tick" id="tick40">40</span>
+      <span class="stage-tick" id="tick60">60</span>
+      <span class="stage-tick" id="tick80">80</span>
+      <span class="stage-tick" id="tick100">👑</span>
+    </div>
+  </div>
+</div>
+
+<!-- MISSIONS -->
+<div class="content" id="missionContent"></div>
+
+<!-- 常時表示のスキップ（未完了でもホームへ進める＝行き止まり防止） -->
+<button onclick="enterApp()" style="position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:60;background:rgba(255,255,255,.96);color:#9B1B4B;border:1px solid #9B1B4B;border-radius:24px;padding:9px 20px;font-size:13px;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.12);cursor:pointer;">スキップしてはじめる →</button>
+
+<!-- COMPLETE BANNER -->
+<div class="complete-banner" id="completeBanner">
+  <div style="font-size:48px;margin-bottom:12px;">👑</div>
+  <h2>🎉 マスター達成！</h2>
+  <p>ソムリン君が完全体に進化しました！<br>あなたはソムリンマスターです 🍷</p>
+  <button class="btn-primary" onclick="enterApp()" style="margin-top:16px;">アプリを始める 🍷</button>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal-sheet" id="modalSheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- LEVEL UP SPLASH -->
+<div class="lvup-splash" id="lvupSplash" onclick="this.classList.remove('show')">
+  <div class="lvup-box">
+    <div class="lvup-stars">⭐⭐⭐</div>
+    <div class="lvup-lv-label">LEVEL UP!</div>
+    <div class="lvup-emoji" id="lvupEmoji"></div>
+    <div class="lvup-title" id="lvupTitle"></div>
+    <div class="lvup-desc" id="lvupDesc"></div>
+    <button class="btn-primary" onclick="document.getElementById('lvupSplash').classList.remove('show')" style="margin-top:4px;">やったー！🎉</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== STAGES ===== */
+const stages = [
+  { min:0,  max:20,  emoji:'🥚', title:'たまごソムリン',    desc:'ミッションをこなして、ソムリン君を成長させよう！', color:'#C8B4A0' },
+  { min:21, max:40,  emoji:'🐣', title:'めざめのソムリン',  desc:'たまごから出てきた！ワインの世界へようこそ。', color:'#E8C44A' },
+  { min:41, max:60,  emoji:'🍇', title:'みならいソムリン',  desc:'ワインの知識を吸収中！もっと記録してみよう。', color:'#9B2D9B' },
+  { min:61, max:80,  emoji:'🍷', title:'かけだしソムリン',  desc:'ワインへの情熱が深まってきた！もう少しで上級者！', color:'#9B1B4B' },
+  { min:81, max:99,  emoji:'🥂', title:'いっぱしのソムリン', desc:'あと少しでマスター！SNSで仲間と繋がろう。', color:'#C9973A' },
+  { min:100, max:100, emoji:'👑', title:'マスターソムリン',  desc:'完全体に進化！あなたはソムリンマスターです！', color:'#FFD700' },
+];
+
+/* ===== MISSIONS ===== */
+const missions = [
+  { id:'nickname', cat:'🧑 自己紹介',         icon:'✏️', title:'ニックネームを入力',       desc:'あなたのワイン愛称を教えてください',         pts:5,  type:'nickname' },
+  { id:'avatar',   cat:'🧑 自己紹介',         icon:'🤳', title:'プロフィール写真を設定',   desc:'ワイン写真でもお顔の写真でもOK！',           pts:5,  type:'avatar' },
+  { id:'style',    cat:'🧑 自己紹介',         icon:'🍷', title:'好きなワインスタイルを選択', desc:'赤・白・スパークリング…どれが好み？（複数可）', pts:5, type:'style' },
+  { id:'price',    cat:'🧑 自己紹介',         icon:'💰', title:'好きな価格帯を設定',       desc:'ふだん選ぶワインの価格帯は？',               pts:5,  type:'price' },
+  { id:'photo1',  cat:'📸 ワインの記録',      icon:'📸', title:'ワインの写真を1枚アップ',  desc:'好きなワインのラベルや飲んだシーン',          pts:10, type:'photos', milestoneCount:1 },
+  { id:'photo3',  cat:'📸 ワインの記録',      icon:'🖼️', title:'ワインの写真を3枚アップ', desc:'3本のワインを記録しよう',                   pts:10, type:'photos', milestoneCount:3, requires:'photo1' },
+  { id:'photo10', cat:'📸 ワインの記録',      icon:'🗂️', title:'ワインの写真を10枚アップ', desc:'10本記録したらワイン好きの証明！',           pts:10, type:'photos', milestoneCount:10, requires:'photo3' },
+  { id:'shop1',   cat:'🏪 お気に入りのお店',  icon:'🏪', title:'初めて飲んだお店を登録',   desc:'どこで飲みましたか？お店の情報を教えて',      pts:10, type:'shop' },
+  { id:'shop3',   cat:'🏪 お気に入りのお店',  icon:'🗺️', title:'お気に入りを3軒登録',     desc:'よく行くお店を3軒登録しよう',               pts:10, type:'shop', requires:'shop1' },
+  { id:'instagram',cat:'📱 SNS連携',         icon:'📷', title:'Instagram連携',          desc:'インスタのワイン投稿をソムリンと共有',         pts:10, type:'sns_ig' },
+  { id:'line',     cat:'📱 SNS連携',         icon:'💬', title:'LINE連携',               desc:'LINEでワイン情報を受け取る',                 pts:10, type:'sns_line' },
+  { id:'invite',   cat:'👥 友達とつながる',   icon:'🎁', title:'友達を1人招待',           desc:'ワイン好きの友達にソムリンを紹介',            pts:10, type:'invite' },
+];
+
+/* ===== STATE ===== */
+const completed = new Set();
+let photoCount = 0;
+let shopCount = 0;
+let currentStageIdx = 0;
+
+/* ===== INIT ===== */
+window.addEventListener('load', () => {
+  renderMissions();
+  updateScore(false);
+});
+
+/* ===== RENDER ===== */
+function renderMissions() {
+  const content = document.getElementById('missionContent');
+  content.innerHTML = '';
+  const cats = [...new Set(missions.map(m => m.cat))];
+  cats.forEach(cat => {
+    const catMissions = missions.filter(m => m.cat === cat);
+    const totalPts = catMissions.reduce((s, m) => s + m.pts, 0);
+    const head = document.createElement('div');
+    head.className = 'section-head';
+    head.innerHTML = `<span class="section-icon">${cat.split(' ')[0]}</span>
+      <span class="section-title">${cat.substring(2).trim()}</span>
+      <span class="section-pts">計 ${totalPts}点</span>`;
+    content.appendChild(head);
+
+    catMissions.forEach(m => {
+      const isDone = completed.has(m.id);
+      const isLocked = m.requires && !completed.has(m.requires);
+      const card = document.createElement('div');
+      card.className = 'mission-card' + (isDone ? ' done' : '') + (isLocked ? ' locked' : '');
+
+      let extraHtml = '';
+      if (m.type === 'photos') {
+        const tgt = m.milestoneCount;
+        const cnt = Math.min(photoCount, tgt);
+        extraHtml = `<div class="photo-progress-row">` +
+          Array.from({length: tgt}, (_, i) =>
+            `<div class="photo-slot ${i < cnt ? 'filled' : ''}">${i < cnt ? '🍷' : '+'}</div>`
+          ).join('') + `</div>`;
+      }
+
+      card.innerHTML = `
+        <div class="mission-icon-wrap">${m.icon}</div>
+        <div class="mission-body">
+          <div class="mission-title">${m.title}</div>
+          <div class="mission-desc">${m.desc}</div>
+          ${extraHtml}
+        </div>
+        <div class="mission-right">
+          ${isLocked
+            ? '<span class="mission-lock">🔒</span>'
+            : isDone
+              ? '<span class="mission-check">✅</span>'
+              : `<span class="mission-pts">+${m.pts}点</span>`
+          }
+        </div>`;
+
+      if (!isLocked && !isDone) card.addEventListener('click', () => openMission(m));
+      content.appendChild(card);
+    });
+  });
+}
+
+/* ===== SCORE & STAGE ===== */
+function calcScore() {
+  return [...completed].reduce((s, id) => {
+    const m = missions.find(x => x.id === id);
+    return s + (m ? m.pts : 0);
+  }, 0);
+}
+
+function updateScore(animate) {
+  const score = calcScore();
+  document.getElementById('progressFill').style.width = Math.min(score, 100) + '%';
+  document.getElementById('scoreNum').textContent = score;
+
+  const thresholds = [0,20,40,60,80,100];
+  ['tick0','tick20','tick40','tick60','tick80','tick100'].forEach((id, i) => {
+    document.getElementById(id).classList.toggle('reached', score >= thresholds[i]);
+  });
+
+  let stageIdx = stages.findIndex(s => score >= s.min && score <= s.max);
+  if (stageIdx === -1) stageIdx = stages.length - 1;
+  const stage = stages[stageIdx];
+
+  document.getElementById('sommelinChar').textContent = stage.emoji;
+  document.getElementById('sommelinTitle').textContent = stage.title;
+  document.getElementById('sommelinDesc').textContent = stage.desc;
+  document.getElementById('sommelinAura').style.opacity = 0.3 + (score / 100) * 0.7;
+
+  if (animate && stageIdx > currentStageIdx) {
+    document.getElementById('lvupEmoji').textContent = stage.emoji;
+    document.getElementById('lvupTitle').textContent = stage.title;
+    document.getElementById('lvupDesc').textContent = stage.desc;
+    document.getElementById('lvupSplash').classList.add('show');
+    const ch = document.getElementById('sommelinChar');
+    ch.classList.add('lvup');
+    setTimeout(() => ch.classList.remove('lvup'), 700);
+  }
+  currentStageIdx = stageIdx;
+  if (score >= 100) document.getElementById('completeBanner').classList.add('visible');
+}
+
+// オンボーディング完了/スキップ時にロール別ホームへ遷移（行き止まり解消）
+function enterApp() {
+  var home = { store: 'restaurant_admin.html', importer: 'importer_admin.html', individual: 'prototype.html' };
+  var role = null;
+  try { role = localStorage.getItem('sommelin_role'); } catch (e) {}
+  window.location.href = home[role] || 'prototype.html';
+}
+
+function completeMission(id) {
+  if (completed.has(id)) return;
+  completed.add(id);
+  closeModal();
+  renderMissions();
+  setTimeout(() => updateScore(true), 100);
+  const m = missions.find(x => x.id === id);
+  showToast(`✅ +${m.pts}点 獲得！`);
+}
+
+/* ===== MODAL ===== */
+function openMission(m) {
+  document.getElementById('modalTitle').textContent = m.title;
+  document.getElementById('modalBody').innerHTML = buildModalContent(m);
+  document.getElementById('modalOverlay').classList.add('open');
+  initModalLogic(m);
+}
+
+function ptBadge(pts) {
+  return `<div class="pt-badge-wrap"><span class="pt-badge">+${pts}点 獲得</span></div>`;
+}
+
+function buildModalContent(m) {
+  if (m.type === 'nickname') return ptBadge(m.pts) + `
+    <p style="font-size:13px;color:var(--sub);text-align:center;margin-bottom:14px;">ワインコミュニティでの名前を入力してください</p>
+    <input class="big-input" id="nicknameInput" placeholder="例: ワイン大好き哲矢" maxlength="20">
+    <p style="font-size:11px;color:var(--sub);text-align:center;margin-bottom:16px;">20文字以内</p>
+    <button class="btn-primary" id="nickBtn" onclick="doNickname()" disabled>決定する</button>`;
+
+  if (m.type === 'avatar') return ptBadge(m.pts) + `
+    <div class="avatar-upload-area" id="avatarArea" onclick="simulateAvatar()">
+      <span>📷</span><span class="avatar-label">タップして選択</span>
+    </div>
+    <p style="font-size:12px;color:var(--sub);text-align:center;margin-bottom:16px;">プロフィール写真を設定します<br>ワインの写真でもOKです🍷</p>
+    <button class="btn-primary" id="avatarBtn" onclick="completeMission('avatar')" disabled>設定する</button>
+    <button class="btn-secondary" onclick="simulateAvatar()">サンプル写真を使う</button>`;
+
+  if (m.type === 'style') return ptBadge(m.pts) + `
+    <p style="font-size:13px;color:var(--sub);text-align:center;margin-bottom:14px;">好きなワインスタイルをすべて選択してください（複数可）</p>
+    <div class="chip-grid" id="styleGrid">
+      ${['🍷 赤ワイン','🥂 白ワイン','🍾 スパークリング','🌸 ロゼ','🍯 甘口','🌿 自然派ワイン','🇫🇷 フランス産','🌴 カリフォルニア産','🇩🇪 ドイツ産','🇮🇹 イタリア産'].map(s =>
+        `<div class="choice-chip" onclick="toggleChip(this,'styleBtn')">${s}</div>`).join('')}
+    </div>
+    <button class="btn-primary" id="styleBtn" onclick="completeMission('style')" disabled>保存する</button>`;
+
+  if (m.type === 'price') return ptBadge(m.pts) + `
+    <p style="font-size:13px;color:var(--sub);text-align:center;margin-bottom:14px;">ふだん選ぶワインの価格帯は？</p>
+    <div class="price-options">
+      ${[['🪙','¥1,500 以下','デイリーワイン'],['💵','¥1,500〜¥3,000','気軽な一本'],['💳','¥3,000〜¥6,000','こだわりの一本'],['💎','¥6,000〜¥15,000','特別な日に'],['👑','¥15,000 以上','プレミアム']].map(([ic,lb,sub]) => `
+        <div class="price-option" onclick="selectPrice(this)">
+          <span class="price-option-icon">${ic}</span>
+          <div class="price-option-text"><div class="price-option-label">${lb}</div><div class="price-option-sub">${sub}</div></div>
+          <div class="price-option-radio"></div>
+        </div>`).join('')}
+    </div>
+    <button class="btn-primary" id="priceBtn" onclick="completeMission('price')" disabled>保存する</button>`;
+
+  if (m.type === 'photos') {
+    const target = m.milestoneCount;
+    const cells = Array.from({length:10}, (_,i) => {
+      const f = i < photoCount;
+      return `<div class="photo-cell ${f?'uploaded':''}" onclick="addPhoto(${i})" id="pcell${i}">
+        ${f ? '🍷' : '<span class="add-icon">+</span><span class="cell-num">'+(i+1)+'枚</span>'}
+      </div>`;
+    }).join('');
+    return ptBadge(m.pts) + `
+      <p class="photo-upload-note">ワインのラベル・グラス・お店のシーンなど<br>どんな写真でもOK（1〜10枚）</p>
+      <div class="photo-milestone-row">
+        ${[[1,10],[3,10],[10,10]].map(([n,p],i)=>`
+          <div class="photo-milestone ${photoCount>=n?'reached':''}" id="pm${n}">
+            <div class="photo-milestone-check">✅</div>
+            <div class="photo-milestone-num">${n}枚</div>
+            <div class="photo-milestone-pts">+${p}点</div>
+          </div>`).join('')}
+      </div>
+      <div class="photo-grid">${cells}</div>
+      <p style="font-size:11px;color:var(--sub);text-align:center;margin-bottom:16px;" id="photoCountLabel">現在 <b>${photoCount}</b> 枚アップ済み</p>
+      <button class="btn-primary" id="photoSaveBtn" onclick="savePhotos()" ${photoCount>0?'':'disabled'}>保存する</button>`;
+  }
+
+  if (m.type === 'shop') return ptBadge(m.pts) + `
+    <p style="font-size:13px;color:var(--sub);text-align:center;margin-bottom:14px;">どこでワインを飲みましたか？</p>
+    <div class="shop-type-row">
+      ${['🍽️ レストラン','🍺 バー','🏠 自宅','🏪 酒屋','✈️ 旅先'].map(s =>
+        `<div class="shop-type-chip" onclick="selShopType(this)">${s}</div>`).join('')}
+    </div>
+    <label class="form-label">お店の名前</label>
+    <input class="form-input" id="shopName" placeholder="例: ビストロ ソムリン" oninput="checkShop()">
+    <label class="form-label">場所・エリア</label>
+    <input class="form-input" id="shopArea" placeholder="例: 東京 銀座、大阪 梅田" oninput="checkShop()">
+    <label class="form-label">メモ（任意）</label>
+    <input class="form-input" id="shopMemo" placeholder="例: ソムリエがおすすめした白ワインが絶品！">
+    <button class="btn-primary" id="shopBtn" onclick="saveShop()" disabled>登録する</button>`;
+
+  if (m.type === 'sns_ig') return ptBadge(m.pts) + `
+    <div class="sns-option">
+      <div class="sns-icon ig">📷</div>
+      <div class="sns-info"><div class="sns-name">Instagram</div><div class="sns-desc">インスタのワイン投稿をソムリンと共有</div></div>
+      <div class="sns-pts">+10点</div>
+    </div>
+    <p style="font-size:12px;color:var(--sub);text-align:center;line-height:1.6;padding:8px 0 16px;">
+      Instagramのワイン投稿から<br>好みのワインを自動学習します🤖
+    </p>
+    <button class="btn-primary" onclick="connectSNS('instagram')">Instagramと連携する</button>
+    <button class="btn-secondary" onclick="closeModal()">あとで</button>`;
+
+  if (m.type === 'sns_line') return ptBadge(m.pts) + `
+    <div class="sns-option">
+      <div class="sns-icon li">💬</div>
+      <div class="sns-info"><div class="sns-name">LINE</div><div class="sns-desc">LINEでワインのおすすめを通知</div></div>
+      <div class="sns-pts">+10点</div>
+    </div>
+    <p style="font-size:12px;color:var(--sub);text-align:center;line-height:1.6;padding:8px 0 16px;">
+      新しいワインのおすすめや<br>お気に入りのお店の情報をLINEでお届け🍷
+    </p>
+    <button class="btn-primary" onclick="connectSNS('line')">LINEと連携する</button>
+    <button class="btn-secondary" onclick="closeModal()">あとで</button>`;
+
+  if (m.type === 'invite') return ptBadge(m.pts) + `
+    <p style="font-size:13px;color:var(--sub);text-align:center;margin-bottom:16px;">
+      友達をソムリンに招待すると<br><b style="color:var(--burgundy)">あなたも友達も</b>ポイントが貰えます！
+    </p>
+    <div class="invite-box">
+      <p style="font-size:12px;color:var(--sub);">あなたの招待コード</p>
+      <div class="invite-code">WN3847</div>
+      <p style="font-size:11px;color:var(--sub);">このコードを友達に教えてください</p>
+    </div>
+    <button class="btn-primary" onclick="shareInvite()">📤 招待リンクをシェア</button>
+    <button class="btn-secondary" onclick="completeMission('invite')">友達が登録した（デモ）</button>`;
+
+  return ptBadge(m.pts) + `<button class="btn-primary" onclick="completeMission('${m.id}')">完了する</button>`;
+}
+
+function initModalLogic(m) {
+  if (m.type === 'nickname') {
+    const inp = document.getElementById('nicknameInput');
+    const btn = document.getElementById('nickBtn');
+    if (inp && btn) inp.addEventListener('input', () => { btn.disabled = !inp.value.trim(); });
+  }
+}
+
+/* ===== ACTION HANDLERS ===== */
+function doNickname() {
+  if (document.getElementById('nicknameInput')?.value.trim()) completeMission('nickname');
+}
+function simulateAvatar() {
+  const a = document.getElementById('avatarArea');
+  if (a) { a.innerHTML = '<span style="font-size:48px">🤗</span>'; a.classList.add('uploaded'); }
+  const b = document.getElementById('avatarBtn');
+  if (b) b.disabled = false;
+}
+function toggleChip(el, btnId) {
+  el.classList.toggle('sel');
+  const btn = document.getElementById(btnId);
+  if (btn) btn.disabled = document.querySelectorAll('.choice-chip.sel').length === 0;
+}
+function selectPrice(el) {
+  document.querySelectorAll('.price-option').forEach(x => x.classList.remove('sel'));
+  el.classList.add('sel');
+  const btn = document.getElementById('priceBtn');
+  if (btn) btn.disabled = false;
+}
+function selShopType(el) {
+  document.querySelectorAll('.shop-type-chip').forEach(x => x.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function checkShop() {
+  const v = document.getElementById('shopName')?.value.trim();
+  const b = document.getElementById('shopBtn');
+  if (b) b.disabled = !v;
+}
+
+function addPhoto(idx) {
+  if (idx !== photoCount) return;
+  photoCount = idx + 1;
+  for (let i = 0; i < 10; i++) {
+    const cell = document.getElementById('pcell' + i);
+    if (!cell) continue;
+    if (i < photoCount) { cell.classList.add('uploaded'); cell.innerHTML = '🍷'; }
+  }
+  [1,3,10].forEach(n => {
+    const el = document.getElementById('pm'+n);
+    if (el) el.classList.toggle('reached', photoCount >= n);
+  });
+  const lbl = document.getElementById('photoCountLabel');
+  if (lbl) lbl.innerHTML = `現在 <b>${photoCount}</b> 枚アップ済み`;
+  const btn = document.getElementById('photoSaveBtn');
+  if (btn) btn.disabled = false;
+}
+
+function savePhotos() {
+  const toAdd = [];
+  if (photoCount>=1  && !completed.has('photo1'))  toAdd.push('photo1');
+  if (photoCount>=3  && !completed.has('photo3'))  toAdd.push('photo3');
+  if (photoCount>=10 && !completed.has('photo10')) toAdd.push('photo10');
+  closeModal();
+  if (toAdd.length > 0) {
+    toAdd.forEach(id => completed.add(id));
+    renderMissions();
+    setTimeout(() => updateScore(true), 100);
+    const total = toAdd.reduce((s,id) => s + missions.find(m=>m.id===id).pts, 0);
+    showToast(`📸 +${total}点！${photoCount}枚のワイン写真を保存しました`);
+  } else {
+    renderMissions();
+    showToast(`📸 ${photoCount}枚を保存しました`);
+  }
+}
+
+function saveShop() {
+  const name = document.getElementById('shopName')?.value.trim();
+  if (!name) return;
+  shopCount++;
+  const toAdd = [];
+  if (shopCount>=1 && !completed.has('shop1')) toAdd.push('shop1');
+  if (shopCount>=3 && !completed.has('shop3')) toAdd.push('shop3');
+  closeModal();
+  if (toAdd.length > 0) {
+    toAdd.forEach(id => completed.add(id));
+    renderMissions();
+    setTimeout(() => updateScore(true), 100);
+    const total = toAdd.reduce((s,id) => s + missions.find(m=>m.id===id).pts, 0);
+    showToast(`🏪 +${total}点！${name}を登録しました`);
+  } else {
+    renderMissions();
+    showToast(`🏪 ${name}を登録しました（${shopCount}軒目）`);
+  }
+}
+
+function connectSNS(type) {
+  setTimeout(() => {
+    showToast(type==='instagram' ? '📷 Instagram連携完了！' : '💬 LINE連携完了！');
+    setTimeout(() => completeMission(type === 'instagram' ? 'instagram' : 'line'), 600);
+  }, 500);
+}
+
+function shareInvite() {
+  showToast('📤 招待リンクをコピーしました！');
+}
+
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+function closeModalOutside(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+
+/* ===== TOAST ===== */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>

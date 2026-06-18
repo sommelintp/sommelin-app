@@ -1,0 +1,3162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Sommelin 管理画面 — Bistrot Lumière</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --burgundy: #9B1B4B;
+    --burgundy-light: #C84B6B;
+    --burgundy-pale: #f9f0f3;
+    --wine-dark: #5C0E2A;
+    --text: #2C1A1D;
+    --text-sub: #7A5A62;
+    --bg: #F5F3F0;
+    --white: #ffffff;
+    --border: #ecdde2;
+    --gold: #C9973A;
+    --green: #16a34a;
+    --red-soft: #fee2e2;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, 'Hiragino Sans', 'Yu Gothic', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    position: relative;
+  }
+
+  /* ===== TOP HEADER ===== */
+  .top-header {
+    background: var(--wine-dark);
+    padding: 16px 20px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .top-header-icon {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .top-header-info { flex: 1; }
+  .top-header-rest { color: white; font-size: 15px; font-weight: 700; }
+  .top-header-sub { color: rgba(255,255,255,0.65); font-size: 11px; margin-top: 1px; }
+  .top-header-badge {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+
+  /* ===== TAB NAV ===== */
+  .tab-nav {
+    background: var(--wine-dark);
+    display: flex;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .tab-nav-item {
+    flex: 1;
+    text-align: center;
+    padding: 12px 4px 10px;
+    color: rgba(255,255,255,0.55);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+  }
+  .tab-nav-item .nav-icon { font-size: 18px; display: block; margin-bottom: 3px; }
+  .tab-nav-item.active {
+    color: white;
+    border-bottom-color: #C84B6B;
+  }
+
+  /* ===== SECTION PANELS ===== */
+  .panel { display: none; padding-bottom: 40px; }
+  .panel.active { display: block; }
+
+  .panel-section {
+    background: white;
+    margin: 12px 12px 0;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .panel-section-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .panel-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-sub);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+
+  /* ===== BUTTONS ===== */
+  .btn-primary {
+    background: var(--burgundy);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: opacity 0.15s;
+  }
+  .btn-primary:active { opacity: 0.8; }
+  .btn-secondary {
+    background: white;
+    color: var(--burgundy);
+    border: 1.5px solid var(--burgundy);
+    border-radius: 10px;
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-sub);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* ===== TOGGLE SWITCH ===== */
+  .toggle-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toggle {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: #ddd;
+    border-radius: 24px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    left: 3px; top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  .toggle input:checked + .toggle-slider { background: var(--green); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+  /* ===== 📅 TASTING CALENDAR ===== */
+  .sync-bar {
+    margin: 12px 12px 0;
+    background: white;
+    border: 1.5px solid #bfdbfe;
+    border-radius: 14px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .sync-icon { font-size: 22px; }
+  .sync-info { flex: 1; }
+  .sync-title { font-size: 13px; font-weight: 700; color: #1d4ed8; }
+  .sync-sub { font-size: 11px; color: #3b82f6; margin-top: 2px; }
+  .sync-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+
+  /* calendar */
+  .cal-admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+  }
+  .cal-admin-month { font-size: 15px; font-weight: 700; }
+  .cal-nav-btn {
+    background: none; border: none; font-size: 20px; cursor: pointer; padding: 4px 8px; color: var(--text-sub);
+  }
+  .cal-admin-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    padding: 0 12px 12px;
+  }
+  .cal-dow { text-align: center; font-size: 10px; font-weight: 700; color: var(--text-sub); padding: 4px 0 6px; }
+  .cal-dow:first-child { color: #e53e3e; }
+  .cal-dow:last-child { color: #2b6cb0; }
+  .cal-cell {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 4px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.1s;
+    gap: 2px;
+  }
+  .cal-cell.other-month { color: #ccc; }
+  .cal-cell.today { background: var(--burgundy-pale); }
+  .cal-cell.today .cal-num { font-weight: 800; color: var(--burgundy); }
+  .cal-cell.has-event { background: #fff8f0; }
+  .cal-cell:active { background: var(--burgundy-pale); }
+  .cal-num { font-size: 13px; line-height: 1; }
+  .cal-dots { display: flex; gap: 2px; }
+  .cal-dot-admin {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--burgundy);
+  }
+  .cal-dot-admin.online { background: #2563eb; }
+  .cal-dot-admin.fair { background: var(--gold); }
+
+  /* event cards */
+  .ev-admin-card {
+    margin: 0 12px 8px;
+    background: white;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    padding: 13px 16px;
+    display: flex;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .ev-admin-card:active { border-color: var(--burgundy); }
+  .ev-admin-card.new-event { border-color: var(--burgundy); }
+  .ev-date-col {
+    background: var(--burgundy);
+    color: white;
+    border-radius: 8px;
+    padding: 6px 10px;
+    text-align: center;
+    flex-shrink: 0;
+    min-width: 44px;
+  }
+  .ev-date-m { font-size: 10px; font-weight: 700; opacity: 0.85; }
+  .ev-date-d { font-size: 20px; font-weight: 800; line-height: 1; }
+  .ev-date-w { font-size: 10px; opacity: 0.75; }
+  .ev-body { flex: 1; min-width: 0; }
+  .ev-type-tag {
+    font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+    display: inline-block; margin-bottom: 4px;
+  }
+  .ev-type-tag.tasting { background: var(--burgundy-pale); color: var(--burgundy); }
+  .ev-type-tag.seminar { background: #dbeafe; color: #1d4ed8; }
+  .ev-type-tag.fair    { background: #fef3c7; color: #92400e; }
+  .ev-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .ev-meta { font-size: 11px; color: var(--text-sub); margin-top: 3px; }
+  .ev-rsvp-chip {
+    background: #dcfce7; color: #15803d;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px;
+    display: inline-block; margin-top: 5px;
+  }
+
+  /* ===== 🍷 WINE LIST MANAGER ===== */
+  .wl-toolbar {
+    padding: 12px 12px 0;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .wl-search {
+    flex: 1;
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-size: 13px;
+    outline: none;
+    font-family: inherit;
+  }
+  .wl-search:focus { border-color: var(--burgundy); }
+
+  .cat-tabs {
+    display: flex;
+    overflow-x: auto;
+    padding: 10px 12px 0;
+    gap: 6px;
+    scrollbar-width: none;
+  }
+  .cat-tabs::-webkit-scrollbar { display: none; }
+  .cat-tab {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-sub);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .cat-tab.active {
+    background: var(--burgundy);
+    border-color: var(--burgundy);
+    color: white;
+  }
+
+  .wine-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .wine-row:last-child { border-bottom: none; }
+  .wine-row.unavailable { opacity: 0.5; }
+  .wine-row-cat { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+  .wine-row-info { flex: 1; min-width: 0; }
+  .wine-row-name { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wine-row-sub { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
+  .wine-row-price { font-size: 12px; font-weight: 700; color: var(--burgundy); white-space: nowrap; flex-shrink: 0; }
+  .wine-row-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .edit-btn, .del-btn {
+    width: 28px; height: 28px;
+    border: none; border-radius: 8px;
+    cursor: pointer; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .edit-btn { background: var(--burgundy-pale); color: var(--burgundy); }
+  .del-btn  { background: var(--red-soft); color: #dc2626; }
+
+  .wl-footer {
+    padding: 12px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-sub);
+  }
+
+  /* ===== MODAL (edit wine) ===== */
+  .modal-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(44,26,29,0.55);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-bg.open { display: flex; }
+  .modal-sheet {
+    background: white;
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-width: 430px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 20px 20px 40px;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  .modal-handle { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 18px; }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--text); }
+
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 11px; font-weight: 700; color: var(--text-sub); letter-spacing: 0.8px; margin-bottom: 6px; display: block; }
+  .form-input, .form-select {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    outline: none;
+    background: white;
+    transition: border-color 0.15s;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--burgundy); }
+  .form-row { display: flex; gap: 10px; }
+  .form-row .form-group { flex: 1; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .modal-actions .btn-primary { flex: 1; justify-content: center; padding: 13px; }
+  .modal-actions .btn-ghost { padding: 13px 20px; }
+
+  /* ===== 📱 QR CODE ===== */
+  .qr-section {
+    padding: 24px 20px;
+    text-align: center;
+  }
+  #qrCodeContainer {
+    display: inline-block;
+    padding: 16px;
+    background: white;
+    border-radius: 16px;
+    border: 2px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .qr-url-box {
+    background: #f8f6f7;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--text-sub);
+    font-family: monospace;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 12px 12px;
+    text-align: left;
+  }
+  .qr-url-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .copy-btn {
+    background: var(--burgundy-pale);
+    color: var(--burgundy);
+    border: none;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    flex-shrink: 0;
+  }
+  .qr-actions {
+    padding: 0 12px;
+    display: flex;
+    gap: 8px;
+  }
+  .qr-actions .btn-secondary { flex: 1; justify-content: center; }
+  .qr-actions .btn-primary { flex: 1; justify-content: center; }
+
+  .privacy-card {
+    margin: 12px 12px 0;
+    background: white;
+    border-radius: 14px;
+    border: 1.5px solid var(--border);
+    padding: 16px;
+  }
+  .privacy-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .privacy-icon { font-size: 28px; flex-shrink: 0; }
+  .privacy-info { flex: 1; }
+  .privacy-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .privacy-desc { font-size: 12px; color: var(--text-sub); line-height: 1.5; }
+  .privacy-warning {
+    margin-top: 10px;
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 11px;
+    color: #92400e;
+    display: none;
+  }
+  .privacy-warning.show { display: block; }
+
+  .qr-usage {
+    margin: 12px 12px 0;
+    background: var(--burgundy-pale);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .qr-usage-title { font-size: 12px; font-weight: 700; color: var(--burgundy); margin-bottom: 10px; letter-spacing: 0.5px; }
+  .qr-usage-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .qr-usage-step:last-child { margin-bottom: 0; }
+  .step-num {
+    width: 20px; height: 20px;
+    background: var(--burgundy);
+    color: white;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1a1a2e;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 300;
+    transition: transform 0.3s ease;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ===== LINE 連携 ===== */
+  :root { --line: #06C755; --line-dark: #019A40; --line-pale: #e8faf0; }
+
+  .line-card {
+    margin: 12px 12px 0;
+    background: white;
+    border-radius: 14px;
+    border: 1.5px solid #b2edd0;
+    overflow: hidden;
+  }
+  .line-card-header {
+    background: linear-gradient(135deg, #06C755 0%, #04a847 100%);
+    padding: 13px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .line-logo {
+    width: 32px; height: 32px;
+    background: white;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .line-logo svg { width: 22px; height: 22px; }
+  .line-header-text { flex: 1; }
+  .line-header-title { color: white; font-size: 14px; font-weight: 800; }
+  .line-header-sub   { color: rgba(255,255,255,0.8); font-size: 11px; margin-top: 1px; }
+  .line-status-badge {
+    background: rgba(255,255,255,0.25);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.4);
+    white-space: nowrap;
+  }
+  .line-status-badge.connected {
+    background: white;
+    color: var(--line-dark);
+    border-color: white;
+  }
+
+  /* 未連携 */
+  .line-unconnected {
+    padding: 16px;
+  }
+  .line-unconnected-desc {
+    font-size: 13px;
+    color: var(--text-sub);
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+  .line-unconnected-desc strong { color: var(--text); }
+  .line-connect-btn {
+    width: 100%;
+    background: var(--line);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 13px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.15s;
+  }
+  .line-connect-btn:active { background: var(--line-dark); }
+
+  /* 連携済み */
+  .line-connected-body { padding: 14px 16px; }
+  .line-account-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--line-pale);
+    border-radius: 10px;
+    margin-bottom: 12px;
+  }
+  .line-account-icon {
+    width: 36px; height: 36px;
+    background: var(--line);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .line-account-name  { font-size: 13px; font-weight: 700; color: var(--text); }
+  .line-account-id    { font-size: 11px; color: var(--text-sub); margin-top: 1px; }
+
+  .line-notify-types {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .line-type-chip {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--line-pale);
+    color: var(--line-dark);
+    border: 1.5px solid #b2edd0;
+  }
+  .line-type-chip.off {
+    background: #f5f5f5;
+    color: #aaa;
+    border-color: #e5e5e5;
+    text-decoration: line-through;
+  }
+
+  .line-timing-row {
+    font-size: 12px;
+    color: var(--text-sub);
+    margin-bottom: 14px;
+  }
+  .line-timing-row span { color: var(--text); font-weight: 600; }
+
+  .line-action-row {
+    display: flex;
+    gap: 8px;
+  }
+  .line-settings-btn {
+    flex: 1;
+    background: white;
+    color: var(--text);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 9px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .line-test-btn {
+    flex: 1;
+    background: var(--line);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 9px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .line-test-btn:active { background: var(--line-dark); }
+
+  /* ===== LINE 設定モーダル ===== */
+  .line-modal-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(44,26,29,0.55);
+    z-index: 250;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .line-modal-bg.open { display: flex; }
+  .line-modal-sheet {
+    background: white;
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-width: 430px;
+    padding: 20px 20px 48px;
+    animation: slideUp 0.25s ease;
+  }
+  .line-modal-handle { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 18px; }
+  .line-modal-title  { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+
+  .line-setting-section { margin-bottom: 20px; }
+  .line-setting-label {
+    font-size: 11px; font-weight: 800; color: var(--text-sub);
+    letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px;
+  }
+  .line-toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 0; border-bottom: 1px solid var(--border);
+    font-size: 14px; color: var(--text);
+  }
+  .line-toggle-row:last-child { border-bottom: none; }
+  .line-toggle-row .row-left { display: flex; align-items: center; gap: 8px; }
+  /* 緑のトグル */
+  .toggle-line input:checked + .toggle-slider { background: var(--line); }
+
+  .line-timing-chips {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .line-timing-chip {
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1.5px solid var(--border);
+    background: white;
+    color: var(--text-sub);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .line-timing-chip.selected {
+    background: var(--line-pale);
+    border-color: var(--line);
+    color: var(--line-dark);
+  }
+
+  .line-modal-save {
+    width: 100%; margin-top: 20px;
+    background: var(--line);
+    color: white; border: none;
+    border-radius: 14px; padding: 14px;
+    font-size: 14px; font-weight: 800;
+    cursor: pointer; font-family: inherit;
+  }
+  .line-modal-save:active { background: var(--line-dark); }
+
+  /* ===== LINE風 プッシュ通知トースト ===== */
+  .line-push {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-120px);
+    width: calc(100% - 24px);
+    max-width: 406px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+    z-index: 500;
+    padding: 12px 14px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 1px solid rgba(0,0,0,0.06);
+  }
+  .line-push.show { transform: translateX(-50%) translateY(0); }
+  .line-push-icon {
+    width: 40px; height: 40px;
+    background: var(--line);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .line-push-icon svg { width: 26px; height: 26px; }
+  .line-push-body { flex: 1; min-width: 0; }
+  .line-push-app  { font-size: 10px; font-weight: 700; color: var(--text-sub); letter-spacing: 0.5px; margin-bottom: 2px; }
+  .line-push-msg  { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.4; }
+  .line-push-sub  { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
+  .line-push-time { font-size: 10px; color: #bbb; flex-shrink: 0; align-self: flex-start; margin-top: 2px; }
+
+  /* ===== ラベルサムネイル ===== */
+  .wine-label-thumb {
+    width: 48px;
+    height: 58px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    text-align: center;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(0,0,0,0.08);
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  .wine-label-thumb:active { transform: scale(0.94); }
+  /* カメラ撮影済みラベル */
+  .wine-label-thumb.scanned {
+    background: linear-gradient(160deg, #fff8f4 0%, #fceee8 100%);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  }
+  .wine-label-thumb.scanned::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--burgundy);
+    border-radius: 6px 6px 0 0;
+  }
+  .wine-label-thumb.scanned .label-emoji { font-size: 20px; }
+  .wine-label-thumb.scanned .label-cam-badge {
+    position: absolute;
+    bottom: 2px; right: 2px;
+    font-size: 9px;
+    background: var(--burgundy);
+    color: white;
+    border-radius: 4px;
+    padding: 1px 3px;
+    line-height: 1.2;
+  }
+  .wine-label-thumb.scanned .label-name {
+    font-size: 7px;
+    color: var(--wine-dark);
+    margin-top: 2px;
+    line-height: 1.2;
+    padding: 0 3px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* 未撮影 プレースホルダー */
+  .wine-label-thumb.placeholder {
+    background: var(--burgundy-pale);
+    color: var(--text-sub);
+    font-size: 22px;
+    border: 1.5px dashed var(--border);
+  }
+
+  /* ===== ツールバー2段目（リスト読み込みボタン） ===== */
+  .wl-toolbar2 {
+    padding: 6px 12px 0;
+    display: flex;
+    gap: 8px;
+  }
+  .btn-import {
+    flex: 1;
+    background: white;
+    color: var(--text);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .btn-import:active { background: var(--burgundy-pale); border-color: var(--burgundy); color: var(--burgundy); }
+
+  /* ===== 一括インポート チェックリスト ===== */
+  .bulk-results-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(44,26,29,0.6);
+    z-index: 350;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .bulk-results-bg.open { display: flex; }
+  .bulk-results-sheet {
+    background: white;
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-width: 430px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 20px 20px 48px;
+    animation: slideUp 0.25s ease;
+  }
+  .br-handle  { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 16px; }
+  .br-header  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .br-title   { font-size: 16px; font-weight: 800; color: var(--text); }
+  .br-sub     { font-size: 12px; color: var(--text-sub); margin-bottom: 16px; }
+  .bulk-wine-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .bulk-wine-row:last-child { border-bottom: none; }
+  .bulk-wine-row:active { background: var(--burgundy-pale); margin: 0 -4px; padding-left: 4px; padding-right: 4px; border-radius: 8px; }
+  .bulk-check {
+    width: 22px; height: 22px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    transition: all 0.15s;
+    background: white;
+  }
+  .bulk-check.checked { background: var(--burgundy); border-color: var(--burgundy); color: white; }
+  .bulk-wine-emoji { font-size: 20px; flex-shrink: 0; }
+  .bulk-wine-info { flex: 1; min-width: 0; }
+  .bulk-wine-name { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bulk-wine-meta { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
+  .br-footer { margin-top: 20px; display: flex; gap: 10px; }
+  .br-footer .btn-primary { flex: 1; justify-content: center; padding: 14px; font-size: 14px; }
+  .br-footer .btn-ghost   { padding: 14px 18px; }
+  .br-select-all {
+    font-size: 12px;
+    color: var(--burgundy);
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* ===== 在庫数チップ ===== */
+  .stock-chip {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .stock-chip.ok   { background: #dcfce7; color: #15803d; }
+  .stock-chip.low  { background: #fef3c7; color: #92400e; }
+  .stock-chip.zero { background: #fee2e2; color: #dc2626; }
+
+  /* ===== カメラキャプチャ オーバーレイ ===== */
+  .cam-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #0a0a0a;
+    z-index: 300;
+    flex-direction: column;
+    align-items: center;
+  }
+  .cam-overlay.open { display: flex; }
+
+  .cam-top-bar {
+    width: 100%;
+    padding: 16px 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .cam-top-title { color: white; font-size: 16px; font-weight: 700; }
+  .cam-close-btn {
+    background: rgba(255,255,255,0.15);
+    border: 1.5px solid rgba(255,255,255,0.3);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .cam-viewfinder {
+    width: 100%;
+    flex: 1;
+    position: relative;
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  /* 背景に薄いグリッド模様でカメラっぽさを演出 */
+  .cam-viewfinder::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .cam-frame {
+    width: 220px;
+    height: 290px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-radius: 16px;
+    position: relative;
+    background: rgba(255,255,255,0.03);
+  }
+  .cam-fc {
+    position: absolute;
+    width: 22px; height: 22px;
+    border-color: white;
+    border-style: solid;
+  }
+  .cam-fc.tl { top:0; left:0; border-width:3px 0 0 3px; border-radius:4px 0 0 0; }
+  .cam-fc.tr { top:0; right:0; border-width:3px 3px 0 0; border-radius:0 4px 0 0; }
+  .cam-fc.bl { bottom:0; left:0; border-width:0 0 3px 3px; border-radius:0 0 0 4px; }
+  .cam-fc.br { bottom:0; right:0; border-width:0 3px 3px 0; border-radius:0 0 4px 0; }
+  .cam-frame-hint {
+    position: absolute;
+    bottom: -38px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,0.55);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .cam-thumb-strip {
+    width: 100%;
+    padding: 10px 16px;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    background: #0d0d0d;
+    min-height: 70px;
+    align-items: center;
+    scrollbar-width: none;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .cam-thumb-strip::-webkit-scrollbar { display: none; }
+  .cam-thumb {
+    width: 52px; height: 52px;
+    border-radius: 10px;
+    background: #222;
+    border: 2px solid rgba(255,255,255,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+    position: relative;
+    animation: thumbPop 0.2s ease;
+    cursor: default;
+  }
+  @keyframes thumbPop {
+    from { transform: scale(0.5); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+  .cam-thumb-num {
+    position: absolute;
+    top: -6px; right: -6px;
+    width: 18px; height: 18px;
+    background: var(--burgundy);
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cam-thumb-empty {
+    color: rgba(255,255,255,0.2);
+    font-size: 12px;
+    text-align: center;
+    width: 100%;
+  }
+
+  .cam-bottom {
+    width: 100%;
+    padding: 16px 20px 36px;
+    background: #0a0a0a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .cam-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    width: 100%;
+  }
+  .cam-shutter {
+    width: 72px; height: 72px;
+    background: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    box-shadow: 0 0 0 5px rgba(255,255,255,0.25);
+    transition: transform 0.1s, box-shadow 0.1s;
+    flex-shrink: 0;
+  }
+  .cam-shutter:active { transform: scale(0.9); box-shadow: 0 0 0 3px rgba(255,255,255,0.15); }
+  .cam-counter {
+    color: rgba(255,255,255,0.6);
+    font-size: 13px;
+    font-weight: 600;
+    min-width: 60px;
+    text-align: center;
+  }
+  .cam-analyze-btn {
+    width: 100%;
+    background: var(--burgundy);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    padding: 15px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.2s;
+  }
+  .cam-analyze-btn:disabled { opacity: 0.3; cursor: default; }
+  .cam-manual-link {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.4);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* ===== 解析中オーバーレイ ===== */
+  .analyzing-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    z-index: 400;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    gap: 16px;
+  }
+  .analyzing-overlay.open { display: flex; }
+  .analyzing-spinner {
+    width: 60px; height: 60px;
+    border: 4px solid rgba(255,255,255,0.2);
+    border-top-color: var(--burgundy-light);
+    border-radius: 50%;
+    animation: adminSpin 0.85s linear infinite;
+  }
+  @keyframes adminSpin { to { transform: rotate(360deg); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .analyzing-count {
+    font-size: 13px;
+    opacity: 0.55;
+  }
+
+  /* ===== ワイン検索結果 シート ===== */
+  .wine-results-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(44,26,29,0.6);
+    z-index: 350;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .wine-results-bg.open { display: flex; }
+  .wine-results-sheet {
+    background: white;
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-width: 430px;
+    max-height: 82vh;
+    overflow-y: auto;
+    padding: 20px 20px 48px;
+    animation: slideUp 0.25s ease;
+  }
+  .wr-handle { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 16px; }
+  .wr-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+  .wr-sub { font-size: 12px; color: var(--text-sub); margin-bottom: 16px; }
+  .wr-badge {
+    display: inline-block;
+    background: var(--burgundy-pale);
+    color: var(--burgundy);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  .wine-result-card {
+    border: 1.5px solid var(--border);
+    border-radius: 13px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .wine-result-card:active { border-color: var(--burgundy); background: var(--burgundy-pale); }
+  .wine-result-emoji { font-size: 28px; flex-shrink: 0; }
+  .wine-result-info { flex: 1; min-width: 0; }
+  .wine-result-name { font-size: 14px; font-weight: 700; color: var(--text); }
+  .wine-result-meta { font-size: 12px; color: var(--text-sub); margin-top: 3px; line-height: 1.4; }
+  .wine-result-score {
+    font-size: 11px; font-weight: 800;
+    color: var(--gold); background: #fef3c7;
+    padding: 3px 8px; border-radius: 8px;
+    flex-shrink: 0; align-self: center;
+    white-space: nowrap;
+  }
+  .wr-manual {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--text-sub);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* ===== 在庫パネル ===== */
+  .stk-stats {
+    display: flex; gap: 0; margin: 16px 16px 12px;
+    background: var(--white); border-radius: 14px;
+    overflow: hidden; box-shadow: 0 1px 4px rgba(92,14,42,.08);
+  }
+  .stk-stat {
+    flex: 1; text-align: center; padding: 14px 8px;
+    border-right: 1px solid var(--border);
+  }
+  .stk-stat:last-child { border: none; }
+  .stk-num { font-size: 22px; font-weight: 900; color: var(--burgundy); }
+  .stk-green { color: #16a34a; }
+  .stk-red   { color: #dc2626; }
+  .stk-lbl   { font-size: 10px; color: var(--text-sub); margin-top: 2px; }
+  .stk-add-card {
+    margin: 0 16px 16px;
+    background: var(--white); border-radius: 14px; padding: 16px;
+    box-shadow: 0 1px 4px rgba(92,14,42,.08);
+  }
+  .stk-add-title { font-size: 13px; font-weight: 800; color: var(--burgundy); margin-bottom: 12px; }
+  .stk-input {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; font-size: 13px; color: var(--text);
+    margin-bottom: 8px; background: var(--bg);
+    font-family: inherit;
+  }
+  .stk-input:focus { outline: none; border-color: var(--burgundy); }
+  .stk-row2 { display: flex; gap: 8px; }
+  .stk-short { width: auto; flex: 1; }
+  .stk-add-btn {
+    width: 100%; padding: 13px; margin-top: 4px;
+    background: var(--burgundy); color: white;
+    font-size: 14px; font-weight: 800; border: none; border-radius: 12px; cursor: pointer;
+  }
+  .stk-add-btn:active { opacity: .8; }
+  .inv-card {
+    background: var(--white); border-radius: 14px; padding: 14px;
+    margin-bottom: 10px; box-shadow: 0 1px 4px rgba(92,14,42,.07);
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .inv-card.out-of-stock { opacity: .55; }
+  .inv-info { flex: 1; min-width: 0; }
+  .inv-name { font-size: 14px; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .inv-meta { font-size: 11px; color: var(--text-sub); margin-top: 3px; }
+  .inv-price { font-size: 13px; font-weight: 700; color: var(--burgundy); margin-top: 4px; }
+  .inv-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+  .inv-toggle {
+    padding: 5px 12px; border-radius: 20px; border: none; cursor: pointer;
+    font-size: 11px; font-weight: 800;
+  }
+  .inv-toggle.in-stock  { background: #dcfce7; color: #16a34a; }
+  .inv-toggle.no-stock  { background: #fee2e2; color: #dc2626; }
+  .inv-del { background: none; border: none; color: var(--text-sub); font-size: 16px; cursor: pointer; padding: 0; }
+  .stk-publish-bar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 430px;
+    background: rgba(255,255,255,.95); backdrop-filter: blur(10px);
+    padding: 12px 20px 28px; border-top: 1px solid var(--border);
+    display: none;
+  }
+  .stk-publish-bar.show { display: block; }
+  .stk-pub-btn {
+    width: 100%; padding: 14px; border: none; border-radius: 14px; cursor: pointer;
+    background: linear-gradient(135deg, var(--burgundy), var(--wine-dark));
+    color: white; font-size: 15px; font-weight: 800;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP HEADER -->
+<div class="top-header">
+  <div class="top-header-icon">🏰</div>
+  <div class="top-header-info">
+    <div class="top-header-rest">Bistrot Lumière</div>
+    <div class="top-header-sub">Sommelin 管理画面</div>
+  </div>
+  <div class="top-header-badge">スタッフ</div>
+</div>
+
+<!-- TAB NAV -->
+<div class="tab-nav">
+  <div class="tab-nav-item active" id="tnav-cal" onclick="switchPanel('calendar')">
+    <span class="nav-icon">📅</span>試飲会
+  </div>
+  <div class="tab-nav-item" id="tnav-wine" onclick="switchPanel('winelist')">
+    <span class="nav-icon">🍷</span>ワインリスト
+  </div>
+  <div class="tab-nav-item" id="tnav-qr" onclick="switchPanel('qr')">
+    <span class="nav-icon">📱</span>QRコード
+  </div>
+  <div class="tab-nav-item" id="tnav-stk" onclick="switchPanel('stock')">
+    <span class="nav-icon">📦</span>在庫
+  </div>
+</div>
+
+<!-- ==================== PANEL: 試飲会 ==================== -->
+<div id="panelCalendar" class="panel active">
+
+  <!-- Google Calendar 同期バー -->
+  <div class="sync-bar">
+    <span class="sync-icon">📆</span>
+    <div class="sync-info">
+      <div class="sync-title">Google カレンダー連携</div>
+      <div class="sync-sub" id="syncStatus">最終同期: 今日 09:30</div>
+    </div>
+    <button class="sync-btn" onclick="simulateSync()">同期する</button>
+  </div>
+
+  <!-- LINE 連携カード -->
+  <div class="line-card" id="lineCard">
+    <!-- ヘッダー（常に表示） -->
+    <div class="line-card-header">
+      <div class="line-logo">
+        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="36" height="36" rx="8" fill="#06C755"/>
+          <path d="M18 7C11.373 7 6 11.477 6 16.97c0 4.928 3.928 9.065 9.237 9.847.359.077.848.237.972.544.111.279.073.716.036 1l-.157 1.02c-.048.31-.22 1.21.955.66 1.175-.55 6.34-4.084 8.65-6.99C27.31 20.96 30 19.12 30 16.97 30 11.477 24.627 7 18 7z" fill="white"/>
+          <path d="M22.8 19.5h-3.3v-5.7a.3.3 0 00-.3-.3h-.9a.3.3 0 00-.3.3v6.9a.3.3 0 00.3.3h4.5a.3.3 0 00.3-.3v-.9a.3.3 0 00-.3-.3z" fill="#06C755"/>
+          <path d="M13.2 13.5h-.9a.3.3 0 00-.3.3v6.9a.3.3 0 00.3.3h.9a.3.3 0 00.3-.3v-6.9a.3.3 0 00-.3-.3z" fill="#06C755"/>
+          <path d="M19.95 13.5h-.9a.3.3 0 00-.3.3v4.1l-3.17-4.25a.3.3 0 00-.24-.15h-.94a.3.3 0 00-.3.3v6.9a.3.3 0 00.3.3h.9a.3.3 0 00.3-.3v-4.1l3.18 4.26c.05.07.13.14.22.14h.94a.3.3 0 00.3-.3v-6.9a.3.3 0 00-.3-.3z" fill="#06C755"/>
+        </svg>
+      </div>
+      <div class="line-header-text">
+        <div class="line-header-title">LINE 通知連携</div>
+        <div class="line-header-sub" id="lineHeaderSub">試飲会情報をLINEで受け取ります</div>
+      </div>
+      <div class="line-status-badge" id="lineStatusBadge">未連携</div>
+    </div>
+
+    <!-- 未連携 ビュー -->
+    <div class="line-unconnected" id="lineUnconnected">
+      <p class="line-unconnected-desc">
+        <strong>3ステップで設定完了。</strong>インポーターが配信する試飲会・セミナー情報をお店のLINEで受け取れます。
+      </p>
+      <!-- ステップ説明 -->
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <div style="width:22px;height:22px;background:var(--line);color:white;border-radius:50%;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">1</div>
+          <div style="font-size:12px;color:var(--text);line-height:1.5;">下のボタンをタップして「<strong>Sommelin</strong>」をLINEで友達追加</div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <div style="width:22px;height:22px;background:var(--line);color:white;border-radius:50%;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">2</div>
+          <div style="font-size:12px;color:var(--text);line-height:1.5;">自動で届くメッセージからお店情報を登録</div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <div style="width:22px;height:22px;background:var(--line);color:white;border-radius:50%;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">3</div>
+          <div style="font-size:12px;color:var(--text);line-height:1.5;">試飲会情報がLINEに届くようになります 🎉</div>
+        </div>
+      </div>
+
+      <!-- ▼ タップで友達追加ボタン（スマホで自分の画面のQRは読めないので） -->
+      <a href="https://line.me/R/ti/p/@sommelin_official" target="_blank"
+         style="display:flex;align-items:center;justify-content:center;gap:10px;
+                background:var(--line);color:white;border-radius:14px;
+                padding:16px;text-decoration:none;font-size:16px;font-weight:800;
+                box-shadow:0 4px 16px rgba(6,199,85,0.35);margin-bottom:10px;"
+         onclick="simulateLineAdd()">
+        <svg width="22" height="22" viewBox="0 0 36 36" fill="none">
+          <path d="M18 7C11.373 7 6 11.477 6 16.97c0 4.928 3.928 9.065 9.237 9.847.359.077.848.237.972.544.111.279.073.716.036 1l-.157 1.02c-.048.31-.22 1.21.955.66 1.175-.55 6.34-4.084 8.65-6.99C27.31 20.96 30 19.12 30 16.97 30 11.477 24.627 7 18 7z" fill="white"/>
+        </svg>
+        LINEで友達追加する
+      </a>
+      <div style="font-size:11px;color:var(--text-sub);text-align:center;margin-bottom:14px;">
+        @sommelin_official · タップするとLINEアプリが開きます
+      </div>
+    </div>
+
+    <!-- 連携済み ビュー（初期は非表示） -->
+    <div class="line-connected-body" id="lineConnected" style="display:none;">
+      <div class="line-account-row">
+        <div class="line-account-icon">🏰</div>
+        <div>
+          <div class="line-account-name">Bistrot Lumière スタッフ</div>
+          <div class="line-account-id">@bistrot_lumiere_staff</div>
+        </div>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:0.8px;margin-bottom:8px;">通知する種別</div>
+      <div class="line-notify-types" id="lineNotifyTypes">
+        <span class="line-type-chip" id="ltc-tasting">🍷 試飲会</span>
+        <span class="line-type-chip" id="ltc-seminar">📚 セミナー</span>
+        <span class="line-type-chip" id="ltc-fair">🏆 フェア</span>
+      </div>
+      <div class="line-timing-row" style="margin-top:8px;">
+        ⏰ 通知タイミング: <span id="lineTimingLabel">1週間前 · 当日</span>
+      </div>
+      <div class="line-action-row">
+        <button class="line-settings-btn" onclick="openLineSettings()">⚙️ 設定変更</button>
+        <button class="line-test-btn" onclick="sendLineTest()">💬 テスト送信</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calendar -->
+  <div class="panel-section" style="margin-top:12px;">
+    <div class="cal-admin-header">
+      <button class="cal-nav-btn" onclick="adminChangeMonth(-1)">‹</button>
+      <span class="cal-admin-month" id="adminMonthLabel"></span>
+      <button class="cal-nav-btn" onclick="adminChangeMonth(1)">›</button>
+    </div>
+    <div class="cal-admin-grid" id="adminCalGrid">
+      <!-- 曜日 -->
+      <div class="cal-dow">日</div><div class="cal-dow">月</div>
+      <div class="cal-dow">火</div><div class="cal-dow">水</div>
+      <div class="cal-dow">木</div><div class="cal-dow">金</div>
+      <div class="cal-dow">土</div>
+    </div>
+  </div>
+
+  <!-- Event list -->
+  <div style="padding: 14px 16px 6px; font-size:11px; font-weight:700; color:var(--text-sub); letter-spacing:1.2px;">近日中の試飲会</div>
+  <div id="adminEventList"></div>
+
+</div>
+
+<!-- ==================== PANEL: ワインリスト ==================== -->
+<div id="panelWinelist" class="panel">
+
+  <!-- ツールバー -->
+  <div class="wl-toolbar">
+    <input class="wl-search" type="text" placeholder="ワインを検索..." oninput="filterWines(this.value)">
+    <button class="btn-primary" onclick="openWineModal(null)">＋ 追加</button>
+  </div>
+  <div class="wl-toolbar2">
+    <button class="btn-import" onclick="openListCapture()">📋 リストを写真で一括読み込み</button>
+  </div>
+
+  <!-- カテゴリタブ -->
+  <div class="cat-tabs">
+    <div class="cat-tab active" onclick="filterCat('all',this)">すべて</div>
+    <div class="cat-tab" onclick="filterCat('sparkling',this)">🥂 泡</div>
+    <div class="cat-tab" onclick="filterCat('white',this)">🤍 白</div>
+    <div class="cat-tab" onclick="filterCat('red',this)">🍷 赤</div>
+    <div class="cat-tab" onclick="filterCat('rose',this)">🌸 ロゼ</div>
+    <div class="cat-tab" onclick="filterCat('orange',this)">🍊 オレンジ</div>
+  </div>
+
+  <!-- リスト -->
+  <div class="panel-section" style="margin-top:10px;">
+    <div id="wineTableBody"></div>
+    <div class="wl-footer">
+      <span id="wineCount">全 0 種</span>
+      <button class="btn-ghost" onclick="showToast('リストを更新しました ✓')">リストを公開する</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ==================== PANEL: QRコード ==================== -->
+<div id="panelQr" class="panel">
+
+  <!-- QR表示 -->
+  <div class="qr-section">
+    <div id="qrCodeContainer"></div>
+    <div style="font-size:13px;color:var(--text-sub);">このQRコードをお店に掲示してください</div>
+  </div>
+
+  <!-- URL コピー -->
+  <div class="qr-url-box">
+    <span class="qr-url-text" id="qrUrlText">https://sommelin.app/r/bistrot-lumiere</span>
+    <button class="copy-btn" onclick="copyUrl()">コピー</button>
+  </div>
+
+  <!-- アクションボタン -->
+  <div class="qr-actions">
+    <button class="btn-secondary" onclick="showToast('印刷ダイアログを開きます 🖨️')">🖨️ 印刷</button>
+    <button class="btn-primary" onclick="showToast('QRコードをダウンロードしました ✓')">⬇️ 保存</button>
+  </div>
+
+  <!-- 公開/非公開 設定 -->
+  <div class="privacy-card">
+    <div class="privacy-row">
+      <span class="privacy-icon" id="privacyIcon">🔓</span>
+      <div class="privacy-info">
+        <div class="privacy-title">ワインリストの公開設定</div>
+        <div class="privacy-desc">
+          <strong id="privacyStatus">公開中</strong> — ソムリンアプリを使えばどこからでも閲覧できます
+        </div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="privacyToggle" checked onchange="togglePrivacy(this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="privacy-warning" id="privacyWarning">
+      ⚠️ 非公開に設定すると、お店のQRコードをスキャンした場合のみリストが表示されます。ランキングや履歴からは閲覧できなくなります。
+    </div>
+  </div>
+
+  <!-- 使い方 -->
+  <div class="qr-usage">
+    <div class="qr-usage-title">📖 QRコードの使い方</div>
+    <div class="qr-usage-step">
+      <div class="step-num">1</div>
+      <div>テーブルやメニューブックにQRコードを貼り付けます</div>
+    </div>
+    <div class="qr-usage-step">
+      <div class="step-num">2</div>
+      <div>お客様がスマートフォンでスキャンすると、ソムリン君がワインをご案内します</div>
+    </div>
+    <div class="qr-usage-step">
+      <div class="step-num">3</div>
+      <div>お客様の好みに合わせたおすすめ・マリアージュ提案が自動で表示されます</div>
+    </div>
+    <div class="qr-usage-step">
+      <div class="step-num">4</div>
+      <div>ワインリストを更新すると、次回スキャン時に自動で最新版が表示されます</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ==================== PANEL: 一般在庫 ==================== -->
+<div id="panelStock" class="panel">
+
+  <!-- Stats -->
+  <div class="stk-stats">
+    <div class="stk-stat"><div class="stk-num" id="stkTotal">0</div><div class="stk-lbl">登録ワイン</div></div>
+    <div class="stk-stat"><div class="stk-num stk-green" id="stkIn">0</div><div class="stk-lbl">在庫あり</div></div>
+    <div class="stk-stat"><div class="stk-num stk-red" id="stkOut">0</div><div class="stk-lbl">在庫なし</div></div>
+  </div>
+
+  <!-- Quick add form -->
+  <div class="stk-add-card">
+    <div class="stk-add-title">＋ ワインを在庫に登録</div>
+    <input class="stk-input" id="stkName" placeholder="ワイン名（例: Ch. Mouton Rothschild）">
+    <div class="stk-row2">
+      <input class="stk-input stk-short" id="stkVintage" placeholder="ヴィンテージ" maxlength="4" type="number">
+      <input class="stk-input stk-short" id="stkPrice" placeholder="販売価格（円）" type="number">
+    </div>
+    <input class="stk-input" id="stkRegion" placeholder="産地（例: Bordeaux, France）">
+    <div class="stk-row2">
+      <input class="stk-input stk-short" id="stkQty" placeholder="在庫数" type="number" value="1">
+      <select class="stk-input stk-short" id="stkType">
+        <option value="bottle">ボトル販売</option>
+        <option value="glass">グラス販売</option>
+        <option value="both">両方</option>
+      </select>
+    </div>
+    <button class="stk-add-btn" onclick="addStockItem()">在庫に追加</button>
+  </div>
+
+  <!-- Inventory list -->
+  <div style="padding:0 16px 12px;font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:.07em;">在庫リスト</div>
+  <div id="stkList" style="padding:0 16px 80px;"></div>
+
+</div>
+
+<!-- 在庫公開フッター -->
+<div class="stk-publish-bar" id="stkPublishBar">
+  <button class="stk-pub-btn" onclick="publishStock()">🌐 在庫情報をソムリンに公開する</button>
+</div>
+
+<!-- ==================== ワインリスト一括インポート オーバーレイ ==================== -->
+<div class="cam-overlay" id="listCamOverlay">
+  <div class="cam-top-bar">
+    <div class="cam-top-title">📋 ワインリストを読み込む</div>
+    <button class="cam-close-btn" onclick="closeListCapture()">キャンセル</button>
+  </div>
+
+  <!-- ビューファインダー（横長） -->
+  <div class="cam-viewfinder">
+    <div style="width:310px;height:220px;border:2px solid rgba(255,255,255,0.4);border-radius:16px;position:relative;background:rgba(255,255,255,0.03);">
+      <div class="cam-fc tl"></div><div class="cam-fc tr"></div>
+      <div class="cam-fc bl"></div><div class="cam-fc br"></div>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:0.35;">
+        <div style="width:80%;height:2px;background:white;border-radius:1px;"></div>
+        <div style="width:80%;height:2px;background:white;border-radius:1px;"></div>
+        <div style="width:80%;height:2px;background:white;border-radius:1px;"></div>
+        <div style="width:60%;height:2px;background:white;border-radius:1px;"></div>
+        <div style="width:70%;height:2px;background:white;border-radius:1px;"></div>
+      </div>
+      <div style="position:absolute;bottom:-38px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.55);font-size:12px;white-space:nowrap;">
+        ワインリスト全体をフレームに収めてください
+      </div>
+    </div>
+  </div>
+
+  <!-- サムネイル不要なのでスリム帯 -->
+  <div style="width:100%;padding:14px 16px;background:#0d0d0d;border-top:1px solid rgba(255,255,255,0.08);">
+    <div style="color:rgba(255,255,255,0.4);font-size:12px;text-align:center;" id="listCaptureTip">
+      📄 メニュー・手書きリスト・印刷リスト、どれでも読み込めます
+    </div>
+  </div>
+
+  <div class="cam-bottom">
+    <div class="cam-controls">
+      <div style="min-width:60px;"></div>
+      <button class="cam-shutter" onclick="captureList()" title="撮影">📸</button>
+      <div style="min-width:60px;"></div>
+    </div>
+    <button class="cam-analyze-btn" id="listAnalyzeBtn" onclick="analyzeList()" disabled>
+      📖 ワインリストを読み込む
+    </button>
+    <button class="cam-manual-link" onclick="closeListCapture()">キャンセル</button>
+  </div>
+</div>
+
+<!-- ==================== 一括インポート チェックリスト ==================== -->
+<div class="bulk-results-bg" id="bulkResultsBg" onclick="closeBulkResultsBg(event)">
+  <div class="bulk-results-sheet">
+    <div class="br-handle"></div>
+    <div class="br-header">
+      <div class="br-title" id="brTitle">📖 ワインが見つかりました</div>
+      <span class="br-select-all" onclick="toggleAllBulk()">すべて選択</span>
+    </div>
+    <div class="br-sub" id="brSub">追加するワインを選択してください</div>
+    <div id="bulkWineList"></div>
+    <div class="br-footer">
+      <button class="btn-ghost" onclick="closeBulkResults()">キャンセル</button>
+      <button class="btn-primary" id="brAddBtn" onclick="confirmBulkAdd()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== カメラキャプチャ オーバーレイ ==================== -->
+<div class="cam-overlay" id="camOverlay">
+  <div class="cam-top-bar">
+    <div class="cam-top-title">📷 ボトルを撮影</div>
+    <button class="cam-close-btn" onclick="closeCameraCapture()">キャンセル</button>
+  </div>
+
+  <!-- ビューファインダー -->
+  <div class="cam-viewfinder">
+    <div class="cam-frame">
+      <div class="cam-fc tl"></div>
+      <div class="cam-fc tr"></div>
+      <div class="cam-fc bl"></div>
+      <div class="cam-fc br"></div>
+      <div class="cam-frame-hint">ボトルをフレームに合わせてください</div>
+    </div>
+  </div>
+
+  <!-- サムネイルストリップ -->
+  <div class="cam-thumb-strip" id="camThumbStrip">
+    <div class="cam-thumb-empty" id="camThumbEmpty">撮影したボトルがここに表示されます</div>
+  </div>
+
+  <!-- 操作エリア -->
+  <div class="cam-bottom">
+    <div class="cam-controls">
+      <div class="cam-counter" id="camCounter">0本撮影済み</div>
+      <button class="cam-shutter" onclick="captureBottle()" title="撮影">📸</button>
+      <div style="min-width:60px;"></div>
+    </div>
+    <button class="cam-analyze-btn" id="camAnalyzeBtn" onclick="analyzeLabels()" disabled>
+      ✨ ラベルを解析する
+    </button>
+    <button class="cam-manual-link" onclick="closeCameraCapture(); openWineModal(null, true)">
+      手動で入力する
+    </button>
+  </div>
+</div>
+
+<!-- ==================== 解析中 オーバーレイ ==================== -->
+<div class="analyzing-overlay" id="analyzingOverlay">
+  <div class="analyzing-spinner"></div>
+  <div style="font-size:16px;font-weight:700;">ラベルを解析中…</div>
+  <div class="analyzing-count" id="analyzingCount">0本</div>
+</div>
+
+<!-- ==================== ワイン検索結果 シート ==================== -->
+<div class="wine-results-bg" id="wineResultsBg" onclick="closeWineResultsBg(event)">
+  <div class="wine-results-sheet">
+    <div class="wr-handle"></div>
+    <div class="wr-badge" id="wrBadge">📦 1本分の結果</div>
+    <div class="wr-title">ラベルから検索しました</div>
+    <div class="wr-sub">タップしてワインを選んでください。情報は後から編集できます。</div>
+    <div id="wineResultsList"></div>
+    <div class="wr-manual" onclick="closeWineResults(); openWineModal(null, true)">
+      一覧にない場合は手動で入力する
+    </div>
+  </div>
+</div>
+
+<!-- ==================== WINE EDIT MODAL ==================== -->
+<div class="modal-bg" id="wineModal" onclick="closeWineModalBg(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="wineModalTitle">ワインを追加</div>
+
+    <!-- ラベル画像プレビュー（スキャン済みのとき表示） -->
+    <div id="modalLabelPreview" style="display:none; margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:0.8px;margin-bottom:8px;">📷 ラベル画像</div>
+      <div style="display:flex;align-items:center;gap:12px;background:var(--burgundy-pale);border-radius:12px;padding:12px 14px;">
+        <div id="modalLabelCard" style="width:56px;height:70px;border-radius:8px;background:linear-gradient(160deg,#fff8f4,#fceee8);border:1px solid rgba(0,0,0,0.1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+          <span id="modalLabelEmoji" style="font-size:24px;">🍷</span>
+          <span id="modalLabelText" style="font-size:7px;font-weight:700;color:var(--wine-dark);text-align:center;padding:0 3px;line-height:1.2;max-width:100%;overflow:hidden;"></span>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);">ラベルを読み取り済み</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:3px;">カメラで撮影したラベル情報が反映されています</div>
+          <div style="font-size:11px;color:var(--burgundy);margin-top:6px;font-weight:600;">情報を確認・修正してから保存してください</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">カテゴリ</label>
+      <select class="form-select" id="fCat">
+        <option value="sparkling">🥂 泡・スパークリング</option>
+        <option value="white">🤍 白ワイン</option>
+        <option value="red" selected>🍷 赤ワイン</option>
+        <option value="rose">🌸 ロゼ</option>
+        <option value="orange">🍊 オレンジワイン</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">ワイン名</label>
+      <input class="form-input" id="fName" placeholder="例: Château Margaux">
+    </div>
+    <div class="form-group">
+      <label class="form-label">生産者</label>
+      <input class="form-input" id="fProducer" placeholder="例: Château Margaux">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">ヴィンテージ</label>
+        <input class="form-input" id="fVintage" placeholder="2020">
+      </div>
+      <div class="form-group">
+        <label class="form-label">産地</label>
+        <input class="form-input" id="fRegion" placeholder="Bordeaux">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">ブドウ品種</label>
+      <input class="form-input" id="fGrapes" placeholder="Cabernet Sauvignon">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">グラス価格 (¥)</label>
+        <input class="form-input" id="fPriceGlass" type="number" placeholder="1800">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ボトル価格 (¥)</label>
+        <input class="form-input" id="fPriceBottle" type="number" placeholder="9000">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">在庫数（本）</label>
+        <input class="form-input" id="fStock" type="number" min="0" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">提供状況</label>
+        <select class="form-select" id="fAvailable">
+          <option value="true">✅ 提供中</option>
+          <option value="false">❌ 売り切れ / 停止</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeWineModal()">キャンセル</button>
+      <button class="btn-primary" onclick="saveWine()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== LINE 店舗登録フォーム（LIFF想定） ==================== -->
+<div class="line-modal-bg" id="lineRegBg" onclick="closeLineRegBg(event)">
+  <div class="line-modal-sheet" style="max-height:88vh;overflow-y:auto;">
+    <div class="line-modal-handle"></div>
+    <!-- LINEっぽいヘッダー -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
+      <div style="width:36px;height:36px;background:var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="22" height="22" viewBox="0 0 36 36" fill="none"><path d="M18 7C11.373 7 6 11.477 6 16.97c0 4.928 3.928 9.065 9.237 9.847.359.077.848.237.972.544.111.279.073.716.036 1l-.157 1.02c-.048.31-.22 1.21.955.66 1.175-.55 6.34-4.084 8.65-6.99C27.31 20.96 30 19.12 30 16.97 30 11.477 24.627 7 18 7z" fill="white"/></svg>
+      </div>
+      <div>
+        <div style="font-size:15px;font-weight:800;color:var(--text);">ソムリン 店舗登録</div>
+        <div style="font-size:11px;color:var(--text-sub);">LINEで試飲会情報を受け取るための登録フォーム</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">担当者名</label>
+      <input class="form-input" id="lreg-name" placeholder="例: 田中 太郎">
+    </div>
+    <div class="form-group">
+      <label class="form-label">担当者の役職</label>
+      <select class="form-select" id="lreg-role">
+        <option value="">選択してください</option>
+        <option value="sommelier">ソムリエ / ワインアドバイザー</option>
+        <option value="chef">シェフ / 料理長</option>
+        <option value="manager">店長 / マネージャー</option>
+        <option value="owner">オーナー</option>
+        <option value="buyer">バイヤー / 仕入れ担当</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">受け取りたい試飲会の産地（複数選択可）</label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;" id="lreg-regions">
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;transition:all 0.15s;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;">🇫🇷 ブルゴーニュ</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;">🇫🇷 ボルドー</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;">🥂 シャンパーニュ</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;">🇮🇹 イタリア全般</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;">🌿 自然派ワイン</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;">🌍 すべての産地</label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">通知を希望する種別</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;">🍷 試飲会</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;">📚 セミナー</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;">🏆 フェア・展示会</label>
+      </div>
+    </div>
+
+    <button class="line-modal-save" onclick="submitLineReg()">
+      登録を完了してLINEを連携する
+    </button>
+    <div style="text-align:center;margin-top:10px;">
+      <span style="font-size:11px;color:var(--text-sub);cursor:pointer;" onclick="closeLineReg()">キャンセル</span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== LINE 設定モーダル ==================== -->
+<div class="line-modal-bg" id="lineModalBg" onclick="closeLineModalBg(event)">
+  <div class="line-modal-sheet">
+    <div class="line-modal-handle"></div>
+    <div class="line-modal-title">
+      <svg width="22" height="22" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#06C755"/><path d="M18 7C11.373 7 6 11.477 6 16.97c0 4.928 3.928 9.065 9.237 9.847.359.077.848.237.972.544.111.279.073.716.036 1l-.157 1.02c-.048.31-.22 1.21.955.66 1.175-.55 6.34-4.084 8.65-6.99C27.31 20.96 30 19.12 30 16.97 30 11.477 24.627 7 18 7z" fill="white"/></svg>
+      LINE 通知設定
+    </div>
+
+    <!-- 通知する種別 -->
+    <div class="line-setting-section">
+      <div class="line-setting-label">通知する種別</div>
+      <div class="line-toggle-row">
+        <div class="row-left"><span>🍷</span> 試飲会</div>
+        <label class="toggle toggle-line"><input type="checkbox" id="lset-tasting" checked onchange="updateLineTypes()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="line-toggle-row">
+        <div class="row-left"><span>📚</span> セミナー</div>
+        <label class="toggle toggle-line"><input type="checkbox" id="lset-seminar" checked onchange="updateLineTypes()"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="line-toggle-row">
+        <div class="row-left"><span>🏆</span> フェア・展示会</div>
+        <label class="toggle toggle-line"><input type="checkbox" id="lset-fair" checked onchange="updateLineTypes()"><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+
+    <!-- 通知タイミング -->
+    <div class="line-setting-section">
+      <div class="line-setting-label">通知タイミング（複数選択可）</div>
+      <div class="line-timing-chips">
+        <div class="line-timing-chip selected" id="ltime-1w" onclick="toggleLineTiming('1w', this)">1週間前</div>
+        <div class="line-timing-chip" id="ltime-3d" onclick="toggleLineTiming('3d', this)">3日前</div>
+        <div class="line-timing-chip" id="ltime-1d" onclick="toggleLineTiming('1d', this)">前日</div>
+        <div class="line-timing-chip selected" id="ltime-0d" onclick="toggleLineTiming('0d', this)">当日</div>
+      </div>
+    </div>
+
+    <!-- LINE メッセージプレビュー -->
+    <div class="line-setting-section">
+      <div class="line-setting-label">通知プレビュー</div>
+      <div style="background:#e9e9e9;border-radius:14px;padding:14px;">
+        <div style="font-size:10px;color:#888;text-align:center;margin-bottom:10px;">ソムリン 試飲会通知</div>
+        <!-- LINEバブル -->
+        <div style="display:flex;align-items:flex-start;gap:8px;">
+          <div style="width:32px;height:32px;background:var(--line);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="20" height="20" viewBox="0 0 36 36" fill="none"><path d="M18 7C11.373 7 6 11.477 6 16.97c0 4.928 3.928 9.065 9.237 9.847.359.077.848.237.972.544.111.279.073.716.036 1l-.157 1.02c-.048.31-.22 1.21.955.66 1.175-.55 6.34-4.084 8.65-6.99C27.31 20.96 30 19.12 30 16.97 30 11.477 24.627 7 18 7z" fill="white"/></svg>
+          </div>
+          <div style="background:white;border-radius:0 12px 12px 12px;padding:10px 12px;max-width:82%;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+            <div style="font-size:11px;font-weight:800;color:#06C755;margin-bottom:5px;">🍷 新着試飲会のお知らせ</div>
+            <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:4px;">ブルゴーニュ新着ワイン試飲会</div>
+            <div style="font-size:12px;color:#555;line-height:1.5;">📅 5月22日(木) 14:00〜18:00<br>📍 ザ・ウエスティン東京 3F<br>🏢 山田商店（インポーター）</div>
+            <div style="margin-top:8px;background:#f0fdf4;border-radius:8px;padding:7px 10px;font-size:11px;color:#15803d;font-weight:600;">👆 タップして参加申込みへ</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="line-modal-save" onclick="saveLineSettings()">設定を保存する</button>
+    <div style="text-align:center;margin-top:12px;">
+      <span style="font-size:12px;color:#dc2626;cursor:pointer;text-decoration:underline;text-underline-offset:3px;" onclick="disconnectLine()">LINE連携を解除する</span>
+    </div>
+  </div>
+</div>
+
+<!-- LINE風 プッシュ通知トースト -->
+<div class="line-push" id="linePush">
+  <div class="line-push-icon">
+    <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18 3C9.716 3 3 8.925 3 16.21c0 6.579 5.24 12.094 12.316 13.146.479.103 1.131.316 1.296.726.148.372.097.954.048 1.333l-.21 1.361c-.064.413-.293 1.614 1.274.88 1.567-.733 8.454-5.446 11.533-9.32C31.08 21.47 33 18.992 33 16.21 33 8.925 26.284 3 18 3z" fill="white"/>
+    </svg>
+  </div>
+  <div class="line-push-body">
+    <div class="line-push-app">ソムリン 試飲会通知</div>
+    <div class="line-push-msg" id="linePushMsg">🍷 新着試飲会が追加されました</div>
+    <div class="line-push-sub" id="linePushSub">タップして詳細を確認</div>
+  </div>
+  <div class="line-push-time" id="linePushTime">今</div>
+</div>
+
+<!-- ==================== 試飲会 RSVP モーダル ==================== -->
+<div class="modal-bg" id="rsvpModalBg" onclick="if(event.target===this)closeRsvpModal()">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+
+    <!-- フォーム -->
+    <div id="rsvpForm">
+      <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:14px;">参加申込み</div>
+
+      <!-- イベント情報 -->
+      <div style="background:var(--burgundy-pale);border-radius:12px;padding:12px 14px;margin-bottom:18px;">
+        <div style="font-size:14px;font-weight:800;color:var(--text);" id="rsvpEvName">—</div>
+        <div style="font-size:12px;color:var(--text-sub);margin-top:4px;">📅 <span id="rsvpEvDate">—</span></div>
+        <div style="font-size:12px;color:var(--text-sub);margin-top:2px;">📍 <span id="rsvpEvVenue">—</span></div>
+        <div style="font-size:12px;color:var(--text-sub);margin-top:2px;">🏢 <span id="rsvpEvOrg">—</span></div>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:0.8px;margin-bottom:12px;">参加者情報（プロフィールから自動入力）</div>
+
+      <div class="form-group">
+        <label class="form-label">氏名 <span style="color:#e53e3e;">✳︎</span></label>
+        <input class="form-input" id="rsvp-name" value="浦川 哲矢" placeholder="氏名">
+      </div>
+      <div class="form-group">
+        <label class="form-label">会社名・店名 <span style="color:#e53e3e;">✳︎</span></label>
+        <input class="form-input" id="rsvp-company" value="Bistrot Lumière" placeholder="店名">
+      </div>
+      <div class="form-group">
+        <label class="form-label">役職</label>
+        <input class="form-input" id="rsvp-title" value="シェフソムリエ" placeholder="役職">
+      </div>
+      <div class="form-group">
+        <label class="form-label">メールアドレス <span style="color:#e53e3e;">✳︎</span></label>
+        <input class="form-input" id="rsvp-email" type="email" value="domaine.bouchon@gmail.com" placeholder="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">参加人数</label>
+        <select class="form-select" id="rsvp-count">
+          <option value="1" selected>1名</option>
+          <option value="2">2名</option>
+          <option value="3">3名</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">備考</label>
+        <input class="form-input" id="rsvp-note" placeholder="アレルギー・特記事項など">
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeRsvpModal()">キャンセル</button>
+        <button class="btn-primary" onclick="submitRsvp()">申込みを確定する</button>
+      </div>
+    </div>
+
+    <!-- 送信中 -->
+    <div id="rsvpSending" style="display:none;text-align:center;padding:48px 20px;">
+      <div style="font-size:40px;margin-bottom:16px;animation:spin 1.2s linear infinite;display:inline-block;">⏳</div>
+      <div style="font-size:15px;font-weight:700;color:var(--text);">インポーターへ通知を送信中...</div>
+      <div style="font-size:12px;color:var(--text-sub);margin-top:6px);">しばらくお待ちください</div>
+    </div>
+
+    <!-- 完了 -->
+    <div id="rsvpDone" style="display:none;padding:4px 0 8px;">
+      <!-- ヘッダー -->
+      <div style="text-align:center;padding:12px 0 20px;">
+        <div style="font-size:48px;margin-bottom:10px;">✅</div>
+        <div style="font-size:18px;font-weight:800;color:var(--text);">申込みが完了しました！</div>
+      </div>
+
+      <!-- 処理ステップ -->
+      <div style="margin-bottom:18px;display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <div style="width:22px;height:22px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:white;font-weight:800;flex-shrink:0;margin-top:1px;">✓</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">参加情報を記録しました</div>
+            <div style="font-size:12px;color:var(--text-sub);margin-top:1px;" id="rsvpDoneName">—</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <div style="width:22px;height:22px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:white;font-weight:800;flex-shrink:0;margin-top:1px;">✓</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">インポーターにメールで通知しました</div>
+            <div style="font-size:12px;color:var(--text-sub);margin-top:1px;" id="rsvpImporterEmail">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- メールプレビュー -->
+      <div style="border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px;">
+        <!-- メールヘッダー -->
+        <div style="background:#f8f9fa;padding:10px 14px;border-bottom:1px solid var(--border);">
+          <div style="font-size:10px;color:var(--text-sub);letter-spacing:.05em;margin-bottom:3px;">📧 送信されたメール（プレビュー）</div>
+          <div style="font-size:12px;font-weight:800;color:var(--text);" id="rsvpMailSubject">—</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">To: <span id="rsvpMailTo">—</span></div>
+        </div>
+        <!-- メール本文 -->
+        <div style="padding:14px;background:white;font-size:12px;line-height:2;color:var(--text);" id="rsvpMailBody">—</div>
+        <!-- フッター -->
+        <div style="background:#f8f9fa;padding:8px 14px;border-top:1px solid var(--border);">
+          <div style="font-size:10px;color:var(--text-sub);">このメールはソムリンシステムから自動送信されました。返信先は申込者のメールアドレスです。</div>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="closeRsvpAndRefresh()" style="width:100%;">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// DATA (Supabase テーブルに直接マッピングできる構造)
+// ============================================================
+
+// restaurants テーブル相当
+const restaurant = {
+  id: 'rest_001',
+  name: 'Bistrot Lumière',
+  slug: 'bistrot-lumiere',
+  isPrivate: false,
+  qrUrl: 'https://sommelin.app/r/bistrot-lumiere',
+  listVersion: 3,
+  listUpdatedAt: '2026-05-19'
+};
+
+// wines テーブル相当
+let wineData = [
+  { id:'w01', cat:'sparkling', name:'Billecart-Salmon Blanc de Blancs', producer:'Billecart-Salmon', vintage:'NV',   region:'Champagne',  grapes:'Chardonnay',          priceGlass:2800, priceBottle:14000, available:true,  stock:6  },
+  { id:'w02', cat:'sparkling', name:'Moët & Chandon Brut Impérial',     producer:'Moët & Chandon', vintage:'NV',   region:'Champagne',  grapes:'Pinot Noir, Chardonnay', priceGlass:2200, priceBottle:11000, available:true,  stock:12 },
+  { id:'w03', cat:'white',     name:'Chablis 1er Cru Montée de Tonnerre', producer:'Moreau-Naudet', vintage:'2021', region:'Chablis',    grapes:'Chardonnay',          priceGlass:1800, priceBottle:9000,  available:true,  stock:9  },
+  { id:'w04', cat:'white',     name:'Sancerre Blanc',                   producer:'Henri Bourgeois', vintage:'2022', region:'Loire',      grapes:'Sauvignon Blanc',     priceGlass:1600, priceBottle:8000,  available:true,  stock:8  },
+  { id:'w05', cat:'white',     name:'Domaine Leflaive Mâcon-Verzé',     producer:'Domaine Leflaive', vintage:'2022', region:'Bourgogne', grapes:'Chardonnay',          priceGlass:1800, priceBottle:9000,  available:true,  stock:5  },
+  { id:'w06', cat:'red',       name:'Ch. Pichon Baron',                 producer:'Ch. Pichon Baron', vintage:'2018', region:'Pauillac',  grapes:'Cabernet Sauvignon',  priceGlass:3200, priceBottle:16000, available:true,  stock:3  },
+  { id:'w07', cat:'red',       name:'Gevrey-Chambertin',                producer:'Rossignol-Trapet', vintage:'2021', region:'Bourgogne', grapes:'Pinot Noir',          priceGlass:2800, priceBottle:14000, available:true,  stock:7  },
+  { id:'w08', cat:'red',       name:"Barolo \"Serralunga d'Alba\"",     producer:'Fontanafredda',  vintage:'2019', region:'Piemonte',   grapes:'Nebbiolo',            priceGlass:2400, priceBottle:12000, available:true,  stock:4  },
+  { id:'w09', cat:'red',       name:"Volnay 1er Cru Caillerets",        producer:"Marquis d'Angerville", vintage:'2020', region:'Bourgogne', grapes:'Pinot Noir',     priceGlass:3600, priceBottle:18000, available:false, stock:0  },
+  { id:'w10', cat:'rose',      name:'Pét-Nat Rosé',                     producer:'La Grange Tiphaine', vintage:'2022', region:'Loire',  grapes:'Gamay',               priceGlass:1400, priceBottle:7000,  available:true,  stock:10 },
+  { id:'w11', cat:'orange',    name:'Ramato Pinot Grigio',              producer:'Vodopivec',      vintage:'2020', region:'Friuli',     grapes:'Pinot Grigio',        priceGlass:1600, priceBottle:8000,  available:true,  stock:6  },
+  { id:'w12', cat:'orange',    name:"Skin Contact Mtsvane",             producer:"Pheasant's Tears", vintage:'2021', region:'Kakheti',  grapes:'Mtsvane',             priceGlass:1800, priceBottle:9000,  available:true,  stock:2  },
+];
+
+// tasting_events テーブル相当
+const adminEvents = [
+  {
+    id:'ev01', googleCalId:'gcal_aaa', type:'tasting', typeLabel:'試飲会',
+    date: new Date(2026,4,22), time:'14:00 – 18:00',
+    name:'ブルゴーニュ新着ワイン試飲会',
+    organizer:'山田商店（インポーター）',
+    importerEmail:'info@yamadashoten.co.jp',
+    venue:'ザ・ウエスティンホテル東京 3F',
+    isNew:true, isOnline:false, dotClass:'',
+    wines:['Gevrey-Chambertin 2022','Nuits-Saint-Georges 1er Cru 2021','Chambolle-Musigny 2021'],
+    rsvpd: true
+  },
+  {
+    id:'ev02', googleCalId:'gcal_bbb', type:'seminar', typeLabel:'セミナー',
+    date: new Date(2026,4,26), time:'19:00 – 21:00',
+    name:'イタリアワイン基礎セミナー（オンライン）',
+    organizer:'ソムリン学習センター',
+    importerEmail:'info@sommelin-academy.co.jp',
+    venue:'Zoom（オンライン）',
+    isNew:true, isOnline:true, dotClass:'online',
+    wines:['Barolo DOCG','Brunello di Montalcino','Amarone della Valpolicella'],
+    rsvpd: false
+  },
+  {
+    id:'ev03', googleCalId:'gcal_ccc', type:'fair', typeLabel:'フェア',
+    date: new Date(2026,5,3), time:'10:00 – 17:00',
+    name:'プロヴァンスワインフェア 2026',
+    organizer:'ヴィラ・ド・プロヴァンス',
+    importerEmail:'event@villa-provence.jp',
+    venue:'東京国際フォーラム ホールD',
+    isNew:false, isOnline:false, dotClass:'fair',
+    wines:['Château Sainte Roseline Rosé','Domaine Tempier Rosé'],
+    rsvpd: false
+  },
+  {
+    id:'ev04', googleCalId:'gcal_ddd', type:'tasting', typeLabel:'試飲会',
+    date: new Date(2026,5,10), time:'15:00 – 18:00',
+    name:'ナチュラルワイン試飲会 — 自然派の最前線',
+    organizer:'ル・ヴァン・ナチュール東京',
+    importerEmail:'hello@le-vin-naturel.jp',
+    venue:'表参道 THE SPACE',
+    isNew:false, isOnline:false, dotClass:'',
+    wines:['Pét-Nat Rosé 2022','Macération 2021'],
+    rsvpd: false
+  },
+];
+
+// ============================================================
+// PANEL SWITCHING
+// ============================================================
+function switchPanel(panel) {
+  const ID_MAP = {calendar:'cal',winelist:'wine',qr:'qr',stock:'stk'};
+  ['calendar','winelist','qr','stock'].forEach(p => {
+    document.getElementById('panel' + p.charAt(0).toUpperCase() + p.slice(1))?.classList.remove('active');
+    document.getElementById('tnav-' + ID_MAP[p])?.classList.remove('active');
+  });
+  document.getElementById('panel' + panel.charAt(0).toUpperCase() + panel.slice(1)).classList.add('active');
+  document.getElementById('tnav-' + ID_MAP[panel]).classList.add('active');
+
+  if (panel === 'calendar') renderAdminCalendar();
+  if (panel === 'winelist') renderWineTable('all', '');
+  if (panel === 'qr') renderQr();
+  if (panel === 'stock') renderStock();
+}
+
+// ============================================================
+// 📅 TASTING CALENDAR
+// ============================================================
+let adminCalYear  = new Date().getFullYear();
+let adminCalMonth = new Date().getMonth();
+
+function renderAdminCalendar() {
+  const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  document.getElementById('adminMonthLabel').textContent = `${adminCalYear}年 ${months[adminCalMonth]}`;
+
+  const grid = document.getElementById('adminCalGrid');
+  // clear old cells (keep dow headers = first 7 children)
+  while (grid.children.length > 7) grid.removeChild(grid.lastChild);
+
+  const first = new Date(adminCalYear, adminCalMonth, 1).getDay();
+  const days  = new Date(adminCalYear, adminCalMonth + 1, 0).getDate();
+  const today = new Date();
+
+  for (let i = 0; i < first; i++) {
+    const prev = new Date(adminCalYear, adminCalMonth, 0).getDate() - first + i + 1;
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell other-month';
+    cell.innerHTML = `<span class="cal-num">${prev}</span>`;
+    grid.appendChild(cell);
+  }
+
+  for (let d = 1; d <= days; d++) {
+    const date = new Date(adminCalYear, adminCalMonth, d);
+    const isToday = date.toDateString() === today.toDateString();
+    const evs = adminEvents.filter(e => e.date.toDateString() === date.toDateString());
+
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell' + (isToday ? ' today' : '') + (evs.length ? ' has-event' : '');
+    const dots = evs.map(e => `<div class="cal-dot-admin ${e.dotClass}"></div>`).join('');
+    cell.innerHTML = `<span class="cal-num">${d}</span>${dots ? `<div class="cal-dots">${dots}</div>` : ''}`;
+    if (evs.length) cell.onclick = () => highlightEvent(evs[0].id);
+    grid.appendChild(cell);
+  }
+
+  // render event list
+  renderAdminEventList();
+}
+
+function adminChangeMonth(delta) {
+  adminCalMonth += delta;
+  if (adminCalMonth > 11) { adminCalMonth = 0; adminCalYear++; }
+  if (adminCalMonth < 0)  { adminCalMonth = 11; adminCalYear--; }
+  renderAdminCalendar();
+}
+
+function renderAdminEventList() {
+  const container = document.getElementById('adminEventList');
+  const now = new Date();
+  const upcoming = adminEvents
+    .filter(e => e.date >= new Date(adminCalYear, adminCalMonth, 1) && e.date <= new Date(adminCalYear, adminCalMonth + 1, 0))
+    .sort((a,b) => a.date - b.date);
+
+  const ms = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const ds = ['日','月','火','水','木','金','土'];
+
+  container.innerHTML = upcoming.length === 0
+    ? `<div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">この月の試飲会はありません</div>`
+    : upcoming.map(ev => `
+      <div class="ev-admin-card ${ev.isNew ? 'new-event' : ''}" id="evcard-${ev.id}">
+        <div class="ev-date-col">
+          <div class="ev-date-m">${ms[ev.date.getMonth()]}</div>
+          <div class="ev-date-d">${ev.date.getDate()}</div>
+          <div class="ev-date-w">${ds[ev.date.getDay()]}曜</div>
+        </div>
+        <div class="ev-body">
+          <span class="ev-type-tag ${ev.type}">${ev.typeLabel}${ev.isOnline ? ' · オンライン' : ''}</span>
+          <div class="ev-name">${ev.name}</div>
+          <div class="ev-meta">⏰ ${ev.time} &nbsp;|&nbsp; 📍 ${ev.venue.split('（')[0]}</div>
+          <div class="ev-meta" style="margin-top:2px;">🏢 ${ev.organizer}</div>
+          ${ev.rsvpd ? '<span class="ev-rsvp-chip">✓ 参加申込み済み</span>' : `<button onclick="rsvpAdminEvent('${ev.id}')" style="margin-top:6px;background:var(--burgundy);color:white;border:none;border-radius:8px;padding:5px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">参加を申し込む</button>`}
+        </div>
+      </div>`).join('');
+}
+
+function highlightEvent(id) {
+  const card = document.getElementById('evcard-' + id);
+  if (card) {
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    card.style.background = '#fff8f0';
+    setTimeout(() => card.style.background = '', 1200);
+  }
+}
+
+function rsvpAdminEvent(id) {
+  openRsvpModal(id);
+}
+
+// ============================================================
+// 試飲会 RSVP フロー
+// ============================================================
+let rsvpTargetId = null;
+
+function openRsvpModal(id) {
+  rsvpTargetId = id;
+  const ev = adminEvents.find(e => e.id === id);
+  if (!ev) return;
+  const ms = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const ds = ['日','月','火','水','木','金','土'];
+  document.getElementById('rsvpEvName').textContent  = ev.name;
+  document.getElementById('rsvpEvDate').textContent  = `${ms[ev.date.getMonth()]} ${ev.date.getDate()}日(${ds[ev.date.getDay()]}) ${ev.time}`;
+  document.getElementById('rsvpEvVenue').textContent = ev.venue;
+  document.getElementById('rsvpEvOrg').textContent   = ev.organizer;
+  document.getElementById('rsvpModalBg').classList.add('open');
+}
+
+function closeRsvpModal() {
+  document.getElementById('rsvpModalBg').classList.remove('open');
+}
+
+function submitRsvp() {
+  const name    = document.getElementById('rsvp-name').value.trim();
+  const company = document.getElementById('rsvp-company').value.trim();
+  const title   = document.getElementById('rsvp-title').value.trim();
+  const email   = document.getElementById('rsvp-email').value.trim();
+  const count   = document.getElementById('rsvp-count').value;
+  const note    = document.getElementById('rsvp-note').value.trim();
+  if (!name)  { showToast('氏名を入力してください'); return; }
+  if (!email) { showToast('メールアドレスを入力してください'); return; }
+
+  const ev = adminEvents.find(e => e.id === rsvpTargetId);
+  if (!ev) return;
+
+  // ① フォームを隠して「送信中」表示
+  document.getElementById('rsvpForm').style.display    = 'none';
+  document.getElementById('rsvpSending').style.display = 'block';
+
+  // ② 1.2秒後に完了画面へ
+  setTimeout(() => {
+    document.getElementById('rsvpSending').style.display = 'none';
+    document.getElementById('rsvpDone').style.display    = 'block';
+
+    ev.rsvpd = true;
+
+    // 日付フォーマット
+    const ms = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+    const ds = ['日','月','火','水','木','金','土'];
+    const dateStr = `${ev.date.getFullYear()}年${ms[ev.date.getMonth()]}${ev.date.getDate()}日(${ds[ev.date.getDay()]}) ${ev.time}`;
+
+    // ステップ表示
+    document.getElementById('rsvpDoneName').textContent =
+      `${name} 様（${company}）· ${count}名`;
+    document.getElementById('rsvpImporterEmail').textContent =
+      ev.importerEmail || '（メールアドレス未登録）';
+
+    // メールプレビュー
+    const subject = `【試飲会 参加申込】${ev.name}`;
+    document.getElementById('rsvpMailSubject').textContent = subject;
+    document.getElementById('rsvpMailTo').textContent = ev.importerEmail || '—';
+    document.getElementById('rsvpMailBody').innerHTML =
+      `${ev.organizer} ご担当者様<br><br>` +
+      `ソムリン経由で以下の参加申込みがありました。<br><br>` +
+      `─────────────────<br>` +
+      `【イベント】${ev.name}<br>` +
+      `【日時】${dateStr}<br>` +
+      `【会場】${ev.venue}<br>` +
+      `─────────────────<br>` +
+      `【申込者情報】<br>` +
+      `氏名：${name}<br>` +
+      `店名：${company}${title ? `（${title}）` : ''}<br>` +
+      `メール：${email}<br>` +
+      `参加人数：${count}名` +
+      (note ? `<br>備考：${note}` : '') +
+      `<br>─────────────────<br>` +
+      `<span style="color:var(--text-sub)">返信先: ${email}<br>` +
+      `このメールはソムリンシステムから自動送信されています。</span>`;
+  }, 1200);
+}
+
+function closeRsvpAndRefresh() {
+  document.getElementById('rsvpForm').style.display = 'block';
+  document.getElementById('rsvpDone').style.display = 'none';
+  closeRsvpModal();
+  renderAdminEventList();
+  showToast('参加申込みが完了しました ✓');
+}
+
+function simulateSync() {
+  const btn = event.target;
+  btn.textContent = '同期中...';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.textContent = '同期する';
+    btn.disabled = false;
+    document.getElementById('syncStatus').textContent = '最終同期: たった今';
+    showToast('Googleカレンダーと同期しました ✓');
+    renderAdminCalendar();
+    // LINE連携中なら新着イベントをLINE通知
+    if (lineState.connected && lineState.types.tasting) {
+      setTimeout(() => {
+        showLinePush(
+          '🍷 新着試飲会が追加されました',
+          'ナチュラルワイン試飲会 — 6月10日(水) 15:00〜'
+        );
+      }, 600);
+    }
+  }, 1800);
+}
+
+// ============================================================
+// 💬 LINE 連携
+// ============================================================
+const lineState = {
+  connected: false,
+  types: { tasting: true, seminar: true, fair: true },
+  timing: ['1w', '0d'],
+};
+
+// LINE友達追加 — スマホでは自分の画面のQRは読めないのでボタン方式に変更
+// QRコードは廃止済み（renderLineQr は呼ばれなくなった）
+function renderLineQr() {
+  // no-op: ボタン表示に切り替えたため生成不要
+  return;
+}
+
+// 登録フォームを開く
+function openLineRegForm() {
+  document.getElementById('lineRegBg').classList.add('open');
+}
+function closeLineReg() {
+  document.getElementById('lineRegBg').classList.remove('open');
+}
+function closeLineRegBg(e) {
+  if (e.target === document.getElementById('lineRegBg')) closeLineReg();
+}
+
+// 産地・種別チップのトグル
+function toggleRegChip(label) {
+  const active = label.classList.toggle('chip-active');
+  label.style.background = active ? 'var(--line-pale)' : 'white';
+  label.style.borderColor = active ? 'var(--line)' : 'var(--border)';
+  label.style.color = active ? 'var(--line-dark)' : '';
+  label.style.fontWeight = active ? '700' : '500';
+}
+
+// 登録完了
+function submitLineReg() {
+  const name = document.getElementById('lreg-name').value.trim();
+  const role = document.getElementById('lreg-role').value;
+  if (!name || !role) { showToast('担当者名と役職を入力してください'); return; }
+  closeLineReg();
+  const btn = document.querySelector('.line-connect-btn');
+  if (btn) { btn.textContent = '連携中…'; btn.disabled = true; }
+  setTimeout(() => {
+    lineState.connected = true;
+    renderLineCard();
+    showToast(`${name}さん、LINE連携が完了しました ✓`);
+    setTimeout(() => showLinePush('💬 ソムリンへの登録が完了しました！', '試飲会情報がこちらに届くようになります'), 600);
+  }, 1200);
+}
+
+// LINE連携ボタン（旧：直接連携、今は登録フォームへ）
+function connectLine() {
+  openLineRegForm();
+}
+
+// 友達追加ボタンをタップしたあとのデモ処理
+// 本番では line.me のリンクが LINE アプリを開くのでこれはプロトタイプ用
+function simulateLineAdd() {
+  // ボタンタップ後1.5秒でLINE連携完了（プロトタイプのシミュレーション）
+  setTimeout(() => {
+    lineState.connected = true;
+    renderLineCard();
+    showToast('Sommelinをトークリストに追加しました ✓');
+    setTimeout(() => showLinePush('💬 Sommelinへの登録が完了しました！', '試飲会情報がこちらに届くようになります'), 600);
+  }, 1500);
+}
+
+// 連携解除
+function disconnectLine() {
+  if (!confirm('LINE連携を解除しますか？')) return;
+  lineState.connected = false;
+  closeLineModal();
+  renderLineCard();
+  showToast('LINE連携を解除しました');
+}
+
+// カードの状態を再描画
+function renderLineCard() {
+  const uncon = document.getElementById('lineUnconnected');
+  const con   = document.getElementById('lineConnected');
+  const badge = document.getElementById('lineStatusBadge');
+  const sub   = document.getElementById('lineHeaderSub');
+
+  if (lineState.connected) {
+    uncon.style.display = 'none';
+    con.style.display   = 'block';
+    badge.textContent   = '✓ 連携中';
+    badge.classList.add('connected');
+    sub.textContent     = 'Bistrot Lumière スタッフグループ';
+    updateLineTypesDisplay();
+    updateLineTimingDisplay();
+  } else {
+    uncon.style.display = 'block';
+    con.style.display   = 'none';
+    badge.textContent   = '未連携';
+    badge.classList.remove('connected');
+    sub.textContent     = '試飲会情報をLINEで受け取ります';
+    // ボタンをリセット
+    const btn = document.querySelector('.line-connect-btn');
+    if (btn) { btn.textContent = 'LINE アカウントと連携する'; btn.disabled = false; }
+  }
+}
+
+// 通知種別チップ更新
+function updateLineTypes() {
+  lineState.types.tasting = document.getElementById('lset-tasting').checked;
+  lineState.types.seminar = document.getElementById('lset-seminar').checked;
+  lineState.types.fair    = document.getElementById('lset-fair').checked;
+  updateLineTypesDisplay();
+}
+function updateLineTypesDisplay() {
+  document.getElementById('ltc-tasting').classList.toggle('off', !lineState.types.tasting);
+  document.getElementById('ltc-seminar').classList.toggle('off', !lineState.types.seminar);
+  document.getElementById('ltc-fair').classList.toggle('off',    !lineState.types.fair);
+}
+
+// 通知タイミング
+function toggleLineTiming(key, el) {
+  el.classList.toggle('selected');
+  const idx = lineState.timing.indexOf(key);
+  if (idx >= 0) lineState.timing.splice(idx, 1);
+  else lineState.timing.push(key);
+  updateLineTimingDisplay();
+}
+function updateLineTimingDisplay() {
+  const labels = { '1w':'1週間前', '3d':'3日前', '1d':'前日', '0d':'当日' };
+  const text = lineState.timing.map(k => labels[k]).join(' · ') || 'なし';
+  const el = document.getElementById('lineTimingLabel');
+  if (el) el.textContent = text;
+}
+
+// LINE 設定モーダル
+function openLineSettings() {
+  document.getElementById('lset-tasting').checked = lineState.types.tasting;
+  document.getElementById('lset-seminar').checked = lineState.types.seminar;
+  document.getElementById('lset-fair').checked    = lineState.types.fair;
+  ['1w','3d','1d','0d'].forEach(k => {
+    document.getElementById('ltime-' + k).classList.toggle('selected', lineState.timing.includes(k));
+  });
+  document.getElementById('lineModalBg').classList.add('open');
+}
+function closeLineModal() {
+  document.getElementById('lineModalBg').classList.remove('open');
+}
+function closeLineModalBg(e) {
+  if (e.target === document.getElementById('lineModalBg')) closeLineModal();
+}
+function saveLineSettings() {
+  updateLineTypes();
+  updateLineTimingDisplay();
+  closeLineModal();
+  showToast('LINE通知設定を保存しました ✓');
+}
+
+// テスト送信
+function sendLineTest() {
+  showLinePush(
+    '🍷 テスト通知です',
+    'ブルゴーニュ試飲会 — 5月22日(木) 14:00〜'
+  );
+  showToast('LINEにテスト通知を送信しました 💬');
+}
+
+// LINE プッシュ通知トースト
+let linePushTimer;
+function showLinePush(msg, sub) {
+  const push = document.getElementById('linePush');
+  document.getElementById('linePushMsg').textContent  = msg;
+  document.getElementById('linePushSub').textContent  = sub;
+  document.getElementById('linePushTime').textContent = '今';
+  push.classList.add('show');
+  clearTimeout(linePushTimer);
+  linePushTimer = setTimeout(() => push.classList.remove('show'), 4500);
+}
+document.getElementById('linePush')?.addEventListener('click', () => document.getElementById('linePush').classList.remove('show'));
+
+// ============================================================
+// 🍷 WINE LIST
+// ============================================================
+const catEmoji = { sparkling:'🥂', white:'🤍', red:'🍷', rose:'🌸', orange:'🍊' };
+let currentCat = 'all';
+let currentSearch = '';
+let editingWineId = null;
+let pendingHasLabel = false; // カメラスキャン由来のワインかどうか
+
+function renderWineTable(cat, search) {
+  currentCat = cat;
+  currentSearch = search.toLowerCase();
+
+  const body = document.getElementById('wineTableBody');
+  const filtered = wineData.filter(w =>
+    (cat === 'all' || w.cat === cat) &&
+    (w.name.toLowerCase().includes(currentSearch) || w.producer.toLowerCase().includes(currentSearch) || w.region.toLowerCase().includes(currentSearch))
+  );
+
+  document.getElementById('wineCount').textContent = `全 ${wineData.length} 種（表示: ${filtered.length}）`;
+
+  const stockClass = s => s === 0 ? 'zero' : s <= 3 ? 'low' : 'ok';
+  const stockLabel = s => s === 0 ? '在庫なし' : `📦 ${s}本`;
+
+  const labelThumb = w => {
+    if (w.hasLabel) {
+      // スキャン済みラベルサムネイル — ミニラベルカード風
+      const initials = w.name.split(' ').slice(0,2).map(s => s[0]).join('').toUpperCase().slice(0,3);
+      const bgColors = { sparkling:'#f8f0ff', white:'#f0f8ff', red:'#fff0f0', rose:'#fff0f5', orange:'#fff8f0' };
+      const fgColors = { sparkling:'#6B3FA0', white:'#1d4ed8', red:'#9B1B4B', rose:'#be185d', orange:'#92400e' };
+      return `<div class="wine-label-thumb scanned" onclick="openWineModal('${w.id}')" title="ラベル画像（スキャン済み）" style="background:linear-gradient(160deg,#fff8f4,#fceee8);">
+        <span class="label-emoji">${catEmoji[w.cat]}</span>
+        <span class="label-name">${w.name.split(' ').slice(0,3).join(' ')}</span>
+        <span class="label-cam-badge">📷</span>
+      </div>`;
+    }
+    return `<div class="wine-label-thumb placeholder" onclick="openWineModal('${w.id}')" title="ラベル画像なし（タップして編集）">${catEmoji[w.cat]}</div>`;
+  };
+
+  body.innerHTML = filtered.map(w => `
+    <div class="wine-row ${w.available ? '' : 'unavailable'}" style="padding:10px 12px 10px 14px;">
+      ${labelThumb(w)}
+      <div class="wine-row-info">
+        <div class="wine-row-name">${w.name} ${w.vintage}</div>
+        <div class="wine-row-sub">${w.producer} · ${w.region}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div class="wine-row-price">G ¥${w.priceGlass.toLocaleString()}</div>
+        <div style="font-size:10px;color:var(--text-sub);">B ¥${w.priceBottle.toLocaleString()}</div>
+      </div>
+      <span class="stock-chip ${stockClass(w.stock ?? 0)}">${stockLabel(w.stock ?? 0)}</span>
+      <div class="wine-row-actions">
+        <label class="toggle" title="${w.available ? '提供中 → 停止' : '停止中 → 再開'}">
+          <input type="checkbox" ${w.available ? 'checked' : ''} onchange="toggleAvailability('${w.id}', this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+        <button class="edit-btn" onclick="openWineModal('${w.id}')" title="編集">✏️</button>
+        <button class="del-btn" onclick="deleteWine('${w.id}')" title="削除">🗑</button>
+      </div>
+    </div>`).join('') || `<div style="text-align:center;padding:32px;color:var(--text-sub);font-size:13px;">該当するワインがありません</div>`;
+}
+
+function filterCat(cat, btn) {
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderWineTable(cat, currentSearch);
+}
+
+function filterWines(q) {
+  renderWineTable(currentCat, q);
+}
+
+function toggleAvailability(id, val) {
+  const w = wineData.find(w => w.id === id);
+  if (w) { w.available = val; showToast(val ? `${w.name.split(' ')[0]}… を提供中に変更しました` : `売り切れに設定しました`); }
+}
+
+function deleteWine(id) {
+  const w = wineData.find(w => w.id === id);
+  if (!w) return;
+  if (!confirm(`「${w.name}」を削除しますか？`)) return;
+  wineData = wineData.filter(w => w.id !== id);
+  renderWineTable(currentCat, currentSearch);
+  showToast('削除しました');
+}
+
+// 「+追加」ボタン → カメラを起動
+function openWineModal(id, skipCamera) {
+  if (!id && !skipCamera) {
+    // 新規追加のときはカメラフローへ
+    openCameraCapture();
+    return;
+  }
+  editingWineId = id;
+  const modal = document.getElementById('wineModal');
+  if (id) {
+    const w = wineData.find(w => w.id === id);
+    document.getElementById('wineModalTitle').textContent = 'ワインを編集';
+    document.getElementById('fCat').value = w.cat;
+    document.getElementById('fName').value = w.name;
+    document.getElementById('fProducer').value = w.producer;
+    document.getElementById('fVintage').value = w.vintage;
+    document.getElementById('fRegion').value = w.region;
+    document.getElementById('fGrapes').value = w.grapes;
+    document.getElementById('fPriceGlass').value = w.priceGlass;
+    document.getElementById('fPriceBottle').value = w.priceBottle;
+    document.getElementById('fStock').value = w.stock ?? 0;
+    document.getElementById('fAvailable').value = String(w.available);
+    pendingHasLabel = w.hasLabel || false;
+    updateModalLabelPreview(w.hasLabel, w.cat, w.name);
+  } else {
+    document.getElementById('wineModalTitle').textContent = 'ワインを追加';
+    ['fName','fProducer','fVintage','fRegion','fGrapes','fPriceGlass','fPriceBottle'].forEach(fid => document.getElementById(fid).value = '');
+    document.getElementById('fCat').value = 'red';
+    document.getElementById('fStock').value = '';
+    document.getElementById('fAvailable').value = 'true';
+    updateModalLabelPreview(false);
+  }
+  modal.classList.add('open');
+}
+
+// モーダル内ラベルプレビューの更新
+function updateModalLabelPreview(show, cat, name) {
+  const preview = document.getElementById('modalLabelPreview');
+  if (!show) { preview.style.display = 'none'; return; }
+  preview.style.display = 'block';
+  document.getElementById('modalLabelEmoji').textContent = catEmoji[cat] || '🍷';
+  document.getElementById('modalLabelText').textContent  = (name || '').split(' ').slice(0,3).join(' ');
+}
+
+// ============================================================
+// 📷 カメラキャプチャ フロー
+// ============================================================
+let capturedBottles = 0;
+const bottleEmojis = ['🍷','🥂','🤍','🍾','🍊','🌸'];
+
+function openCameraCapture() {
+  capturedBottles = 0;
+  document.getElementById('camCounter').textContent = '0本撮影済み';
+  document.getElementById('camAnalyzeBtn').disabled = true;
+  document.getElementById('camThumbStrip').innerHTML = '<div class="cam-thumb-empty" id="camThumbEmpty">撮影したボトルがここに表示されます</div>';
+  document.getElementById('camOverlay').classList.add('open');
+}
+
+function closeCameraCapture() {
+  document.getElementById('camOverlay').classList.remove('open');
+}
+
+function captureBottle() {
+  // サムネイルストリップに追加
+  const strip = document.getElementById('camThumbStrip');
+  const empty = document.getElementById('camThumbEmpty');
+  if (empty) empty.remove();
+
+  capturedBottles++;
+  const thumb = document.createElement('div');
+  thumb.className = 'cam-thumb';
+  const emoji = bottleEmojis[(capturedBottles - 1) % bottleEmojis.length];
+  thumb.innerHTML = `${emoji}<span class="cam-thumb-num">${capturedBottles}</span>`;
+  strip.appendChild(thumb);
+  strip.scrollLeft = strip.scrollWidth;
+
+  document.getElementById('camCounter').textContent = `${capturedBottles}本撮影済み`;
+  document.getElementById('camAnalyzeBtn').disabled = false;
+  // シャッターの触感演出
+  const shutter = document.querySelector('.cam-shutter');
+  shutter.style.transform = 'scale(0.88)';
+  setTimeout(() => shutter.style.transform = '', 120);
+}
+
+function analyzeLabels() {
+  closeCameraCapture();
+  const overlay = document.getElementById('analyzingOverlay');
+  document.getElementById('analyzingCount').textContent = `${capturedBottles}本分`;
+  overlay.classList.add('open');
+  setTimeout(() => {
+    overlay.classList.remove('open');
+    showWineSearchResults(capturedBottles);
+  }, 1800);
+}
+
+// ============================================================
+// 🔍 ワイン検索結果（AI解析シミュレーション）
+// ============================================================
+
+// 解析結果の候補データ（ラベル読み取りを想定）
+const wineSearchCandidates = [
+  [
+    { cat:'red', emoji:'🍷', name:'Château Pichon Baron', producer:'Château Pichon Baron', vintage:'2019', region:'Pauillac, Bordeaux', grapes:'Cabernet Sauvignon 65%, Merlot 35%', priceGlass:0, priceBottle:0, score:'98%', note:'ラベルを高精度で読み取りました' },
+    { cat:'red', emoji:'🍷', name:'Château Pichon Baron', producer:'Château Pichon Baron', vintage:'2018', region:'Pauillac, Bordeaux', grapes:'Cabernet Sauvignon 65%, Merlot 35%', priceGlass:0, priceBottle:0, score:'94%', note:'ヴィンテージが異なる可能性があります' },
+    { cat:'red', emoji:'🍷', name:'Château Pichon Lalande', producer:'Château Pichon Lalande', vintage:'2019', region:'Pauillac, Bordeaux', grapes:'Cabernet Sauvignon 45%, Merlot 35%', priceGlass:0, priceBottle:0, score:'72%', note:'類似ラベルが検出されました' },
+  ],
+  [
+    { cat:'white', emoji:'🤍', name:'Chablis 1er Cru "Fourchaume"', producer:'William Fèvre', vintage:'2022', region:'Chablis, Bourgogne', grapes:'Chardonnay', priceGlass:0, priceBottle:0, score:'96%', note:'産地・生産者を確認しました' },
+    { cat:'white', emoji:'🤍', name:'Chablis Grand Cru "Valmur"', producer:'Domaine Raveneau', vintage:'2021', region:'Chablis, Bourgogne', grapes:'Chardonnay', priceGlass:0, priceBottle:0, score:'81%', note:'グランクリュの可能性があります' },
+    { cat:'sparkling', emoji:'🥂', name:'Blanc de Blancs Brut Nature', producer:'Jacques Selosse', vintage:'NV', region:'Champagne', grapes:'Chardonnay 100%', priceGlass:0, priceBottle:0, score:'58%', note:'泡ワインとして類似検出' },
+  ],
+  [
+    { cat:'orange', emoji:'🍊', name:'Ramato Pinot Grigio', producer:'Vodopivec', vintage:'2021', region:'Carso, Friuli', grapes:'Pinot Grigio', priceGlass:0, priceBottle:0, score:'97%', note:'ラベルを高精度で読み取りました' },
+    { cat:'orange', emoji:'🍊', name:'Skin Contact Gravner', producer:'Joško Gravner', vintage:'2015', region:'Oslavia, Friuli', grapes:'Ribolla Gialla', priceGlass:0, priceBottle:0, score:'68%', note:'オレンジワインとして類似検出' },
+  ]
+];
+
+let currentCandidateSet = null;
+
+function showWineSearchResults(bottleCount) {
+  // 複数本のとき → 1本目の結果を代表表示（実際は複数タブ予定）
+  const candidateIdx = Math.min(bottleCount, wineSearchCandidates.length) - 1;
+  const candidates = wineSearchCandidates[Math.max(0, candidateIdx % wineSearchCandidates.length)];
+  currentCandidateSet = candidates;
+
+  document.getElementById('wrBadge').textContent = `📦 ${bottleCount}本 解析完了`;
+
+  const list = document.getElementById('wineResultsList');
+  list.innerHTML = candidates.map((c, i) => `
+    <div class="wine-result-card" onclick="selectWineCandidate(${i})">
+      <span class="wine-result-emoji">${c.emoji}</span>
+      <div class="wine-result-info">
+        <div class="wine-result-name">${c.name}</div>
+        <div class="wine-result-meta">${c.producer} &nbsp;·&nbsp; ${c.vintage} &nbsp;·&nbsp; ${c.region}</div>
+        <div class="wine-result-meta" style="margin-top:2px;color:#9a7a55;">${c.grapes}</div>
+        <div style="font-size:11px;color:var(--text-sub);margin-top:4px;">💬 ${c.note}</div>
+      </div>
+      <span class="wine-result-score">✓ ${c.score}</span>
+    </div>`).join('');
+
+  document.getElementById('wineResultsBg').classList.add('open');
+}
+
+function closeWineResultsBg(e) {
+  if (e && e.target !== document.getElementById('wineResultsBg')) return;
+  closeWineResults();
+}
+
+function closeWineResults() {
+  document.getElementById('wineResultsBg').classList.remove('open');
+}
+
+function selectWineCandidate(i) {
+  closeWineResults();
+  const c = currentCandidateSet[i];
+  // フォームに候補データをセット（hasLabel=true でラベル画像あり扱いにする）
+  pendingHasLabel = true;
+  editingWineId = null;
+  document.getElementById('wineModalTitle').textContent = 'ワインを追加（確認・修正）';
+  document.getElementById('fCat').value      = c.cat;
+  document.getElementById('fName').value     = c.name;
+  document.getElementById('fProducer').value = c.producer;
+  document.getElementById('fVintage').value  = c.vintage;
+  document.getElementById('fRegion').value   = c.region;
+  document.getElementById('fGrapes').value   = c.grapes;
+  document.getElementById('fPriceGlass').value  = '';
+  document.getElementById('fPriceBottle').value = '';
+  document.getElementById('fStock').value    = '';
+  document.getElementById('fAvailable').value = 'true';
+  // モーダル内のラベルプレビューを更新
+  updateModalLabelPreview(true, c.cat, c.name);
+  document.getElementById('wineModal').classList.add('open');
+  showToast(`「${c.name}」の情報を自動入力しました ✓`);
+}
+
+// ============================================================
+// 📋 ワインリスト写真 一括インポート
+// ============================================================
+let listCaptured = false;
+// 一括インポート用サンプルデータ（AI解析シミュレーション）
+const bulkListSamples = [
+  { cat:'sparkling', emoji:'🥂', name:'Billecart-Salmon Rosé',      producer:'Billecart-Salmon',  vintage:'NV',   region:'Champagne',  grapes:'Pinot Noir, Chardonnay', confidence:98 },
+  { cat:'white',     emoji:'🤍', name:'Puligny-Montrachet',          producer:'Louis Jadot',       vintage:'2021', region:'Bourgogne',  grapes:'Chardonnay',             confidence:95 },
+  { cat:'white',     emoji:'🤍', name:'Grüner Veltliner Smaragd',    producer:'F.X. Pichler',      vintage:'2022', region:'Wachau',     grapes:'Grüner Veltliner',        confidence:91 },
+  { cat:'red',       emoji:'🍷', name:'Barolo Cannubi',               producer:'Borgogno',          vintage:'2018', region:'Piemonte',   grapes:'Nebbiolo',               confidence:97 },
+  { cat:'red',       emoji:'🍷', name:'Pommard 1er Cru Les Rugiens', producer:'Domaine de Courcel', vintage:'2020', region:'Bourgogne',  grapes:'Pinot Noir',             confidence:89 },
+  { cat:'red',       emoji:'🍷', name:'Tignanello',                   producer:'Antinori',          vintage:'2019', region:'Toscana',    grapes:'Sangiovese, Cabernet',   confidence:94 },
+  { cat:'rose',      emoji:'🌸', name:'Whispering Angel',             producer:'Château d\'Esclans', vintage:'2023', region:'Provence',  grapes:'Grenache, Cinsault',      confidence:99 },
+];
+let bulkChecked = [];
+
+function openListCapture() {
+  listCaptured = false;
+  document.getElementById('listAnalyzeBtn').disabled = true;
+  document.getElementById('listCaptureTip').textContent = '📄 メニュー・手書きリスト・印刷リスト、どれでも読み込めます';
+  document.getElementById('listCamOverlay').classList.add('open');
+}
+
+function closeListCapture() {
+  document.getElementById('listCamOverlay').classList.remove('open');
+}
+
+function captureList() {
+  listCaptured = true;
+  document.getElementById('listAnalyzeBtn').disabled = false;
+  document.getElementById('listCaptureTip').textContent = '✅ リストを撮影しました。「読み込む」を押してください';
+  const shutter = document.querySelector('#listCamOverlay .cam-shutter');
+  shutter.style.transform = 'scale(0.88)';
+  setTimeout(() => shutter.style.transform = '', 120);
+}
+
+function analyzeList() {
+  closeListCapture();
+  const overlay = document.getElementById('analyzingOverlay');
+  document.getElementById('analyzingCount').textContent = 'ワインリストを解析中…';
+  overlay.classList.add('open');
+  setTimeout(() => {
+    overlay.classList.remove('open');
+    showBulkResults();
+  }, 2200);
+}
+
+function showBulkResults() {
+  // ランダムに5〜7本を選んで表示（毎回少し違う結果を演出）
+  const count = 5 + Math.floor(Math.random() * 3);
+  const shuffled = [...bulkListSamples].sort(() => 0.5 - Math.random()).slice(0, count);
+
+  bulkChecked = shuffled.map((_, i) => i); // 全チェック済み
+  document.getElementById('brTitle').textContent = `📖 ${count}本のワインが見つかりました`;
+  document.getElementById('brSub').textContent   = '追加するワインを選択してください（すべてチェック済み）';
+  document.getElementById('brAddBtn').textContent = `✓ ${count}本を追加する`;
+  document.getElementById('bulkWineList').dataset.count = count;
+
+  renderBulkList(shuffled);
+  document.getElementById('bulkResultsBg').classList.add('open');
+}
+
+window._bulkWines = [];
+function renderBulkList(wines) {
+  window._bulkWines = wines;
+  const list = document.getElementById('bulkWineList');
+  list.innerHTML = wines.map((w, i) => `
+    <div class="bulk-wine-row" onclick="toggleBulkCheck(${i}, this)">
+      <div class="bulk-check checked" id="bcheck-${i}">✓</div>
+      <span class="bulk-wine-emoji">${w.emoji}</span>
+      <div class="bulk-wine-info">
+        <div class="bulk-wine-name">${w.name} <span style="font-weight:400;color:var(--text-sub);">${w.vintage}</span></div>
+        <div class="bulk-wine-meta">${w.producer} · ${w.region} · ${w.grapes}</div>
+        <div style="display:inline-block;margin-top:3px;font-size:10px;font-weight:700;color:#15803d;background:#dcfce7;padding:1px 7px;border-radius:6px;">読取精度 ${w.confidence}%</div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleBulkCheck(i, row) {
+  const check = document.getElementById('bcheck-' + i);
+  const idx = bulkChecked.indexOf(i);
+  if (idx >= 0) {
+    bulkChecked.splice(idx, 1);
+    check.classList.remove('checked');
+    check.textContent = '';
+  } else {
+    bulkChecked.push(i);
+    check.classList.add('checked');
+    check.textContent = '✓';
+  }
+  const n = bulkChecked.length;
+  document.getElementById('brAddBtn').textContent = n > 0 ? `✓ ${n}本を追加する` : '選択してください';
+  document.getElementById('brAddBtn').disabled = n === 0;
+}
+
+function toggleAllBulk() {
+  const total = window._bulkWines.length;
+  const allChecked = bulkChecked.length === total;
+  bulkChecked = allChecked ? [] : window._bulkWines.map((_, i) => i);
+  window._bulkWines.forEach((_, i) => {
+    const check = document.getElementById('bcheck-' + i);
+    check.classList.toggle('checked', !allChecked);
+    check.textContent = !allChecked ? '✓' : '';
+  });
+  const n = bulkChecked.length;
+  document.getElementById('brAddBtn').textContent = n > 0 ? `✓ ${n}本を追加する` : '選択してください';
+}
+
+function confirmBulkAdd() {
+  const added = bulkChecked.map(i => window._bulkWines[i]);
+  added.forEach(w => {
+    wineData.push({
+      id: 'w' + Date.now() + Math.random().toString(36).slice(2,6),
+      cat: w.cat, name: w.name, producer: w.producer,
+      vintage: w.vintage, region: w.region, grapes: w.grapes,
+      priceGlass: 0, priceBottle: 0, stock: 0,
+      available: true, hasLabel: true   // リストスキャン = ラベル情報あり
+    });
+  });
+  closeBulkResults();
+  renderWineTable(currentCat, currentSearch);
+  showToast(`${added.length}本のワインを追加しました ✓`);
+}
+
+function closeBulkResultsBg(e) {
+  if (e && e.target !== document.getElementById('bulkResultsBg')) return;
+  closeBulkResults();
+}
+function closeBulkResults() {
+  document.getElementById('bulkResultsBg').classList.remove('open');
+}
+
+function closeWineModal() {
+  document.getElementById('wineModal').classList.remove('open');
+}
+function closeWineModalBg(e) {
+  if (e.target === document.getElementById('wineModal')) closeWineModal();
+}
+
+function saveWine() {
+  const data = {
+    cat: document.getElementById('fCat').value,
+    name: document.getElementById('fName').value.trim(),
+    producer: document.getElementById('fProducer').value.trim(),
+    vintage: document.getElementById('fVintage').value.trim(),
+    region: document.getElementById('fRegion').value.trim(),
+    grapes: document.getElementById('fGrapes').value.trim(),
+    priceGlass: parseInt(document.getElementById('fPriceGlass').value) || 0,
+    priceBottle: parseInt(document.getElementById('fPriceBottle').value) || 0,
+    stock: parseInt(document.getElementById('fStock').value) || 0,
+    available: document.getElementById('fAvailable').value === 'true',
+    hasLabel: pendingHasLabel,
+  };
+  if (!data.name) { alert('ワイン名を入力してください'); return; }
+
+  if (editingWineId) {
+    const w = wineData.find(w => w.id === editingWineId);
+    // 編集時はhasLabelを維持（上書きしない）
+    data.hasLabel = w.hasLabel || pendingHasLabel;
+    Object.assign(w, data);
+    showToast('更新しました ✓');
+  } else {
+    wineData.push({ id: 'w' + Date.now(), ...data });
+    showToast('追加しました ✓');
+  }
+  pendingHasLabel = false;
+  closeWineModal();
+  renderWineTable(currentCat, currentSearch);
+}
+
+// ============================================================
+// 📱 QR CODE
+// ============================================================
+let qrRendered = false;
+
+function renderQr() {
+  if (qrRendered) return;
+  qrRendered = true;
+  const container = document.getElementById('qrCodeContainer');
+  container.innerHTML = '';
+  new QRCode(container, {
+    text: restaurant.qrUrl,
+    width: 200,
+    height: 200,
+    colorDark: '#5C0E2A',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+}
+
+function copyUrl() {
+  const url = restaurant.qrUrl;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => showToast('URLをコピーしました ✓'));
+  } else {
+    showToast('URLをコピーしました ✓');
+  }
+}
+
+function togglePrivacy(isPublic) {
+  restaurant.isPrivate = !isPublic;
+  document.getElementById('privacyIcon').textContent = isPublic ? '🔓' : '🔒';
+  document.getElementById('privacyStatus').textContent = isPublic ? '公開中' : '非公開';
+  document.getElementById('privacyWarning').classList.toggle('show', !isPublic);
+  showToast(isPublic ? 'ワインリストを公開しました 🔓' : 'ワインリストを非公開にしました 🔒');
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+renderAdminCalendar();
+// LINE QRコードは試飲会タブ表示時に生成（遅延ロード）
+setTimeout(renderLineQr, 300);
+
+// ============================================================
+// 📦 在庫管理（localStorage経由でwine_search.htmlと連携）
+// ============================================================
+const STORE_INFO = {
+  id: 'bistrot-lumiere',
+  name: 'Bistrot Lumière',
+  addr: '渋谷区神宮前3-5-6',
+  type: 'restaurant',
+  dist: '0.3km',
+  tel: '03-1234-5678',
+};
+
+const STK_KEY = 'sommelin_store_inventory';
+
+function loadStock() {
+  try { return JSON.parse(localStorage.getItem(STK_KEY) || '[]'); } catch(e){ return []; }
+}
+function saveStock(items) {
+  // 他店のデータを保持しつつ自店分のみ上書き
+  const all = loadStock().filter(i => i.storeId !== STORE_INFO.id);
+  localStorage.setItem(STK_KEY, JSON.stringify([...all, ...items.map(i => ({...i, storeId: STORE_INFO.id, storeName: STORE_INFO.name, storeAddr: STORE_INFO.addr, storeType: STORE_INFO.type}))]));
+}
+
+// デモデータを初回のみ注入
+function initDemoStock() {
+  const existing = loadStock().filter(i => i.storeId === STORE_INFO.id);
+  if (existing.length > 0) return; // 既にデータあり
+  const demo = [
+    { id:'si1', name:'Alex Gambal Charmes-Chambertin', vintage:'2019', region:'Bourgogne, France', price:36000, qty:2, type:'bottle', inStock:true },
+    { id:'si2', name:'Maison Leroy Nuits-Saint-Georges', vintage:'2018', region:'Bourgogne, France', price:68000, qty:1, type:'bottle', inStock:true },
+    { id:'si3', name:'Château Pichon Baron', vintage:'2015', region:'Pauillac, France', price:28000, qty:0, type:'bottle', inStock:false },
+    { id:'si4', name:'Opus One', vintage:'2020', region:'Napa Valley, USA', price:52000, qty:3, type:'bottle', inStock:true },
+    { id:'si5', name:'Sassicaia', vintage:'2020', region:'Bolgheri, Italy', price:24000, qty:2, type:'both', inStock:true },
+  ];
+  saveStock(demo);
+}
+
+function renderStock() {
+  initDemoStock();
+  const items = loadStock().filter(i => i.storeId === STORE_INFO.id);
+  const inCount  = items.filter(i => i.inStock).length;
+  const outCount = items.filter(i => !i.inStock).length;
+  document.getElementById('stkTotal').textContent = items.length;
+  document.getElementById('stkIn').textContent    = inCount;
+  document.getElementById('stkOut').textContent   = outCount;
+
+  const list = document.getElementById('stkList');
+  if (items.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:32px 16px;color:var(--text-sub);">
+      <div style="font-size:36px;margin-bottom:12px;">📦</div>
+      まだ在庫が登録されていません。<br>上のフォームからワインを追加してください。</div>`;
+    return;
+  }
+  list.innerHTML = items.map(it => `
+    <div class="inv-card${it.inStock ? '' : ' out-of-stock'}" id="inv-${it.id}">
+      <div class="inv-info">
+        <div class="inv-name">${it.name}</div>
+        <div class="inv-meta">${it.vintage}　${it.region}</div>
+        <div class="inv-price">¥${(it.price||0).toLocaleString()}　<span style="font-size:11px;font-weight:500;color:var(--text-sub);">${it.type==='bottle'?'ボトル':it.type==='glass'?'グラス':'ボトル/グラス'} ${it.qty}本</span></div>
+      </div>
+      <div class="inv-right">
+        <button class="inv-toggle ${it.inStock?'in-stock':'no-stock'}" onclick="toggleStock('${it.id}')">
+          ${it.inStock ? '在庫あり' : '在庫なし'}
+        </button>
+        <button class="inv-del" onclick="deleteStock('${it.id}')" title="削除">✕</button>
+      </div>
+    </div>`).join('');
+
+  // 公開バーを表示
+  const bar = document.getElementById('stkPublishBar');
+  if (bar) bar.classList.toggle('show', items.length > 0);
+}
+
+function addStockItem() {
+  const name    = document.getElementById('stkName').value.trim();
+  const vintage = document.getElementById('stkVintage').value.trim();
+  const price   = parseInt(document.getElementById('stkPrice').value) || 0;
+  const region  = document.getElementById('stkRegion').value.trim();
+  const qty     = parseInt(document.getElementById('stkQty').value) || 1;
+  const type    = document.getElementById('stkType').value;
+  if (!name) { showToast('ワイン名を入力してください'); return; }
+  const myItems = loadStock().filter(i => i.storeId === STORE_INFO.id);
+  myItems.push({ id:'si'+Date.now(), name, vintage, price, region, qty, type, inStock:true });
+  saveStock(myItems);
+  // フォームリセット
+  ['stkName','stkVintage','stkPrice','stkRegion'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('stkQty').value = '1';
+  renderStock();
+  showToast('✓ 在庫に追加しました');
+}
+
+function toggleStock(id) {
+  const myItems = loadStock().filter(i => i.storeId === STORE_INFO.id);
+  const it = myItems.find(i => i.id === id);
+  if (!it) return;
+  it.inStock = !it.inStock;
+  if (!it.inStock) it.qty = 0;
+  else if (it.qty === 0) it.qty = 1;
+  saveStock(myItems);
+  renderStock();
+  showToast(it.inStock ? '✓ 在庫ありに変更しました' : '在庫なしに変更しました');
+}
+
+function deleteStock(id) {
+  const myItems = loadStock().filter(i => i.storeId === STORE_INFO.id && i.id !== id);
+  saveStock(myItems);
+  renderStock();
+  showToast('削除しました');
+}
+
+function publishStock() {
+  const myItems = loadStock().filter(i => i.storeId === STORE_INFO.id && i.inStock);
+  showToast(`🌐 ${myItems.length}件の在庫情報を公開しました ✓`);
+}
+</script>
+</body>
+</html>

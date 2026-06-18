@@ -1,0 +1,2485 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Sommelin — インポーター管理 | 山田商店</title>
+<style>
+  :root {
+    --burgundy: #9B1B4B;
+    --wine-dark: #5C0E2A;
+    --burgundy-pale: #f9f0f3;
+    --text: #2C1A1D;
+    --text-sub: #7A5A62;
+    --bg: #F5F3F0;
+    --white: #ffffff;
+    --border: #ecdde2;
+    --gold: #C9973A;
+    --green: #16a34a;
+    --line: #06C755;
+    --line-dark: #019A40;
+    --line-pale: #e8faf0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, 'Hiragino Sans', 'Yu Gothic', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    position: relative;
+  }
+
+  /* ===== HEADER ===== */
+  .top-header {
+    background: var(--wine-dark);
+    padding: 16px 20px 14px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .th-icon {
+    width: 38px; height: 38px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .th-info { flex: 1; }
+  .th-name  { color: white; font-size: 15px; font-weight: 800; }
+  .th-sub   { color: rgba(255,255,255,0.6); font-size: 11px; margin-top: 1px; }
+  .th-badge {
+    background: rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.9);
+    font-size: 10px; font-weight: 700;
+    padding: 4px 10px; border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+
+  /* ===== TAB NAV ===== */
+  .tab-nav {
+    background: var(--wine-dark);
+    display: flex;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .tab-nav-item {
+    flex: 1; text-align: center;
+    padding: 11px 4px 9px;
+    color: rgba(255,255,255,0.5);
+    font-size: 11px; font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.15s; letter-spacing: 0.3px;
+  }
+  .tab-nav-item .ni { font-size: 16px; display: block; margin-bottom: 3px; }
+  .tab-nav-item.active { color: white; border-bottom-color: #C84B6B; }
+
+  .panel { display: none; padding-bottom: 120px; }
+  .panel.active { display: block; }
+
+  /* ===== セクションタイトル ===== */
+  .section-head {
+    padding: 14px 16px 6px;
+    font-size: 11px; font-weight: 800;
+    color: var(--text-sub); letter-spacing: 1.2px;
+    text-transform: uppercase;
+  }
+
+  /* ===== イベントカード ===== */
+  .event-card {
+    margin: 12px 12px 0;
+    background: white;
+    border-radius: 14px;
+    border: 1.5px solid var(--border);
+    padding: 14px 16px;
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .ev-date-col {
+    background: var(--burgundy);
+    color: white; border-radius: 10px;
+    padding: 7px 11px; text-align: center;
+    flex-shrink: 0; min-width: 48px;
+  }
+  .ev-date-m { font-size: 10px; font-weight: 700; opacity: 0.85; }
+  .ev-date-d { font-size: 22px; font-weight: 800; line-height: 1; }
+  .ev-date-w { font-size: 10px; opacity: 0.75; }
+  .ev-info { flex: 1; min-width: 0; }
+  .ev-tag {
+    font-size: 10px; font-weight: 700;
+    background: var(--burgundy-pale); color: var(--burgundy);
+    padding: 2px 8px; border-radius: 8px;
+    display: inline-block; margin-bottom: 5px;
+  }
+  .ev-name { font-size: 14px; font-weight: 800; color: var(--text); }
+  .ev-meta { font-size: 11px; color: var(--text-sub); margin-top: 3px; line-height: 1.4; }
+  .ev-change-btn {
+    background: var(--burgundy-pale); color: var(--burgundy);
+    border: none; border-radius: 8px; padding: 6px 12px;
+    font-size: 11px; font-weight: 700; cursor: pointer;
+    font-family: inherit; flex-shrink: 0; align-self: center;
+  }
+
+  /* ===== 配信モード セレクタ ===== */
+  .mode-selector {
+    margin: 12px 12px 0;
+    background: white;
+    border-radius: 14px;
+    border: 1.5px solid var(--border);
+    overflow: hidden;
+  }
+  .mode-selector-header {
+    padding: 12px 16px 8px;
+    font-size: 11px; font-weight: 800;
+    color: var(--text-sub); letter-spacing: 0.8px;
+  }
+  .mode-tabs {
+    display: flex;
+    border-top: 1px solid var(--border);
+  }
+  .mode-tab {
+    flex: 1; text-align: center;
+    padding: 12px 8px;
+    font-size: 12px; font-weight: 700;
+    color: var(--text-sub); cursor: pointer;
+    border-right: 1px solid var(--border);
+    transition: all 0.15s; line-height: 1.3;
+  }
+  .mode-tab:last-child { border-right: none; }
+  .mode-tab.active { background: var(--burgundy-pale); color: var(--burgundy); }
+  .mode-tab .mt-count {
+    display: block; font-size: 18px; font-weight: 800;
+    margin-bottom: 2px;
+  }
+  .mode-tab .mt-label { font-size: 10px; }
+  .mode-previous-hint {
+    padding: 8px 16px;
+    font-size: 11px; color: var(--text-sub);
+    display: flex; align-items: center; gap: 6px;
+    border-top: 1px solid var(--border);
+    background: #fffdf5;
+  }
+
+  /* ===== フィルタバー ===== */
+  .filter-bar {
+    padding: 10px 12px 0;
+    display: flex; gap: 6px; align-items: center;
+  }
+  .filter-search {
+    flex: 1;
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 12px 8px 32px;
+    font-size: 13px; outline: none;
+    font-family: inherit;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237A5A62' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 10px center;
+  }
+  .filter-search:focus { border-color: var(--burgundy); }
+  .filter-btn {
+    background: white; color: var(--text-sub);
+    border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 8px 12px; font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: inherit; white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .filter-btn.active { background: var(--burgundy-pale); border-color: var(--burgundy); color: var(--burgundy); }
+
+  /* ===== 統計バー ===== */
+  .stats-bar {
+    margin: 8px 12px 0;
+    background: white;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    display: flex; gap: 0; align-items: center;
+  }
+  .stat-item {
+    flex: 1; text-align: center;
+    border-right: 1px solid var(--border);
+    padding: 0 8px;
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-val  { font-size: 18px; font-weight: 800; color: var(--burgundy); }
+  .stat-label{ font-size: 10px; color: var(--text-sub); margin-top: 1px; }
+
+  /* ===== 店舗リスト ===== */
+  .store-list { margin: 10px 12px 0; }
+  .store-row {
+    background: white;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    margin-bottom: 6px;
+    padding: 12px 12px 12px 14px;
+    display: flex; align-items: center; gap: 10px;
+    transition: all 0.12s;
+    position: relative;
+    overflow: hidden;
+  }
+  .store-row.selected { border-color: var(--burgundy); background: #fff8fa; }
+  .store-row.excluded { opacity: 0.45; }
+  .store-row.no-line  { opacity: 0.6; }
+
+  .sr-check {
+    width: 24px; height: 24px;
+    border: 2px solid var(--border);
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800;
+    cursor: pointer; flex-shrink: 0;
+    transition: all 0.12s; color: transparent;
+  }
+  .store-row.selected .sr-check { background: var(--burgundy); border-color: var(--burgundy); color: white; }
+  .store-row.no-line .sr-check { background: #f5f5f5; border-color: #ddd; cursor: not-allowed; }
+
+  .sr-icon {
+    width: 40px; height: 40px;
+    background: var(--burgundy-pale);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .sr-info { flex: 1; min-width: 0; }
+  .sr-name {
+    font-size: 13px; font-weight: 700; color: var(--text);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .sr-meta { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
+  .sr-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+
+  .line-badge {
+    background: var(--line-pale); color: var(--line-dark);
+    font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 8px;
+    white-space: nowrap;
+    border: 1px solid #b2edd0;
+  }
+  .line-badge.no { background: #f5f5f5; color: #aaa; border-color: #e5e5e5; }
+  .last-sent-badge {
+    font-size: 9px; color: var(--text-sub);
+    background: #f5f5f5; padding: 2px 6px; border-radius: 6px;
+  }
+  .last-sent-badge.recent { background: #f0fdf4; color: #15803d; }
+
+  .excluded-badge {
+    font-size: 10px; font-weight: 700;
+    background: #fee2e2; color: #dc2626;
+    padding: 2px 7px; border-radius: 8px;
+    border: 1px solid #fca5a5;
+  }
+  .new-badge {
+    font-size: 9px; font-weight: 800;
+    background: var(--gold); color: white;
+    padding: 1px 6px; border-radius: 5px;
+    letter-spacing: 0.3px;
+  }
+
+  .sr-menu-btn {
+    background: none; border: none;
+    color: var(--text-sub); font-size: 16px;
+    cursor: pointer; padding: 2px 4px;
+    font-family: inherit; line-height: 1;
+    flex-shrink: 0;
+  }
+
+  /* ===== 加盟店パネル ===== */
+  .member-card {
+    background: white; border-radius: 12px;
+    border: 1px solid var(--border);
+    margin: 8px 12px 0;
+    padding: 13px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .mc-icon {
+    width: 44px; height: 44px;
+    background: var(--burgundy-pale); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  .mc-info { flex: 1; min-width: 0; }
+  .mc-name { font-size: 14px; font-weight: 700; }
+  .mc-meta { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
+  .mc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+
+  /* ===== 配信履歴パネル ===== */
+  .history-card {
+    background: white; border-radius: 12px;
+    border: 1px solid var(--border);
+    margin: 8px 12px 0; padding: 14px 16px;
+  }
+  .hc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .hc-event  { font-size: 14px; font-weight: 700; color: var(--text); }
+  .hc-date   { font-size: 11px; color: var(--text-sub); }
+  .hc-stats  { display: flex; gap: 16px; margin-bottom: 8px; }
+  .hc-stat   { font-size: 12px; color: var(--text-sub); }
+  .hc-stat strong { font-size: 15px; font-weight: 800; color: var(--burgundy); margin-right: 3px; }
+  .hc-open-rate {
+    background: #f0fdf4; border-radius: 8px;
+    padding: 6px 10px; font-size: 11px; color: #15803d; font-weight: 600;
+  }
+
+  /* ===== スティッキー フッター ===== */
+  .sticky-footer {
+    position: fixed;
+    bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 430px;
+    background: white;
+    border-top: 1.5px solid var(--border);
+    padding: 12px 16px 28px;
+    z-index: 100;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+  }
+  .sf-count-row {
+    display: flex; align-items: baseline; gap: 8px;
+    margin-bottom: 10px;
+  }
+  .sf-count-num {
+    font-size: 28px; font-weight: 800; color: var(--burgundy);
+    line-height: 1;
+  }
+  .sf-count-label { font-size: 13px; color: var(--text); font-weight: 600; }
+  .sf-count-sub   { font-size: 11px; color: var(--text-sub); margin-left: auto; }
+  .sf-send-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--line) 0%, #04a847 100%);
+    color: white; border: none;
+    border-radius: 14px; padding: 15px;
+    font-size: 15px; font-weight: 800;
+    cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: opacity 0.15s;
+    box-shadow: 0 4px 16px rgba(6,199,85,0.3);
+  }
+  .sf-send-btn:disabled { opacity: 0.3; cursor: default; box-shadow: none; }
+  .sf-send-btn:active { opacity: 0.85; }
+
+  /* ===== コンテキストメニュー ===== */
+  .ctx-menu-bg {
+    display: none; position: fixed;
+    inset: 0; background: rgba(44,26,29,0.5);
+    z-index: 300; align-items: flex-end; justify-content: center;
+  }
+  .ctx-menu-bg.open { display: flex; }
+  .ctx-menu {
+    background: white; border-radius: 20px 20px 0 0;
+    width: 100%; max-width: 430px;
+    padding: 20px 20px 40px;
+    animation: slideUp 0.2s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  .ctx-handle { width: 36px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 14px; }
+  .ctx-store-name { font-size: 15px; font-weight: 800; color: var(--text); text-align: center; margin-bottom: 16px; }
+  .ctx-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; border-radius: 12px;
+    cursor: pointer; font-size: 14px; color: var(--text);
+    transition: background 0.1s; margin-bottom: 4px;
+  }
+  .ctx-item:active { background: var(--burgundy-pale); }
+  .ctx-item .ci-icon { font-size: 20px; width: 28px; text-align: center; }
+  .ctx-item.danger { color: #dc2626; }
+
+  /* ===== 送信確認モーダル ===== */
+  .confirm-bg {
+    display: none; position: fixed;
+    inset: 0; background: rgba(44,26,29,0.55);
+    z-index: 350; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .confirm-bg.open { display: flex; }
+  .confirm-modal {
+    background: white; border-radius: 20px;
+    padding: 28px 24px; width: 100%; max-width: 380px;
+    animation: popIn 0.2s ease;
+    text-align: center;
+  }
+  @keyframes popIn {
+    from { transform: scale(0.92); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
+  }
+  .cm-icon  { font-size: 48px; margin-bottom: 12px; }
+  .cm-title { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+  .cm-count {
+    font-size: 36px; font-weight: 800; color: var(--line-dark);
+    margin: 12px 0 4px; line-height: 1;
+  }
+  .cm-count-label { font-size: 14px; color: var(--text-sub); margin-bottom: 16px; }
+  .cm-event-preview {
+    background: var(--burgundy-pale); border-radius: 12px;
+    padding: 12px 16px; margin-bottom: 20px; text-align: left;
+  }
+  .cm-event-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .cm-event-meta { font-size: 11px; color: var(--text-sub); margin-top: 3px; }
+  .cm-btns { display: flex; gap: 10px; }
+  .cm-cancel {
+    flex: 1; background: white; color: var(--text-sub);
+    border: 1.5px solid var(--border); border-radius: 12px;
+    padding: 13px; font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+  }
+  .cm-send {
+    flex: 2; background: var(--line); color: white;
+    border: none; border-radius: 12px;
+    padding: 13px; font-size: 14px; font-weight: 800;
+    cursor: pointer; font-family: inherit;
+  }
+  .cm-send:active { background: var(--line-dark); }
+
+  /* ===== 送信中 オーバーレイ ===== */
+  .sending-overlay {
+    display: none; position: fixed;
+    inset: 0; background: rgba(0,0,0,0.82);
+    z-index: 400; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: white; gap: 16px;
+  }
+  .sending-overlay.open { display: flex; }
+  .sending-spinner {
+    width: 64px; height: 64px;
+    border: 5px solid rgba(255,255,255,0.2);
+    border-top-color: var(--line);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .sending-count { font-size: 36px; font-weight: 800; }
+  .sending-label { font-size: 14px; opacity: 0.7; }
+  .sending-progress {
+    width: 200px; height: 4px;
+    background: rgba(255,255,255,0.2); border-radius: 2px;
+    overflow: hidden;
+  }
+  .sending-progress-fill {
+    height: 100%; width: 0%;
+    background: var(--line); border-radius: 2px;
+    transition: width 0.1s linear;
+  }
+
+  /* ===== 送信完了 ===== */
+  .done-overlay {
+    display: none; position: fixed;
+    inset: 0; background: white;
+    z-index: 450; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 12px; padding: 40px 30px;
+    text-align: center;
+  }
+  .done-overlay.open { display: flex; }
+  .done-checkmark {
+    width: 80px; height: 80px;
+    background: var(--line); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px; margin-bottom: 8px;
+    animation: popIn 0.4s ease;
+  }
+  .done-title { font-size: 22px; font-weight: 800; color: var(--text); }
+  .done-count { font-size: 48px; font-weight: 800; color: var(--line-dark); line-height: 1; }
+  .done-label { font-size: 16px; color: var(--text-sub); }
+  .done-stats {
+    display: flex; gap: 20px;
+    background: var(--line-pale); border-radius: 14px;
+    padding: 14px 24px; margin: 8px 0;
+  }
+  .done-stat { text-align: center; }
+  .done-stat-val   { font-size: 20px; font-weight: 800; color: var(--line-dark); }
+  .done-stat-label { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
+  .done-back-btn {
+    width: 100%; margin-top: 12px;
+    background: var(--wine-dark); color: white;
+    border: none; border-radius: 14px;
+    padding: 15px; font-size: 15px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+  }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed; bottom: 100px; left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: #1a1a2e; color: white;
+    padding: 12px 20px; border-radius: 12px;
+    font-size: 13px; font-weight: 600;
+    z-index: 500; transition: transform 0.3s ease;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ===== 業界カレンダー ===== */
+  .gcal-sync-bar {
+    margin: 12px 12px 0;
+    background: white; border: 1.5px solid #bfdbfe;
+    border-radius: 14px; padding: 12px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .gcal-sync-info { flex: 1; }
+  .gcal-sync-title { font-size: 13px; font-weight: 700; color: #1d4ed8; }
+  .gcal-sync-sub   { font-size: 11px; color: #3b82f6; margin-top: 2px; }
+  .gcal-sync-btn {
+    background: #2563eb; color: white; border: none;
+    border-radius: 8px; padding: 8px 14px;
+    font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: inherit; white-space: nowrap;
+  }
+
+  /* カレンダー凡例 */
+  .cal-legend {
+    margin: 10px 12px 0;
+    background: white; border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--text-sub); font-weight: 600;
+  }
+  .legend-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  }
+
+  /* カレンダーグリッド */
+  .cal-imp-wrap {
+    margin: 10px 12px 0;
+    background: white; border-radius: 14px;
+    border: 1px solid var(--border); overflow: hidden;
+  }
+  .cal-imp-header {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cal-imp-month { font-size: 15px; font-weight: 800; color: var(--text); }
+  .cal-imp-nav {
+    background: none; border: none; font-size: 20px;
+    cursor: pointer; padding: 4px 8px; color: var(--text-sub);
+  }
+  .cal-imp-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 1px; padding: 0 10px 12px;
+  }
+  .cal-imp-dow {
+    text-align: center; font-size: 10px;
+    font-weight: 700; color: var(--text-sub);
+    padding: 8px 0 6px;
+  }
+  .cal-imp-dow:first-child { color: #e53e3e; }
+  .cal-imp-dow:last-child  { color: #2b6cb0; }
+  .cal-imp-cell {
+    aspect-ratio: 1; display: flex;
+    flex-direction: column; align-items: center;
+    justify-content: flex-start; padding-top: 4px;
+    border-radius: 8px; cursor: pointer;
+    font-size: 12px; gap: 2px; transition: background 0.1s;
+  }
+  .cal-imp-cell.other-month { color: #ccc; }
+  .cal-imp-cell.today { background: var(--burgundy-pale); }
+  .cal-imp-cell.today .cal-imp-num { font-weight: 800; color: var(--burgundy); }
+  .cal-imp-cell.has-event { background: #f0f7ff; }
+  .cal-imp-cell.has-mine  { background: var(--burgundy-pale); }
+  .cal-imp-cell:active { background: #eee; }
+  .cal-imp-num { font-size: 13px; line-height: 1; }
+  .cal-imp-dots { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; }
+  .imp-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+  }
+
+  /* イベントカード（カレンダービュー用） */
+  .imp-ev-card {
+    margin: 0 12px 8px;
+    background: white; border-radius: 12px;
+    border-left: 4px solid var(--burgundy);
+    border-top: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 13px 16px;
+    display: flex; gap: 12px; cursor: pointer;
+    transition: all 0.12s;
+  }
+  .imp-ev-card:active { background: #fafafa; }
+  .imp-ev-card.others { border-left-color: #2563eb; }
+  .imp-ev-card.fair   { border-left-color: var(--gold); }
+  .imp-ev-date {
+    text-align: center; flex-shrink: 0;
+    min-width: 38px;
+  }
+  .imp-ev-date-m { font-size: 9px; font-weight: 700; color: var(--text-sub); }
+  .imp-ev-date-d { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1; }
+  .imp-ev-date-w { font-size: 9px; color: var(--text-sub); }
+  .imp-ev-body { flex: 1; min-width: 0; }
+  .imp-ev-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .imp-ev-meta { font-size: 11px; color: var(--text-sub); margin-top: 3px; line-height: 1.4; }
+  .imp-ev-organizer {
+    display: inline-block; margin-top: 5px;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 8px;
+  }
+  .imp-ev-organizer.mine   { background: var(--burgundy-pale); color: var(--burgundy); }
+  .imp-ev-organizer.others { background: #dbeafe; color: #1d4ed8; }
+  .imp-ev-organizer.fair   { background: #fef3c7; color: #92400e; }
+  .imp-ev-actions {
+    display: flex; flex-direction: column;
+    gap: 4px; flex-shrink: 0; align-self: center;
+  }
+  .imp-ev-btn {
+    font-size: 10px; font-weight: 700;
+    padding: 5px 10px; border-radius: 8px;
+    border: none; cursor: pointer; font-family: inherit;
+    white-space: nowrap;
+  }
+  .imp-ev-btn.send { background: var(--line-pale); color: var(--line-dark); }
+  .imp-ev-btn.mine { background: var(--burgundy-pale); color: var(--burgundy); }
+
+  /* ===== att sheet タブ ===== */
+  .att-tabs { display:flex; border-bottom:2px solid #E8E4DF; margin:0 0 14px; }
+  .att-tab {
+    flex:1; padding:9px 0; font-size:12px; font-weight:700;
+    border:none; background:none; color:var(--text-sub); cursor:pointer;
+    border-bottom:2.5px solid transparent; margin-bottom:-2px; transition:all .15s;
+  }
+  .att-tab.active { color:var(--burgundy); border-bottom-color:var(--burgundy); }
+
+  /* ===== ワインリストカード ===== */
+  .wine-list-card {
+    background:white; border-radius:12px; padding:13px 14px;
+    margin-bottom:8px; box-shadow:0 1px 6px rgba(0,0,0,.06);
+    display:flex; align-items:center; gap:10px;
+  }
+  .wl-rank {
+    width:26px; height:26px; border-radius:50%;
+    background:var(--gold-pale, #FFF8EC); color:var(--gold);
+    font-size:11px; font-weight:800;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .wl-info { flex:1; min-width:0; }
+  .wl-name { font-size:13px; font-weight:700; color:var(--text); line-height:1.3; }
+  .wl-meta { font-size:11px; color:var(--text-sub); margin-top:2px; }
+  .wl-price { font-size:13px; font-weight:700; color:var(--burgundy); flex-shrink:0; }
+
+  /* LINE配信ボタン */
+  .line-send-btn {
+    width:100%; padding:13px 0; margin-bottom:10px;
+    background:#06C755; color:white; border:none; border-radius:12px;
+    font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    transition:opacity .15s;
+  }
+  .line-send-btn:active { opacity:.85; }
+  .line-send-btn.secondary { background:#E8F5E9; color:#2E7D32; }
+
+  /* ===== アンケート結果 ===== */
+  .survey-header {
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--burgundy-pale); border-radius:12px;
+    padding:10px 14px; margin-bottom:14px;
+  }
+  .survey-stat { text-align:center; }
+  .survey-stat-num { font-size:20px; font-weight:800; color:var(--burgundy); }
+  .survey-stat-label { font-size:10px; color:var(--text-sub); margin-top:2px; }
+
+  .survey-wine-card {
+    background:white; border-radius:12px; padding:14px;
+    margin-bottom:8px; box-shadow:0 1px 6px rgba(0,0,0,.06);
+  }
+  .sw-top { display:flex; align-items:flex-start; gap:10px; margin-bottom:8px; }
+  .sw-rank-badge {
+    width:28px; height:28px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:800; flex-shrink:0;
+  }
+  .sw-rank-1 { background:#FFD700; color:#7A5C00; }
+  .sw-rank-2 { background:#C0C0C0; color:#4A4A4A; }
+  .sw-rank-3 { background:#CD7F32; color:#fff; }
+  .sw-rank-other { background:var(--burgundy-pale); color:var(--burgundy); }
+  .sw-name { font-size:13px; font-weight:700; color:var(--text); line-height:1.3; flex:1; }
+  .sw-score { font-size:14px; font-weight:800; color:var(--burgundy); flex-shrink:0; }
+  .sw-votes { font-size:11px; color:var(--text-sub); }
+  .sw-comments { display:flex; flex-direction:column; gap:4px; }
+  .sw-comment {
+    background:var(--burgundy-pale); border-radius:8px;
+    padding:5px 10px; font-size:11px; color:var(--text);
+    font-style:italic;
+  }
+
+  /* ===== ソムリンレポート ===== */
+  .sommelin-report-section {
+    background: linear-gradient(135deg, #5C0E2A 0%, #9B1B4B 100%);
+    border-radius:14px; padding:16px; margin-top:14px; margin-bottom:14px;
+  }
+  .sr-header { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .sr-icon { font-size:28px; }
+  .sr-title { color:white; font-size:15px; font-weight:800; }
+  .sr-sub { color:rgba(255,255,255,.7); font-size:11px; margin-top:1px; }
+  .sr-preview {
+    background:rgba(255,255,255,.12); border-radius:10px;
+    padding:12px; margin-bottom:12px;
+  }
+  .sr-preview-label { color:rgba(255,255,255,.6); font-size:10px; letter-spacing:.05em; margin-bottom:8px; }
+  .sr-preview-item {
+    display:flex; align-items:center; gap:8px;
+    padding:6px 0; border-bottom:1px solid rgba(255,255,255,.1);
+    font-size:12px; color:white;
+  }
+  .sr-preview-item:last-child { border-bottom:none; }
+  .sr-medal { font-size:16px; flex-shrink:0; }
+  .sr-wine-short { flex:1; font-weight:600; }
+  .sr-pts { color:rgba(255,255,255,.7); font-size:11px; flex-shrink:0; }
+  .sr-broadcast-btn {
+    width:100%; padding:12px 0; background:white;
+    color:var(--burgundy); border:none; border-radius:10px;
+    font-size:13px; font-weight:800; cursor:pointer; font-family:inherit;
+  }
+
+  /* ===== 参加者バッジ（イベントカード内） ===== */
+  .rsvp-badge {
+    display:inline-flex; align-items:center; gap:4px;
+    background:#E8F5E9; color:#2E7D32;
+    font-size:11px; font-weight:700;
+    padding:3px 9px; border-radius:10px;
+    margin-top:5px;
+  }
+
+  /* ===== 参加者管理シート ===== */
+  .att-sheet-bg {
+    display:none; position:fixed; inset:0;
+    background:rgba(44,26,29,.55); z-index:300;
+    align-items:flex-end; justify-content:center;
+  }
+  .att-sheet-bg.open { display:flex; }
+  .att-sheet {
+    background:#F5F3F0; border-radius:20px 20px 0 0;
+    width:100%; max-width:430px; max-height:90vh;
+    display:flex; flex-direction:column;
+    animation:slideUp .25s ease;
+  }
+  .att-handle {
+    width:36px; height:4px; background:#ddd; border-radius:2px;
+    margin:10px auto 0; flex-shrink:0;
+  }
+  .att-head { padding:16px 18px 0; flex-shrink:0; }
+  .att-ev-mini {
+    background:var(--burgundy-pale); border-radius:12px;
+    padding:10px 14px; margin-bottom:14px;
+  }
+  .att-ev-mini-name { font-size:14px; font-weight:800; color:var(--text); margin-bottom:3px; }
+  .att-ev-mini-meta { font-size:12px; color:var(--text-sub); }
+
+  /* stats */
+  .att-stats {
+    display:flex; gap:8px; margin-bottom:14px;
+  }
+  .att-stat {
+    flex:1; background:white; border-radius:12px;
+    padding:12px 14px; text-align:center;
+    box-shadow:0 1px 4px rgba(0,0,0,.06);
+  }
+  .att-stat-num { font-size:24px; font-weight:800; color:var(--burgundy); line-height:1; }
+  .att-stat-label { font-size:11px; color:var(--text-sub); margin-top:4px; }
+
+  /* action buttons */
+  .att-actions { display:flex; gap:8px; margin-bottom:12px; }
+  .att-action-btn {
+    flex:1; padding:11px 0; border:none; border-radius:12px;
+    font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    transition:opacity .15s;
+  }
+  .att-action-btn:active { opacity:.8; }
+  .att-btn-csv { background:#2E7D32; color:white; }
+  .att-btn-mail { background:var(--burgundy); color:white; }
+
+  /* participant list */
+  .att-body {
+    flex:1; overflow-y:auto; padding:0 16px 32px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .att-list-label {
+    font-size:11px; font-weight:700; color:var(--text-sub);
+    letter-spacing:.08em; margin-bottom:8px;
+  }
+  .att-card {
+    background:white; border-radius:12px;
+    padding:12px 14px; margin-bottom:8px;
+    box-shadow:0 1px 6px rgba(0,0,0,.06);
+    display:flex; align-items:flex-start; gap:10px;
+  }
+  .att-num {
+    width:26px; height:26px; border-radius:50%;
+    background:var(--burgundy-pale); color:var(--burgundy);
+    font-size:11px; font-weight:800;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; margin-top:1px;
+  }
+  .att-info { flex:1; min-width:0; }
+  .att-store { font-size:13px; font-weight:700; color:var(--text); }
+  .att-person { font-size:12px; color:var(--text-sub); margin-top:1px; }
+  .att-email { font-size:11px; color:#2563eb; margin-top:2px; }
+  .att-foot {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:6px; padding-top:6px;
+    border-top:1px solid #F0EDE8;
+  }
+  .att-count { font-size:13px; font-weight:700; color:var(--burgundy); }
+  .att-date { font-size:10px; color:var(--text-sub); }
+  .att-note { font-size:11px; color:var(--text-sub); margin-top:3px; font-style:italic; }
+
+  /* empty */
+  .att-empty {
+    text-align:center; padding:48px 20px;
+    color:var(--text-sub); font-size:13px; line-height:1.7;
+  }
+
+  /* mail confirm */
+  .mail-confirm-bg {
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,.4); z-index:400;
+    align-items:center; justify-content:center;
+  }
+  .mail-confirm-bg.open { display:flex; }
+  .mail-confirm-box {
+    background:white; border-radius:20px;
+    padding:24px 22px; width:calc(100% - 40px); max-width:360px;
+    animation:slideUp .2s ease;
+  }
+  .mail-confirm-title { font-size:16px; font-weight:800; color:var(--text); margin-bottom:8px; }
+  .mail-confirm-sub { font-size:13px; color:var(--text-sub); line-height:1.6; margin-bottom:18px; }
+  .mail-confirm-preview {
+    background:#f8f9fa; border-radius:10px; padding:12px;
+    font-size:11px; line-height:1.8; color:var(--text);
+    margin-bottom:18px; border:1px solid #eee;
+  }
+  .mail-confirm-btns { display:flex; gap:8px; }
+  .mail-confirm-btns button { flex:1; padding:12px 0; border:none; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .mail-confirm-cancel { background:#F0EDE8; color:var(--text); }
+  .mail-confirm-send { background:var(--burgundy); color:white; }
+
+  /* ===== カタログパネル ===== */
+  .cat-stats {
+    display:flex;margin:16px 16px 12px;background:var(--white);
+    border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(92,14,42,.08);
+  }
+  .cat-stat { flex:1;text-align:center;padding:14px 8px;border-right:1px solid var(--border); }
+  .cat-stat:last-child { border:none; }
+  .cat-snum { font-size:22px;font-weight:900;color:var(--burgundy); }
+  .cat-ok { color:#16a34a; }
+  .cat-ng { color:#dc2626; }
+  .cat-slbl { font-size:10px;color:var(--text-sub);margin-top:2px; }
+  .cat-add-card {
+    margin:0 16px 12px;background:var(--white);border-radius:14px;
+    padding:16px;box-shadow:0 1px 4px rgba(92,14,42,.08);
+  }
+  .cat-add-title { font-size:13px;font-weight:800;color:var(--burgundy);margin-bottom:12px; }
+  .cat-input {
+    width:100%;border:1.5px solid var(--border);border-radius:10px;
+    padding:10px 12px;font-size:13px;color:var(--text);
+    margin-bottom:8px;background:var(--bg);font-family:inherit;
+  }
+  .cat-input:focus { outline:none;border-color:var(--burgundy); }
+  .cat-row2 { display:flex;gap:8px; }
+  .cat-short { width:auto;flex:1; }
+  .cat-add-btn {
+    width:100%;padding:13px;margin-top:4px;
+    background:var(--burgundy);color:white;
+    font-size:14px;font-weight:800;border:none;border-radius:12px;cursor:pointer;
+  }
+  .cat-actions { display:flex;gap:8px;margin:0 16px 14px; }
+  .cat-act-btn {
+    flex:1;padding:10px;border:1.5px solid var(--border);border-radius:12px;
+    background:var(--white);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;
+  }
+  .cat-act-btn.cat-line { background:var(--line);color:white;border-color:var(--line); }
+  .cat-card {
+    background:var(--white);border-radius:14px;padding:14px;
+    margin-bottom:10px;box-shadow:0 1px 4px rgba(92,14,42,.07);
+  }
+  .cat-card.unavail { opacity:.55; }
+  .cat-card-top { display:flex;align-items:flex-start;gap:10px; }
+  .cat-badge { width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;background:var(--burgundy-pale); }
+  .cat-cinfo { flex:1;min-width:0; }
+  .cat-cname { font-size:14px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  .cat-cmeta { font-size:11px;color:var(--text-sub);margin-top:3px; }
+  .cat-cprice { font-size:13px;font-weight:700;color:var(--burgundy);margin-top:4px; }
+  .cat-cright { display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0; }
+  .cat-toggle {
+    padding:5px 10px;border-radius:20px;border:none;cursor:pointer;
+    font-size:11px;font-weight:800;
+  }
+  .cat-toggle.avail { background:#dcfce7;color:#16a34a; }
+  .cat-toggle.unavl { background:#fee2e2;color:#dc2626; }
+  .cat-del { background:none;border:none;color:var(--text-sub);font-size:15px;cursor:pointer;padding:0; }
+  .cat-desc { font-size:12px;color:var(--text-sub);margin-top:8px;line-height:1.6;padding-top:8px;border-top:1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="top-header">
+  <div class="th-icon">🏢</div>
+  <div class="th-info">
+    <div class="th-name">山田商店</div>
+    <div class="th-sub">Sommelin インポーター管理</div>
+  </div>
+  <div class="th-badge">インポーター</div>
+</div>
+
+<!-- TAB NAV -->
+<div class="tab-nav">
+  <div class="tab-nav-item" id="tnav-calendar" onclick="switchPanel('calendar')">
+    <span class="ni">📅</span>カレンダー
+  </div>
+  <div class="tab-nav-item active" id="tnav-broadcast" onclick="switchPanel('broadcast')">
+    <span class="ni">📤</span>配信管理
+  </div>
+  <div class="tab-nav-item" id="tnav-members" onclick="switchPanel('members')">
+    <span class="ni">🏪</span>加盟店
+  </div>
+  <div class="tab-nav-item" id="tnav-history" onclick="switchPanel('history')">
+    <span class="ni">📊</span>履歴
+  </div>
+  <div class="tab-nav-item" id="tnav-catalog" onclick="switchPanel('catalog')">
+    <span class="ni">📋</span>カタログ
+  </div>
+</div>
+
+<!-- ==================== PANEL: カレンダー ==================== -->
+<div id="panelCalendar" class="panel">
+
+  <!-- Googleカレンダー同期バー -->
+  <div class="gcal-sync-bar">
+    <span style="font-size:22px;">📆</span>
+    <div class="gcal-sync-info">
+      <div class="gcal-sync-title">Sommelin 共有カレンダー</div>
+      <div class="gcal-sync-sub" id="impSyncStatus">最終同期: 今日 09:30</div>
+    </div>
+    <button class="gcal-sync-btn" onclick="impSimulateSync(this)">同期</button>
+  </div>
+
+  <!-- 凡例 -->
+  <div class="cal-legend">
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--burgundy);"></div>自社イベント
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#2563eb;"></div>他社イベント
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--gold);"></div>フェア・大型
+    </div>
+  </div>
+
+  <!-- カレンダーグリッド -->
+  <div class="cal-imp-wrap">
+    <div class="cal-imp-header">
+      <button class="cal-imp-nav" onclick="impChangeMonth(-1)">‹</button>
+      <span class="cal-imp-month" id="impMonthLabel"></span>
+      <button class="cal-imp-nav" onclick="impChangeMonth(1)">›</button>
+    </div>
+    <div class="cal-imp-grid" id="impCalGrid">
+      <div class="cal-imp-dow">日</div><div class="cal-imp-dow">月</div>
+      <div class="cal-imp-dow">火</div><div class="cal-imp-dow">水</div>
+      <div class="cal-imp-dow">木</div><div class="cal-imp-dow">金</div>
+      <div class="cal-imp-dow">土</div>
+    </div>
+  </div>
+
+  <!-- 近日中のイベント一覧 -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 6px;">
+    <div style="font-size:11px;font-weight:800;color:var(--text-sub);letter-spacing:1.2px;">近日中の試飲会・イベント</div>
+    <button onclick="openNewEventForm()" style="background:var(--burgundy);color:white;border:none;border-radius:10px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;">＋ 追加</button>
+  </div>
+  <div id="impEventList" style="padding-bottom:20px;"></div>
+
+</div>
+
+<!-- ==================== 新規イベント登録 モーダル ==================== -->
+<div style="display:none;position:fixed;inset:0;background:rgba(44,26,29,0.55);z-index:300;align-items:flex-end;justify-content:center;" id="newEvBg" onclick="closeNewEvBg(event)">
+  <div style="background:white;border-radius:20px 20px 0 0;width:100%;max-width:430px;max-height:90vh;overflow-y:auto;padding:20px 20px 48px;animation:slideUp 0.25s ease;" id="newEvSheet">
+    <div style="width:36px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 18px;"></div>
+    <div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:18px;">🍷 新しい試飲会を追加</div>
+
+    <div style="margin-bottom:14px;">
+      <label style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:0.5px;display:block;margin-bottom:6px;">イベント種別 <span style="color:#e53e3e;">✳︎</span></label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="evTypeGrid">
+        <div onclick="selectEvType(this,'tasting','🍷 試飲会')" style="padding:8px 14px;border-radius:20px;border:1.5px solid var(--burgundy);background:var(--burgundy-pale);color:var(--burgundy);font-size:12px;font-weight:700;cursor:pointer;" data-type="tasting">🍷 試飲会</div>
+        <div onclick="selectEvType(this,'seminar','📚 セミナー')" style="padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:white;color:var(--text-sub);font-size:12px;font-weight:700;cursor:pointer;" data-type="seminar">📚 セミナー</div>
+        <div onclick="selectEvType(this,'fair','🏆 フェア')" style="padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:white;color:var(--text-sub);font-size:12px;font-weight:700;cursor:pointer;" data-type="fair">🏆 フェア</div>
+        <div onclick="selectEvType(this,'online','💻 オンライン')" style="padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:white;color:var(--text-sub);font-size:12px;font-weight:700;cursor:pointer;" data-type="online">💻 オンライン</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <label style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:0.5px;display:block;margin-bottom:6px;">イベント名 <span style="color:#e53e3e;">✳︎</span></label>
+      <input id="nev-title" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;font-family:inherit;outline:none;" placeholder="例: ブルゴーニュ新着ワイン試飲会">
+    </div>
+
+    <div style="display:flex;gap:10px;margin-bottom:14px;">
+      <div style="flex:1;">
+        <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">開催日 <span style="color:#e53e3e;">✳︎</span></label>
+        <input id="nev-date" type="date" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;">
+      </div>
+      <div style="flex:1;">
+        <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">時間帯</label>
+        <input id="nev-time" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;" placeholder="14:00〜18:00">
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">会場 <span style="color:#e53e3e;">✳︎</span></label>
+      <input id="nev-venue" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;font-family:inherit;outline:none;" placeholder="例: ザ・ウエスティン東京 3F">
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">概要・説明</label>
+      <textarea id="nev-desc" rows="3" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;font-family:inherit;outline:none;resize:none;" placeholder="試飲できるワイン、参加費など..."></textarea>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:8px;">公開設定</label>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <label style="display:flex;align-items:center;gap:10px;background:#f5f5f5;border-radius:10px;padding:10px 14px;cursor:pointer;">
+          <input type="radio" name="nev-vis" value="all_importers" checked style="accent-color:var(--burgundy);">
+          <div><div style="font-size:13px;font-weight:700;">インポーター全員に公開</div><div style="font-size:11px;color:var(--text-sub);">業界共有カレンダーに表示</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;background:#f5f5f5;border-radius:10px;padding:10px 14px;cursor:pointer;">
+          <input type="radio" name="nev-vis" value="selected" style="accent-color:var(--burgundy);">
+          <div><div style="font-size:13px;font-weight:700;">配信先の店舗のみ</div><div style="font-size:11px;color:var(--text-sub);">自分が選んだ店舗にのみ通知</div></div>
+        </label>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeNewEvModal()" style="background:white;color:var(--text-sub);border:1.5px solid var(--border);border-radius:12px;padding:13px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">キャンセル</button>
+      <button onclick="saveNewEvent()" style="flex:1;background:var(--burgundy);color:white;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;">登録する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PANEL: 配信管理 ==================== -->
+<div id="panelBroadcast" class="panel active">
+
+  <!-- 配信するイベント -->
+  <div class="section-head">配信するイベント</div>
+  <div class="event-card">
+    <div class="ev-date-col">
+      <div class="ev-date-m">MAY</div>
+      <div class="ev-date-d">22</div>
+      <div class="ev-date-w">木曜</div>
+    </div>
+    <div class="ev-info">
+      <span class="ev-tag">🍷 試飲会</span>
+      <div class="ev-name">ブルゴーニュ新着ワイン試飲会</div>
+      <div class="ev-meta">⏰ 14:00〜18:00 &nbsp;|&nbsp; 📍 ザ・ウエスティン東京 3F</div>
+    </div>
+    <button class="ev-change-btn" onclick="showToast('イベント変更機能は近日実装予定')">変更</button>
+  </div>
+
+  <!-- 配信モード -->
+  <div class="section-head" style="margin-top:14px;">配信先を選ぶ</div>
+  <div class="mode-selector">
+    <div class="mode-selector-header">配信モード</div>
+    <div class="mode-tabs">
+      <div class="mode-tab" id="mtab-all" onclick="setMode('all')">
+        <span class="mt-count" id="mc-all">—</span>
+        <span class="mt-label">すべて</span>
+      </div>
+      <div class="mode-tab active" id="mtab-prev" onclick="setMode('prev')">
+        <span class="mt-count" id="mc-prev">—</span>
+        <span class="mt-label">前回と同じ</span>
+      </div>
+      <div class="mode-tab" id="mtab-custom" onclick="setMode('custom')">
+        <span class="mt-count" id="mc-custom">—</span>
+        <span class="mt-label">カスタム</span>
+      </div>
+    </div>
+    <div class="mode-previous-hint" id="prevHint">
+      📋 前回配信（5月1日）の宛先を引き継いでいます
+    </div>
+  </div>
+
+  <!-- フィルタバー -->
+  <div class="filter-bar">
+    <input class="filter-search" type="text" placeholder="店舗を検索…" oninput="filterStores(this.value)">
+    <button class="filter-btn" id="farea-btn" onclick="cycleAreaFilter(this)">エリア ▾</button>
+    <button class="filter-btn" id="ftype-btn" onclick="cycleTypeFilter(this)">業種 ▾</button>
+  </div>
+
+  <!-- 統計バー -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-val" id="statTotal">—</div>
+      <div class="stat-label">全加盟店</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val" style="color:var(--line);" id="statLine">—</div>
+      <div class="stat-label">LINE連携済み</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val" style="color:#aaa;" id="statNoLine">—</div>
+      <div class="stat-label">未連携</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val" style="color:#dc2626;" id="statExcluded">—</div>
+      <div class="stat-label">除外中</div>
+    </div>
+  </div>
+
+  <!-- 店舗リスト -->
+  <div class="store-list" id="storeList"></div>
+
+</div>
+
+<!-- ==================== PANEL: 加盟店 ==================== -->
+<div id="panelMembers" class="panel">
+  <div class="section-head" style="padding-top:14px;">LINE連携済み店舗</div>
+  <div id="memberListConnected"></div>
+  <div class="section-head" style="margin-top:8px;">未連携店舗</div>
+  <div id="memberListNotConnected"></div>
+</div>
+
+<!-- ==================== PANEL: 配信履歴 ==================== -->
+<div id="panelHistory" class="panel">
+  <div class="section-head" style="padding-top:14px;">配信履歴</div>
+  <div id="historyList"></div>
+</div>
+
+<!-- ==================== PANEL: 取り扱いカタログ ==================== -->
+<div id="panelCatalog" class="panel">
+
+  <!-- Stats -->
+  <div class="cat-stats">
+    <div class="cat-stat"><div class="cat-snum" id="catTotal">0</div><div class="cat-slbl">登録ワイン</div></div>
+    <div class="cat-stat"><div class="cat-snum cat-ok" id="catAvail">0</div><div class="cat-slbl">取り扱い中</div></div>
+    <div class="cat-stat"><div class="cat-snum cat-ng" id="catSold">0</div><div class="cat-slbl">取り扱い停止</div></div>
+  </div>
+
+  <!-- Add form -->
+  <div class="cat-add-card">
+    <div class="cat-add-title">＋ 取り扱いワインを追加</div>
+    <input class="cat-input" id="catName" placeholder="ワイン名（例: Alex Gambal Charmes-Chambertin）">
+    <input class="cat-input" id="catProducer" placeholder="生産者名">
+    <div class="cat-row2">
+      <input class="cat-input cat-short" id="catVintage" placeholder="ヴィンテージ" maxlength="4" type="number">
+      <input class="cat-input cat-short" id="catRegion" placeholder="産地">
+    </div>
+    <div class="cat-row2">
+      <input class="cat-input cat-short" id="catPrice" placeholder="参考価格（円）" type="number">
+      <select class="cat-input cat-short" id="catAvailSel">
+        <option value="1">取り扱い中</option>
+        <option value="0">取り扱い停止</option>
+      </select>
+    </div>
+    <input class="cat-input" id="catDesc" placeholder="説明・テイスティングノート（任意）">
+    <button class="cat-add-btn" onclick="addCatalogItem()">カタログに追加</button>
+  </div>
+
+  <!-- Actions -->
+  <div class="cat-actions">
+    <button class="cat-act-btn" onclick="exportCatalog()">⬇ CSV</button>
+    <button class="cat-act-btn cat-line" onclick="shareCatalogLine()">💬 LINEでシェア</button>
+  </div>
+
+  <div style="padding:0 16px 12px;font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:.07em;">カタログ一覧</div>
+  <div id="catList" style="padding:0 16px 100px;"></div>
+
+</div>
+
+<!-- ==================== コンテキストメニュー ==================== -->
+<div class="ctx-menu-bg" id="ctxMenuBg" onclick="closeCtxMenu(event)">
+  <div class="ctx-menu">
+    <div class="ctx-handle"></div>
+    <div class="ctx-store-name" id="ctxStoreName">店舗名</div>
+    <div class="ctx-item" onclick="ctxSelectToggle()">
+      <span class="ci-icon" id="ctxSelectIcon">☑️</span>
+      <span id="ctxSelectLabel">配信リストに追加</span>
+    </div>
+    <div class="ctx-item" onclick="ctxExclude()">
+      <span class="ci-icon" id="ctxExcludeIcon">🚫</span>
+      <span id="ctxExcludeLabel">今回の配信から除外する</span>
+    </div>
+    <div class="ctx-item" onclick="ctxNote()">
+      <span class="ci-icon">📝</span>
+      <span>メモを追加</span>
+    </div>
+    <div class="ctx-item danger" onclick="ctxRemove()">
+      <span class="ci-icon">🗑</span>
+      <span>加盟店リストから削除</span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 送信確認 モーダル ==================== -->
+<div class="confirm-bg" id="confirmBg">
+  <div class="confirm-modal">
+    <div class="cm-icon">💬</div>
+    <div class="cm-title">LINEで配信しますか？</div>
+    <div class="cm-count" id="confirmCount">—</div>
+    <div class="cm-count-label">店舗に送信します</div>
+    <div class="cm-event-preview">
+      <div class="cm-event-name">🍷 ブルゴーニュ新着ワイン試飲会</div>
+      <div class="cm-event-meta">5月22日(木) 14:00〜18:00 · ザ・ウエスティン東京</div>
+    </div>
+    <div class="cm-btns">
+      <button class="cm-cancel" onclick="closeConfirm()">キャンセル</button>
+      <button class="cm-send"   onclick="startSending()">📤 配信する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 送信中 オーバーレイ ==================== -->
+<div class="sending-overlay" id="sendingOverlay">
+  <div class="sending-spinner"></div>
+  <div class="sending-count" id="sendingCount">0</div>
+  <div class="sending-label" id="sendingLabel">店舗に送信中…</div>
+  <div class="sending-progress"><div class="sending-progress-fill" id="sendingFill"></div></div>
+</div>
+
+<!-- ==================== 送信完了 ==================== -->
+<div class="done-overlay" id="doneOverlay">
+  <div class="done-checkmark">✓</div>
+  <div class="done-title">配信完了！</div>
+  <div class="done-count" id="doneCount">—</div>
+  <div class="done-label">店舗にLINEを送信しました</div>
+  <div class="done-stats">
+    <div class="done-stat">
+      <div class="done-stat-val" id="doneSent">—</div>
+      <div class="done-stat-label">送信成功</div>
+    </div>
+    <div class="done-stat">
+      <div class="done-stat-val" id="doneDelivered">—</div>
+      <div class="done-stat-label">既読</div>
+    </div>
+    <div class="done-stat">
+      <div class="done-stat-val" id="doneRsvp">—</div>
+      <div class="done-stat-label">RSVP済み</div>
+    </div>
+  </div>
+  <button class="done-back-btn" onclick="closeDone()">管理画面に戻る</button>
+</div>
+
+<!-- STICKY FOOTER (配信管理のみ) -->
+<div class="sticky-footer" id="stickyFooter">
+  <div class="sf-count-row">
+    <span class="sf-count-num" id="sfCount">0</span>
+    <span class="sf-count-label">店舗に配信します</span>
+    <span class="sf-count-sub" id="sfSub">全18店舗中 LINE連携済み14</span>
+  </div>
+  <button class="sf-send-btn" id="sfSendBtn" onclick="openConfirm()" disabled>
+    💬 LINE で一括配信する
+  </button>
+</div>
+
+<!-- ==================== 参加者管理シート ==================== -->
+<div class="att-sheet-bg" id="attSheetBg" onclick="if(event.target===this)closeAttSheet()">
+  <div class="att-sheet">
+    <div class="att-handle"></div>
+    <div class="att-head">
+      <!-- イベント情報ミニカード -->
+      <div class="att-ev-mini">
+        <div class="att-ev-mini-name" id="attEvName">—</div>
+        <div class="att-ev-mini-meta" id="attEvMeta">—</div>
+      </div>
+      <!-- 集計サマリー -->
+      <div class="att-stats">
+        <div class="att-stat">
+          <div class="att-stat-num" id="attStatStores">0</div>
+          <div class="att-stat-label">登録店舗数</div>
+        </div>
+        <div class="att-stat">
+          <div class="att-stat-num" id="attStatPeople">0</div>
+          <div class="att-stat-label">合計参加人数</div>
+        </div>
+        <div class="att-stat">
+          <div class="att-stat-num" id="attStatNew">0</div>
+          <div class="att-stat-label">直近24h新着</div>
+        </div>
+      </div>
+      <!-- タブ -->
+      <div class="att-tabs">
+        <button class="att-tab active" id="attTabPeople" onclick="switchAttTab('people')">👥 参加者一覧</button>
+        <button class="att-tab" id="attTabWines"  onclick="switchAttTab('wines')">📋 ワイン配信</button>
+        <button class="att-tab" id="attTabSurvey" onclick="switchAttTab('survey')">📊 アンケート</button>
+      </div>
+    </div>
+    <!-- スクロール可能なコンテンツ -->
+    <div class="att-body" id="attBody"></div>
+  </div>
+</div>
+
+<!-- ==================== メール送信確認ダイアログ ==================== -->
+<div class="mail-confirm-bg" id="mailConfirmBg" onclick="if(event.target===this)closeMailConfirm()">
+  <div class="mail-confirm-box">
+    <div class="mail-confirm-title">✉ CSV をメールで送信</div>
+    <div class="mail-confirm-sub" id="mailConfirmSub">参加者一覧をCSVファイルに添付してメール送信します。</div>
+    <div class="mail-confirm-preview" id="mailConfirmPreview">—</div>
+    <div class="mail-confirm-btns">
+      <button class="mail-confirm-cancel" onclick="closeMailConfirm()">キャンセル</button>
+      <button class="mail-confirm-send" onclick="sendCsvMail()">送信する</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// データ
+// ============================================================
+const stores = [
+  { id:'s01', name:'Bistrot Lumière',       icon:'🏰', area:'恵比寿',  type:'フレンチ',     lineConnected:true,  lastSent:'2026-05-01', excluded:false, isNew:false },
+  { id:'s02', name:'La Cave de Tanaka',     icon:'🍽️', area:'代官山',  type:'ワインバー',   lineConnected:true,  lastSent:'2026-05-01', excluded:false, isNew:false },
+  { id:'s03', name:'Osteria Naturale',       icon:'🌿', area:'中目黒',  type:'イタリアン',   lineConnected:true,  lastSent:'2026-05-01', excluded:false, isNew:false },
+  { id:'s04', name:'Vino e Cucina Rosso',   icon:'🍾', area:'麻布十番', type:'イタリアン',   lineConnected:true,  lastSent:null,         excluded:false, isNew:true  },
+  { id:'s05', name:'Le Grenier',             icon:'🌟', area:'銀座',    type:'フレンチ',     lineConnected:true,  lastSent:'2026-05-01', excluded:false, isNew:false },
+  { id:'s06', name:'Bar à Vin Sakura',      icon:'🌸', area:'六本木',  type:'ワインバー',   lineConnected:true,  lastSent:null,         excluded:false, isNew:true  },
+  { id:'s07', name:'Trattoria del Vino',    icon:'🇮🇹', area:'渋谷',    type:'イタリアン',   lineConnected:true,  lastSent:'2026-05-01', excluded:false, isNew:false },
+  { id:'s08', name:'Maison du Vin',         icon:'🏡', area:'目黒',    type:'フレンチ',     lineConnected:true,  lastSent:'2026-04-15', excluded:false, isNew:false },
+  { id:'s09', name:'Sake & Wine Yamamoto',  icon:'🍶', area:'新宿',    type:'和食',         lineConnected:true,  lastSent:'2026-04-15', excluded:false, isNew:false },
+  { id:'s10', name:'El Viñedo',             icon:'🇪🇸', area:'恵比寿',  type:'スペイン料理', lineConnected:false, lastSent:null,         excluded:false, isNew:false },
+  { id:'s11', name:'Nakamura Wine Bar',     icon:'🍷', area:'中目黒',  type:'ワインバー',   lineConnected:true,  lastSent:'2026-05-01', excluded:false, isNew:false },
+  { id:'s12', name:'Chez Matsumoto',        icon:'👨‍🍳', area:'西麻布',  type:'フレンチ',     lineConnected:true,  lastSent:'2026-04-15', excluded:false, isNew:false },
+  { id:'s13', name:'Bottega Organica',      icon:'🌱', area:'学芸大学', type:'イタリアン',   lineConnected:false, lastSent:null,         excluded:false, isNew:false },
+  { id:'s14', name:'Wine Republic',         icon:'🏛️', area:'表参道',  type:'ワインバー',   lineConnected:true,  lastSent:null,         excluded:false, isNew:true  },
+  { id:'s15', name:'Caviste Fujita',        icon:'🔑', area:'白金台',  type:'ワインバー',   lineConnected:true,  lastSent:'2026-05-01', excluded:false, isNew:false },
+  { id:'s16', name:'La Petite Maison',      icon:'🌷', area:'広尾',    type:'フレンチ',     lineConnected:true,  lastSent:null,         excluded:false, isNew:true  },
+  { id:'s17', name:'Salone del Vino',       icon:'✨', area:'銀座',    type:'イタリアン',   lineConnected:true,  lastSent:'2026-04-15', excluded:false, isNew:false },
+  { id:'s18', name:'Bistro du Marché',      icon:'🛒', area:'神楽坂',  type:'フレンチ',     lineConnected:false, lastSent:null,         excluded:false, isNew:false },
+];
+
+const prevList = stores.filter(s => s.lastSent === '2026-05-01').map(s => s.id);
+const allLineIds = stores.filter(s => s.lineConnected).map(s => s.id);
+
+// 配信履歴データ
+const broadcastHistory = [
+  { date:'2026-05-01', event:'シャンパーニュ特集 試飲会', sent:8, opened:6, rsvpd:3 },
+  { date:'2026-04-15', event:'イタリアワイン新着セミナー', sent:11, opened:9, rsvpd:5 },
+  { date:'2026-04-01', event:'プロヴァンスロゼ試飲会', sent:8, opened:7, rsvpd:4 },
+  { date:'2026-03-18', event:'ボルドー格付けシャトー試飲会', sent:14, opened:11, rsvpd:7 },
+];
+
+// ============================================================
+// 状態
+// ============================================================
+let currentMode = 'prev';
+let selectedIds = new Set(prevList);
+let searchQuery = '';
+let areaFilter  = '';
+let typeFilter  = '';
+let ctxTargetId = null;
+
+// ============================================================
+// 新規イベント登録
+// ============================================================
+let selectedEvType = 'tasting';
+
+function openNewEventForm() {
+  document.getElementById('newEvBg').style.display = 'flex';
+  // 今日の日付をデフォルトに
+  document.getElementById('nev-date').value = new Date().toISOString().slice(0,10);
+}
+function closeNewEvModal() {
+  document.getElementById('newEvBg').style.display = 'none';
+}
+function closeNewEvBg(e) {
+  if (e.target === document.getElementById('newEvBg')) closeNewEvModal();
+}
+function selectEvType(el, type, label) {
+  selectedEvType = type;
+  document.querySelectorAll('#evTypeGrid div').forEach(d => {
+    d.style.background = 'white'; d.style.borderColor = 'var(--border)'; d.style.color = 'var(--text-sub)';
+  });
+  el.style.background = 'var(--burgundy-pale)'; el.style.borderColor = 'var(--burgundy)'; el.style.color = 'var(--burgundy)';
+}
+function saveNewEvent() {
+  const title = document.getElementById('nev-title').value.trim();
+  const dateV = document.getElementById('nev-date').value;
+  const venue = document.getElementById('nev-venue').value.trim();
+  if (!title) { showToast('イベント名を入力してください'); return; }
+  if (!dateV) { showToast('開催日を入力してください'); return; }
+  if (!venue) { showToast('会場を入力してください'); return; }
+
+  const typeDots = { tasting:'#9B1B4B', seminar:'#9B1B4B', fair:'#C9973A', online:'#2563eb' };
+  const typeLabels = { tasting:'試飲会', seminar:'セミナー', fair:'フェア', online:'オンライン' };
+  const vis = document.querySelector('input[name="nev-vis"]:checked')?.value || 'selected';
+  const [y,m,d] = dateV.split('-').map(Number);
+
+  industryEvents.push({
+    id: 'ie' + Date.now(), mine: true, type: selectedEvType,
+    typeLabel: typeLabels[selectedEvType], dotColor: typeDots[selectedEvType],
+    date: new Date(y, m-1, d),
+    time: document.getElementById('nev-time').value || '—',
+    name: title, organizer: '山田商店', venue,
+    visibility: vis
+  });
+
+  closeNewEvModal();
+  // フォームリセット
+  ['nev-title','nev-time','nev-venue','nev-desc'].forEach(id => document.getElementById(id).value = '');
+  // 登録した月に移動
+  impCalYear = y; impCalMonth = m - 1;
+  renderImporterCalendar();
+  showToast(`「${title}」を登録しました ✓`);
+}
+
+// ============================================================
+// 業界カレンダー データ
+// ============================================================
+// mine = 自社（山田商店）、others = 他社インポーター
+const industryEvents = [
+  // 自社イベント
+  { id:'ie01', mine:true,  type:'tasting', typeLabel:'試飲会',  dotColor:'#9B1B4B',
+    date: new Date(2026,4,22), time:'14:00〜18:00',
+    name:'ブルゴーニュ新着ワイン試飲会',
+    organizer:'山田商店', venue:'ザ・ウエスティン東京 3F',
+    notifyEmail:'info@yamadashoten.co.jp',
+    wines:[
+      { name:'Alex Gambal Charmes-Chambertin', vintage:'2019', price:36000 },
+      { name:'David Duband Gevrey-Chambertin', vintage:'2020', price:18000 },
+      { name:'Rossignol-Trapet Chambolle-Musigny', vintage:'2021', price:24000 },
+      { name:'Maison Leroy Nuits-Saint-Georges', vintage:'2018', price:68000 },
+      { name:'Henri Magnien Morey-Saint-Denis 1er Cru', vintage:'2020', price:21000 },
+    ],
+    survey:{
+      sent:5, responded:4,
+      results:[
+        { name:'Maison Leroy Nuits-Saint-Georges 2018',        votes:4, avg:4.9, star:'⭐⭐⭐⭐⭐', comments:['今回のベスト！','複雑味があって素晴らしい','余韻が長すぎる','圧倒的な存在感'] },
+        { name:'Alex Gambal Charmes-Chambertin 2019',          votes:3, avg:4.7, star:'⭐⭐⭐⭐⭐', comments:['香りが別格','エレガントで美しい','マリアージュが広い'] },
+        { name:'David Duband Gevrey-Chambertin 2020',          votes:4, avg:4.4, star:'⭐⭐⭐⭐',  comments:['バランスが良い','コスパが高い','グラスに注いだ瞬間が好き','飲みやすい'] },
+        { name:'Rossignol-Trapet Chambolle-Musigny 2021',      votes:2, avg:4.2, star:'⭐⭐⭐⭐',  comments:['繊細でエレガント','もう少し熟成させたい'] },
+        { name:'Henri Magnien Morey-Saint-Denis 1er Cru 2020', votes:1, avg:3.8, star:'⭐⭐⭐⭐',  comments:['まだ若い印象。3〜5年後に飲みたい'] },
+      ]
+    },
+    rsvps:[
+      { id:'r01', store:'Bistrot Lumière',       name:'浦川 哲矢',   title:'シェフソムリエ', email:'domaine.bouchon@gmail.com', count:2, note:'',              at:'5/08 14:32' },
+      { id:'r02', store:'レストラン フジモト',     name:'藤本 裕樹',   title:'マネージャー',   email:'fujimoto@fujimoto-r.co.jp', count:3, note:'アレルギー: ナッツ類（藤本）', at:'5/09 09:14' },
+      { id:'r03', store:'ワインバル ヴィーニョ',   name:'中山 彩花',   title:'ソムリエ',      email:'nakayama@vinho.jp',          count:1, note:'',              at:'5/10 17:05' },
+      { id:'r04', store:'オステリア ミラノ 六本木', name:'小林 健一',   title:'オーナー',      email:'kobayashi@osteria-milano.jp',count:2, note:'',              at:'5/11 11:48' },
+      { id:'r05', store:'シェ・マルク',            name:'マルク 佐藤', title:'ソムリエール',   email:'marc.s@chez-marc.jp',        count:2, note:'2名のうち1名は研修生', at:'5/12 16:20' },
+    ]
+  },
+  { id:'ie02', mine:true,  type:'seminar', typeLabel:'セミナー', dotColor:'#9B1B4B',
+    date: new Date(2026,4,26), time:'19:00〜21:00',
+    name:'イタリアワイン基礎セミナー（オンライン）',
+    organizer:'山田商店', venue:'Zoom（オンライン）',
+    notifyEmail:'info@yamadashoten.co.jp',
+    wines:[
+      { name:'Barolo Serralunga d\'Alba', vintage:'2019', price:18000 },
+      { name:'Brunello di Montalcino', vintage:'2018', price:28000 },
+      { name:'Amarone della Valpolicella', vintage:'2017', price:22000 },
+    ],
+    survey:null,
+    rsvps:[
+      { id:'r06', store:'La Table de Yoshi', name:'田中 佳子', title:'支配人',   email:'tanaka@latabledb.jp',      count:1, note:'', at:'5/13 10:00' },
+      { id:'r07', store:'ル・ブション 渋谷',  name:'渡辺 修',  title:'シェフ',   email:'watanabe@le-bouchon.co.jp', count:2, note:'', at:'5/14 20:31' },
+      { id:'r08', store:'銀座 ル・ソムリエ',  name:'松田 直樹', title:'ソムリエ', email:'matsuda@ginza-ls.jp',       count:1, note:'', at:'5/15 13:44' },
+    ]
+  },
+  { id:'ie05', mine:true,  type:'tasting', typeLabel:'試飲会', dotColor:'#9B1B4B',
+    date: new Date(2026,5,18), time:'14:00〜18:00',
+    name:'ローヌ・南仏新着試飲会',
+    organizer:'山田商店', venue:'品川 グランドホテル',
+    notifyEmail:'info@yamadashoten.co.jp',
+    rsvps:[]
+  },
+
+  // 他社イベント
+  { id:'ie03', mine:false, type:'fair',    typeLabel:'フェア',   dotColor:'#C9973A',
+    date: new Date(2026,5,3),  time:'10:00〜17:00',
+    name:'プロヴァンスワインフェア 2026',
+    organizer:'ヴィラ・ド・プロヴァンス', venue:'東京国際フォーラム ホールD' },
+  { id:'ie04', mine:false, type:'tasting', typeLabel:'試飲会',   dotColor:'#2563eb',
+    date: new Date(2026,5,10), time:'15:00〜18:00',
+    name:'ナチュラルワイン試飲会 — 自然派の最前線',
+    organizer:'ル・ヴァン・ナチュール東京', venue:'表参道 THE SPACE' },
+  { id:'ie06', mine:false, type:'tasting', typeLabel:'試飲会',   dotColor:'#2563eb',
+    date: new Date(2026,5,24), time:'13:00〜17:00',
+    name:'スペイン&ポルトガル新着試飲会',
+    organizer:'イベリア商事', venue:'渋谷 セルリアンタワー' },
+  { id:'ie07', mine:false, type:'seminar', typeLabel:'セミナー', dotColor:'#2563eb',
+    date: new Date(2026,6,2),  time:'18:30〜21:00',
+    name:'シャンパーニュ技術セミナー',
+    organizer:'シャンパーニュ・ジャポン', venue:'銀座 エノテカ本店' },
+  { id:'ie08', mine:false, type:'fair',    typeLabel:'フェア',   dotColor:'#C9973A',
+    date: new Date(2026,6,8),  time:'11:00〜18:00',
+    name:'ワイン・オブ・ザ・イヤー 大試飲会',
+    organizer:'日本ソムリエ協会', venue:'東京ビッグサイト' },
+];
+
+let impCalYear  = new Date().getFullYear();
+let impCalMonth = new Date().getMonth();
+
+// ============================================================
+// カレンダー描画
+// ============================================================
+function renderImporterCalendar() {
+  const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  document.getElementById('impMonthLabel').textContent = `${impCalYear}年 ${months[impCalMonth]}`;
+
+  const grid  = document.getElementById('impCalGrid');
+  const today = new Date();
+  while (grid.children.length > 7) grid.removeChild(grid.lastChild);
+
+  const first = new Date(impCalYear, impCalMonth, 1).getDay();
+  const days  = new Date(impCalYear, impCalMonth + 1, 0).getDate();
+
+  for (let i = 0; i < first; i++) {
+    const prev = new Date(impCalYear, impCalMonth, 0).getDate() - first + i + 1;
+    const cell = document.createElement('div');
+    cell.className = 'cal-imp-cell other-month';
+    cell.innerHTML = `<span class="cal-imp-num">${prev}</span>`;
+    grid.appendChild(cell);
+  }
+
+  for (let d = 1; d <= days; d++) {
+    const date    = new Date(impCalYear, impCalMonth, d);
+    const isToday = date.toDateString() === today.toDateString();
+    const evs     = industryEvents.filter(e => e.date.toDateString() === date.toDateString());
+    const hasMine = evs.some(e => e.mine);
+
+    const cell = document.createElement('div');
+    cell.className = 'cal-imp-cell'
+      + (isToday  ? ' today' : '')
+      + (hasMine  ? ' has-mine' : evs.length ? ' has-event' : '');
+
+    const dots = evs.map(e => `<div class="imp-dot" style="background:${e.dotColor};"></div>`).join('');
+    cell.innerHTML = `<span class="cal-imp-num">${d}</span>${dots ? `<div class="cal-imp-dots">${dots}</div>` : ''}`;
+    if (evs.length) cell.onclick = () => highlightImpEvent(evs[0].id);
+    grid.appendChild(cell);
+  }
+
+  renderImpEventList();
+}
+
+function impChangeMonth(delta) {
+  impCalMonth += delta;
+  if (impCalMonth > 11) { impCalMonth = 0; impCalYear++; }
+  if (impCalMonth < 0)  { impCalMonth = 11; impCalYear--; }
+  renderImporterCalendar();
+}
+
+function renderImpEventList() {
+  const ms = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const ds = ['日','月','火','水','木','金','土'];
+  const upcoming = industryEvents
+    .filter(e => e.date >= new Date(impCalYear, impCalMonth, 1) && e.date < new Date(impCalYear, impCalMonth + 1, 1))
+    .sort((a,b) => a.date - b.date);
+
+  const container = document.getElementById('impEventList');
+  if (!upcoming.length) {
+    container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">この月のイベントはありません</div>`;
+    return;
+  }
+
+  container.innerHTML = upcoming.map(ev => {
+    const cls    = ev.mine ? 'mine' : ev.type === 'fair' ? 'fair' : 'others';
+    const orgCls = ev.mine ? 'mine' : ev.type === 'fair' ? 'fair' : 'others';
+
+    // 自社イベントは「参加者管理」ボタン＋参加者バッジ
+    let actionBtns = '';
+    let rsvpBadge  = '';
+    if (ev.mine && ev.rsvps !== undefined) {
+      const totalStores  = ev.rsvps.length;
+      const totalPeople  = ev.rsvps.reduce((s, r) => s + r.count, 0);
+      if (totalStores > 0) {
+        rsvpBadge = `<span class="rsvp-badge">👥 ${totalStores}軒 / ${totalPeople}名 登録済み</span>`;
+      }
+      actionBtns = `
+        <button class="imp-ev-btn mine" onclick="openAttSheet('${ev.id}')">参加者</button>
+        <button class="imp-ev-btn send" onclick="goToBroadcast('${ev.id}')">配信</button>`;
+    } else {
+      actionBtns = `<button class="imp-ev-btn send" onclick="showToast('カレンダーに追加しました ✓')">予定追加</button>`;
+    }
+
+    return `<div class="imp-ev-card ${cls}" id="iev-${ev.id}">
+      <div class="imp-ev-date">
+        <div class="imp-ev-date-m">${ms[ev.date.getMonth()]}</div>
+        <div class="imp-ev-date-d">${ev.date.getDate()}</div>
+        <div class="imp-ev-date-w">${ds[ev.date.getDay()]}曜</div>
+      </div>
+      <div class="imp-ev-body">
+        <div class="imp-ev-name">${ev.name}</div>
+        <div class="imp-ev-meta">⏰ ${ev.time} &nbsp;|&nbsp; 📍 ${ev.venue}</div>
+        <span class="imp-ev-organizer ${orgCls}">${ev.mine ? '🏢 自社' : '🏢 ' + ev.organizer}</span>
+        ${rsvpBadge}
+      </div>
+      <div class="imp-ev-actions">${actionBtns}</div>
+    </div>`;
+  }).join('');
+}
+
+function highlightImpEvent(id) {
+  const el = document.getElementById('iev-' + id);
+  if (el) { el.scrollIntoView({ behavior:'smooth', block:'nearest' }); el.style.opacity = '0.6'; setTimeout(() => el.style.opacity = '', 500); }
+}
+
+// ============================================================
+// 参加者管理シート
+// ============================================================
+let currentAttEvId = null;
+let currentAttTab  = 'people';
+
+function openAttSheet(evId) {
+  currentAttEvId = evId;
+  currentAttTab  = 'people';
+  const ev = industryEvents.find(e => e.id === evId);
+  if (!ev) return;
+
+  const ms = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const ds = ['日','月','火','水','木','金','土'];
+  const dateStr = `${ms[ev.date.getMonth()]}${ev.date.getDate()}日(${ds[ev.date.getDay()]}) ${ev.time}`;
+  document.getElementById('attEvName').textContent = ev.name;
+  document.getElementById('attEvMeta').textContent = `📅 ${dateStr}　📍 ${ev.venue}`;
+
+  const rsvps       = ev.rsvps || [];
+  const totalStores = rsvps.length;
+  const totalPeople = rsvps.reduce((s, r) => s + r.count, 0);
+  const recent      = rsvps.filter(r => r.at >= '5/11').length;
+  document.getElementById('attStatStores').textContent = totalStores;
+  document.getElementById('attStatPeople').textContent = totalPeople;
+  document.getElementById('attStatNew').textContent    = recent;
+
+  // アンケートタブの表示制御
+  const surveyTab = document.getElementById('attTabSurvey');
+  surveyTab.style.display = ev.survey ? '' : 'none';
+
+  switchAttTab('people');
+  document.getElementById('attSheetBg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAttSheet() {
+  document.getElementById('attSheetBg').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function switchAttTab(tab) {
+  currentAttTab = tab;
+  ['people','wines','survey'].forEach(t => {
+    document.getElementById('attTab' + t.charAt(0).toUpperCase() + t.slice(1))
+      ?.classList.toggle('active', t === tab);
+  });
+  renderAttTab(tab);
+}
+
+function renderAttTab(tab) {
+  const ev   = industryEvents.find(e => e.id === currentAttEvId);
+  const body = document.getElementById('attBody');
+  if (!ev) return;
+
+  if (tab === 'people') {
+    // ── 参加者一覧 ──
+    const rsvps = ev.rsvps || [];
+    let h = `<div class="att-actions" style="margin-bottom:12px;">
+      <button class="att-action-btn att-btn-csv"  onclick="downloadCsv()">⬇ CSV</button>
+      <button class="att-action-btn att-btn-mail" onclick="openMailConfirm()">✉ メール</button>
+    </div>`;
+    if (rsvps.length === 0) {
+      h += `<div class="att-empty"><div style="font-size:40px;margin-bottom:12px;">📋</div>
+        まだ参加申込みはありません。<br>店舗からの申込みがあると<br>ここに順番に表示されます。</div>`;
+    } else {
+      h += rsvps.map((r, i) => `
+        <div class="att-card">
+          <div class="att-num">${i + 1}</div>
+          <div class="att-info">
+            <div class="att-store">${r.store}</div>
+            <div class="att-person">${r.name}　${r.title}</div>
+            <div class="att-email">${r.email}</div>
+            ${r.note ? `<div class="att-note">📝 ${r.note}</div>` : ''}
+            <div class="att-foot">
+              <span class="att-count">👥 ${r.count}名</span>
+              <span class="att-date">登録: ${r.at}</span>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+    body.innerHTML = h;
+
+  } else if (tab === 'wines') {
+    // ── ワイン配信 ──
+    const wines = ev.wines || [];
+    const rsvps = ev.rsvps || [];
+    const isAfter = ev.date <= new Date(); // イベント終了後かどうか
+    let h = '';
+
+    if (wines.length === 0) {
+      h = `<div class="att-empty"><div style="font-size:36px;margin-bottom:12px;">🍾</div>
+        ワインリストが登録されていません。<br>イベント作成時にワインを追加してください。</div>`;
+    } else {
+      h += `<div style="margin-bottom:12px;">
+        <button class="line-send-btn" onclick="sendWineListLine(${rsvps.length})">
+          <span style="font-size:18px;">💬</span> 参加者 ${rsvps.length}軒 全員にLINEで送る
+        </button>`;
+      if (isAfter) {
+        h += `<button class="line-send-btn secondary" style="margin-bottom:0;" onclick="sendSurveyLine(${rsvps.length})">
+          <span style="font-size:16px;">📊</span> アンケートをLINEで送る
+        </button>`;
+      }
+      h += `</div>`;
+
+      h += `<div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:.07em;margin-bottom:8px;">📋 試飲ワインリスト（${wines.length}本）</div>`;
+      h += wines.map((w, i) => `
+        <div class="wine-list-card">
+          <div class="wl-rank">${i + 1}</div>
+          <div class="wl-info">
+            <div class="wl-name">${w.name}</div>
+            <div class="wl-meta">${w.vintage}</div>
+          </div>
+          <div class="wl-price">¥${w.price.toLocaleString()}</div>
+        </div>`).join('');
+
+      h += `<div style="margin-top:10px;font-size:11px;color:var(--text-sub);text-align:center;line-height:1.7;">
+        ※ LINEで送信されるリストには価格は含まれません。<br>価格は任意で設定できます。</div>`;
+    }
+    body.innerHTML = h;
+
+  } else if (tab === 'survey') {
+    // ── アンケート結果 ──
+    const s = ev.survey;
+    if (!s) {
+      body.innerHTML = `<div class="att-empty">アンケートデータがありません</div>`;
+      return;
+    }
+    const medals = ['🥇','🥈','🥉'];
+    const rankCls = ['sw-rank-1','sw-rank-2','sw-rank-3','sw-rank-other','sw-rank-other'];
+    let h = '';
+
+    // 集計ヘッダー
+    h += `<div class="survey-header">
+      <div class="survey-stat"><div class="survey-stat-num">${s.sent}</div><div class="survey-stat-label">送信件数</div></div>
+      <div class="survey-stat"><div class="survey-stat-num">${s.responded}</div><div class="survey-stat-label">回答数</div></div>
+      <div class="survey-stat"><div class="survey-stat-num">${Math.round(s.responded/s.sent*100)}%</div><div class="survey-stat-label">回答率</div></div>
+    </div>`;
+
+    h += `<div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:.07em;margin-bottom:8px;">🏆 人気ランキング</div>`;
+
+    h += s.results.map((r, i) => `
+      <div class="survey-wine-card">
+        <div class="sw-top">
+          <div class="sw-rank-badge ${rankCls[i]}">${i < 3 ? medals[i] : i+1}</div>
+          <div class="sw-name">${r.name}</div>
+          <div>
+            <div class="sw-score">${r.avg.toFixed(1)}</div>
+            <div class="sw-votes">${r.votes}票</div>
+          </div>
+        </div>
+        <div class="sw-comments">
+          ${r.comments.slice(0,2).map(c => `<div class="sw-comment">「${c}」</div>`).join('')}
+        </div>
+      </div>`).join('');
+
+    // ソムリンレポートセクション
+    h += `<div class="sommelin-report-section">
+      <div class="sr-header">
+        <div class="sr-icon">🍷</div>
+        <div>
+          <div class="sr-title">ソムリンレポート</div>
+          <div class="sr-sub">全ユーザーへの配信プレビュー</div>
+        </div>
+      </div>
+      <div class="sr-preview">
+        <div class="sr-preview-label">LINE 配信イメージ ▼</div>
+        <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.9);margin-bottom:8px;">
+          🍷 先日の試飲会レポート<br>
+          <span style="font-weight:400;font-size:10px;opacity:.7;">${ev.name}</span>
+        </div>
+        ${s.results.slice(0,3).map((r, i) => `
+          <div class="sr-preview-item">
+            <span class="sr-medal">${medals[i]}</span>
+            <span class="sr-wine-short">${r.name.split(' ').slice(-2).join(' ')}</span>
+            <span class="sr-pts">⭐${r.avg.toFixed(1)}</span>
+          </div>`).join('')}
+        <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.15);font-size:11px;color:rgba(255,255,255,.8);">
+          🎯 <strong>ソムリン's pick:</strong> 今回の注目は
+          「${s.results[0].name.split(' ').slice(-2).join(' ')}」。
+          ${s.results[0].comments[0]}という声が多数！
+        </div>
+      </div>
+      <button class="sr-broadcast-btn" onclick="broadcastSommelinReport()">
+        📢 全ユーザーに配信する
+      </button>
+    </div>`;
+
+    body.innerHTML = h;
+  }
+}
+
+// ============================================================
+// CSV ダウンロード
+// ============================================================
+function downloadCsv() {
+  const ev = industryEvents.find(e => e.id === currentAttEvId);
+  if (!ev) return;
+  const rsvps = ev.rsvps || [];
+  if (rsvps.length === 0) { showToast('参加者がいません'); return; }
+
+  const ms = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const ds = ['日','月','火','水','木','金','土'];
+
+  const header = ['No','店名','氏名','役職','メールアドレス','参加人数','備考','登録日時'];
+  const rows = rsvps.map((r, i) =>
+    [i+1, r.store, r.name, r.title, r.email, r.count, r.note, r.at]
+      .map(v => `"${String(v).replace(/"/g, '""')}"`)
+      .join(',')
+  );
+
+  // BOM付きUTF-8でExcelでも文字化けしない
+  const csv = '﻿' + [header.join(','), ...rows].join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `参加者一覧_${ev.name}_${ms[ev.date.getMonth()]}${ev.date.getDate()}日.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSVをダウンロードしました ✓');
+}
+
+// ============================================================
+// CSV をメール送信（確認 → シミュレーション）
+// ============================================================
+function openMailConfirm() {
+  const ev = industryEvents.find(e => e.id === currentAttEvId);
+  if (!ev) return;
+  const rsvps = ev.rsvps || [];
+  const email = ev.notifyEmail || '（未設定）';
+  const ms = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+  document.getElementById('mailConfirmSub').textContent =
+    `参加者一覧（${rsvps.length}件）をCSV添付でメール送信します。`;
+  document.getElementById('mailConfirmPreview').innerHTML =
+    `<b>送信先:</b> ${email}<br>` +
+    `<b>件名:</b> 【参加者一覧】${ev.name}<br>` +
+    `<b>添付:</b> 参加者一覧_${ev.name}_${ms[ev.date.getMonth()]}${ev.date.getDate()}日.csv<br>` +
+    `<b>内容:</b> 全${rsvps.length}軒 / 合計${rsvps.reduce((s,r)=>s+r.count,0)}名の参加情報`;
+
+  document.getElementById('mailConfirmBg').classList.add('open');
+}
+
+function closeMailConfirm() {
+  document.getElementById('mailConfirmBg').classList.remove('open');
+}
+
+function sendCsvMail() {
+  closeMailConfirm();
+  setTimeout(() => showToast('✉ メールで送信しました ✓'), 600);
+}
+
+// ============================================================
+// LINE 配信：ワインリスト → 参加者全員
+// ============================================================
+function sendWineListLine(storeCount) {
+  if (storeCount === 0) { showToast('参加者がいません'); return; }
+  const ev    = industryEvents.find(e => e.id === currentAttEvId);
+  const wines = ev?.wines || [];
+
+  // モーダル生成
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position:fixed;inset:0;z-index:3000;
+    display:flex;align-items:flex-end;justify-content:center;
+    background:rgba(0,0,0,0.5);`;
+  const ms = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const dateStr = ev ? `${ms[ev.date.getMonth()]}${ev.date.getDate()}日` : '';
+  const wineLines = wines.map((w,i) => `${i+1}. ${w.name}（${w.vintage}）`).join('\n');
+  modal.innerHTML = `
+    <div style="background:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:24px 20px 32px;">
+      <div style="text-align:center;font-size:15px;font-weight:800;color:#2C1A1D;margin-bottom:4px;">LINE で配信</div>
+      <div style="text-align:center;font-size:12px;color:#7A5A62;margin-bottom:16px;">参加者 ${storeCount}軒 に試飲リストを送信します</div>
+      <div style="background:#e8faf0;border:1.5px solid #06C755;border-radius:12px;padding:14px 16px;margin-bottom:16px;white-space:pre-line;font-size:12px;line-height:1.8;color:#1a3c2a;font-family:monospace;">🍷 【試飲会のご案内】\n${ev?.name || ''}\n📅 ${dateStr}　📍 ${ev?.venue || ''}\n\n試飲ワインリスト：\n${wineLines}\n\n当日のご参加をお待ちしております。\n— ${ev?.org || '主催者'}</div>
+      <button onclick="confirmSendWineLine(this,${storeCount})" style="width:100%;padding:14px;background:#06C755;color:#fff;font-size:15px;font-weight:800;border:none;border-radius:12px;cursor:pointer;margin-bottom:10px;">💬 ${storeCount}軒 全員に送信する</button>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="width:100%;padding:12px;background:#f5f3f0;color:#7A5A62;font-size:14px;font-weight:700;border:none;border-radius:12px;cursor:pointer;">キャンセル</button>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+
+function confirmSendWineLine(btn, count) {
+  btn.textContent = '送信中…';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.closest('[style*=fixed]').remove();
+    showToast(`💬 ${count}軒にLINEでワインリストを送信しました ✓`);
+  }, 1000);
+}
+
+// ============================================================
+// LINE 配信：アンケート → 参加者全員
+// ============================================================
+function sendSurveyLine(storeCount) {
+  if (storeCount === 0) { showToast('参加者がいません'); return; }
+  const ev = industryEvents.find(e => e.id === currentAttEvId);
+
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position:fixed;inset:0;z-index:3000;
+    display:flex;align-items:flex-end;justify-content:center;
+    background:rgba(0,0,0,0.5);`;
+  modal.innerHTML = `
+    <div style="background:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:24px 20px 32px;">
+      <div style="text-align:center;font-size:15px;font-weight:800;color:#2C1A1D;margin-bottom:4px;">アンケートを送信</div>
+      <div style="text-align:center;font-size:12px;color:#7A5A62;margin-bottom:16px;">参加者 ${storeCount}軒 にLINEでアンケートを送ります</div>
+      <div style="background:#e8faf0;border:1.5px solid #06C755;border-radius:12px;padding:14px 16px;margin-bottom:16px;white-space:pre-line;font-size:12px;line-height:1.8;color:#1a3c2a;font-family:monospace;">📊 【試飲会アンケート】\n${ev?.name || ''}\n\nご参加ありがとうございました！\n\n今回飲んだワインの中で、\n一番おいしかったのはどれでしたか？\n評価と感想をお聞かせください 🍷\n\n▼ アンケートはこちら\nhttps://sommelin.app/survey/xxxx</div>
+      <button onclick="confirmSendSurveyLine(this,${storeCount})" style="width:100%;padding:14px;background:#06C755;color:#fff;font-size:15px;font-weight:800;border:none;border-radius:12px;cursor:pointer;margin-bottom:10px;">📊 ${storeCount}軒 全員にアンケートを送る</button>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="width:100%;padding:12px;background:#f5f3f0;color:#7A5A62;font-size:14px;font-weight:700;border:none;border-radius:12px;cursor:pointer;">キャンセル</button>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+
+function confirmSendSurveyLine(btn, count) {
+  btn.textContent = '送信中…';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.closest('[style*=fixed]').remove();
+    showToast(`📊 ${count}軒にアンケートを送信しました ✓`);
+    // アンケートタブに切り替えてデータ更新イメージ
+    const ev = industryEvents.find(e => e.id === currentAttEvId);
+    if (ev) {
+      if (!ev.survey) {
+        ev.survey = { sent: count, responded: 0, results: [] };
+      } else {
+        ev.survey.sent = count;
+      }
+    }
+  }, 1000);
+}
+
+// ============================================================
+// ソムリンレポート：全ユーザーへのLINE一斉配信
+// ============================================================
+function broadcastSommelinReport() {
+  const ev = industryEvents.find(e => e.id === currentAttEvId);
+  const s  = ev?.survey;
+  if (!s || s.results.length === 0) { showToast('アンケートデータがありません'); return; }
+
+  const medals = ['🥇','🥈','🥉'];
+  const top3   = s.results.slice(0, 3);
+  const pickName = top3[0]?.name?.split(' ').slice(-2).join(' ') || '';
+  const pickComment = top3[0]?.comments?.[0] || '';
+
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position:fixed;inset:0;z-index:3000;
+    display:flex;align-items:flex-end;justify-content:center;
+    background:rgba(0,0,0,0.6);`;
+  const previewLines = top3.map((r, i) =>
+    `${medals[i]} ${r.name.split(' ').slice(-2).join(' ')} ⭐${r.avg.toFixed(1)}`
+  ).join('\n');
+
+  modal.innerHTML = `
+    <div style="background:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:24px 20px 32px;">
+      <div style="text-align:center;font-size:15px;font-weight:800;color:#9B1B4B;margin-bottom:2px;">📢 ソムリンレポート配信</div>
+      <div style="text-align:center;font-size:12px;color:#7A5A62;margin-bottom:16px;">ソムリンに登録している全ユーザーにLINEで送信します</div>
+      <div style="background:linear-gradient(135deg,#3d0a1c,#6b1230);border-radius:12px;padding:16px;margin-bottom:16px;white-space:pre-line;font-size:12px;line-height:1.9;color:rgba(255,255,255,0.9);font-family:monospace;">🍷 ソムリンレポート\n${ev?.name || ''}\n\n人気ワインランキング ▼\n${previewLines}\n\n🎯 ソムリン's pick:\n「${pickName}」\n「${pickComment}」という声が多数！\n\n詳細はソムリンアプリで →\nhttps://sommelin.app</div>
+      <div style="background:#fff3e0;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:11px;color:#7A5A62;">⚠️ 配信前にソムリン編集チームが内容を確認します（通常24時間以内）</div>
+      <button onclick="confirmBroadcast(this)" style="width:100%;padding:14px;background:linear-gradient(135deg,#9B1B4B,#5C0E2A);color:#fff;font-size:15px;font-weight:800;border:none;border-radius:12px;cursor:pointer;margin-bottom:10px;">📢 配信申請を送る</button>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="width:100%;padding:12px;background:#f5f3f0;color:#7A5A62;font-size:14px;font-weight:700;border:none;border-radius:12px;cursor:pointer;">キャンセル</button>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+
+function confirmBroadcast(btn) {
+  btn.textContent = '送信中…';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.closest('[style*=fixed]').remove();
+    showToast('📢 ソムリンチームに配信申請を送りました ✓');
+  }, 900);
+}
+
+function goToBroadcast(evId) {
+  switchPanel('broadcast');
+  showToast('このイベントで配信モードを開きました');
+}
+
+function impSimulateSync(btn) {
+  btn.textContent = '同期中…'; btn.disabled = true;
+  setTimeout(() => {
+    btn.textContent = '同期'; btn.disabled = false;
+    document.getElementById('impSyncStatus').textContent = '最終同期: たった今';
+    showToast('Googleカレンダーと同期しました ✓');
+    renderImporterCalendar();
+  }, 1500);
+}
+
+// ============================================================
+// パネル切り替え
+// ============================================================
+function switchPanel(name) {
+  ['calendar','broadcast','members','history','catalog'].forEach(p => {
+    document.getElementById('panel' + cap(p)).classList.remove('active');
+    document.getElementById('tnav-' + p).classList.remove('active');
+  });
+  document.getElementById('panel' + cap(name)).classList.add('active');
+  document.getElementById('tnav-' + name).classList.add('active');
+  document.getElementById('stickyFooter').style.display = name === 'broadcast' ? 'block' : 'none';
+
+  if (name === 'calendar')  renderImporterCalendar();
+  if (name === 'broadcast') renderStoreList();
+  if (name === 'members')   renderMembers();
+  if (name === 'history')   renderHistory();
+  if (name === 'catalog')   renderCatalog();
+}
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+// ============================================================
+// 配信モード
+// ============================================================
+function setMode(mode) {
+  currentMode = mode;
+  ['all','prev','custom'].forEach(m => document.getElementById('mtab-'+m).classList.toggle('active', m === mode));
+  const hint = document.getElementById('prevHint');
+
+  if (mode === 'all') {
+    selectedIds = new Set(allLineIds.filter(id => !stores.find(s=>s.id===id)?.excluded));
+    hint.style.display = 'none';
+  } else if (mode === 'prev') {
+    selectedIds = new Set(prevList.filter(id => !stores.find(s=>s.id===id)?.excluded));
+    hint.style.display = 'flex';
+    hint.textContent = `📋 前回配信（5月1日）の宛先 ${prevList.length}店舗を引き継いでいます`;
+  } else {
+    hint.style.display = 'none';
+  }
+  renderStoreList();
+  updateFooter();
+}
+
+// ============================================================
+// 統計更新
+// ============================================================
+function updateStats() {
+  const total    = stores.length;
+  const lineOk   = stores.filter(s => s.lineConnected).length;
+  const noLine   = total - lineOk;
+  const excluded = stores.filter(s => s.excluded).length;
+  document.getElementById('statTotal').textContent    = total;
+  document.getElementById('statLine').textContent     = lineOk;
+  document.getElementById('statNoLine').textContent   = noLine;
+  document.getElementById('statExcluded').textContent = excluded;
+
+  // モードタブのカウント更新
+  document.getElementById('mc-all').textContent    = allLineIds.filter(id => !stores.find(s=>s.id===id)?.excluded).length;
+  document.getElementById('mc-prev').textContent   = prevList.filter(id => !stores.find(s=>s.id===id)?.excluded).length;
+  document.getElementById('mc-custom').textContent = selectedIds.size;
+}
+
+// ============================================================
+// フッター更新
+// ============================================================
+function updateFooter() {
+  const count = selectedIds.size;
+  document.getElementById('sfCount').textContent  = count;
+  document.getElementById('sfSendBtn').disabled   = count === 0;
+  const lineTotal = allLineIds.length;
+  document.getElementById('sfSub').textContent = `全${stores.length}店舗中 LINE連携済み${lineTotal}`;
+  document.getElementById('mc-custom').textContent = count;
+}
+
+// ============================================================
+// 店舗リスト描画
+// ============================================================
+function getFilteredStores() {
+  return stores.filter(s => {
+    const matchSearch = searchQuery === '' ||
+      s.name.toLowerCase().includes(searchQuery) ||
+      s.area.includes(searchQuery) ||
+      s.type.includes(searchQuery);
+    const matchArea = areaFilter === '' || s.area === areaFilter;
+    const matchType = typeFilter === '' || s.type === typeFilter;
+    return matchSearch && matchArea && matchType;
+  });
+}
+
+function renderStoreList() {
+  updateStats();
+  const list = document.getElementById('storeList');
+  const filtered = getFilteredStores();
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text-sub);font-size:13px;">店舗が見つかりません</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(s => {
+    const isSelected = selectedIds.has(s.id);
+    const noLine     = !s.lineConnected;
+    const isExcluded = s.excluded;
+
+    let lastSentHtml = '';
+    if (noLine) {
+      lastSentHtml = `<span class="line-badge no">LINE未連携</span>`;
+    } else if (isExcluded) {
+      lastSentHtml = `<span class="excluded-badge">🚫 除外中</span>`;
+    } else if (s.lastSent === '2026-05-01') {
+      lastSentHtml = `<span class="last-sent-badge recent">前回送信済</span>`;
+    } else if (s.lastSent) {
+      lastSentHtml = `<span class="last-sent-badge">${s.lastSent.slice(5).replace('-','/')}</span>`;
+    } else {
+      lastSentHtml = `<span class="last-sent-badge">未配信</span>`;
+    }
+
+    const newBadge = s.isNew ? `<span class="new-badge">NEW</span>` : '';
+
+    return `<div class="store-row${isSelected?' selected':''}${noLine?' no-line':''}${isExcluded?' excluded':''}" id="sr-${s.id}">
+      <div class="sr-check" onclick="toggleStore('${s.id}')">${isSelected?'✓':''}</div>
+      <div class="sr-icon">${s.icon}</div>
+      <div class="sr-info">
+        <div class="sr-name">${s.name} ${newBadge}</div>
+        <div class="sr-meta">📍 ${s.area} &nbsp;·&nbsp; ${s.type}</div>
+      </div>
+      <div class="sr-right">
+        <span class="line-badge${noLine?' no':''}">💬 ${noLine?'未連携':'LINE連携'}</span>
+        ${lastSentHtml}
+      </div>
+      <button class="sr-menu-btn" onclick="openCtxMenu('${s.id}')">⋯</button>
+    </div>`;
+  }).join('');
+
+  updateFooter();
+}
+
+function toggleStore(id) {
+  const s = stores.find(x => x.id === id);
+  if (!s || !s.lineConnected || s.excluded) return;
+  if (selectedIds.has(id)) selectedIds.delete(id);
+  else selectedIds.add(id);
+  if (currentMode !== 'custom') {
+    currentMode = 'custom';
+    ['all','prev','custom'].forEach(m => document.getElementById('mtab-'+m).classList.toggle('active', m==='custom'));
+    document.getElementById('prevHint').style.display = 'none';
+  }
+  renderStoreList();
+}
+
+// ============================================================
+// フィルタ
+// ============================================================
+const areas = ['', '恵比寿','代官山','中目黒','麻布十番','銀座','六本木','渋谷','目黒','新宿','西麻布','学芸大学','表参道','白金台','広尾','神楽坂'];
+const types = ['', 'フレンチ','イタリアン','ワインバー','和食','スペイン料理'];
+let areaIdx = 0, typeIdx = 0;
+
+function cycleAreaFilter(btn) {
+  areaIdx = (areaIdx + 1) % areas.length;
+  areaFilter = areas[areaIdx];
+  btn.textContent = areaFilter ? `${areaFilter} ✕` : 'エリア ▾';
+  btn.classList.toggle('active', !!areaFilter);
+  renderStoreList();
+}
+function cycleTypeFilter(btn) {
+  typeIdx = (typeIdx + 1) % types.length;
+  typeFilter = types[typeIdx];
+  btn.textContent = typeFilter ? `${typeFilter} ✕` : '業種 ▾';
+  btn.classList.toggle('active', !!typeFilter);
+  renderStoreList();
+}
+function filterStores(q) {
+  searchQuery = q.toLowerCase();
+  renderStoreList();
+}
+
+// ============================================================
+// コンテキストメニュー
+// ============================================================
+function openCtxMenu(id) {
+  ctxTargetId = id;
+  const s = stores.find(x => x.id === id);
+  document.getElementById('ctxStoreName').textContent = s.name;
+  document.getElementById('ctxSelectIcon').textContent  = selectedIds.has(id) ? '☑️' : '🔲';
+  document.getElementById('ctxSelectLabel').textContent = selectedIds.has(id) ? '選択を外す' : '配信リストに追加';
+  document.getElementById('ctxExcludeIcon').textContent  = s.excluded ? '✅' : '🚫';
+  document.getElementById('ctxExcludeLabel').textContent = s.excluded ? '除外を解除する' : '今回の配信から除外する';
+  document.getElementById('ctxMenuBg').classList.add('open');
+}
+function closeCtxMenu(e) {
+  if (!e || e.target === document.getElementById('ctxMenuBg')) {
+    document.getElementById('ctxMenuBg').classList.remove('open');
+    ctxTargetId = null;
+  }
+}
+function ctxSelectToggle() {
+  toggleStore(ctxTargetId);
+  closeCtxMenu();
+}
+function ctxExclude() {
+  const s = stores.find(x => x.id === ctxTargetId);
+  if (!s) return;
+  s.excluded = !s.excluded;
+  if (s.excluded) { selectedIds.delete(s.id); showToast(`「${s.name}」を除外しました`); }
+  else            { showToast(`「${s.name}」の除外を解除しました`); }
+  closeCtxMenu();
+  renderStoreList();
+}
+function ctxNote() {
+  closeCtxMenu();
+  showToast('メモ機能は近日実装予定');
+}
+function ctxRemove() {
+  closeCtxMenu();
+  showToast('削除機能は近日実装予定');
+}
+
+// ============================================================
+// 送信フロー
+// ============================================================
+function openConfirm() {
+  document.getElementById('confirmCount').textContent = selectedIds.size;
+  document.getElementById('confirmBg').classList.add('open');
+}
+function closeConfirm() {
+  document.getElementById('confirmBg').classList.remove('open');
+}
+function startSending() {
+  closeConfirm();
+  const total = selectedIds.size;
+  const overlay = document.getElementById('sendingOverlay');
+  const fill    = document.getElementById('sendingFill');
+  overlay.classList.add('open');
+
+  let current = 0;
+  const interval = setInterval(() => {
+    current++;
+    const pct = Math.round((current / total) * 100);
+    document.getElementById('sendingCount').textContent = current;
+    document.getElementById('sendingLabel').textContent = `/ ${total}店舗に送信中…`;
+    fill.style.width = pct + '%';
+    if (current >= total) {
+      clearInterval(interval);
+      setTimeout(() => {
+        overlay.classList.remove('open');
+        showDone(total);
+      }, 400);
+    }
+  }, Math.max(60, Math.round(1800 / total)));
+}
+function showDone(total) {
+  document.getElementById('doneCount').textContent    = total;
+  document.getElementById('doneSent').textContent     = total;
+  document.getElementById('doneDelivered').textContent = Math.floor(total * 0.85);
+  document.getElementById('doneRsvp').textContent     = Math.floor(total * 0.28);
+  document.getElementById('doneOverlay').classList.add('open');
+  // 履歴に追加
+  broadcastHistory.unshift({ date:'2026-06-10', event:'ブルゴーニュ新着ワイン試飲会', sent:total, opened:Math.floor(total*0.85), rsvpd:Math.floor(total*0.28) });
+}
+function closeDone() {
+  document.getElementById('doneOverlay').classList.remove('open');
+  selectedIds.clear();
+  setMode('all');
+}
+
+// ============================================================
+// 加盟店パネル
+// ============================================================
+function renderMembers() {
+  const connected = stores.filter(s => s.lineConnected);
+  const notConn   = stores.filter(s => !s.lineConnected);
+
+  document.getElementById('memberListConnected').innerHTML = connected.map(s => `
+    <div class="member-card">
+      <div class="mc-icon">${s.icon}</div>
+      <div class="mc-info">
+        <div class="mc-name">${s.name}</div>
+        <div class="mc-meta">📍 ${s.area} · ${s.type} &nbsp;·&nbsp; 💬 LINE連携済</div>
+      </div>
+      <div class="mc-right">
+        ${s.isNew ? '<span class="new-badge">NEW</span>' : ''}
+        ${s.lastSent ? `<span style="font-size:10px;color:var(--text-sub);">前回: ${s.lastSent.slice(5).replace('-','/')}</span>` : '<span style="font-size:10px;color:#aaa;">未配信</span>'}
+      </div>
+    </div>`).join('');
+
+  document.getElementById('memberListNotConnected').innerHTML = notConn.map(s => `
+    <div class="member-card" style="opacity:0.6;">
+      <div class="mc-icon">${s.icon}</div>
+      <div class="mc-info">
+        <div class="mc-name">${s.name}</div>
+        <div class="mc-meta">📍 ${s.area} · ${s.type}</div>
+      </div>
+      <div class="mc-right">
+        <button onclick="showToast('招待リンクをコピーしました 📋')" style="font-size:11px;font-weight:700;background:var(--burgundy-pale);color:var(--burgundy);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-family:inherit;">招待する</button>
+      </div>
+    </div>`).join('');
+}
+
+// ============================================================
+// 配信履歴パネル
+// ============================================================
+function renderHistory() {
+  document.getElementById('historyList').innerHTML = broadcastHistory.map(h => `
+    <div class="history-card">
+      <div class="hc-header">
+        <div class="hc-event">🍷 ${h.event}</div>
+        <div class="hc-date">${h.date}</div>
+      </div>
+      <div class="hc-stats">
+        <div class="hc-stat"><strong>${h.sent}</strong>店舗に送信</div>
+        <div class="hc-stat"><strong>${h.opened}</strong>既読</div>
+        <div class="hc-stat"><strong>${h.rsvpd}</strong>RSVP</div>
+      </div>
+      <div class="hc-open-rate">
+        📊 既読率 ${Math.round(h.opened/h.sent*100)}% &nbsp;·&nbsp; RSVP率 ${Math.round(h.rsvpd/h.sent*100)}%
+        &nbsp;&nbsp;
+        <span style="color:#9B1B4B;font-weight:700;cursor:pointer;" onclick="restorePrevList(${JSON.stringify(h)})">この宛先を再利用 →</span>
+      </div>
+    </div>`).join('');
+}
+
+function restorePrevList(h) {
+  // 履歴から宛先を復元（シミュレーション: prevListを使用）
+  selectedIds = new Set(prevList);
+  switchPanel('broadcast');
+  showToast(`「${h.event}」の宛先 ${h.sent}店舗を読み込みました`);
+  currentMode = 'custom';
+  ['all','prev','custom'].forEach(m => document.getElementById('mtab-'+m).classList.toggle('active', m==='custom'));
+  renderStoreList();
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+setMode('prev');
+renderStoreList();
+
+// ============================================================
+// 📋 取り扱いカタログ（localStorage経由でwine_search.htmlと連携）
+// ============================================================
+const IMP_INFO = {
+  id: 'yamada-shoten',
+  name: '山田商店',
+  type: 'importer',
+};
+const CAT_KEY = 'sommelin_importer_catalog';
+
+function loadCatalog() {
+  try { return JSON.parse(localStorage.getItem(CAT_KEY) || '[]'); } catch(e){ return []; }
+}
+function saveCatalog(items) {
+  const all = loadCatalog().filter(i => i.importerId !== IMP_INFO.id);
+  localStorage.setItem(CAT_KEY, JSON.stringify([...all, ...items.map(i => ({...i, importerId: IMP_INFO.id, importerName: IMP_INFO.name}))]));
+}
+
+function initDemoCatalog() {
+  const existing = loadCatalog().filter(i => i.importerId === IMP_INFO.id);
+  if (existing.length > 0) return;
+  const demo = [
+    { id:'ic1', name:'Alex Gambal Charmes-Chambertin', producer:'Alex Gambal', vintage:'2019', region:'Bourgogne, France', price:36000, available:true, desc:'ブルゴーニュの新星。緻密なタンニンと赤果実の香り。' },
+    { id:'ic2', name:'David Duband Gevrey-Chambertin', producer:'David Duband', vintage:'2020', region:'Bourgogne, France', price:18000, available:true, desc:'コスパ優秀な村名格。飲みやすくエレガント。' },
+    { id:'ic3', name:'Rossignol-Trapet Chambolle-Musigny', producer:'Rossignol-Trapet', vintage:'2021', region:'Bourgogne, France', price:24000, available:true, desc:'繊細なフローラルアロマ。女性的なシャンボール・ミュジニー。' },
+    { id:'ic4', name:'Maison Leroy Nuits-Saint-Georges', producer:'Maison Leroy', vintage:'2018', region:'Bourgogne, France', price:68000, available:true, desc:'ルロワの最高峰。圧倒的な存在感と長い余韻。' },
+    { id:'ic5', name:'Henri Magnien Morey-Saint-Denis 1er Cru', producer:'Henri Magnien', vintage:'2020', region:'Bourgogne, France', price:21000, available:true, desc:'1er Cruの力強さの中に繊細さ。まだ若い印象。3〜5年後がベスト。' },
+  ];
+  saveCatalog(demo);
+}
+
+function renderCatalog() {
+  initDemoCatalog();
+  const items = loadCatalog().filter(i => i.importerId === IMP_INFO.id);
+  document.getElementById('catTotal').textContent = items.length;
+  document.getElementById('catAvail').textContent = items.filter(i => i.available).length;
+  document.getElementById('catSold').textContent  = items.filter(i => !i.available).length;
+
+  const list = document.getElementById('catList');
+  if (items.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:32px 16px;color:var(--text-sub);">
+      <div style="font-size:36px;margin-bottom:12px;">📋</div>
+      カタログが空です。<br>上のフォームから取り扱いワインを追加してください。</div>`;
+    return;
+  }
+  list.innerHTML = items.map(it => `
+    <div class="cat-card${it.available ? '' : ' unavail'}">
+      <div class="cat-card-top">
+        <div class="cat-badge">🍷</div>
+        <div class="cat-cinfo">
+          <div class="cat-cname">${it.name}</div>
+          <div class="cat-cmeta">${it.producer}　${it.vintage}　${it.region}</div>
+          <div class="cat-cprice">¥${(it.price||0).toLocaleString()}</div>
+        </div>
+        <div class="cat-cright">
+          <button class="cat-toggle ${it.available?'avail':'unavl'}" onclick="toggleCat('${it.id}')">
+            ${it.available ? '取り扱い中' : '停止中'}
+          </button>
+          <button class="cat-del" onclick="deleteCat('${it.id}')">✕</button>
+        </div>
+      </div>
+      ${it.desc ? `<div class="cat-desc">${it.desc}</div>` : ''}
+    </div>`).join('');
+}
+
+function addCatalogItem() {
+  const name     = document.getElementById('catName').value.trim();
+  const producer = document.getElementById('catProducer').value.trim();
+  const vintage  = document.getElementById('catVintage').value.trim();
+  const region   = document.getElementById('catRegion').value.trim();
+  const price    = parseInt(document.getElementById('catPrice').value) || 0;
+  const available= document.getElementById('catAvailSel').value === '1';
+  const desc     = document.getElementById('catDesc').value.trim();
+  if (!name) { showToast('ワイン名を入力してください'); return; }
+  const myItems = loadCatalog().filter(i => i.importerId === IMP_INFO.id);
+  myItems.push({ id:'ic'+Date.now(), name, producer, vintage, region, price, available, desc });
+  saveCatalog(myItems);
+  ['catName','catProducer','catVintage','catRegion','catPrice','catDesc'].forEach(id => document.getElementById(id).value = '');
+  renderCatalog();
+  showToast('✓ カタログに追加しました');
+}
+
+function toggleCat(id) {
+  const myItems = loadCatalog().filter(i => i.importerId === IMP_INFO.id);
+  const it = myItems.find(i => i.id === id);
+  if (!it) return;
+  it.available = !it.available;
+  saveCatalog(myItems);
+  renderCatalog();
+  showToast(it.available ? '✓ 取り扱い中に変更しました' : '取り扱い停止に変更しました');
+}
+
+function deleteCat(id) {
+  const myItems = loadCatalog().filter(i => i.importerId === IMP_INFO.id && i.id !== id);
+  saveCatalog(myItems);
+  renderCatalog();
+  showToast('削除しました');
+}
+
+function exportCatalog() {
+  const items = loadCatalog().filter(i => i.importerId === IMP_INFO.id);
+  if (!items.length) { showToast('カタログが空です'); return; }
+  const header = ['名前','生産者','ヴィンテージ','産地','参考価格','ステータス','説明'];
+  const rows = items.map(i => [i.name,i.producer,i.vintage,i.region,i.price,i.available?'取り扱い中':'停止',i.desc]
+    .map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(','));
+  const csv = '﻿' + [header.join(','), ...rows].join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download = `${IMP_INFO.name}_取り扱いカタログ.csv`;
+  a.click();
+  showToast('カタログをCSVでダウンロードしました');
+}
+
+function shareCatalogLine() {
+  const items = loadCatalog().filter(i => i.importerId === IMP_INFO.id && i.available);
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;z-index:3000;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.5);';
+  const lines = items.slice(0,5).map((it,i)=>`${i+1}. ${it.name} ${it.vintage}`).join('\n');
+  modal.innerHTML = `<div style="background:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:24px 20px 36px;">
+    <div style="font-size:15px;font-weight:800;text-align:center;margin-bottom:14px;">LINEでカタログをシェア</div>
+    <div style="background:#e8faf0;border:1.5px solid #06C755;border-radius:12px;padding:14px;margin-bottom:16px;white-space:pre-line;font-size:12px;line-height:1.9;font-family:monospace;color:#1a3c2a;">📋 【${IMP_INFO.name} 取り扱いカタログ】\n取り扱い中ワイン（${items.length}本）\n\n${lines}${items.length>5?`\n…他${items.length-5}本`:''}\n\n詳細・ご注文はお気軽にお問い合わせください。\n\nhttps://sommelin.app/catalog/${IMP_INFO.id}</div>
+    <button onclick="this.closest('[style]').remove();showToast('💬 LINEでカタログを送信しました ✓');" style="width:100%;padding:14px;background:#06C755;color:#fff;font-size:15px;font-weight:800;border:none;border-radius:12px;cursor:pointer;margin-bottom:10px;">💬 LINEで送る</button>
+    <button onclick="this.closest('[style]').remove()" style="width:100%;padding:12px;background:#f5f3f0;color:#7A5A62;font-size:14px;font-weight:700;border:none;border-radius:12px;cursor:pointer;">キャンセル</button>
+  </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if(e.target===modal) modal.remove(); });
+}
+</script>
+</body>
+</html>

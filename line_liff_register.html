@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Sommelin — 店舗登録</title>
+<style>
+  :root {
+    --burgundy: #9B1B4B;
+    --wine-dark: #5C0E2A;
+    --burgundy-pale: #f9f0f3;
+    --text: #2C1A1D;
+    --text-sub: #7A5A62;
+    --bg: #f8f8f8;
+    --white: #ffffff;
+    --border: #e5e5e5;
+    --gold: #C9973A;
+    --line: #06C755;
+    --line-dark: #019A40;
+    --line-pale: #e8faf0;
+    --req: #e53e3e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, 'Hiragino Sans', 'Yu Gothic', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== LINE LIFF ブラウザバー（シミュレーション） ===== */
+  .liff-bar {
+    background: var(--line);
+    padding: 10px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 200;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  }
+  .liff-back {
+    color: white; font-size: 22px; font-weight: 300;
+    background: none; border: none; cursor: pointer;
+    padding: 0 6px 0 0; line-height: 1;
+  }
+  .liff-title {
+    color: white; font-size: 15px; font-weight: 700;
+    letter-spacing: 0.5px; flex: 1; text-align: center;
+  }
+  .liff-close {
+    color: white; font-size: 18px; font-weight: 300;
+    background: none; border: none; cursor: pointer;
+    padding: 0 0 0 6px; line-height: 1; opacity: 0.8;
+  }
+  .liff-url-bar {
+    background: rgba(255,255,255,0.2);
+    border-radius: 6px; padding: 4px 10px;
+    display: flex; align-items: center; gap: 6px;
+    max-width: 180px;
+  }
+  .liff-lock { font-size: 11px; }
+  .liff-url  { font-size: 10px; color: white; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ===== 画面管理 ===== */
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ===== ウェルカム画面 ===== */
+  .welcome-hero {
+    background: linear-gradient(160deg, var(--wine-dark) 0%, var(--burgundy) 60%, #C84B6B 100%);
+    padding: 40px 24px 32px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .welcome-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle at 80% 20%, rgba(201,151,58,0.25) 0%, transparent 50%),
+                      radial-gradient(circle at 10% 80%, rgba(255,255,255,0.08) 0%, transparent 40%);
+  }
+  .welcome-logo {
+    display: inline-flex; align-items: center; gap: 10px;
+    margin-bottom: 20px; position: relative;
+  }
+  .welcome-logo-icon {
+    width: 52px; height: 52px;
+    background: white; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  }
+  .welcome-logo-icon {
+    background-image: url("assets/sommelin/sommelin-logo.png");
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  .welcome-logo-icon svg { display: none; }
+  .welcome-logo-text {
+    color: white; font-size: 26px; font-weight: 800; letter-spacing: 1px;
+  }
+  .welcome-tagline {
+    color: rgba(255,255,255,0.85); font-size: 13px; letter-spacing: 0.3px;
+    margin-bottom: 4px; position: relative;
+  }
+  .welcome-title {
+    color: white; font-size: 22px; font-weight: 800;
+    line-height: 1.4; margin-bottom: 16px; position: relative;
+  }
+  .welcome-benefits {
+    display: flex; flex-direction: column; gap: 8px;
+    text-align: left; position: relative;
+  }
+  .welcome-benefit {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 10px; padding: 10px 14px;
+    color: white; font-size: 13px; font-weight: 600;
+  }
+  .benefit-icon { font-size: 18px; flex-shrink: 0; }
+
+  .welcome-body { padding: 24px 20px 32px; }
+  .welcome-body-title {
+    font-size: 17px; font-weight: 800; color: var(--text);
+    margin-bottom: 8px;
+  }
+  .welcome-body-desc {
+    font-size: 13px; color: var(--text-sub); line-height: 1.7;
+    margin-bottom: 24px;
+  }
+  .welcome-start-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--line) 0%, #04a847 100%);
+    color: white; border: none; border-radius: 14px;
+    padding: 16px; font-size: 16px; font-weight: 800;
+    cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: 0 4px 16px rgba(6,199,85,0.35);
+    transition: opacity 0.15s;
+  }
+  .welcome-start-btn:active { opacity: 0.85; }
+  .welcome-note {
+    text-align: center; font-size: 11px; color: var(--text-sub);
+    margin-top: 12px; line-height: 1.5;
+  }
+
+  /* ===== ステップインジケーター ===== */
+  .step-indicator {
+    background: white;
+    padding: 14px 20px 10px;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 44px; z-index: 100;
+  }
+  .step-label {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px;
+  }
+  .step-title { font-size: 14px; font-weight: 800; color: var(--text); }
+  .step-count { font-size: 12px; color: var(--text-sub); }
+  .progress-bar {
+    width: 100%; height: 4px;
+    background: #eee; border-radius: 2px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--burgundy), #C84B6B);
+    border-radius: 2px; transition: width 0.4s ease;
+  }
+  .step-dots {
+    display: flex; justify-content: center; gap: 6px; margin-top: 8px;
+  }
+  .step-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #ddd; transition: all 0.3s;
+  }
+  .step-dot.done   { background: var(--line); }
+  .step-dot.active { background: var(--burgundy); width: 18px; border-radius: 3px; }
+
+  /* ===== フォーム共通 ===== */
+  .form-body { padding: 20px 20px 100px; }
+  .form-group { margin-bottom: 16px; }
+  .form-label {
+    font-size: 12px; font-weight: 700; color: var(--text-sub);
+    letter-spacing: 0.5px; display: flex; align-items: center;
+    gap: 5px; margin-bottom: 6px;
+  }
+  .req-mark { color: var(--req); font-size: 11px; }
+  .opt-mark {
+    color: #aaa; font-size: 10px; font-weight: 500;
+    background: #f5f5f5; padding: 1px 6px; border-radius: 4px;
+  }
+  .form-input, .form-select, .form-textarea {
+    width: 100%; border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 11px 14px;
+    font-size: 15px; font-family: inherit; color: var(--text);
+    outline: none; background: white;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--burgundy);
+    box-shadow: 0 0 0 3px rgba(155,27,75,0.1);
+  }
+  .form-input.error { border-color: var(--req); box-shadow: 0 0 0 3px rgba(229,62,62,0.1); }
+  .form-input-hint {
+    font-size: 11px; color: var(--text-sub); margin-top: 4px; padding-left: 2px;
+  }
+  .form-row { display: flex; gap: 10px; }
+  .form-row .form-group { flex: 1; }
+  .form-divider {
+    height: 1px; background: var(--border);
+    margin: 20px 0; border: none;
+  }
+  .form-section-title {
+    font-size: 13px; font-weight: 800; color: var(--burgundy);
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 14px; padding-bottom: 8px;
+    border-bottom: 2px solid var(--burgundy-pale);
+  }
+
+  /* 業種カード選択 */
+  .type-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; margin-top: 6px;
+  }
+  .type-card {
+    border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 12px 10px; text-align: center;
+    cursor: pointer; transition: all 0.15s;
+    background: white;
+  }
+  .type-card:active { transform: scale(0.97); }
+  .type-card.selected {
+    border-color: var(--burgundy); background: var(--burgundy-pale);
+  }
+  .type-card .tc-icon { font-size: 22px; margin-bottom: 4px; }
+  .type-card .tc-label { font-size: 11px; font-weight: 700; color: var(--text); line-height: 1.3; }
+  .type-card.selected .tc-label { color: var(--burgundy); }
+
+  /* 同意チェック */
+  .consent-box {
+    background: #fffbeb; border: 1.5px solid #fde68a;
+    border-radius: 12px; padding: 14px 16px;
+  }
+  .consent-check-row {
+    display: flex; align-items: flex-start; gap: 12px;
+    cursor: pointer;
+  }
+  .consent-check-row input[type=checkbox] {
+    width: 22px; height: 22px; flex-shrink: 0;
+    accent-color: var(--burgundy); cursor: pointer; margin-top: 2px;
+  }
+  .consent-text { font-size: 13px; color: var(--text); line-height: 1.6; }
+  .consent-link { color: var(--burgundy); text-decoration: underline; }
+
+  /* ===== ナビボタン ===== */
+  .form-nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 430px;
+    background: white; border-top: 1px solid var(--border);
+    padding: 12px 20px 28px;
+    display: flex; gap: 10px; z-index: 100;
+  }
+  .btn-back {
+    background: white; color: var(--text-sub);
+    border: 1.5px solid var(--border); border-radius: 12px;
+    padding: 14px 20px; font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+  }
+  .btn-next {
+    flex: 1; background: var(--burgundy); color: white;
+    border: none; border-radius: 12px;
+    padding: 14px; font-size: 15px; font-weight: 800;
+    cursor: pointer; font-family: inherit;
+    transition: opacity 0.15s;
+  }
+  .btn-next:active { opacity: 0.85; }
+  .btn-next.line-style {
+    background: linear-gradient(135deg, var(--line) 0%, #04a847 100%);
+    box-shadow: 0 4px 16px rgba(6,199,85,0.3);
+  }
+
+  /* ===== 送信中オーバーレイ ===== */
+  .submitting-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(255,255,255,0.95);
+    z-index: 300; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px;
+  }
+  .submitting-overlay.open { display: flex; }
+  .submitting-spinner {
+    width: 56px; height: 56px;
+    border: 4px solid rgba(155,27,75,0.15);
+    border-top-color: var(--burgundy);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .submitting-text { font-size: 16px; font-weight: 700; color: var(--text); }
+  .submitting-sub  { font-size: 12px; color: var(--text-sub); }
+
+  /* ===== 完了画面 ===== */
+  .done-hero {
+    background: linear-gradient(160deg, var(--line-dark) 0%, var(--line) 100%);
+    padding: 40px 24px 32px; text-align: center;
+  }
+  .done-check {
+    width: 72px; height: 72px; background: white;
+    border-radius: 50%; margin: 0 auto 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+  .done-title { color: white; font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+  .done-sub   { color: rgba(255,255,255,0.85); font-size: 13px; line-height: 1.6; }
+
+  .done-body { padding: 24px 20px 100px; }
+  .done-section-title {
+    font-size: 13px; font-weight: 800; color: var(--text-sub);
+    letter-spacing: 0.8px; text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  /* ===== LINE チャットプレビュー ===== */
+  .line-chat-preview {
+    background: #b2c8e6;
+    border-radius: 16px; overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .lcp-header {
+    background: #3b82a0; padding: 10px 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .lcp-icon {
+    width: 36px; height: 36px; background: var(--line);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .lcp-icon svg { width: 22px; height: 22px; }
+  .lcp-name { color: white; font-size: 14px; font-weight: 700; }
+  .lcp-body  { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+
+  /* チャットバブル */
+  .chat-row { display: flex; align-items: flex-end; gap: 8px; }
+  .chat-row.mine { flex-direction: row-reverse; }
+  .chat-avatar {
+    width: 32px; height: 32px; background: var(--line);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .chat-avatar svg { width: 20px; height: 20px; }
+  .chat-bubble {
+    background: white; border-radius: 0 12px 12px 12px;
+    padding: 10px 12px; max-width: 80%;
+    font-size: 13px; line-height: 1.5; color: #1a1a1a;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .chat-bubble.mine { background: #b9f2d5; border-radius: 12px 0 12px 12px; }
+  .chat-time { font-size: 9px; color: rgba(0,0,0,0.45); margin-bottom: 2px; white-space: nowrap; }
+  .chat-time.right { text-align: right; }
+
+  /* 試飲会通知カード (Flex Message 風) */
+  .flex-card {
+    background: white; border-radius: 12px;
+    overflow: hidden; max-width: 85%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  }
+  .flex-card-header {
+    background: var(--burgundy); padding: 10px 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .flex-card-title { color: white; font-size: 12px; font-weight: 800; }
+  .flex-card-body  { padding: 12px 14px; }
+  .flex-card-name  { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+  .flex-card-row   { font-size: 11px; color: #555; margin-bottom: 3px; display: flex; gap: 4px; }
+  .flex-card-btn {
+    display: block; width: 100%;
+    background: var(--burgundy); color: white;
+    border: none; padding: 9px;
+    font-size: 12px; font-weight: 700; text-align: center;
+    cursor: pointer; font-family: inherit;
+  }
+
+  /* おすすめワインカード */
+  .wine-recommend-card {
+    background: white; border-radius: 12px;
+    overflow: hidden; max-width: 85%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  }
+  .wrc-header {
+    background: linear-gradient(135deg, var(--wine-dark), var(--burgundy));
+    padding: 10px 14px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .wrc-title { color: white; font-size: 12px; font-weight: 800; }
+  .wrc-body  { padding: 12px 14px; }
+  .wrc-wine  { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid #f0f0f0; }
+  .wrc-wine:last-child { border-bottom: none; }
+  .wrc-wine-emoji { font-size: 18px; }
+  .wrc-wine-name  { font-size: 12px; font-weight: 700; color: var(--text); }
+  .wrc-wine-meta  { font-size: 10px; color: #888; margin-top: 1px; }
+  .wrc-wine-score { font-size: 11px; font-weight: 700; color: var(--gold); margin-left: auto; white-space: nowrap; }
+
+  .done-actions { display: flex; flex-direction: column; gap: 10px; }
+  .done-btn-primary {
+    width: 100%; background: var(--wine-dark); color: white;
+    border: none; border-radius: 14px; padding: 15px;
+    font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit;
+    transition: opacity 0.15s;
+  }
+  .done-btn-secondary {
+    width: 100%; background: white; color: var(--text-sub);
+    border: 1.5px solid var(--border); border-radius: 14px; padding: 14px;
+    font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;
+  }
+
+  /* ===== 役割選択画面 ===== */
+  .role-screen-body { padding: 24px 20px 40px; }
+  .role-hero {
+    background: linear-gradient(160deg, var(--wine-dark) 0%, var(--burgundy) 55%, #C84B6B 100%);
+    padding: 32px 24px 24px; text-align: center;
+  }
+  .role-hero-logo { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .role-hero-icon {
+    width: 44px; height: 44px; background: white; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    background-image: url("assets/sommelin/sommelin-logo.png");
+    background-size: contain; background-position: center; background-repeat: no-repeat;
+  }
+  .role-hero-name { color: white; font-size: 22px; font-weight: 800; }
+  .role-hero-sub  { color: rgba(255,255,255,0.8); font-size: 12px; }
+  .role-lead  { font-size: 18px; font-weight: 900; color: var(--text); margin-bottom: 5px; }
+  .role-subtext { font-size: 12px; color: var(--text-sub); line-height: 1.6; margin-bottom: 20px; }
+  .liff-role-card {
+    background: white; border: 2px solid var(--border);
+    border-radius: 16px; padding: 16px 14px 16px 18px;
+    margin-bottom: 10px; cursor: pointer;
+    display: flex; align-items: center; gap: 13px;
+    transition: all 0.15s;
+  }
+  .liff-role-card:active { border-color: var(--burgundy); background: var(--burgundy-pale,#f9f0f3); transform: scale(0.98); }
+  .liff-role-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; flex-shrink: 0;
+  }
+  .liff-role-info { flex: 1; }
+  .liff-role-title { font-size: 14px; font-weight: 800; color: var(--text); }
+  .liff-role-desc  { font-size: 11px; color: var(--text-sub); line-height: 1.4; margin-top: 2px; }
+  .liff-role-badge {
+    font-size: 9px; font-weight: 700; padding: 2px 7px;
+    border-radius: 6px; display: inline-block; margin-top: 4px;
+  }
+  .badge-biz  { background: #fef3c7; color: #92400e; }
+  .badge-free { background: #f0fdf4; color: #166534; }
+  .liff-role-arrow { font-size: 18px; color: var(--text-sub); flex-shrink: 0; }
+  .liff-notice-lock {
+    background: #f9f0f3; border: 1.5px solid #ecdde2;
+    border-radius: 12px; padding: 12px 14px;
+    font-size: 11px; color: var(--text-sub); line-height: 1.6;
+    margin-top: 16px; display: flex; gap: 8px; align-items: flex-start;
+  }
+
+  /* ===== 本人確認画面 ===== */
+  .verify-methods { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+  .verify-method {
+    background: white; border: 2px solid var(--border); border-radius: 12px;
+    padding: 12px 14px; cursor: pointer; display: flex; align-items: center; gap: 12px;
+    transition: all 0.15s;
+  }
+  .verify-method.selected { border-color: var(--burgundy); background: #f9f0f3; }
+  .verify-method:active { transform: scale(0.98); }
+  .vm-icon { font-size: 22px; flex-shrink: 0; }
+  .vm-title { font-size: 12px; font-weight: 800; color: var(--text); }
+  .vm-sub   { font-size: 10px; color: var(--text-sub); }
+  .vm-check { font-size: 16px; color: var(--burgundy); margin-left: auto; }
+  .upload-area {
+    border: 2px dashed var(--border); border-radius: 12px;
+    padding: 24px 16px; text-align: center; cursor: pointer;
+    background: var(--bg,#f8f8f8); transition: all 0.15s; margin-bottom: 12px;
+  }
+  .upload-area.filled { border-color: var(--burgundy); border-style: solid; background: #f9f0f3; }
+  .upload-area .ua-icon  { font-size: 28px; margin-bottom: 6px; }
+  .upload-area .ua-label { font-size: 12px; font-weight: 700; color: var(--text-sub); }
+  .upload-area .ua-sub   { font-size: 10px; color: var(--text-sub); margin-top: 2px; }
+  .btn-verify-submit {
+    width: 100%; background: var(--burgundy); color: white;
+    border: none; border-radius: 14px; padding: 15px;
+    font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit;
+    transition: opacity 0.15s;
+  }
+  .btn-verify-submit:active { opacity: 0.85; }
+
+  /* ===== 審査中画面 ===== */
+  .pending-body {
+    min-height: calc(100vh - 44px);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 40px 24px; text-align: center;
+  }
+  .pending-icon  { font-size: 60px; margin-bottom: 18px; }
+  .pending-title { font-size: 20px; font-weight: 900; color: var(--text); margin-bottom: 10px; }
+  .pending-sub   { font-size: 13px; color: var(--text-sub); line-height: 1.7; margin-bottom: 24px; }
+  .pending-timeline {
+    width: 100%; background: white; border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 16px; text-align: left; margin-bottom: 20px;
+  }
+  .pt-row { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--bg,#f8f8f8); align-items: flex-start; }
+  .pt-row:last-child { border-bottom: none; }
+  .pt-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .pt-text { font-size: 11px; color: var(--text-sub); line-height: 1.5; }
+  .pt-text strong { color: var(--text); }
+  .notice-red-sm {
+    background: #fff5f5; border: 1.5px solid #fed7d7;
+    border-radius: 10px; padding: 10px 12px;
+    font-size: 11px; color: #c53030; line-height: 1.6; margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+
+<!-- LINE LIFF ブラウザバー -->
+<div class="liff-bar">
+  <button class="liff-back" onclick="liffBack()">‹</button>
+  <div class="liff-url-bar">
+    <span class="liff-lock">🔒</span>
+    <span class="liff-url">liff.line.me/sommelin</span>
+  </div>
+  <button class="liff-close" onclick="alert('このウィンドウを閉じますか？')">✕</button>
+</div>
+
+<!-- ==================== 役割選択画面（最初に表示） ==================== -->
+<div class="screen active" id="screenRole">
+  <div class="role-hero">
+    <div class="role-hero-logo">
+      <div class="role-hero-icon"></div>
+      <div class="role-hero-name">Sommelin</div>
+    </div>
+    <div class="role-hero-sub">ワインビジネスをもっとスマートに</div>
+  </div>
+  <div class="role-screen-body">
+    <div class="role-lead">あなたはどちらですか？</div>
+    <div class="role-subtext">役割によって使える機能が異なります。まず当てはまるものを選んでください。</div>
+
+    <div class="liff-role-card" onclick="chooseLiffRole('importer')">
+      <div class="liff-role-icon" style="background:#dbeafe;">🚢</div>
+      <div class="liff-role-info">
+        <div class="liff-role-title">インポーター・卸・酒販</div>
+        <div class="liff-role-desc">試飲会の企画・配信、加盟店管理、業界カレンダーの共有</div>
+        <span class="liff-role-badge badge-biz">🔒 業務者専用 — 審査あり</span>
+      </div>
+      <span class="liff-role-arrow">›</span>
+    </div>
+
+    <div class="liff-role-card" onclick="chooseLiffRole('store')">
+      <div class="liff-role-icon" style="background:#fce8ef;">🍽️</div>
+      <div class="liff-role-info">
+        <div class="liff-role-title">飲食店・ホテル・業務店</div>
+        <div class="liff-role-desc">ワインリスト管理、試飲会申込み、LINEで情報受け取り</div>
+        <span class="liff-role-badge badge-biz">🔒 業務者専用 — 審査あり</span>
+      </div>
+      <span class="liff-role-arrow">›</span>
+    </div>
+
+    <div class="liff-role-card" onclick="chooseLiffRole('individual')">
+      <div class="liff-role-icon" style="background:#f0fdf4;">🍷</div>
+      <div class="liff-role-info">
+        <div class="liff-role-title">個人（ワイン愛好家）</div>
+        <div class="liff-role-desc">セラー管理、飲んだ記録、お気に入りリストのチェック</div>
+        <span class="liff-role-badge badge-free">✅ すぐに利用可能</span>
+      </div>
+      <span class="liff-role-arrow">›</span>
+    </div>
+
+    <div class="liff-notice-lock">
+      <span style="font-size:18px;flex-shrink:0;">🔒</span>
+      <span>業務者向け機能には試飲会情報が含まれます。<strong>一般の方が紛れ込まないよう、業務実績の確認（審査）をお願いしています。</strong></span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== ウェルカム画面 ==================== -->
+<div class="screen" id="screenWelcome">
+  <div class="welcome-hero">
+    <div class="welcome-logo">
+      <div class="welcome-logo-icon">
+        <!-- ソムリン君ミニSVG -->
+        <svg viewBox="0 0 40 40" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="20" cy="20" r="20" fill="#9B1B4B"/>
+          <circle cx="20" cy="24" r="13" fill="#F2C090"/>
+          <path d="M9 20 Q8 7 20 6 Q32 7 31 20 Q26 14 20 15 Q14 14 9 20Z" fill="#5C1020"/>
+          <path d="M29 8 Q35 2 34 11 Q30 14 27 11 Q26 7 30 6" fill="#5C1020"/>
+          <ellipse cx="16" cy="23" rx="2" ry="1.5" fill="#3A1020"/>
+          <ellipse cx="24" cy="23" rx="2" ry="1.5" fill="#3A1020"/>
+          <path d="M20 29 Q14 24 8 27 Q6 30 9 32 Q13 34 17 31 Q19 28 20 29Z" fill="#5C1020"/>
+          <path d="M20 29 Q26 24 32 27 Q34 30 31 32 Q27 34 23 31 Q21 28 20 29Z" fill="#5C1020"/>
+          <path d="M15 37 L20 34 L25 37 L20 40Z" fill="#CC2233"/>
+          <circle cx="20" cy="37" r="2" fill="#AA1122"/>
+        </svg>
+      </div>
+      <div class="welcome-logo-text">Sommelin</div>
+    </div>
+    <div class="welcome-tagline">ワインビジネスをもっとスマートに</div>
+    <div class="welcome-title">Sommelin<br>ワインアプリへようこそ</div>
+    <div class="welcome-benefits">
+      <div class="welcome-benefit">
+        <span class="benefit-icon">🍷</span>
+        <span>試飲会・セミナーの最新情報がLINEで届く</span>
+      </div>
+      <div class="welcome-benefit">
+        <span class="benefit-icon">⭐</span>
+        <span>お店の傾向に合ったおすすめワインをご提案</span>
+      </div>
+      <div class="welcome-benefit">
+        <span class="benefit-icon">📋</span>
+        <span>一度登録すれば毎回の入力が不要に</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="welcome-body">
+    <div class="welcome-body-title">店舗情報の登録をお願いします</div>
+    <div class="welcome-body-desc">
+      お店やご担当者の情報を登録していただくと、このLINEアカウントから<strong>試飲会のご案内</strong>や<strong>おすすめワインの情報</strong>をお届けできるようになります。<br><br>
+      登録内容は今後の試飲会申込みにも自動で引用されます。入力は約3分で完了します。
+    </div>
+    <button class="welcome-start-btn" onclick="startReg()">
+      📝 登録をはじめる
+    </button>
+    <div class="welcome-note">
+      入力内容はSommelin（sommelin.app）のプライバシーポリシーに基づき管理されます。
+    </div>
+  </div>
+</div>
+
+<!-- ==================== STEP 1: 業種・店舗情報 ==================== -->
+<div class="screen" id="screenStep1">
+  <div class="step-indicator">
+    <div class="step-label">
+      <div class="step-title">🏪 業種・店舗情報</div>
+      <div class="step-count">1 / 3</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:33%"></div></div>
+    <div class="step-dots">
+      <div class="step-dot active" id="dot1"></div>
+      <div class="step-dot" id="dot2"></div>
+      <div class="step-dot" id="dot3"></div>
+    </div>
+  </div>
+
+  <div class="form-body">
+    <!-- 業種 -->
+    <div class="form-section-title">🏢 業種</div>
+    <div class="form-group">
+      <div class="form-label">業種を選んでください <span class="req-mark">✳︎ 必須</span></div>
+      <div class="type-grid" id="typeGrid">
+        <div class="type-card selected" onclick="selectType(this,'飲食店・ホテル')">
+          <div class="tc-icon">🍽️</div>
+          <div class="tc-label">飲食店・<br>ホテル</div>
+        </div>
+        <div class="type-card" onclick="selectType(this,'卸・酒販・スーパー')">
+          <div class="tc-icon">🏬</div>
+          <div class="tc-label">卸・酒販・<br>スーパー</div>
+        </div>
+        <div class="type-card" onclick="selectType(this,'インポーター')">
+          <div class="tc-icon">🚢</div>
+          <div class="tc-label">インポーター</div>
+        </div>
+        <div class="type-card" onclick="selectType(this,'メーカー')">
+          <div class="tc-icon">🏭</div>
+          <div class="tc-label">メーカー</div>
+        </div>
+        <div class="type-card" onclick="selectType(this,'コンサルタント')">
+          <div class="tc-icon">💼</div>
+          <div class="tc-label">コンサルタント</div>
+        </div>
+        <div class="type-card" onclick="selectType(this,'メディア・報道')">
+          <div class="tc-icon">📰</div>
+          <div class="tc-label">メディア・<br>報道</div>
+        </div>
+        <div class="type-card" onclick="selectType(this,'その他')">
+          <div class="tc-icon">🔖</div>
+          <div class="tc-label">その他</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="form-divider">
+    <div class="form-section-title">🏪 店舗・会社情報</div>
+
+    <div class="form-group">
+      <label class="form-label">会社名・店名 <span class="req-mark">✳︎ 必須</span></label>
+      <input class="form-input" id="f-name" type="text" placeholder="例: Bistrot Lumière">
+    </div>
+    <div class="form-group">
+      <label class="form-label">フリガナ <span class="req-mark">✳︎ 必須</span></label>
+      <input class="form-input" id="f-name-kana" type="text" placeholder="例: ビストロリュミエール">
+    </div>
+    <div class="form-group">
+      <label class="form-label">欧文表記 <span class="req-mark">✳︎ 必須</span></label>
+      <input class="form-input" id="f-name-en" type="text" placeholder="例: Bistrot Lumiere">
+      <div class="form-input-hint">半角アルファベットで入力</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">帳合（仕入れ先酒販店） <span class="opt-mark">任意</span></label>
+      <input class="form-input" id="f-supplier" type="text" placeholder="例: 山田商店">
+    </div>
+  </div>
+</div>
+
+<!-- ==================== STEP 2: 担当者情報 ==================== -->
+<div class="screen" id="screenStep2">
+  <div class="step-indicator">
+    <div class="step-label">
+      <div class="step-title">👤 担当者情報</div>
+      <div class="step-count">2 / 3</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:66%"></div></div>
+    <div class="step-dots">
+      <div class="step-dot done"></div>
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+    </div>
+  </div>
+
+  <div class="form-body">
+    <div class="form-section-title">👤 担当者・参加者</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">部署名 <span class="req-mark">✳︎</span></label>
+        <input class="form-input" id="f-dept" placeholder="例: ソムリエ部門">
+      </div>
+      <div class="form-group">
+        <label class="form-label">役職名 <span class="req-mark">✳︎</span></label>
+        <input class="form-input" id="f-title" placeholder="例: ソムリエ">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">氏名（漢字） <span class="req-mark">✳︎ 必須</span></label>
+      <input class="form-input" id="f-pname" type="text" placeholder="例: 浦川 哲矢">
+    </div>
+    <div class="form-group">
+      <label class="form-label">氏名（フリガナ） <span class="req-mark">✳︎ 必須</span></label>
+      <input class="form-input" id="f-pname-kana" type="text" placeholder="例: ウラカワ テツヤ">
+    </div>
+    <div class="form-group">
+      <label class="form-label">氏名（欧文表記） <span class="req-mark">✳︎ 必須</span></label>
+      <input class="form-input" id="f-pname-en" type="text" placeholder="例: Tetsuya Urakawa">
+      <div class="form-input-hint">半角アルファベット・名 姓の順で入力</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== STEP 3: 連絡先・確認 ==================== -->
+<div class="screen" id="screenStep3">
+  <div class="step-indicator">
+    <div class="step-label">
+      <div class="step-title">📬 連絡先・同意</div>
+      <div class="step-count">3 / 3</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+    <div class="step-dots">
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+      <div class="step-dot active"></div>
+    </div>
+  </div>
+
+  <div class="form-body">
+    <div class="form-section-title">📍 所在地</div>
+    <div class="form-row">
+      <div class="form-group" style="flex:0.6;">
+        <label class="form-label">郵便番号 <span class="req-mark">✳︎</span></label>
+        <input class="form-input" id="f-zip" type="tel" placeholder="1500001" maxlength="7">
+        <div class="form-input-hint">ハイフンなし</div>
+      </div>
+      <div class="form-group" style="flex:1.4;">
+        <label class="form-label">都道府県</label>
+        <select class="form-select" id="f-pref">
+          <option value="">選択</option>
+          <option selected>東京都</option>
+          <option>神奈川県</option>
+          <option>大阪府</option>
+          <option>愛知県</option>
+          <option>福岡県</option>
+          <option>北海道</option>
+          <option>その他</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">住所（市区町村以降） <span class="req-mark">✳︎ 必須</span></label>
+      <input class="form-input" id="f-addr" type="text" placeholder="例: 渋谷区恵比寿1-1-1">
+    </div>
+
+    <hr class="form-divider">
+    <div class="form-section-title">📞 連絡先</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">電話番号 <span class="req-mark">✳︎</span></label>
+        <input class="form-input" id="f-tel" type="tel" placeholder="0312345678">
+        <div class="form-input-hint">ハイフンなし</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">FAX番号 <span class="opt-mark">任意</span></label>
+        <input class="form-input" id="f-fax" type="tel" placeholder="0312345679">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">メールアドレス <span class="req-mark">✳︎ 必須</span></label>
+      <input class="form-input" id="f-email" type="email" placeholder="example@bistrot.jp">
+      <div class="form-input-hint">ログインID・試飲会申込み確認に使用します</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Google カレンダー用メール <span class="opt-mark">任意</span></label>
+      <input class="form-input" id="f-gcal" type="email" placeholder="calendar@bistrot.jp">
+      <div class="form-input-hint">メインと異なる場合のみ入力</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">ウェブサイト / SNS URL <span class="opt-mark">任意</span></label>
+      <input class="form-input" id="f-web" type="url" placeholder="https://...">
+    </div>
+
+    <hr class="form-divider">
+    <div class="form-section-title">🔑 認証・その他</div>
+
+    <div class="form-group">
+      <label class="form-label">酒類販売免許番号 <span class="opt-mark">任意</span></label>
+      <input class="form-input" id="f-license" type="text" placeholder="例: 東小第12345号">
+      <div class="form-input-hint">将来の店舗認証に使用。後から入力も可</div>
+    </div>
+
+    <hr class="form-divider">
+    <div class="form-group">
+      <div class="consent-box">
+        <label class="consent-check-row">
+          <input type="checkbox" id="f-consent">
+          <span class="consent-text">
+            Sommelin（sommelin.app）からの試飲会情報・おすすめワイン・業界ニュースのメール・LINE通知の受信に同意します。
+            <a class="consent-link" href="#">プライバシーポリシーを読む</a>
+          </span>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 完了画面 ==================== -->
+<div class="screen" id="screenDone">
+  <div class="done-hero">
+    <div class="done-check">✓</div>
+    <div class="done-title">登録が完了しました！</div>
+    <div class="done-sub">
+      これからこのLINEアカウントに<br>
+      試飲会情報とおすすめワインをお届けします
+    </div>
+  </div>
+
+  <div class="done-body">
+    <div class="done-section-title" style="margin-bottom:12px;">📱 LINEでこのような情報が届きます</div>
+
+    <!-- LINE チャットプレビュー -->
+    <div class="line-chat-preview">
+      <!-- ヘッダー -->
+      <div class="lcp-header">
+        <div class="lcp-icon">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 7C11.373 7 6 11.477 6 16.97c0 4.928 3.928 9.065 9.237 9.847.359.077.848.237.972.544.111.279.073.716.036 1l-.157 1.02c-.048.31-.22 1.21.955.66 1.175-.55 6.34-4.084 8.65-6.99C27.31 20.96 30 19.12 30 16.97 30 11.477 24.627 7 18 7z" fill="white"/>
+          </svg>
+        </div>
+        <div class="lcp-name">Sommelin</div>
+      </div>
+      <!-- メッセージ -->
+      <div class="lcp-body">
+
+        <!-- ウェルカムメッセージ -->
+        <div class="chat-row">
+          <div class="chat-avatar">
+            <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 7C11.373 7 6 11.477 6 16.97c0 4.928 3.928 9.065 9.237 9.847.359.077.848.237.972.544.111.279.073.716.036 1l-.157 1.02c-.048.31-.22 1.21.955.66 1.175-.55 6.34-4.084 8.65-6.99C27.31 20.96 30 19.12 30 16.97 30 11.477 24.627 7 18 7z" fill="white"/></svg>
+          </div>
+          <div>
+            <div class="chat-bubble">
+              🎉 ご登録ありがとうございます！<br>
+              <strong id="preview-storename">お店</strong>様、Sommelinです。<br><br>
+              これから試飲会情報やおすすめワインをこちらにお届けします。お楽しみに 🍷
+            </div>
+          </div>
+          <div class="chat-time">14:32</div>
+        </div>
+
+        <!-- 試飲会通知カード -->
+        <div class="chat-row">
+          <div class="chat-avatar">
+            <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 7C11.373 7 6 11.477 6 16.97c0 4.928 3.928 9.065 9.237 9.847.359.077.848.237.972.544.111.279.073.716.036 1l-.157 1.02c-.048.31-.22 1.21.955.66 1.175-.55 6.34-4.084 8.65-6.99C27.31 20.96 30 19.12 30 16.97 30 11.477 24.627 7 18 7z" fill="white"/></svg>
+          </div>
+          <div>
+            <div class="flex-card">
+              <div class="flex-card-header">
+                <span style="color:white;font-size:15px;">🍷</span>
+                <span class="flex-card-title">新着 試飲会のご案内</span>
+              </div>
+              <div class="flex-card-body">
+                <div class="flex-card-name">ブルゴーニュ新着ワイン試飲会</div>
+                <div class="flex-card-row">📅 5月22日(木) 14:00〜18:00</div>
+                <div class="flex-card-row">📍 ザ・ウエスティン東京 3F</div>
+                <div class="flex-card-row">🏢 山田商店（インポーター）</div>
+              </div>
+              <button class="flex-card-btn" onclick="showToast('参加申込みページへ')">👆 タップして申込みへ</button>
+            </div>
+          </div>
+          <div class="chat-time">14:32</div>
+        </div>
+
+        <!-- おすすめワイン -->
+        <div class="chat-row">
+          <div class="chat-avatar">
+            <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 7C11.373 7 6 11.477 6 16.97c0 4.928 3.928 9.065 9.237 9.847.359.077.848.237.972.544.111.279.073.716.036 1l-.157 1.02c-.048.31-.22 1.21.955.66 1.175-.55 6.34-4.084 8.65-6.99C27.31 20.96 30 19.12 30 16.97 30 11.477 24.627 7 18 7z" fill="white"/></svg>
+          </div>
+          <div>
+            <div class="wine-recommend-card">
+              <div class="wrc-header">
+                <span style="font-size:14px;">⭐</span>
+                <span class="wrc-title">今週のおすすめワイン</span>
+              </div>
+              <div class="wrc-body">
+                <div class="wrc-wine">
+                  <span class="wrc-wine-emoji">🥂</span>
+                  <div>
+                    <div class="wrc-wine-name">Billecart-Salmon Rosé</div>
+                    <div class="wrc-wine-meta">Champagne · NV</div>
+                  </div>
+                  <span class="wrc-wine-score">★ 4.9</span>
+                </div>
+                <div class="wrc-wine">
+                  <span class="wrc-wine-emoji">🍷</span>
+                  <div>
+                    <div class="wrc-wine-name">Gevrey-Chambertin</div>
+                    <div class="wrc-wine-meta">Bourgogne · 2021</div>
+                  </div>
+                  <span class="wrc-wine-score">★ 4.8</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="chat-time">14:33</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="done-actions">
+      <button class="done-btn-primary" onclick="openAdmin()">
+        🏪 Sommelin 管理画面を開く
+      </button>
+      <button class="done-btn-secondary" onclick="showToast('このウィンドウを閉じてLINEに戻ります')">
+        LINE に戻る
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 本人確認画面（業務者のみ） ==================== -->
+<div class="screen" id="screenVerify">
+  <div class="step-indicator" style="top:44px;">
+    <div class="step-label">
+      <div class="step-title">🔒 業務の確認</div>
+      <div class="step-count">追加確認</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+  </div>
+  <div class="form-body">
+    <div class="form-section-title" id="verifyHeading">業務店であることを確認します</div>
+    <p style="font-size:12px;color:var(--text-sub);line-height:1.7;margin-bottom:12px;">
+      試飲会情報はプロフェッショナル限定のコンテンツです。以下のうち<strong>どれか2つ</strong>を入力してください。
+    </p>
+
+    <!-- 進捗カウンター -->
+    <div style="display:flex;align-items:center;gap:10px;background:white;border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:12px;">
+      <div style="flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden;">
+        <div id="liffVpFill" style="height:100%;border-radius:4px;background:var(--burgundy);transition:width 0.4s ease;width:0%;"></div>
+      </div>
+      <div style="font-size:12px;font-weight:800;color:var(--text);white-space:nowrap;">
+        <span id="liffVpCount">0</span> / 2 入力済み
+      </div>
+    </div>
+
+    <div class="notice-red-sm">
+      一般のお客様が試飲会に紛れ込まないよう、業務の確認をお願いしています。ご理解ください。
+    </div>
+
+    <!-- ① 名刺 -->
+    <div style="margin-bottom:8px;">
+      <div class="verify-method" id="lvm-card" onclick="liffToggleVerify('card',this)" style="border-radius:12px;">
+        <div id="lvcb-card" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;background:white;"></div>
+        <span class="vm-icon">📇</span>
+        <div><div class="vm-title">名刺の写真</div><div class="vm-sub">名刺を撮影してアップロード</div></div>
+      </div>
+      <div id="lvexp-card" style="display:none;background:#f9f0f3;border:2px solid var(--burgundy);border-top:none;border-radius:0 0 12px 12px;padding:12px;">
+        <div class="upload-area" id="liftUpArea-card" onclick="liffSimUpload('card')" style="margin-bottom:0;">
+          <div class="ua-icon" id="liftUpIcon-card">📷</div>
+          <div class="ua-label" id="liftUpLabel-card">名刺を撮影・アップロード</div>
+          <div class="ua-sub" id="liftUpSub-card">タップしてカメラを起動</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ② HP URL -->
+    <div style="margin-bottom:8px;">
+      <div class="verify-method" id="lvm-website" onclick="liffToggleVerify('website',this)" style="border-radius:12px;">
+        <div id="lvcb-website" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;background:white;"></div>
+        <span class="vm-icon">🌐</span>
+        <div><div class="vm-title">ホームページURL</div><div class="vm-sub">会社・店舗の公式サイト</div></div>
+      </div>
+      <div id="lvexp-website" style="display:none;background:#f9f0f3;border:2px solid var(--burgundy);border-top:none;border-radius:0 0 12px 12px;padding:12px;">
+        <input class="form-input" id="lvurl-website" type="url" placeholder="https://www.example.co.jp" oninput="liffUrlInput('website',this.value)" style="border-radius:8px;">
+      </div>
+    </div>
+
+    <!-- ③ Googleマップ -->
+    <div style="margin-bottom:8px;">
+      <div class="verify-method" id="lvm-gmap" onclick="liffToggleVerify('gmap',this)" style="border-radius:12px;">
+        <div id="lvcb-gmap" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;background:white;"></div>
+        <span class="vm-icon">📍</span>
+        <div><div class="vm-title">GoogleマップURL</div><div class="vm-sub">Googleビジネスに掲載の店舗・会社</div></div>
+      </div>
+      <div id="lvexp-gmap" style="display:none;background:#f9f0f3;border:2px solid var(--burgundy);border-top:none;border-radius:0 0 12px 12px;padding:12px;">
+        <input class="form-input" id="lvurl-gmap" type="url" placeholder="https://maps.google.com/..." oninput="liffUrlInput('gmap',this.value)" style="border-radius:8px;">
+      </div>
+    </div>
+
+    <!-- ④ 食べログ -->
+    <div style="margin-bottom:14px;">
+      <div class="verify-method" id="lvm-tabelog" onclick="liffToggleVerify('tabelog',this)" style="border-radius:12px;">
+        <div id="lvcb-tabelog" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;background:white;"></div>
+        <span class="vm-icon">🍴</span>
+        <div><div class="vm-title">食べログURL</div><div class="vm-sub">食べログに掲載されている飲食店</div></div>
+      </div>
+      <div id="lvexp-tabelog" style="display:none;background:#f9f0f3;border:2px solid var(--burgundy);border-top:none;border-radius:0 0 12px 12px;padding:12px;">
+        <input class="form-input" id="lvurl-tabelog" type="url" placeholder="https://tabelog.com/..." oninput="liffUrlInput('tabelog',this.value)" style="border-radius:8px;">
+      </div>
+    </div>
+
+    <button class="btn-verify-submit" id="liffBtnSubmitVerify" onclick="submitVerify()"
+            style="opacity:0.45;pointer-events:none;">
+      申請する（あと<span id="liffNeed">2</span>つ入力してください）
+    </button>
+    <p style="font-size:10px;color:var(--text-sub);text-align:center;margin-top:10px;line-height:1.6;">
+      審査には通常1〜3営業日かかります。<br>結果はLINEまたはメールでお知らせします。
+    </p>
+  </div>
+</div>
+
+<!-- ==================== 審査中画面（業務者のみ） ==================== -->
+<div class="screen" id="screenPending">
+  <div class="pending-body">
+    <div class="pending-icon">⏳</div>
+    <div class="pending-title">申請を受け付けました</div>
+    <div class="pending-sub">審査が完了したらLINEまたはメールにてご連絡します。通常<strong>1〜3営業日</strong>以内に審査が完了します。</div>
+
+    <div class="pending-timeline">
+      <div class="pt-row">
+        <div class="pt-dot" style="background:#06C755;"></div>
+        <div class="pt-text"><strong>申請完了</strong> — 今日</div>
+      </div>
+      <div class="pt-row">
+        <div class="pt-dot" style="background:var(--border);"></div>
+        <div class="pt-text"><strong>書類確認</strong> — 1〜3営業日</div>
+      </div>
+      <div class="pt-row">
+        <div class="pt-dot" style="background:var(--border);"></div>
+        <div class="pt-text"><strong>承認・アカウント有効化</strong> — LINE/メールでお知らせ</div>
+      </div>
+    </div>
+
+    <p style="font-size:11px;color:var(--text-sub);line-height:1.7;text-align:left;width:100%;">
+      ご不明な点は <a href="mailto:support@sommelin.app" style="color:var(--burgundy);">support@sommelin.app</a> までご連絡ください。
+    </p>
+  </div>
+</div>
+
+<!-- ==================== ナビボタン（フォームステップ用） ==================== -->
+<div class="form-nav" id="formNav" style="display:none;">
+  <button class="btn-back" id="navBack" onclick="goBack()">‹ 戻る</button>
+  <button class="btn-next" id="navNext" onclick="goNext()">次へ →</button>
+</div>
+
+<!-- 送信中オーバーレイ -->
+<div class="submitting-overlay" id="submittingOverlay">
+  <div class="submitting-spinner"></div>
+  <div class="submitting-text">登録中…</div>
+  <div class="submitting-sub">情報を保存しています</div>
+</div>
+
+<!-- トースト -->
+<div style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(60px);background:#1a1a2e;color:white;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:600;transition:transform 0.3s ease;white-space:nowrap;" id="toast"></div>
+
+<script>
+// ============================================================
+// 状態管理
+// ============================================================
+let currentStep = 0; // 0=welcome, 1,2,3=steps, 4=done
+let selectedType = '飲食店・ホテル';
+let selectedLiffRole = 'store'; // 'store' | 'importer' | 'individual'
+// 2-of-4 マルチセレクト
+const liffVerifyData = { card: false, website: false, gmap: false, tabelog: false };
+const liffVerifySelected = new Set();
+
+const screens = ['screenWelcome','screenStep1','screenStep2','screenStep3','screenDone'];
+
+// 役割選択：screenRoleはscreens配列の外で管理
+function hideLiffRoleAndShow(idx) {
+  document.getElementById('screenRole').classList.remove('active');
+  screens.forEach((id, i) => {
+    document.getElementById(id).classList.toggle('active', i === idx);
+  });
+  ['screenVerify','screenPending'].forEach(id => {
+    document.getElementById(id).classList.remove('active');
+  });
+  const formNav = document.getElementById('formNav');
+  formNav.style.display = (idx >= 1 && idx <= 3) ? 'flex' : 'none';
+  if (idx >= 1 && idx <= 3) {
+    const back = document.getElementById('navBack');
+    const next = document.getElementById('navNext');
+    back.style.display = idx === 1 ? 'none' : 'block';
+    if (idx === 3) {
+      next.textContent = '登録する ✓';
+      next.className = 'btn-next line-style';
+    } else {
+      next.textContent = '次へ →';
+      next.className = 'btn-next';
+    }
+  }
+  window.scrollTo(0, 0);
+}
+
+function showScreen(idx) {
+  hideLiffRoleAndShow(idx);
+}
+
+// 役割選択
+function chooseLiffRole(role) {
+  selectedLiffRole = role;
+  if (role === 'individual') {
+    // 個人は通常の登録ページへ
+    showToast('個人アカウントで登録します');
+    setTimeout(() => { window.location.href = 'login.html'; }, 900);
+    return;
+  }
+  // 業務者 → ウェルカム画面へ
+  hideLiffRoleAndShow(0);
+}
+
+// ============================================================
+// ナビゲーション
+// ============================================================
+function startReg() {
+  currentStep = 1;
+  showScreen(1);
+}
+
+function goNext() {
+  if (currentStep === 1 && !validateStep1()) return;
+  if (currentStep === 2 && !validateStep2()) return;
+  if (currentStep === 3) {
+    if (!validateStep3()) return;
+    submitForm();
+    return;
+  }
+  currentStep++;
+  showScreen(currentStep);
+}
+
+function goBack() {
+  if (currentStep <= 1) return;
+  currentStep--;
+  showScreen(currentStep);
+}
+
+function liffBack() {
+  if (currentStep >= 1) { goBack(); }
+  else if (currentStep === 0) {
+    // ウェルカム画面から → 役割選択に戻る
+    document.getElementById('screenRole').classList.add('active');
+    screens.forEach(id => document.getElementById(id).classList.remove('active'));
+    document.getElementById('formNav').style.display = 'none';
+    window.scrollTo(0, 0);
+  } else { showToast('LINEに戻ります'); }
+}
+
+// ============================================================
+// バリデーション（必須項目のみシンプルにチェック）
+// ============================================================
+function validateStep1() {
+  const fields = [
+    { id:'f-name',      label:'会社名・店名' },
+    { id:'f-name-kana', label:'フリガナ' },
+    { id:'f-name-en',   label:'欧文表記' },
+  ];
+  return checkFields(fields);
+}
+function validateStep2() {
+  const fields = [
+    { id:'f-dept',      label:'部署名' },
+    { id:'f-title',     label:'役職名' },
+    { id:'f-pname',     label:'氏名' },
+    { id:'f-pname-kana',label:'フリガナ' },
+    { id:'f-pname-en',  label:'氏名欧文表記' },
+  ];
+  return checkFields(fields);
+}
+function validateStep3() {
+  const fields = [
+    { id:'f-zip',   label:'郵便番号' },
+    { id:'f-addr',  label:'住所' },
+    { id:'f-tel',   label:'電話番号' },
+    { id:'f-email', label:'メールアドレス' },
+  ];
+  if (!checkFields(fields)) return false;
+  if (!document.getElementById('f-consent').checked) {
+    showToast('お知らせ受信への同意が必要です');
+    return false;
+  }
+  return true;
+}
+function checkFields(fields) {
+  for (const f of fields) {
+    const el = document.getElementById(f.id);
+    if (!el.value.trim()) {
+      el.classList.add('error');
+      el.focus();
+      showToast(`${f.label}を入力してください`);
+      setTimeout(() => el.classList.remove('error'), 2000);
+      return false;
+    }
+  }
+  return true;
+}
+
+// ============================================================
+// 業種カード選択
+// ============================================================
+function selectType(card, type) {
+  document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedType = type;
+}
+
+// ============================================================
+// 送信シミュレーション
+// ============================================================
+function submitForm() {
+  const overlay = document.getElementById('submittingOverlay');
+  overlay.classList.add('open');
+  const storeName = document.getElementById('f-name').value || 'お店';
+  document.getElementById('preview-storename').textContent = storeName;
+  setTimeout(() => {
+    overlay.classList.remove('open');
+    // 業務者は本人確認画面へ、個人は完了画面へ
+    if (selectedLiffRole === 'store' || selectedLiffRole === 'importer') {
+      const heading = selectedLiffRole === 'importer'
+        ? 'インポーター・卸であることを確認します'
+        : '業務店であることを確認します';
+      document.getElementById('verifyHeading').textContent = heading;
+      // 全画面を隠して screenVerify を表示
+      screens.forEach(id => document.getElementById(id).classList.remove('active'));
+      document.getElementById('screenRole').classList.remove('active');
+      document.getElementById('screenPending').classList.remove('active');
+      document.getElementById('screenVerify').classList.add('active');
+      document.getElementById('formNav').style.display = 'none';
+      window.scrollTo(0, 0);
+    } else {
+      currentStep = 4;
+      showScreen(4);
+    }
+  }, 2000);
+}
+
+// ============================================================
+// 本人確認ロジック（2-of-4 マルチセレクト）
+// ============================================================
+function liffToggleVerify(method, el) {
+  if (liffVerifySelected.has(method)) {
+    liffVerifySelected.delete(method);
+    liffVerifyData[method] = false;
+    el.style.borderRadius = '12px';
+    el.style.borderBottom = '';
+    const cb = document.getElementById('lvcb-' + method);
+    cb.style.background = 'white';
+    cb.style.borderColor = 'var(--border)';
+    cb.textContent = '';
+    document.getElementById('lvexp-' + method).style.display = 'none';
+  } else {
+    liffVerifySelected.add(method);
+    el.style.borderRadius = '12px 12px 0 0';
+    el.style.borderBottom = 'none';
+    const cb = document.getElementById('lvcb-' + method);
+    cb.style.background = 'var(--burgundy)';
+    cb.style.borderColor = 'var(--burgundy)';
+    cb.textContent = '✓';
+    cb.style.color = 'white';
+    cb.style.fontWeight = '800';
+    document.getElementById('lvexp-' + method).style.display = 'block';
+  }
+  updateLiffVerifyProgress();
+}
+
+function liffUrlInput(method, value) {
+  liffVerifyData[method] = value.trim().length > 0;
+  updateLiffVerifyProgress();
+}
+
+function liffSimUpload(method) {
+  const icon  = document.getElementById('liftUpIcon-' + method);
+  const label = document.getElementById('liftUpLabel-' + method);
+  const sub   = document.getElementById('liftUpSub-' + method);
+  const area  = document.getElementById('liftUpArea-' + method);
+  icon.textContent  = '⏳';
+  label.textContent = '読み込み中...';
+  sub.textContent   = '';
+  setTimeout(() => {
+    liffVerifyData[method] = true;
+    icon.textContent  = '✅';
+    label.textContent = '名刺のアップロード完了';
+    sub.textContent   = '確認されました';
+    area.classList.add('filled');
+    showToast('📇 名刺を受け付けました');
+    updateLiffVerifyProgress();
+  }, 1400);
+}
+
+function updateLiffVerifyProgress() {
+  const filled = [...liffVerifySelected].filter(m => liffVerifyData[m]).length;
+  const pct = Math.min(filled / 2 * 100, 100);
+  document.getElementById('liffVpFill').style.width = pct + '%';
+  document.getElementById('liffVpCount').textContent = filled;
+
+  const btn  = document.getElementById('liffBtnSubmitVerify');
+  const need = document.getElementById('liffNeed');
+  if (filled >= 2) {
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+    btn.textContent = '申請する →';
+  } else {
+    btn.style.opacity = '0.45';
+    btn.style.pointerEvents = 'none';
+    const remaining = 2 - filled;
+    need.textContent = remaining;
+    btn.innerHTML = 'あと<span id="liffNeed">' + remaining + '</span>つ入力してください';
+  }
+}
+
+function submitVerify() {
+  const filled = [...liffVerifySelected].filter(m => liffVerifyData[m]).length;
+  if (filled < 2) {
+    showToast('2つ入力してください（現在 ' + filled + ' つ）');
+    return;
+  }
+  const overlay = document.getElementById('submittingOverlay');
+  overlay.classList.add('open');
+  setTimeout(() => {
+    overlay.classList.remove('open');
+    document.getElementById('screenVerify').classList.remove('active');
+    document.getElementById('screenPending').classList.add('active');
+    window.scrollTo(0, 0);
+  }, 1800);
+}
+
+// ============================================================
+// 完了後
+// ============================================================
+function openAdmin() {
+  showToast('管理画面を開いています…');
+  setTimeout(() => {
+    window.location.href = 'restaurant_admin.html';
+  }, 800);
+}
+
+// ============================================================
+// トースト
+// ============================================================
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    t.style.transform = 'translateX(-50%) translateY(60px)';
+  }, 2500);
+}
+</script>
+</body>
+</html>
