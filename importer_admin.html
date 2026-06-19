@@ -579,6 +579,10 @@
   .cal-imp-cell.today .cal-imp-num { font-weight: 800; color: var(--burgundy); }
   .cal-imp-cell.has-event { background: #f0f7ff; }
   .cal-imp-cell.has-mine  { background: var(--burgundy-pale); }
+  .cal-imp-cell.cal-past { opacity: .38; }
+  .cal-imp-cell.cal-past .cal-imp-num { color: var(--text-sub); }
+  .cal-imp-cell.cal-past .imp-dot { opacity: .55; }
+  .cal-imp-cell.cal-past.today { opacity: 1; }
   .cal-imp-cell:active { background: #eee; }
   .cal-imp-num { font-size: 13px; line-height: 1; }
   .cal-imp-dots { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; }
@@ -855,6 +859,118 @@
   .mail-confirm-cancel { background:#F0EDE8; color:var(--text); }
   .mail-confirm-send { background:var(--burgundy); color:white; }
 
+  /* ===== パネル内サブタブ（発信・顧客） ===== */
+  .sub-tabs {
+    display:flex; margin:12px 12px 0;
+    background:white; border:1.5px solid var(--border);
+    border-radius:12px; overflow:hidden;
+  }
+  .sub-tab {
+    flex:1; padding:11px 8px; text-align:center;
+    font-size:13px; font-weight:700; color:var(--text-sub);
+    background:none; border:none; cursor:pointer; font-family:inherit;
+    border-right:1px solid var(--border); transition:all .15s;
+  }
+  .sub-tab:last-child { border-right:none; }
+  .sub-tab.active { background:var(--burgundy-pale); color:var(--burgundy); }
+
+  /* 作成ボタン行（発信） */
+  .create-row { display:flex; gap:8px; margin:12px 12px 0; }
+  .create-btn {
+    flex:1; padding:11px 8px; border:1.5px solid var(--burgundy);
+    background:white; color:var(--burgundy);
+    border-radius:12px; font-size:13px; font-weight:700;
+    cursor:pointer; font-family:inherit;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+  }
+  .create-btn:active { background:var(--burgundy-pale); }
+
+  /* 配信タイプ トグル */
+  .bcast-type-toggle {
+    display:flex; gap:6px; margin:12px 12px 0;
+  }
+  .bct-btn {
+    flex:1; padding:10px 8px; border:1.5px solid var(--border);
+    background:white; color:var(--text-sub);
+    border-radius:10px; font-size:12px; font-weight:700;
+    cursor:pointer; font-family:inherit; line-height:1.3;
+  }
+  .bct-btn.active { background:var(--burgundy-pale); border-color:var(--burgundy); color:var(--burgundy); }
+
+  /* 投稿コンポーザー */
+  .composer-card {
+    margin:12px 12px 0; background:white;
+    border-radius:14px; border:1.5px solid var(--border); padding:14px 16px;
+  }
+  .composer-textarea {
+    width:100%; border:1.5px solid var(--border); border-radius:10px;
+    padding:11px 12px; font-size:13px; color:var(--text);
+    font-family:inherit; resize:vertical; min-height:90px; outline:none;
+    background:var(--bg);
+  }
+  .composer-textarea:focus { border-color:var(--burgundy); }
+  .composer-tools { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+  .composer-tool-btn {
+    border:1.5px solid var(--border); background:white; color:var(--text-sub);
+    border-radius:10px; padding:8px 12px; font-size:12px; font-weight:700;
+    cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:5px;
+  }
+  .composer-tool-btn:active { background:var(--burgundy-pale); }
+  .composer-thumb-wrap { position:relative; display:inline-block; margin-top:10px; }
+  .composer-thumb {
+    width:84px; height:84px; object-fit:cover; border-radius:10px;
+    border:1.5px solid var(--border); display:block;
+  }
+  .composer-thumb-del {
+    position:absolute; top:-7px; right:-7px;
+    width:22px; height:22px; border-radius:50%;
+    background:#dc2626; color:white; border:none; cursor:pointer;
+    font-size:12px; font-weight:800; line-height:1; font-family:inherit;
+  }
+  .composer-wine-chip {
+    display:inline-flex; align-items:center; gap:6px; margin-top:10px;
+    background:var(--burgundy-pale); color:var(--burgundy);
+    border-radius:10px; padding:7px 10px; font-size:12px; font-weight:700;
+  }
+  .composer-wine-chip button {
+    background:none; border:none; color:var(--burgundy); cursor:pointer;
+    font-size:13px; font-weight:800; font-family:inherit; line-height:1;
+  }
+
+  /* LINE課金 案内チップ */
+  .line-billing-note {
+    margin:12px 12px 0; background:#fffdf5;
+    border:1px solid var(--border); border-radius:10px;
+    padding:9px 12px; font-size:11px; line-height:1.6;
+    color:var(--text-sub);
+  }
+
+  /* カタログ 写真ボタン・サムネ */
+  .cat-photo-row { display:flex; gap:8px; margin-bottom:10px; }
+  .cat-photo-btn {
+    flex:1; border:1.5px dashed var(--border); background:var(--bg);
+    color:var(--text-sub); border-radius:10px; padding:11px 8px;
+    font-size:12px; font-weight:700; cursor:pointer; font-family:inherit;
+    display:flex; align-items:center; justify-content:center; gap:5px; text-align:center;
+  }
+  .cat-photo-btn:active { background:var(--burgundy-pale); }
+  .cat-photo-hint { font-size:10.5px; color:var(--text-sub); line-height:1.6; margin-bottom:10px; }
+  .cat-photo-preview-wrap { position:relative; display:inline-block; margin-bottom:10px; }
+  .cat-photo-preview {
+    width:84px; height:84px; object-fit:cover; border-radius:10px;
+    border:1.5px solid var(--border); display:block;
+  }
+  .cat-photo-preview-del {
+    position:absolute; top:-7px; right:-7px;
+    width:22px; height:22px; border-radius:50%;
+    background:#dc2626; color:white; border:none; cursor:pointer;
+    font-size:12px; font-weight:800; line-height:1; font-family:inherit;
+  }
+  .cat-thumb {
+    width:34px; height:34px; border-radius:10px; object-fit:cover;
+    flex-shrink:0;
+  }
+
   /* ===== カタログパネル ===== */
   .cat-stats {
     display:flex;margin:16px 16px 12px;background:var(--white);
@@ -930,13 +1046,10 @@
     <span class="ni">📅</span>カレンダー
   </div>
   <div class="tab-nav-item active" id="tnav-broadcast" onclick="switchPanel('broadcast')">
-    <span class="ni">📤</span>配信管理
+    <span class="ni">📤</span>発信
   </div>
   <div class="tab-nav-item" id="tnav-members" onclick="switchPanel('members')">
-    <span class="ni">🏪</span>加盟店
-  </div>
-  <div class="tab-nav-item" id="tnav-history" onclick="switchPanel('history')">
-    <span class="ni">📊</span>履歴
+    <span class="ni">👥</span>顧客
   </div>
   <div class="tab-nav-item" id="tnav-catalog" onclick="switchPanel('catalog')">
     <span class="ni">📋</span>カタログ
@@ -965,7 +1078,7 @@
       <div class="legend-dot" style="background:#2563eb;"></div>他社イベント
     </div>
     <div class="legend-item">
-      <div class="legend-dot" style="background:var(--gold);"></div>フェア・大型
+      <div class="legend-dot" style="background:var(--gold);"></div>フェア・展示会
     </div>
   </div>
 
@@ -1056,92 +1169,154 @@
   </div>
 </div>
 
-<!-- ==================== PANEL: 配信管理 ==================== -->
+<!-- ==================== PANEL: 発信 ==================== -->
 <div id="panelBroadcast" class="panel active">
 
-  <!-- 配信するイベント -->
-  <div class="section-head">配信するイベント</div>
-  <div class="event-card">
-    <div class="ev-date-col">
-      <div class="ev-date-m">MAY</div>
-      <div class="ev-date-d">22</div>
-      <div class="ev-date-w">木曜</div>
-    </div>
-    <div class="ev-info">
-      <span class="ev-tag">🍷 試飲会</span>
-      <div class="ev-name">ブルゴーニュ新着ワイン試飲会</div>
-      <div class="ev-meta">⏰ 14:00〜18:00 &nbsp;|&nbsp; 📍 ザ・ウエスティン東京 3F</div>
-    </div>
-    <button class="ev-change-btn" onclick="showToast('イベント変更機能は近日実装予定')">変更</button>
+  <!-- サブタブ: 配信 / 履歴 -->
+  <div class="sub-tabs">
+    <button class="sub-tab active" id="btab-send" onclick="switchBroadcastTab('send')">📤 配信</button>
+    <button class="sub-tab" id="btab-history" onclick="switchBroadcastTab('history')">🕘 履歴</button>
   </div>
 
-  <!-- 配信モード -->
-  <div class="section-head" style="margin-top:14px;">配信先を選ぶ</div>
-  <div class="mode-selector">
-    <div class="mode-selector-header">配信モード</div>
-    <div class="mode-tabs">
-      <div class="mode-tab" id="mtab-all" onclick="setMode('all')">
-        <span class="mt-count" id="mc-all">—</span>
-        <span class="mt-label">すべて</span>
+  <!-- ===== 配信 サブビュー ===== -->
+  <div id="bcastSendView">
+
+    <!-- 作成エントリーポイント -->
+    <div class="create-row">
+      <button class="create-btn" onclick="openNewEventForm()">＋ イベント作成</button>
+      <button class="create-btn" onclick="startNewPost()">＋ 投稿作成</button>
+    </div>
+
+    <!-- 配信タイプ -->
+    <div class="bcast-type-toggle">
+      <button class="bct-btn active" id="bct-event" onclick="setBroadcastType('event')">🍷 イベント</button>
+      <button class="bct-btn" id="bct-post" onclick="setBroadcastType('post')">📣 おすすめ・お知らせ</button>
+    </div>
+
+    <!-- 配信タイプ: イベント -->
+    <div id="bcastEventBlock">
+      <div class="section-head">配信するイベント</div>
+      <div class="event-card">
+        <div class="ev-date-col">
+          <div class="ev-date-m">MAY</div>
+          <div class="ev-date-d">22</div>
+          <div class="ev-date-w">木曜</div>
+        </div>
+        <div class="ev-info">
+          <span class="ev-tag">🍷 試飲会</span>
+          <div class="ev-name">ブルゴーニュ新着ワイン試飲会</div>
+          <div class="ev-meta">⏰ 14:00〜18:00 &nbsp;|&nbsp; 📍 ザ・ウエスティン東京 3F</div>
+        </div>
+        <button class="ev-change-btn" onclick="showToast('イベント変更機能は近日実装予定')">変更</button>
       </div>
-      <div class="mode-tab active" id="mtab-prev" onclick="setMode('prev')">
-        <span class="mt-count" id="mc-prev">—</span>
-        <span class="mt-label">前回と同じ</span>
+    </div>
+
+    <!-- 配信タイプ: おすすめ・お知らせ（投稿コンポーザー） -->
+    <div id="bcastPostBlock" style="display:none;">
+      <div class="section-head">投稿を作成</div>
+      <div class="composer-card">
+        <textarea id="postText" class="composer-textarea" placeholder="お客様へのメッセージ（おすすめワイン・新着・お知らせなど）"></textarea>
+        <div class="composer-tools">
+          <label class="composer-tool-btn">
+            📷 写真を添付
+            <input type="file" accept="image/*" style="display:none;" onchange="onPostPhoto(this)">
+          </label>
+          <button class="composer-tool-btn" onclick="attachPostWine()">🍷 おすすめワインを添付</button>
+        </div>
+        <div id="postPhotoPreview"></div>
+        <div id="postWineChip"></div>
       </div>
-      <div class="mode-tab" id="mtab-custom" onclick="setMode('custom')">
-        <span class="mt-count" id="mc-custom">—</span>
-        <span class="mt-label">カスタム</span>
+    </div>
+
+    <!-- LINE課金 案内 -->
+    <div class="line-billing-note">
+      💡 LINE配信は無料枠（月あたり一定通数）まで無料、超過分は従量課金です。将来、無料枠＋有料プランを用意予定。
+    </div>
+
+    <!-- 配信モード -->
+    <div class="section-head" style="margin-top:14px;">配信先を選ぶ</div>
+    <div class="mode-selector">
+      <div class="mode-selector-header">配信モード</div>
+      <div class="mode-tabs">
+        <div class="mode-tab" id="mtab-all" onclick="setMode('all')">
+          <span class="mt-count" id="mc-all">—</span>
+          <span class="mt-label">すべて</span>
+        </div>
+        <div class="mode-tab active" id="mtab-prev" onclick="setMode('prev')">
+          <span class="mt-count" id="mc-prev">—</span>
+          <span class="mt-label">前回と同じ</span>
+        </div>
+        <div class="mode-tab" id="mtab-custom" onclick="setMode('custom')">
+          <span class="mt-count" id="mc-custom">—</span>
+          <span class="mt-label">カスタム</span>
+        </div>
+      </div>
+      <div class="mode-previous-hint" id="prevHint">
+        📋 前回配信（5月1日）の宛先を引き継いでいます
       </div>
     </div>
-    <div class="mode-previous-hint" id="prevHint">
-      📋 前回配信（5月1日）の宛先を引き継いでいます
+
+    <!-- フィルタバー -->
+    <div class="filter-bar">
+      <input class="filter-search" type="text" placeholder="顧客を検索…" oninput="filterStores(this.value)">
+      <button class="filter-btn" id="farea-btn" onclick="cycleAreaFilter(this)">エリア ▾</button>
+      <button class="filter-btn" id="ftype-btn" onclick="cycleTypeFilter(this)">業種 ▾</button>
     </div>
+
+    <!-- 統計バー -->
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="stat-val" id="statTotal">—</div>
+        <div class="stat-label">全顧客</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val" style="color:var(--line);" id="statLine">—</div>
+        <div class="stat-label">LINE連携済み</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val" style="color:#aaa;" id="statNoLine">—</div>
+        <div class="stat-label">未連携</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val" style="color:#dc2626;" id="statExcluded">—</div>
+        <div class="stat-label">除外中</div>
+      </div>
+    </div>
+
+    <!-- 店舗リスト -->
+    <div class="store-list" id="storeList"></div>
   </div>
 
-  <!-- フィルタバー -->
-  <div class="filter-bar">
-    <input class="filter-search" type="text" placeholder="店舗を検索…" oninput="filterStores(this.value)">
-    <button class="filter-btn" id="farea-btn" onclick="cycleAreaFilter(this)">エリア ▾</button>
-    <button class="filter-btn" id="ftype-btn" onclick="cycleTypeFilter(this)">業種 ▾</button>
+  <!-- ===== 履歴 サブビュー ===== -->
+  <div id="bcastHistoryView" style="display:none;">
+    <div class="section-head" style="padding-top:14px;">配信履歴</div>
+    <div id="historyList"></div>
   </div>
-
-  <!-- 統計バー -->
-  <div class="stats-bar">
-    <div class="stat-item">
-      <div class="stat-val" id="statTotal">—</div>
-      <div class="stat-label">全加盟店</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-val" style="color:var(--line);" id="statLine">—</div>
-      <div class="stat-label">LINE連携済み</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-val" style="color:#aaa;" id="statNoLine">—</div>
-      <div class="stat-label">未連携</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-val" style="color:#dc2626;" id="statExcluded">—</div>
-      <div class="stat-label">除外中</div>
-    </div>
-  </div>
-
-  <!-- 店舗リスト -->
-  <div class="store-list" id="storeList"></div>
 
 </div>
 
-<!-- ==================== PANEL: 加盟店 ==================== -->
+<!-- ==================== PANEL: 顧客 ==================== -->
 <div id="panelMembers" class="panel">
-  <div class="section-head" style="padding-top:14px;">LINE連携済み店舗</div>
-  <div id="memberListConnected"></div>
-  <div class="section-head" style="margin-top:8px;">未連携店舗</div>
-  <div id="memberListNotConnected"></div>
-</div>
 
-<!-- ==================== PANEL: 配信履歴 ==================== -->
-<div id="panelHistory" class="panel">
-  <div class="section-head" style="padding-top:14px;">配信履歴</div>
-  <div id="historyList"></div>
+  <!-- サブタブ: 店舗 / 個人 -->
+  <div class="sub-tabs">
+    <button class="sub-tab active" id="ctab-store" onclick="switchCustomerTab('store')">🏪 店舗</button>
+    <button class="sub-tab" id="ctab-person" onclick="switchCustomerTab('person')">🙋 個人</button>
+  </div>
+
+  <!-- 店舗 サブビュー -->
+  <div id="custStoreView">
+    <div class="section-head" style="padding-top:14px;">LINE連携済み店舗</div>
+    <div id="memberListConnected"></div>
+    <div class="section-head" style="margin-top:8px;">未連携店舗</div>
+    <div id="memberListNotConnected"></div>
+  </div>
+
+  <!-- 個人 サブビュー -->
+  <div id="custPersonView" style="display:none;">
+    <div class="section-head" style="padding-top:14px;">個人のお客様</div>
+    <div id="memberListPersons"></div>
+  </div>
 </div>
 
 <!-- ==================== PANEL: 取り扱いカタログ ==================== -->
@@ -1157,6 +1332,16 @@
   <!-- Add form -->
   <div class="cat-add-card">
     <div class="cat-add-title">＋ 取り扱いワインを追加</div>
+    <div class="cat-photo-row">
+      <label class="cat-photo-btn">📷 ボトルを撮影
+        <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="onCatPhoto(this)">
+      </label>
+      <label class="cat-photo-btn">🧾 納品書を撮影
+        <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="onCatPhoto(this)">
+      </label>
+    </div>
+    <div class="cat-photo-hint">📷写真からの自動入力は近日対応予定。今は写真を添付して、足りない情報を入力してください。</div>
+    <div id="catPhotoPreview"></div>
     <input class="cat-input" id="catName" placeholder="ワイン名（例: Alex Gambal Charmes-Chambertin）">
     <input class="cat-input" id="catProducer" placeholder="生産者名">
     <div class="cat-row2">
@@ -1204,7 +1389,7 @@
     </div>
     <div class="ctx-item danger" onclick="ctxRemove()">
       <span class="ci-icon">🗑</span>
-      <span>加盟店リストから削除</span>
+      <span>顧客リストから削除</span>
     </div>
   </div>
 </div>
@@ -1217,8 +1402,8 @@
     <div class="cm-count" id="confirmCount">—</div>
     <div class="cm-count-label">店舗に送信します</div>
     <div class="cm-event-preview">
-      <div class="cm-event-name">🍷 ブルゴーニュ新着ワイン試飲会</div>
-      <div class="cm-event-meta">5月22日(木) 14:00〜18:00 · ザ・ウエスティン東京</div>
+      <div class="cm-event-name" id="cmEventName">🍷 ブルゴーニュ新着ワイン試飲会</div>
+      <div class="cm-event-meta" id="cmEventMeta">5月22日(木) 14:00〜18:00 · ザ・ウエスティン東京</div>
     </div>
     <div class="cm-btns">
       <button class="cm-cancel" onclick="closeConfirm()">キャンセル</button>
@@ -1258,7 +1443,7 @@
   <button class="done-back-btn" onclick="closeDone()">管理画面に戻る</button>
 </div>
 
-<!-- STICKY FOOTER (配信管理のみ) -->
+<!-- STICKY FOOTER (発信→配信サブタブのみ) -->
 <div class="sticky-footer" id="stickyFooter">
   <div class="sf-count-row">
     <span class="sf-count-num" id="sfCount">0</span>
@@ -1555,6 +1740,7 @@ function renderImporterCalendar() {
 
   const grid  = document.getElementById('impCalGrid');
   const today = new Date();
+  const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   while (grid.children.length > 7) grid.removeChild(grid.lastChild);
 
   const first = new Date(impCalYear, impCalMonth, 1).getDay();
@@ -1571,12 +1757,14 @@ function renderImporterCalendar() {
   for (let d = 1; d <= days; d++) {
     const date    = new Date(impCalYear, impCalMonth, d);
     const isToday = date.toDateString() === today.toDateString();
+    const isPast  = date < todayMid;
     const evs     = industryEvents.filter(e => e.date.toDateString() === date.toDateString());
     const hasMine = evs.some(e => e.mine);
 
     const cell = document.createElement('div');
     cell.className = 'cal-imp-cell'
       + (isToday  ? ' today' : '')
+      + (isPast   ? ' cal-past' : '')
       + (hasMine  ? ' has-mine' : evs.length ? ' has-event' : '');
 
     const dots = evs.map(e => `<div class="imp-dot" style="background:${e.dotColor};"></div>`).join('');
@@ -2028,6 +2216,8 @@ function confirmBroadcast(btn) {
 
 function goToBroadcast(evId) {
   switchPanel('broadcast');
+  switchBroadcastTab('send');
+  setBroadcastType('event');
   showToast('このイベントで配信モードを開きました');
 }
 
@@ -2045,21 +2235,145 @@ function impSimulateSync(btn) {
 // パネル切り替え
 // ============================================================
 function switchPanel(name) {
-  ['calendar','broadcast','members','history','catalog'].forEach(p => {
+  // 履歴は発信パネルの履歴サブタブに統合済み
+  if (name === 'history') {
+    switchPanel('broadcast');
+    switchBroadcastTab('history');
+    return;
+  }
+  ['calendar','broadcast','members','catalog'].forEach(p => {
     document.getElementById('panel' + cap(p)).classList.remove('active');
     document.getElementById('tnav-' + p).classList.remove('active');
   });
   document.getElementById('panel' + cap(name)).classList.add('active');
   document.getElementById('tnav-' + name).classList.add('active');
-  document.getElementById('stickyFooter').style.display = name === 'broadcast' ? 'block' : 'none';
+  // フッターは発信パネルの「配信」サブタブ表示中のみ
+  document.getElementById('stickyFooter').style.display =
+    (name === 'broadcast' && broadcastTab === 'send') ? 'block' : 'none';
 
   if (name === 'calendar')  renderImporterCalendar();
-  if (name === 'broadcast') renderStoreList();
+  if (name === 'broadcast') { renderStoreList(); renderHistory(); }
   if (name === 'members')   renderMembers();
-  if (name === 'history')   renderHistory();
   if (name === 'catalog')   renderCatalog();
 }
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+// ============================================================
+// 発信パネル: サブタブ（配信 / 履歴）＋ 配信タイプ
+// ============================================================
+let broadcastTab  = 'send';      // 'send' | 'history'
+let broadcastType = 'event';     // 'event' | 'post'
+
+function switchBroadcastTab(tab) {
+  broadcastTab = tab;
+  document.getElementById('btab-send').classList.toggle('active', tab === 'send');
+  document.getElementById('btab-history').classList.toggle('active', tab === 'history');
+  document.getElementById('bcastSendView').style.display    = tab === 'send' ? 'block' : 'none';
+  document.getElementById('bcastHistoryView').style.display = tab === 'history' ? 'block' : 'none';
+  // スティッキーフッターは配信サブタブ時のみ
+  document.getElementById('stickyFooter').style.display = tab === 'send' ? 'block' : 'none';
+  if (tab === 'history') renderHistory();
+}
+
+function setBroadcastType(type) {
+  broadcastType = type;
+  document.getElementById('bct-event').classList.toggle('active', type === 'event');
+  document.getElementById('bct-post').classList.toggle('active', type === 'post');
+  document.getElementById('bcastEventBlock').style.display = type === 'event' ? 'block' : 'none';
+  document.getElementById('bcastPostBlock').style.display  = type === 'post' ? 'block' : 'none';
+}
+
+// 「＋ 投稿作成」: 発信→配信サブタブ→投稿タイプにして本文へフォーカス
+function startNewPost() {
+  switchPanel('broadcast');
+  switchBroadcastTab('send');
+  setBroadcastType('post');
+  const ta = document.getElementById('postText');
+  if (ta) { ta.focus(); ta.scrollIntoView({ behavior:'smooth', block:'center' }); }
+}
+
+// 投稿: 写真添付
+let postPhotoData = null;
+function onPostPhoto(input) {
+  const f = input.files && input.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    postPhotoData = e.target.result;
+    document.getElementById('postPhotoPreview').innerHTML =
+      `<div class="composer-thumb-wrap">
+         <img class="composer-thumb" src="${postPhotoData}" alt="添付画像">
+         <button class="composer-thumb-del" onclick="removePostPhoto()">✕</button>
+       </div>`;
+  };
+  reader.readAsDataURL(f);
+  input.value = '';
+}
+function removePostPhoto() {
+  postPhotoData = null;
+  document.getElementById('postPhotoPreview').innerHTML = '';
+}
+
+// 投稿: カタログからおすすめワインを添付
+let postWineName = null;
+function attachPostWine() {
+  const items = loadCatalog().filter(i => i.importerId === IMP_INFO.id && i.available);
+  if (!items.length) { showToast('カタログに取り扱い中のワインがありません'); return; }
+  const listText = items.slice(0, 20).map((it, i) => `${i + 1}. ${it.name}${it.vintage ? ' ' + it.vintage : ''}`).join('\n');
+  const ans = prompt('添付するワインの番号を入力してください:\n\n' + listText);
+  if (ans === null) return;
+  const idx = parseInt(ans, 10) - 1;
+  if (isNaN(idx) || idx < 0 || idx >= items.length) { showToast('番号が正しくありません'); return; }
+  const it = items[idx];
+  postWineName = `${it.name}${it.vintage ? ' ' + it.vintage : ''}`;
+  document.getElementById('postWineChip').innerHTML =
+    `<div class="composer-wine-chip">🍷 ${postWineName}<button onclick="removePostWine()">✕</button></div>`;
+}
+function removePostWine() {
+  postWineName = null;
+  document.getElementById('postWineChip').innerHTML = '';
+}
+
+// ============================================================
+// 顧客パネル: サブタブ（店舗 / 個人）
+// ============================================================
+let customerTab = 'store';       // 'store' | 'person'
+function switchCustomerTab(tab) {
+  customerTab = tab;
+  document.getElementById('ctab-store').classList.toggle('active', tab === 'store');
+  document.getElementById('ctab-person').classList.toggle('active', tab === 'person');
+  document.getElementById('custStoreView').style.display  = tab === 'store' ? 'block' : 'none';
+  document.getElementById('custPersonView').style.display = tab === 'person' ? 'block' : 'none';
+  if (tab === 'person') renderPersons();
+}
+
+// 個人顧客（一般ワイン愛好家）サンプルデータ
+const persons = [
+  { id:'p01', name:'佐藤 美咲',  icon:'🙋‍♀️', area:'恵比寿', note:'赤ワイン好き',           lineConnected:true  },
+  { id:'p02', name:'高橋 健太',  icon:'🙋‍♂️', area:'目黒',   note:'ブルゴーニュ愛好家',       lineConnected:true  },
+  { id:'p03', name:'鈴木 由紀',  icon:'🙋‍♀️', area:'銀座',   note:'シャンパーニュ党',         lineConnected:true  },
+  { id:'p04', name:'伊藤 大輔',  icon:'🙋‍♂️', area:'渋谷',   note:'イタリアワイン好き',       lineConnected:false },
+  { id:'p05', name:'山本 麻衣',  icon:'🙋‍♀️', area:'中目黒', note:'自然派ワインを探し中',     lineConnected:true  },
+  { id:'p06', name:'渡辺 翔',    icon:'🙋‍♂️', area:'新宿',   note:'コスパ重視',               lineConnected:false },
+];
+
+function renderPersons() {
+  const el = document.getElementById('memberListPersons');
+  if (!el) return;
+  el.innerHTML = persons.map(p => `
+    <div class="member-card"${p.lineConnected ? '' : ' style="opacity:0.6;"'}>
+      <div class="mc-icon">${p.icon}</div>
+      <div class="mc-info">
+        <div class="mc-name">${p.name}</div>
+        <div class="mc-meta">📍 ${p.area} · ${p.note}${p.lineConnected ? ' &nbsp;·&nbsp; 💬 LINE連携済' : ''}</div>
+      </div>
+      <div class="mc-right">
+        ${p.lineConnected
+          ? '<span class="line-badge">💬 連携済</span>'
+          : '<button onclick="showToast(\'招待リンクをコピーしました 📋\')" style="font-size:11px;font-weight:700;background:var(--burgundy-pale);color:var(--burgundy);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-family:inherit;">招待する</button>'}
+      </div>
+    </div>`).join('');
+}
 
 // ============================================================
 // 配信モード
@@ -2262,6 +2576,21 @@ function ctxRemove() {
 // ============================================================
 function openConfirm() {
   document.getElementById('confirmCount').textContent = selectedIds.size;
+  const nameEl = document.getElementById('cmEventName');
+  const metaEl = document.getElementById('cmEventMeta');
+  if (broadcastType === 'post') {
+    const txt = (document.getElementById('postText').value || '').trim();
+    if (!txt && !postPhotoData && !postWineName) { showToast('投稿内容を入力してください'); return; }
+    const preview = txt ? (txt.length > 60 ? txt.slice(0, 60) + '…' : txt) : '（写真・ワインのみの投稿）';
+    nameEl.textContent = '📣 ' + preview;
+    const extras = [];
+    if (postPhotoData) extras.push('📷 写真添付');
+    if (postWineName)  extras.push('🍷 ' + postWineName);
+    metaEl.textContent = extras.length ? extras.join(' · ') : 'おすすめ・お知らせ投稿';
+  } else {
+    nameEl.textContent = '🍷 ブルゴーニュ新着ワイン試飲会';
+    metaEl.textContent = '5月22日(木) 14:00〜18:00 · ザ・ウエスティン東京';
+  }
   document.getElementById('confirmBg').classList.add('open');
 }
 function closeConfirm() {
@@ -2388,6 +2717,7 @@ function showToast(msg) {
 // ============================================================
 setMode('prev');
 renderStoreList();
+renderHistory();
 
 // ============================================================
 // 📋 取り扱いカタログ（localStorage経由でwine_search.htmlと連携）
@@ -2420,6 +2750,28 @@ function initDemoCatalog() {
   saveCatalog(demo);
 }
 
+// カタログ: 写真添付（ボトル / 納品書）
+let catPhotoData = null;
+function onCatPhoto(input) {
+  const f = input.files && input.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    catPhotoData = e.target.result;
+    document.getElementById('catPhotoPreview').innerHTML =
+      `<div class="cat-photo-preview-wrap">
+         <img class="cat-photo-preview" src="${catPhotoData}" alt="ワイン写真">
+         <button class="cat-photo-preview-del" onclick="removeCatPhoto()">✕</button>
+       </div>`;
+  };
+  reader.readAsDataURL(f);
+  input.value = '';
+}
+function removeCatPhoto() {
+  catPhotoData = null;
+  document.getElementById('catPhotoPreview').innerHTML = '';
+}
+
 function renderCatalog() {
   initDemoCatalog();
   const items = loadCatalog().filter(i => i.importerId === IMP_INFO.id);
@@ -2437,7 +2789,7 @@ function renderCatalog() {
   list.innerHTML = items.map(it => `
     <div class="cat-card${it.available ? '' : ' unavail'}">
       <div class="cat-card-top">
-        <div class="cat-badge">🍷</div>
+        ${it.photo ? `<img class="cat-thumb" src="${it.photo}" alt="">` : '<div class="cat-badge">🍷</div>'}
         <div class="cat-cinfo">
           <div class="cat-cname">${it.name}</div>
           <div class="cat-cmeta">${it.producer}　${it.vintage}　${it.region}</div>
@@ -2464,9 +2816,12 @@ function addCatalogItem() {
   const desc     = document.getElementById('catDesc').value.trim();
   if (!name) { showToast('ワイン名を入力してください'); return; }
   const myItems = loadCatalog().filter(i => i.importerId === IMP_INFO.id);
-  myItems.push({ id:'ic'+Date.now(), name, producer, vintage, region, price, available, desc });
+  const item = { id:'ic'+Date.now(), name, producer, vintage, region, price, available, desc };
+  if (catPhotoData) item.photo = catPhotoData;
+  myItems.push(item);
   saveCatalog(myItems);
   ['catName','catProducer','catVintage','catRegion','catPrice','catDesc'].forEach(id => document.getElementById(id).value = '');
+  removeCatPhoto();
   renderCatalog();
   showToast('✓ カタログに追加しました');
 }
