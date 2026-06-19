@@ -426,8 +426,8 @@ body {
     <div class="role-card" onclick="chooseRole('importer')" style="margin-bottom:10px;">
       <div class="role-icon" style="background:#dbeafe;">🚢</div>
       <div class="role-info">
-        <div class="role-title">インポーター・卸売・酒販</div>
-        <div class="role-desc">試飲会の企画・配信、加盟店管理、カレンダー共有</div>
+        <div class="role-title">インポーター</div>
+        <div class="role-desc">試飲会の企画・配信、加盟店管理、業界カレンダー共有</div>
       </div>
       <span class="role-arrow">›</span>
     </div>
@@ -450,11 +450,11 @@ body {
       <span class="role-arrow">›</span>
     </div>
 
-    <div class="role-card" onclick="chooseRole('store')" style="margin-bottom:10px;">
+    <div class="role-card" onclick="chooseRole('retailer')" style="margin-bottom:10px;">
       <div class="role-icon" style="background:#ecfdf5;">🍾</div>
       <div class="role-info">
-        <div class="role-title">ワインショップ・専門小売</div>
-        <div class="role-desc">仕入れ管理、在庫・試飲会情報の受け取り</div>
+        <div class="role-title">酒販店・卸（ワインショップ）</div>
+        <div class="role-desc">仕入れ・在庫管理、試飲会の開催・参加、情報受け取り</div>
       </div>
       <span class="role-arrow">›</span>
     </div>
@@ -875,13 +875,15 @@ const verifyUrlSelected = new Set();
 const roleConfig = {
   // 登録直後の遷移先。個人はオンボーディングへ、業務者は確認後それぞれの管理画面へ。
   store:      { label: '飲食店・ホテル', emoji: '🍽️', dest: 'restaurant_admin.html', biz: true },
-  importer:   { label: 'インポーター・卸', emoji: '🚢', dest: 'importer_admin.html',   biz: true },
+  importer:   { label: 'インポーター', emoji: '🚢', dest: 'importer_admin.html',   biz: true },
+  retailer:   { label: '酒販店・卸', emoji: '🍾', dest: 'restaurant_admin.html', biz: true },
   individual: { label: '個人・ワイン愛好家', emoji: '🍷', dest: 'onboarding.html',    biz: false },
 };
 // ロール別のホーム画面（ログイン後・オンボーディング完了後の遷移先）
 const roleHome = {
   store:      'restaurant_admin.html',
   importer:   'importer_admin.html',
+  retailer:   'restaurant_admin.html',
   individual: 'prototype.html',
 };
 function destForRole(role) { return roleHome[role] || 'prototype.html'; }

@@ -2157,6 +2157,52 @@ const adminEvents = [
   },
 ];
 
+// ── 本物の試飲会データをSupabaseから読み込み、デモデータを差し替える ──
+// status='published' のみ読める(RLS)。失敗時はデモのまま＝携帯でも壊れない。同一内容の重複は除去。
+const SOMMELIN_SB_URL = 'https://gkhdpzfmqraliwaiubwl.supabase.co';
+const SOMMELIN_SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+async function loadRealEvents() {
+  try {
+    const sel = 'id,title,event_date,start_time,end_time,venue_name,venue_address,registration_url,cost,max_attendees,description';
+    // 酒販店・飲食店向け画面のため「全体公開(target_type=all)」の試飲会のみ表示。
+    // インポーター限定・クローズドの試飲会はここには出さない（公開範囲ルール）。
+    const url = SOMMELIN_SB_URL + '/rest/v1/events?select=' + sel + '&status=eq.published&target_type=eq.all&order=event_date.asc&limit=500';
+    const res = await fetch(url, { headers: { apikey: SOMMELIN_SB_KEY, Authorization: 'Bearer ' + SOMMELIN_SB_KEY } });
+    if (!res.ok) { console.warn('[events] fetch失敗', res.status); return; }
+    const rows = await res.json();
+    if (!Array.isArray(rows) || rows.length === 0) return;
+    const fmtTime = t => { const x = String(t || '').match(/(\d{1,2}):(\d{2})/); return x ? x[1].padStart(2, '0') + ':' + x[2] : ''; };
+    const seen = new Set();
+    const mapped = [];
+    for (const e of rows) {
+      const m = String(e.event_date || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (!m) continue;
+      const dk = (e.title || '') + '|' + e.event_date + '|' + (e.venue_name || '');
+      if (seen.has(dk)) continue; // 同一内容の重複を除去
+      seen.add(dk);
+      const st = fmtTime(e.start_time), en = fmtTime(e.end_time);
+      const online = /オンライン|zoom|online|配信/i.test((e.venue_name || '') + (e.description || ''));
+      mapped.push({
+        id: String(e.id), googleCalId: '', type: 'tasting', typeLabel: '試飲会',
+        date: new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])),
+        time: st ? (en ? st + ' – ' + en : st) : '時間未定',
+        name: e.title || '（無題の試飲会）',
+        organizer: '',
+        importerEmail: '',
+        venue: e.venue_name || e.venue_address || '会場未定',
+        registrationUrl: e.registration_url || '',
+        isNew: false, isOnline: online, dotClass: online ? 'online' : '',
+        wines: [], rsvpd: false,
+      });
+    }
+    if (mapped.length === 0) return;
+    adminEvents.length = 0;
+    adminEvents.push(...mapped);
+    if (typeof renderAdminCalendar === 'function') renderAdminCalendar();
+  } catch (err) { console.warn('[events] loadRealEvents error', err); }
+}
+loadRealEvents();
+
 // ============================================================
 // PANEL SWITCHING
 // ============================================================
