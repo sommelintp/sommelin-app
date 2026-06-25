@@ -561,6 +561,12 @@ let cellar = [
   { id:8,  cat:'red',       name:'Pinot Noir Reserve',             producer:'Lemelson Vineyards',vintage:'2020',region:'オレゴン, アメリカ',         grapes:'ピノ・ノワール',  bottles:1, price:11000, date:'2026-04-20', note:'オレゴン初挑戦', hasLabel:true },
 ];
 
+// ── 端末に保存（localStorage）。初回は上のサンプルで開始し、以後は保存内容を復元 ──
+const CELLAR_KEY = 'somm_cellar_v1';
+try { const _s = localStorage.getItem(CELLAR_KEY); if (_s) { const _a = JSON.parse(_s); if (Array.isArray(_a)) cellar = _a; } } catch (e) {}
+nextId = Math.max(nextId, 101, ...cellar.map(w => (w.id || 0) + 1));
+function saveCellar(){ try { localStorage.setItem(CELLAR_KEY, JSON.stringify(cellar)); } catch (e) {} }
+
 const journal = [
   { id:1, wineId:1, name:'Gevrey-Chambertin', producer:'Rossignol-Trapet', vintage:'2019', region:'ブルゴーニュ', cat:'red',   rating:5, note:'ベリーの香りとスパイス。余韻がとても長い。デカンタ1時間後が最高だった。', date:'2026-06-08', place:'自宅' },
   { id:2, wineId:0, name:'Barolo Riserva',    producer:'Giacomo Conterno', vintage:'2015', region:'バローロ',     cat:'red',   rating:5, note:'圧倒的なタンニンと果実味のバランス。生涯ベスト3に入る。', date:'2026-06-08', place:'Bistrot Lumière' },
@@ -761,6 +767,7 @@ function changeStock(id, delta) {
   } else {
     showToast(delta > 0 ? '＋1本 追加' : '−1本 消費');
   }
+  saveCellar();
   renderSummary();
   renderCellar();
 }
@@ -823,6 +830,7 @@ function saveWine() {
     hasLabel: false,
   };
   cellar.unshift(w);
+  saveCellar();
   // reset form
   ['f-name','f-producer','f-vintage','f-region','f-grapes','f-note'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-bottles').value = '1';

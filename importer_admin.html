@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sommelin — インポーター管理 | 山田商店</title>
 <style>
   :root {
@@ -635,6 +635,7 @@
   }
   .imp-ev-btn.send { background: var(--line-pale); color: var(--line-dark); }
   .imp-ev-btn.mine { background: var(--burgundy-pale); color: var(--burgundy); }
+  .imp-ev-btn.saved { background: var(--burgundy); color: #fff; }
 
   /* ===== att sheet タブ ===== */
   .att-tabs { display:flex; border-bottom:2px solid #E8E4DF; margin:0 0 14px; }
@@ -746,6 +747,53 @@
   }
 
   /* ===== 参加者管理シート ===== */
+  /* ===== 投稿: 個人客にも配信トグル ===== */
+  .post-person-toggle {
+    display:flex; align-items:center; gap:10px;
+    background:var(--white); border:1px solid var(--border);
+    border-radius:12px; padding:12px 14px; margin-top:10px;
+    cursor:pointer; font-size:13px; color:var(--text);
+  }
+  .post-person-toggle input { width:18px; height:18px; accent-color:var(--burgundy); flex-shrink:0; }
+  .post-person-toggle .ppt-text { flex:1; font-weight:700; }
+  .post-person-toggle .ppt-count { font-size:12px; font-weight:800; color:var(--line-dark); }
+
+  /* ===== 汎用ピッカー・ボトムシート（イベント / ワイン選択） ===== */
+  .picker-bg {
+    display:none; position:fixed; inset:0;
+    background:rgba(44,26,29,.55); z-index:3200;
+    align-items:flex-end; justify-content:center;
+  }
+  .picker-bg.open { display:flex; }
+  .picker-sheet {
+    background:#F5F3F0; border-radius:20px 20px 0 0;
+    width:100%; max-width:430px; max-height:80vh;
+    display:flex; flex-direction:column; animation:slideUp .25s ease;
+  }
+  .picker-head {
+    padding:16px 18px 12px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:space-between;
+    border-bottom:1px solid var(--border);
+  }
+  .picker-title { font-size:15px; font-weight:800; color:var(--text); }
+  .picker-close {
+    background:none; border:none; font-size:20px; color:var(--text-sub);
+    cursor:pointer; line-height:1; padding:4px 6px;
+  }
+  .picker-body { flex:1; overflow-y:auto; padding:12px 16px 32px; -webkit-overflow-scrolling:touch; }
+  .picker-item {
+    background:var(--white); border:1px solid var(--border); border-radius:12px;
+    padding:12px 14px; margin-bottom:8px; cursor:pointer;
+    display:flex; align-items:center; gap:10px; transition:border-color .15s,background .15s;
+  }
+  .picker-item:active { background:var(--burgundy-pale); }
+  .picker-item.selected { border-color:var(--burgundy); background:var(--burgundy-pale); }
+  .picker-item-main { flex:1; min-width:0; }
+  .picker-item-title { font-size:14px; font-weight:800; color:var(--text); }
+  .picker-item-meta { font-size:11px; color:var(--text-sub); margin-top:3px; line-height:1.4; }
+  .picker-item-check { font-size:16px; color:var(--burgundy); flex-shrink:0; }
+  .picker-empty { text-align:center; padding:28px 16px; color:var(--text-sub); font-size:13px; }
+
   .att-sheet-bg {
     display:none; position:fixed; inset:0;
     background:rgba(44,26,29,.55); z-index:300;
@@ -1196,19 +1244,7 @@
     <!-- 配信タイプ: イベント -->
     <div id="bcastEventBlock">
       <div class="section-head">配信するイベント</div>
-      <div class="event-card">
-        <div class="ev-date-col">
-          <div class="ev-date-m">MAY</div>
-          <div class="ev-date-d">22</div>
-          <div class="ev-date-w">木曜</div>
-        </div>
-        <div class="ev-info">
-          <span class="ev-tag">🍷 試飲会</span>
-          <div class="ev-name">ブルゴーニュ新着ワイン試飲会</div>
-          <div class="ev-meta">⏰ 14:00〜18:00 &nbsp;|&nbsp; 📍 ザ・ウエスティン東京 3F</div>
-        </div>
-        <button class="ev-change-btn" onclick="showToast('イベント変更機能は近日実装予定')">変更</button>
-      </div>
+      <div class="event-card" id="bcastEventCard"></div>
     </div>
 
     <!-- 配信タイプ: おすすめ・お知らせ（投稿コンポーザー） -->
@@ -1226,6 +1262,12 @@
         <div id="postPhotoPreview"></div>
         <div id="postWineChip"></div>
       </div>
+      <!-- 投稿のみ: 個人客にも配信 -->
+      <label class="post-person-toggle" id="postPersonToggle">
+        <input type="checkbox" id="postToPersons" onchange="onPostPersonToggle()">
+        <span class="ppt-text">🙋 個人客（LINE連携済み）にも配信する</span>
+        <span class="ppt-count" id="postPersonCount">+0名</span>
+      </label>
     </div>
 
     <!-- LINE課金 案内 -->
@@ -1252,7 +1294,7 @@
         </div>
       </div>
       <div class="mode-previous-hint" id="prevHint">
-        📋 前回配信（5月1日）の宛先を引き継いでいます
+        📋 前回配信の宛先を引き継いでいます
       </div>
     </div>
 
@@ -1505,6 +1547,28 @@
   </div>
 </div>
 
+<!-- ==================== 配信イベント選択シート ==================== -->
+<div class="picker-bg" id="eventPickerBg" onclick="if(event.target===this)closeEventPicker()">
+  <div class="picker-sheet">
+    <div class="picker-head">
+      <div class="picker-title">配信するイベントを選ぶ</div>
+      <button class="picker-close" aria-label="閉じる" onclick="closeEventPicker()">✕</button>
+    </div>
+    <div class="picker-body" id="eventPickerBody"></div>
+  </div>
+</div>
+
+<!-- ==================== おすすめワイン選択シート ==================== -->
+<div class="picker-bg" id="winePickerBg" onclick="if(event.target===this)closeWinePicker()">
+  <div class="picker-sheet">
+    <div class="picker-head">
+      <div class="picker-title">おすすめワインを選ぶ</div>
+      <button class="picker-close" aria-label="閉じる" onclick="closeWinePicker()">✕</button>
+    </div>
+    <div class="picker-body" id="winePickerBody"></div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -1533,16 +1597,129 @@ const stores = [
   { id:'s18', name:'Bistro du Marché',      icon:'🛒', area:'神楽坂',  type:'フレンチ',     lineConnected:false, lastSent:null,         excluded:false, isNew:false },
 ];
 
-const prevList = stores.filter(s => s.lastSent === '2026-05-01').map(s => s.id);
-const allLineIds = stores.filter(s => s.lineConnected).map(s => s.id);
+// 「前回配信」の最終送信日（この日付がシードの「前回」を表す。挙動はこの定数で判定する）
+const PREV_SENT_DATE = '2026-05-01';
+// 「前回配信」の宛先。永続化された宛先があれば後で上書き。
+let prevList = stores.filter(s => s.lastSent === PREV_SENT_DATE).map(s => s.id);
+let allLineIds = stores.filter(s => s.lineConnected).map(s => s.id);
+// 前回配信の表示用日付（"5月1日" 等）。履歴・ヒント文に使う。
+function fmtPrevDate() {
+  const m = PREV_SENT_DATE.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${Number(m[2])}月${Number(m[3])}日` : PREV_SENT_DATE;
+}
 
-// 配信履歴データ
-const broadcastHistory = [
-  { date:'2026-05-01', event:'シャンパーニュ特集 試飲会', sent:8, opened:6, rsvpd:3 },
-  { date:'2026-04-15', event:'イタリアワイン新着セミナー', sent:11, opened:9, rsvpd:5 },
-  { date:'2026-04-01', event:'プロヴァンスロゼ試飲会', sent:8, opened:7, rsvpd:4 },
-  { date:'2026-03-18', event:'ボルドー格付けシャトー試飲会', sent:14, opened:11, rsvpd:7 },
+// 配信履歴データ（各エントリに stable な id を付与。再利用時に index ではなく id で参照する）
+let broadcastHistory = [
+  { id:'h-seed-1', date:'2026-05-01', event:'シャンパーニュ特集 試飲会', sent:8, opened:6, rsvpd:3, recipients:[...prevList] },
+  { id:'h-seed-2', date:'2026-04-15', event:'イタリアワイン新着セミナー', sent:11, opened:9, rsvpd:5, recipients:stores.filter(s=>s.lastSent==='2026-04-15').map(s=>s.id) },
+  { id:'h-seed-3', date:'2026-04-01', event:'プロヴァンスロゼ試飲会', sent:8, opened:7, rsvpd:4, recipients:[...prevList] },
+  { id:'h-seed-4', date:'2026-03-18', event:'ボルドー格付けシャトー試飲会', sent:14, opened:11, rsvpd:7, recipients:[...prevList] },
 ];
+
+// ============================================================
+// 永続化（localStorage）— バックエンド未接続のため端末内に保存し、
+// リロードしても編集が残るようにする。本来は Supabase へ保存する。
+// ============================================================
+const LS = {
+  history:  'sommelin_importer_history',
+  stores:   'sommelin_importer_store_edits',  // {excluded:{id:bool}, note:{id:str}, removed:[id]}
+  persons:  'sommelin_importer_person_edits',
+  events:   'sommelin_importer_events',        // saveNewEvent で作成した自社イベント
+  savedExt: 'sommelin_importer_saved_external', // 他社イベントの「保存済み」状態 [id]
+};
+function lsGet(key, fallback) {
+  try { const v = localStorage.getItem(key); return v == null ? fallback : JSON.parse(v); }
+  catch (e) { console.warn('[ls] read失敗', key, e); return fallback; }
+}
+function lsSet(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); return true; }
+  catch (e) {
+    console.warn('[ls] write失敗', key, e);
+    if (e && (e.name === 'QuotaExceededError' || /quota/i.test(String(e.message || '')))) {
+      showToast('保存できませんでした（端末の保存容量が不足しています）');
+    } else {
+      showToast('保存できませんでした');
+    }
+    return false;
+  }
+}
+
+// ── 画像ダウンスケール（DataURL → 最大1024px・JPEG ~0.7 に縮小して容量を抑える）──
+function downscaleImage(file, cb, maxSide, quality) {
+  maxSide = maxSide || 1024; quality = quality == null ? 0.7 : quality;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        let { width: w, height: h } = img;
+        if (w > maxSide || h > maxSide) {
+          if (w >= h) { h = Math.round(h * maxSide / w); w = maxSide; }
+          else        { w = Math.round(w * maxSide / h); h = maxSide; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        cb(canvas.toDataURL('image/jpeg', quality));
+      } catch (err) { console.warn('[img] downscale失敗、原本を使用', err); cb(e.target.result); }
+    };
+    img.onerror = () => cb(e.target.result);
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── 店舗の編集（除外/メモ/削除）を永続化＆復元 ──
+function persistStoreEdits() {
+  // TODO(backend): replace with Supabase UPDATE on importer_store_links (auth + RLS)
+  const data = { excluded:{}, note:{}, removed:[], lastSent:{} };
+  stores.forEach(s => {
+    if (s.excluded) data.excluded[s.id] = true;
+    if (s.note) data.note[s.id] = s.note;
+    if (s.lastSent) data.lastSent[s.id] = s.lastSent;  // 配信後の最終送信日
+  });
+  data.removed = (window.__removedStoreIds || []);
+  lsSet(LS.stores, data);
+}
+function applyStoreEdits() {
+  const data = lsGet(LS.stores, null);
+  if (!data) return;
+  window.__removedStoreIds = Array.isArray(data.removed) ? data.removed : [];
+  // 削除済みを除外
+  if (window.__removedStoreIds.length) {
+    for (let i = stores.length - 1; i >= 0; i--) {
+      if (window.__removedStoreIds.includes(stores[i].id)) stores.splice(i, 1);
+    }
+  }
+  stores.forEach(s => {
+    if (data.excluded && data.excluded[s.id]) s.excluded = true;
+    if (data.note && data.note[s.id] != null) s.note = data.note[s.id];
+    if (data.lastSent && data.lastSent[s.id]) s.lastSent = data.lastSent[s.id];
+  });
+}
+
+// ── 永続化された自社イベントを industryEvents に取り込む ──
+function loadPersistedEvents() {
+  const arr = lsGet(LS.events, []);
+  if (!Array.isArray(arr)) return;
+  arr.forEach(e => {
+    if (industryEvents.some(x => x.id === e.id)) return;
+    industryEvents.push({ ...e, mine:true, date: new Date(e.dateY, e.dateM, e.dateD), rsvps: e.rsvps || [] });
+  });
+}
+function persistEvent(evObj) {
+  // TODO(backend): replace with Supabase INSERT into events (auth + RLS; reconcile events vs tasting_events)
+  const arr = lsGet(LS.events, []);
+  arr.push(evObj);
+  lsSet(LS.events, arr);
+}
+
+// ── 起動時ブートストラップ：永続化された編集をシードに反映 ──
+applyStoreEdits();                                  // 除外/メモ/削除を復元
+prevList    = stores.filter(s => s.lastSent === '2026-05-01').map(s => s.id);
+allLineIds  = stores.filter(s => s.lineConnected).map(s => s.id);
+const persistedHistory = lsGet(LS.history, null);   // 配信履歴を復元（あれば差し替え）
+if (Array.isArray(persistedHistory) && persistedHistory.length) broadcastHistory = persistedHistory;
 
 // ============================================================
 // 状態
@@ -1590,13 +1767,21 @@ function saveNewEvent() {
   const vis = document.querySelector('input[name="nev-vis"]:checked')?.value || 'selected';
   const [y,m,d] = dateV.split('-').map(Number);
 
-  industryEvents.push({
+  const newEv = {
     id: 'ie' + Date.now(), mine: true, type: selectedEvType,
     typeLabel: typeLabels[selectedEvType], dotColor: typeDots[selectedEvType],
     date: new Date(y, m-1, d),
     time: document.getElementById('nev-time').value || '—',
     name: title, organizer: '山田商店', venue,
-    visibility: vis
+    visibility: vis, wines: [], survey: null, rsvps: []
+  };
+  industryEvents.push(newEv);
+
+  // localStorage に保存（Date は復元用に分解して持つ）
+  persistEvent({
+    id: newEv.id, type: newEv.type, typeLabel: newEv.typeLabel, dotColor: newEv.dotColor,
+    dateY: y, dateM: m - 1, dateD: d, time: newEv.time,
+    name: title, organizer: '山田商店', venue, visibility: vis, wines: [], survey: null, rsvps: []
   });
 
   closeNewEvModal();
@@ -1605,6 +1790,8 @@ function saveNewEvent() {
   // 登録した月に移動
   impCalYear = y; impCalMonth = m - 1;
   renderImporterCalendar();
+  // 配信カードの候補も更新
+  if (typeof ensureSelectedBroadcastEvent === 'function') { ensureSelectedBroadcastEvent(); renderBroadcastEventCard(); }
   showToast(`「${title}」を登録しました ✓`);
 }
 
@@ -1692,18 +1879,37 @@ const industryEvents = [
     organizer:'日本ソムリエ協会', venue:'東京ビッグサイト' },
 ];
 
-// ── 本物の試飲会データをSupabaseから読み込み、デモを差し替える ──
-// インポーター画面なので「全体公開 + インポーター限定」を表示（クローズドは出さない）。失敗時はデモのまま。
+// 永続化された自社イベントを取り込む（loadPersistedEvents は上で定義済み）
+loadPersistedEvents();
+
+// 自社イベント（mine:true）はアンケート/参加者/ワイン等を持つため、フェッチで消えないよう
+// 起動時のスナップショットを永続的に保持する。Supabase 取得はこの他社イベントだけを差し替える。
+const SEED_SELF_EVENTS = industryEvents.filter(e => e.mine);
+
+// イベント読み込みの結果状態（空/失敗時にインライン表示するため）
+let eventLoadState = 'ok'; // 'ok' | 'error' | 'empty'
+
+// ── 本物の試飲会データをSupabaseから読み込み、他社イベントを差し替える ──
+// インポーター画面なので「全体公開 + インポーター限定」を表示（クローズドは出さない）。
+// 自社イベント（SEED_SELF_EVENTS）は常に保持する。失敗時はシードのまま。
 const SOMMELIN_SB_URL = 'https://gkhdpzfmqraliwaiubwl.supabase.co';
 const SOMMELIN_SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+function rebuildIndustryEvents(fetched) {
+  // 自社イベントは常に維持し、その上に取得分を id 重複なしで重ねる
+  const byId = new Map();
+  SEED_SELF_EVENTS.forEach(e => byId.set(e.id, e));
+  fetched.forEach(e => { if (!byId.has(e.id)) byId.set(e.id, e); });
+  industryEvents.length = 0;
+  industryEvents.push(...byId.values());
+}
 async function loadIndustryEvents() {
   try {
     const sel = 'id,title,event_date,start_time,end_time,venue_name,venue_address,registration_url,description';
     const url = SOMMELIN_SB_URL + '/rest/v1/events?select=' + sel + '&status=eq.published&target_type=in.(all,importer)&order=event_date.asc&limit=500';
     const res = await fetch(url, { headers: { apikey: SOMMELIN_SB_KEY, Authorization: 'Bearer ' + SOMMELIN_SB_KEY } });
-    if (!res.ok) { console.warn('[events] fetch失敗', res.status); return; }
+    if (!res.ok) { console.warn('[events] fetch失敗', res.status); eventLoadState = 'error'; refreshEventViews(); return; }
     const rows = await res.json();
-    if (!Array.isArray(rows) || rows.length === 0) return;
+    if (!Array.isArray(rows) || rows.length === 0) { eventLoadState = 'empty'; refreshEventViews(); return; }
     const fmtTime = t => { const x = String(t || '').match(/(\d{1,2}):(\d{2})/); return x ? x[1].padStart(2, '0') + ':' + x[2] : ''; };
     const seen = new Set(); const mapped = [];
     for (const e of rows) {
@@ -1720,11 +1926,16 @@ async function loadIndustryEvents() {
         notifyEmail: '', wines: [], survey: null, rsvps: [],
       });
     }
-    if (mapped.length === 0) return;
-    industryEvents.length = 0;
-    industryEvents.push(...mapped);
-    if (typeof renderImporterCalendar === 'function') renderImporterCalendar();
-  } catch (err) { console.warn('[events] loadIndustryEvents error', err); }
+    // 自社イベントを保持したまま他社イベントを差し替え（mapped が空でも自社は残る）
+    rebuildIndustryEvents(mapped);
+    eventLoadState = mapped.length ? 'ok' : 'empty';
+    refreshEventViews();
+  } catch (err) { console.warn('[events] loadIndustryEvents error', err); eventLoadState = 'error'; refreshEventViews(); }
+}
+// イベント再描画（カレンダー＋一覧＋配信カード）をまとめて行う
+function refreshEventViews() {
+  if (typeof renderImporterCalendar === 'function') renderImporterCalendar();
+  if (typeof ensureSelectedBroadcastEvent === 'function') { ensureSelectedBroadcastEvent(); renderBroadcastEventCard(); }
 }
 loadIndustryEvents();
 
@@ -1791,12 +2002,18 @@ function renderImpEventList() {
     .sort((a,b) => a.date - b.date);
 
   const container = document.getElementById('impEventList');
+  // フェッチ失敗/空のときはインラインで状態を表示（自社シードがあれば一覧自体は出る）
+  let stateMsg = '';
+  if (eventLoadState === 'error') {
+    stateMsg = `<div style="background:#fdeef0;border:1px solid #f3c6cf;border-radius:10px;padding:10px 12px;margin-bottom:10px;color:#9B1B4B;font-size:12px;">⚠️ イベントを読み込めませんでした（表示中はデモ・自社分のみ）</div>`;
+  }
   if (!upcoming.length) {
-    container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">この月のイベントはありません</div>`;
+    container.innerHTML = stateMsg + `<div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">${eventLoadState==='error' ? 'イベントを読み込めませんでした' : '予定はありません'}</div>`;
     return;
   }
 
-  container.innerHTML = upcoming.map(ev => {
+  const savedExt = lsGet(LS.savedExt, []);
+  container.innerHTML = stateMsg + upcoming.map(ev => {
     const cls    = ev.mine ? 'mine' : ev.type === 'fair' ? 'fair' : 'others';
     const orgCls = ev.mine ? 'mine' : ev.type === 'fair' ? 'fair' : 'others';
 
@@ -1813,7 +2030,9 @@ function renderImpEventList() {
         <button class="imp-ev-btn mine" onclick="openAttSheet('${ev.id}')">参加者</button>
         <button class="imp-ev-btn send" onclick="goToBroadcast('${ev.id}')">配信</button>`;
     } else {
-      actionBtns = `<button class="imp-ev-btn send" onclick="showToast('カレンダーに追加しました ✓')">予定追加</button>`;
+      // 他社イベント: 「予定追加」を保存済みトグルにして localStorage に反映
+      const isSaved = savedExt.includes(ev.id);
+      actionBtns = `<button class="imp-ev-btn send${isSaved ? ' saved' : ''}" onclick="toggleSavedExternal('${ev.id}')">${isSaved ? '✓ 保存済み' : '予定追加'}</button>`;
     }
 
     return `<div class="imp-ev-card ${cls}" id="iev-${ev.id}">
@@ -1836,6 +2055,17 @@ function renderImpEventList() {
 function highlightImpEvent(id) {
   const el = document.getElementById('iev-' + id);
   if (el) { el.scrollIntoView({ behavior:'smooth', block:'nearest' }); el.style.opacity = '0.6'; setTimeout(() => el.style.opacity = '', 500); }
+}
+
+// 他社イベントを自分のカレンダーに「保存済み」としてトグル（localStorage 永続化）
+function toggleSavedExternal(id) {
+  // TODO(backend): replace with Supabase INSERT/DELETE on saved_events (auth + RLS)
+  const arr = lsGet(LS.savedExt, []);
+  const i = arr.indexOf(id);
+  if (i >= 0) { arr.splice(i, 1); showToast('カレンダーから削除しました'); }
+  else        { arr.push(id);     showToast('カレンダーに追加しました ✓'); }
+  lsSet(LS.savedExt, arr);
+  renderImpEventList();
 }
 
 // ============================================================
@@ -2111,7 +2341,7 @@ function sendWineListLine(storeCount) {
     <div style="background:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:24px 20px 32px;">
       <div style="text-align:center;font-size:15px;font-weight:800;color:#2C1A1D;margin-bottom:4px;">LINE で配信</div>
       <div style="text-align:center;font-size:12px;color:#7A5A62;margin-bottom:16px;">参加者 ${storeCount}軒 に試飲リストを送信します</div>
-      <div style="background:#e8faf0;border:1.5px solid #06C755;border-radius:12px;padding:14px 16px;margin-bottom:16px;white-space:pre-line;font-size:12px;line-height:1.8;color:#1a3c2a;font-family:monospace;">🍷 【試飲会のご案内】\n${ev?.name || ''}\n📅 ${dateStr}　📍 ${ev?.venue || ''}\n\n試飲ワインリスト：\n${wineLines}\n\n当日のご参加をお待ちしております。\n— ${ev?.org || '主催者'}</div>
+      <div style="background:#e8faf0;border:1.5px solid #06C755;border-radius:12px;padding:14px 16px;margin-bottom:16px;white-space:pre-line;font-size:12px;line-height:1.8;color:#1a3c2a;font-family:monospace;">🍷 【試飲会のご案内】\n${ev?.name || ''}\n📅 ${dateStr}　📍 ${ev?.venue || ''}\n\n試飲ワインリスト：\n${wineLines}\n\n当日のご参加をお待ちしております。\n— ${ev?.organizer || '山田商店'}</div>
       <button onclick="confirmSendWineLine(this,${storeCount})" style="width:100%;padding:14px;background:#06C755;color:#fff;font-size:15px;font-weight:800;border:none;border-radius:12px;cursor:pointer;margin-bottom:10px;">💬 ${storeCount}軒 全員に送信する</button>
       <button onclick="this.closest('[style*=fixed]').remove()" style="width:100%;padding:12px;background:#f5f3f0;color:#7A5A62;font-size:14px;font-weight:700;border:none;border-radius:12px;cursor:pointer;">キャンセル</button>
     </div>`;
@@ -2164,7 +2394,10 @@ function confirmSendSurveyLine(btn, count) {
       if (!ev.survey) {
         ev.survey = { sent: count, responded: 0, results: [] };
       } else {
+        // 再送信: 送信数だけ更新し、既存の回答・集計結果（responded/results）は保持する
         ev.survey.sent = count;
+        if (ev.survey.responded == null) ev.survey.responded = 0;
+        if (!Array.isArray(ev.survey.results)) ev.survey.results = [];
       }
     }
   }, 1000);
@@ -2215,10 +2448,12 @@ function confirmBroadcast(btn) {
 }
 
 function goToBroadcast(evId) {
+  const ev = industryEvents.find(e => e.id === evId);
+  if (ev) selectedBroadcastEvent = ev;
   switchPanel('broadcast');
   switchBroadcastTab('send');
-  setBroadcastType('event');
-  showToast('このイベントで配信モードを開きました');
+  setBroadcastType('event');   // 内部で renderBroadcastEventCard を呼ぶ
+  showToast(ev ? `「${ev.name}」の配信を開きました` : '配信モードを開きました');
 }
 
 function impSimulateSync(btn) {
@@ -2281,6 +2516,83 @@ function setBroadcastType(type) {
   document.getElementById('bct-post').classList.toggle('active', type === 'post');
   document.getElementById('bcastEventBlock').style.display = type === 'event' ? 'block' : 'none';
   document.getElementById('bcastPostBlock').style.display  = type === 'post' ? 'block' : 'none';
+  if (type === 'event') { ensureSelectedBroadcastEvent(); renderBroadcastEventCard(); }
+  updateFooter();  // 個人客加算の有無で宛先数が変わるため再計算
+}
+
+// ============================================================
+// 配信するイベントの選択（イベント配信タイプ）
+// ============================================================
+let selectedBroadcastEvent = null;  // industryEvents の1件
+
+// 既定の配信イベントを決める：今日以降で最も近い自社イベント、無ければ最初の自社イベント
+function ensureSelectedBroadcastEvent() {
+  const selfEvents = industryEvents.filter(e => e.mine);
+  if (selectedBroadcastEvent && industryEvents.some(e => e.id === selectedBroadcastEvent.id)) {
+    // 既存の選択が今も存在するなら最新オブジェクトに同期
+    selectedBroadcastEvent = industryEvents.find(e => e.id === selectedBroadcastEvent.id);
+    return;
+  }
+  const todayMid = new Date(); todayMid.setHours(0,0,0,0);
+  const upcoming = selfEvents.filter(e => e.date >= todayMid).sort((a,b) => a.date - b.date);
+  selectedBroadcastEvent = upcoming[0] || selfEvents[0] || null;
+}
+
+const BCAST_MS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const BCAST_WD = ['日','月','火','水','木','金','土'];
+
+// 配信タイプ「イベント」のカード描画（#bcastEventCard）
+function renderBroadcastEventCard() {
+  const card = document.getElementById('bcastEventCard');
+  if (!card) return;
+  const ev = selectedBroadcastEvent;
+  if (!ev) {
+    card.innerHTML = `<div style="padding:14px;font-size:12px;color:var(--text-sub);">配信できる自社イベントがありません。「＋ イベント作成」から登録してください。</div>`;
+    return;
+  }
+  card.innerHTML = `
+    <div class="ev-date-col">
+      <div class="ev-date-m">${BCAST_MS[ev.date.getMonth()]}</div>
+      <div class="ev-date-d">${ev.date.getDate()}</div>
+      <div class="ev-date-w">${BCAST_WD[ev.date.getDay()]}曜</div>
+    </div>
+    <div class="ev-info">
+      <span class="ev-tag">🍷 ${ev.typeLabel || '試飲会'}</span>
+      <div class="ev-name">${ev.name}</div>
+      <div class="ev-meta">⏰ ${ev.time} &nbsp;|&nbsp; 📍 ${ev.venue}</div>
+    </div>
+    <button class="ev-change-btn" aria-label="配信するイベントを変更" onclick="openEventPicker()">変更</button>`;
+}
+
+// 配信イベント選択シート
+function openEventPicker() {
+  const body = document.getElementById('eventPickerBody');
+  const ms = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  // 自社イベントを先頭に、日付順で表示
+  const list = [...industryEvents].sort((a,b) => (b.mine - a.mine) || (a.date - b.date));
+  if (!list.length) {
+    body.innerHTML = `<div class="picker-empty">イベントがありません</div>`;
+  } else {
+    body.innerHTML = list.map(ev => {
+      const sel = selectedBroadcastEvent && ev.id === selectedBroadcastEvent.id;
+      const meta = `${ms[ev.date.getMonth()]}${ev.date.getDate()}日(${BCAST_WD[ev.date.getDay()]}) · ${ev.time} · 📍 ${ev.venue}`;
+      const org = ev.mine ? '🏢 自社' : '🏢 ' + (ev.organizer || '他社');
+      return `<div class="picker-item${sel ? ' selected' : ''}" onclick="selectBroadcastEvent('${ev.id}')">
+        <div class="picker-item-main">
+          <div class="picker-item-title">${ev.name}</div>
+          <div class="picker-item-meta">${meta}　${org}</div>
+        </div>
+        ${sel ? '<span class="picker-item-check">✓</span>' : ''}
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('eventPickerBg').classList.add('open');
+}
+function closeEventPicker() { document.getElementById('eventPickerBg').classList.remove('open'); }
+function selectBroadcastEvent(id) {
+  const ev = industryEvents.find(e => e.id === id);
+  if (ev) { selectedBroadcastEvent = ev; renderBroadcastEventCard(); }
+  closeEventPicker();
 }
 
 // 「＋ 投稿作成」: 発信→配信サブタブ→投稿タイプにして本文へフォーカス
@@ -2292,21 +2604,19 @@ function startNewPost() {
   if (ta) { ta.focus(); ta.scrollIntoView({ behavior:'smooth', block:'center' }); }
 }
 
-// 投稿: 写真添付
+// 投稿: 写真添付（容量対策のため最大1024px・JPEG ~0.7 に縮小して保持）
 let postPhotoData = null;
 function onPostPhoto(input) {
   const f = input.files && input.files[0];
   if (!f) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    postPhotoData = e.target.result;
+  downscaleImage(f, dataUrl => {
+    postPhotoData = dataUrl;
     document.getElementById('postPhotoPreview').innerHTML =
       `<div class="composer-thumb-wrap">
          <img class="composer-thumb" src="${postPhotoData}" alt="添付画像">
-         <button class="composer-thumb-del" onclick="removePostPhoto()">✕</button>
+         <button class="composer-thumb-del" aria-label="写真を削除" onclick="removePostPhoto()">✕</button>
        </div>`;
-  };
-  reader.readAsDataURL(f);
+  });
   input.value = '';
 }
 function removePostPhoto() {
@@ -2314,24 +2624,49 @@ function removePostPhoto() {
   document.getElementById('postPhotoPreview').innerHTML = '';
 }
 
-// 投稿: カタログからおすすめワインを添付
+// 投稿: カタログからおすすめワインを添付（選択シート）
 let postWineName = null;
 function attachPostWine() {
   const items = loadCatalog().filter(i => i.importerId === IMP_INFO.id && i.available);
   if (!items.length) { showToast('カタログに取り扱い中のワインがありません'); return; }
-  const listText = items.slice(0, 20).map((it, i) => `${i + 1}. ${it.name}${it.vintage ? ' ' + it.vintage : ''}`).join('\n');
-  const ans = prompt('添付するワインの番号を入力してください:\n\n' + listText);
-  if (ans === null) return;
-  const idx = parseInt(ans, 10) - 1;
-  if (isNaN(idx) || idx < 0 || idx >= items.length) { showToast('番号が正しくありません'); return; }
-  const it = items[idx];
-  postWineName = `${it.name}${it.vintage ? ' ' + it.vintage : ''}`;
-  document.getElementById('postWineChip').innerHTML =
-    `<div class="composer-wine-chip">🍷 ${postWineName}<button onclick="removePostWine()">✕</button></div>`;
+  const body = document.getElementById('winePickerBody');
+  body.innerHTML = items.map(it => {
+    const label = `${it.name}${it.vintage ? ' ' + it.vintage : ''}`;
+    const sel = postWineName === label;
+    const meta = [it.producer, it.region, it.price ? '¥' + Number(it.price).toLocaleString() : '']
+      .filter(Boolean).join('　');
+    return `<div class="picker-item${sel ? ' selected' : ''}" onclick="selectPostWine('${it.id}')">
+      <div class="picker-item-main">
+        <div class="picker-item-title">🍷 ${label}</div>
+        ${meta ? `<div class="picker-item-meta">${meta}</div>` : ''}
+      </div>
+      ${sel ? '<span class="picker-item-check">✓</span>' : ''}
+    </div>`;
+  }).join('');
+  document.getElementById('winePickerBg').classList.add('open');
+}
+function closeWinePicker() { document.getElementById('winePickerBg').classList.remove('open'); }
+function selectPostWine(id) {
+  const it = loadCatalog().find(i => i.importerId === IMP_INFO.id && i.id === id);
+  if (it) {
+    postWineName = `${it.name}${it.vintage ? ' ' + it.vintage : ''}`;
+    document.getElementById('postWineChip').innerHTML =
+      `<div class="composer-wine-chip">🍷 ${postWineName}<button aria-label="ワインを外す" onclick="removePostWine()">✕</button></div>`;
+  }
+  closeWinePicker();
 }
 function removePostWine() {
   postWineName = null;
   document.getElementById('postWineChip').innerHTML = '';
+}
+
+// 投稿: 「個人客にも配信」トグル（投稿タイプのみ）
+let postToPersons = false;
+function connectedPersonCount() { return persons.filter(p => p.lineConnected).length; }
+function onPostPersonToggle() {
+  postToPersons = document.getElementById('postToPersons').checked;
+  document.getElementById('postPersonCount').textContent = '+' + (postToPersons ? connectedPersonCount() : 0) + '名';
+  updateFooter();
 }
 
 // ============================================================
@@ -2348,7 +2683,7 @@ function switchCustomerTab(tab) {
 }
 
 // 個人顧客（一般ワイン愛好家）サンプルデータ
-const persons = [
+let persons = [
   { id:'p01', name:'佐藤 美咲',  icon:'🙋‍♀️', area:'恵比寿', note:'赤ワイン好き',           lineConnected:true  },
   { id:'p02', name:'高橋 健太',  icon:'🙋‍♂️', area:'目黒',   note:'ブルゴーニュ愛好家',       lineConnected:true  },
   { id:'p03', name:'鈴木 由紀',  icon:'🙋‍♀️', area:'銀座',   note:'シャンパーニュ党',         lineConnected:true  },
@@ -2356,6 +2691,28 @@ const persons = [
   { id:'p05', name:'山本 麻衣',  icon:'🙋‍♀️', area:'中目黒', note:'自然派ワインを探し中',     lineConnected:true  },
   { id:'p06', name:'渡辺 翔',    icon:'🙋‍♂️', area:'新宿',   note:'コスパ重視',               lineConnected:false },
 ];
+
+// 永続化された個人客の編集（招待済みフラグ）を反映
+function applyPersonEdits() {
+  const data = lsGet(LS.persons, null);
+  if (!data || !data.invited) return;
+  persons.forEach(p => { if (data.invited[p.id]) p.invited = true; });
+}
+function persistPersonEdits() {
+  // TODO(backend): replace with Supabase UPDATE on person_links (auth + RLS)
+  const data = { invited:{} };
+  persons.forEach(p => { if (p.invited) data.invited[p.id] = true; });
+  lsSet(LS.persons, data);
+}
+function invitePerson(id) {
+  const p = persons.find(x => x.id === id);
+  if (!p) return;
+  p.invited = true;
+  persistPersonEdits();
+  renderPersons();
+  showToast('招待リンクをコピーしました 📋');
+}
+applyPersonEdits();
 
 function renderPersons() {
   const el = document.getElementById('memberListPersons');
@@ -2370,7 +2727,9 @@ function renderPersons() {
       <div class="mc-right">
         ${p.lineConnected
           ? '<span class="line-badge">💬 連携済</span>'
-          : '<button onclick="showToast(\'招待リンクをコピーしました 📋\')" style="font-size:11px;font-weight:700;background:var(--burgundy-pale);color:var(--burgundy);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-family:inherit;">招待する</button>'}
+          : (p.invited
+              ? '<span style="font-size:11px;font-weight:700;color:var(--text-sub);">招待済み</span>'
+              : `<button onclick="invitePerson('${p.id}')" style="font-size:11px;font-weight:700;background:var(--burgundy-pale);color:var(--burgundy);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-family:inherit;">招待する</button>`)}
       </div>
     </div>`).join('');
 }
@@ -2389,7 +2748,7 @@ function setMode(mode) {
   } else if (mode === 'prev') {
     selectedIds = new Set(prevList.filter(id => !stores.find(s=>s.id===id)?.excluded));
     hint.style.display = 'flex';
-    hint.textContent = `📋 前回配信（5月1日）の宛先 ${prevList.length}店舗を引き継いでいます`;
+    hint.textContent = `📋 前回配信（${fmtPrevDate()}）の宛先 ${prevList.length}店舗を引き継いでいます`;
   } else {
     hint.style.display = 'none';
   }
@@ -2420,12 +2779,17 @@ function updateStats() {
 // フッター更新
 // ============================================================
 function updateFooter() {
-  const count = selectedIds.size;
-  document.getElementById('sfCount').textContent  = count;
-  document.getElementById('sfSendBtn').disabled   = count === 0;
+  const storeCount = selectedIds.size;
+  // 投稿タイプ＋「個人客にも配信」ON のときは個人客を加算
+  const personCount = (broadcastType === 'post' && postToPersons) ? connectedPersonCount() : 0;
+  const total = storeCount + personCount;
+  document.getElementById('sfCount').textContent  = total;
+  document.getElementById('sfSendBtn').disabled   = total === 0;
   const lineTotal = allLineIds.length;
-  document.getElementById('sfSub').textContent = `全${stores.length}店舗中 LINE連携済み${lineTotal}`;
-  document.getElementById('mc-custom').textContent = count;
+  document.getElementById('sfSub').textContent = personCount
+    ? `店舗${storeCount} ＋ 個人${personCount}名`
+    : `全${stores.length}店舗中 LINE連携済み${lineTotal}`;
+  document.getElementById('mc-custom').textContent = storeCount;
 }
 
 // ============================================================
@@ -2463,7 +2827,7 @@ function renderStoreList() {
       lastSentHtml = `<span class="line-badge no">LINE未連携</span>`;
     } else if (isExcluded) {
       lastSentHtml = `<span class="excluded-badge">🚫 除外中</span>`;
-    } else if (s.lastSent === '2026-05-01') {
+    } else if (s.lastSent === PREV_SENT_DATE) {
       lastSentHtml = `<span class="last-sent-badge recent">前回送信済</span>`;
     } else if (s.lastSent) {
       lastSentHtml = `<span class="last-sent-badge">${s.lastSent.slice(5).replace('-','/')}</span>`;
@@ -2478,13 +2842,13 @@ function renderStoreList() {
       <div class="sr-icon">${s.icon}</div>
       <div class="sr-info">
         <div class="sr-name">${s.name} ${newBadge}</div>
-        <div class="sr-meta">📍 ${s.area} &nbsp;·&nbsp; ${s.type}</div>
+        <div class="sr-meta">📍 ${s.area} &nbsp;·&nbsp; ${s.type}${s.note ? ` &nbsp;·&nbsp; 📝 ${s.note}` : ''}</div>
       </div>
       <div class="sr-right">
         <span class="line-badge${noLine?' no':''}">💬 ${noLine?'未連携':'LINE連携'}</span>
         ${lastSentHtml}
       </div>
-      <button class="sr-menu-btn" onclick="openCtxMenu('${s.id}')">⋯</button>
+      <button class="sr-menu-btn" aria-label="この顧客の操作メニュー" onclick="openCtxMenu('${s.id}')">⋯</button>
     </div>`;
   }).join('');
 
@@ -2559,38 +2923,94 @@ function ctxExclude() {
   s.excluded = !s.excluded;
   if (s.excluded) { selectedIds.delete(s.id); showToast(`「${s.name}」を除外しました`); }
   else            { showToast(`「${s.name}」の除外を解除しました`); }
+  persistStoreEdits();   // TODO(backend): Supabase UPDATE（上記 persistStoreEdits 内に記載）
   closeCtxMenu();
   renderStoreList();
 }
 function ctxNote() {
+  const s = stores.find(x => x.id === ctxTargetId);
   closeCtxMenu();
-  showToast('メモ機能は近日実装予定');
+  if (!s) return;
+  const v = prompt(`「${s.name}」のメモ`, s.note || '');
+  if (v === null) return;            // キャンセル
+  s.note = v.trim();
+  persistStoreEdits();               // TODO(backend): Supabase UPDATE（上記 persistStoreEdits 内に記載）
+  showToast(s.note ? 'メモを保存しました' : 'メモを削除しました');
+  renderStoreList();
 }
 function ctxRemove() {
+  const s = stores.find(x => x.id === ctxTargetId);
   closeCtxMenu();
-  showToast('削除機能は近日実装予定');
+  if (!s) return;
+  // 配信対象から外し、リストから削除（localStorage に記録して次回も反映）
+  selectedIds.delete(s.id);
+  window.__removedStoreIds = window.__removedStoreIds || [];
+  if (!window.__removedStoreIds.includes(s.id)) window.__removedStoreIds.push(s.id);
+  const i = stores.findIndex(x => x.id === s.id);
+  if (i >= 0) stores.splice(i, 1);
+  persistStoreEdits();               // TODO(backend): Supabase DELETE（上記 persistStoreEdits 内に記載）
+  showToast(`「${s.name}」を顧客リストから削除しました`);
+  renderStoreList();
 }
 
 // ============================================================
 // 送信フロー
 // ============================================================
+// 送信フローを通して運ぶ内容（配信タイプ・宛先数・履歴タイトル等）
+let pendingBroadcast = null;
+
+// 今日の日付を 'YYYY-MM-DD' で（履歴の保存形式に合わせる）
+function todayISO() {
+  const d = new Date();
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
 function openConfirm() {
-  document.getElementById('confirmCount').textContent = selectedIds.size;
+  const storeCount  = selectedIds.size;
+  const personCount = (broadcastType === 'post' && postToPersons) ? connectedPersonCount() : 0;
+  const total = storeCount + personCount;
   const nameEl = document.getElementById('cmEventName');
   const metaEl = document.getElementById('cmEventMeta');
+
   if (broadcastType === 'post') {
     const txt = (document.getElementById('postText').value || '').trim();
     if (!txt && !postPhotoData && !postWineName) { showToast('投稿内容を入力してください'); return; }
+    if (total === 0) { showToast('配信先を選んでください'); return; }
     const preview = txt ? (txt.length > 60 ? txt.slice(0, 60) + '…' : txt) : '（写真・ワインのみの投稿）';
     nameEl.textContent = '📣 ' + preview;
     const extras = [];
     if (postPhotoData) extras.push('📷 写真添付');
     if (postWineName)  extras.push('🍷 ' + postWineName);
+    if (personCount)   extras.push(`🙋 個人客 ${personCount}名にも配信`);
     metaEl.textContent = extras.length ? extras.join(' · ') : 'おすすめ・お知らせ投稿';
+    // 履歴タイトル: 本文の先頭〜20文字（無ければ「おすすめ投稿」）
+    let histTitle = txt ? txt.replace(/\s+/g, ' ').slice(0, 20) : 'おすすめ投稿';
+    const histNote = [];
+    if (postPhotoData) histNote.push('📷写真');
+    if (postWineName)  histNote.push('🍷' + postWineName);
+    pendingBroadcast = {
+      type: 'post', total, storeCount, personCount,
+      doneText: '投稿を配信しました',
+      histTitle, histNote: histNote.join(' / '),
+      icon: '📣', text: txt, photo: !!postPhotoData, wine: postWineName || ''
+    };
   } else {
-    nameEl.textContent = '🍷 ブルゴーニュ新着ワイン試飲会';
-    metaEl.textContent = '5月22日(木) 14:00〜18:00 · ザ・ウエスティン東京';
+    if (storeCount === 0) { showToast('配信先を選んでください'); return; }
+    ensureSelectedBroadcastEvent();
+    const ev = selectedBroadcastEvent;
+    if (!ev) { showToast('配信できる自社イベントがありません'); return; }
+    const ms = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+    const metaStr = `${ms[ev.date.getMonth()]}${ev.date.getDate()}日(${BCAST_WD[ev.date.getDay()]}) ${ev.time} · ${ev.venue}`;
+    nameEl.textContent = '🍷 ' + ev.name;
+    metaEl.textContent = metaStr;
+    pendingBroadcast = {
+      type: 'event', total: storeCount, storeCount, personCount: 0,
+      doneText: 'イベント案内を配信しました',
+      histTitle: ev.name, histNote: '', icon: '🍷', eventId: ev.id
+    };
   }
+  document.getElementById('confirmCount').textContent = total;
   document.getElementById('confirmBg').classList.add('open');
 }
 function closeConfirm() {
@@ -2598,17 +3018,18 @@ function closeConfirm() {
 }
 function startSending() {
   closeConfirm();
-  const total = selectedIds.size;
+  const total = (pendingBroadcast && pendingBroadcast.total) || selectedIds.size;
   const overlay = document.getElementById('sendingOverlay');
   const fill    = document.getElementById('sendingFill');
   overlay.classList.add('open');
+  const unit = (pendingBroadcast && pendingBroadcast.type === 'post') ? '件' : '店舗';
 
   let current = 0;
   const interval = setInterval(() => {
     current++;
     const pct = Math.round((current / total) * 100);
     document.getElementById('sendingCount').textContent = current;
-    document.getElementById('sendingLabel').textContent = `/ ${total}店舗に送信中…`;
+    document.getElementById('sendingLabel').textContent = `/ ${total}${unit}に送信中…`;
     fill.style.width = pct + '%';
     if (current >= total) {
       clearInterval(interval);
@@ -2620,16 +3041,44 @@ function startSending() {
   }, Math.max(60, Math.round(1800 / total)));
 }
 function showDone(total) {
-  document.getElementById('doneCount').textContent    = total;
-  document.getElementById('doneSent').textContent     = total;
-  document.getElementById('doneDelivered').textContent = Math.floor(total * 0.85);
-  document.getElementById('doneRsvp').textContent     = Math.floor(total * 0.28);
+  const pb = pendingBroadcast || { type: 'event', histTitle: '配信', histNote: '', total };
+  const opened = Math.floor(total * 0.85);
+  const rsvpd  = Math.floor(total * 0.28);
+  // 完了オーバーレイ文言（タイプで出し分け）
+  document.querySelector('.done-title').textContent = pb.doneText || '配信完了！';
+  document.querySelector('.done-label').textContent =
+    pb.type === 'post' ? '件のLINEを送信しました' : '店舗にLINEを送信しました';
+  document.getElementById('doneCount').textContent     = total;
+  document.getElementById('doneSent').textContent      = total;
+  document.getElementById('doneDelivered').textContent = opened;
+  document.getElementById('doneRsvp').textContent      = pb.type === 'post' ? '—' : rsvpd;
   document.getElementById('doneOverlay').classList.add('open');
-  // 履歴に追加
-  broadcastHistory.unshift({ date:'2026-06-10', event:'ブルゴーニュ新着ワイン試飲会', sent:total, opened:Math.floor(total*0.85), rsvpd:Math.floor(total*0.28) });
+
+  // 履歴に追加（タイプに応じたタイトル・アイコン・日付＝今日）
+  const entry = {
+    id: 'h-' + Date.now(),
+    type: pb.type,
+    icon: pb.icon || (pb.type === 'post' ? '📣' : '🍷'),
+    date: todayISO(),
+    event: pb.histTitle || (pb.type === 'post' ? 'おすすめ投稿' : '配信'),
+    note: pb.histNote || '',
+    sent: total, opened, rsvpd,
+    recipients: Array.from(selectedIds)
+  };
+  broadcastHistory.unshift(entry);
+  // TODO(backend): replace with Supabase INSERT into broadcasts + LINE Messaging API push (read receipts)
+  lsSet(LS.history, broadcastHistory);
+
+  // イベント配信なら宛先店舗の「最終送信日」を今日に更新して永続化
+  if (pb.type === 'event') {
+    selectedIds.forEach(id => { const s = stores.find(x => x.id === id); if (s) s.lastSent = todayISO(); });
+    persistStoreEdits();
+  }
+  renderHistory();
 }
 function closeDone() {
   document.getElementById('doneOverlay').classList.remove('open');
+  pendingBroadcast = null;
   selectedIds.clear();
   setMode('all');
 }
@@ -2671,30 +3120,46 @@ function renderMembers() {
 // 配信履歴パネル
 // ============================================================
 function renderHistory() {
-  document.getElementById('historyList').innerHTML = broadcastHistory.map(h => `
-    <div class="history-card">
+  const el = document.getElementById('historyList');
+  if (!broadcastHistory.length) {
+    el.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">配信履歴はまだありません</div>`;
+    return;
+  }
+  el.innerHTML = broadcastHistory.map(h => {
+    const icon = h.icon || (h.type === 'post' ? '📣' : '🍷');
+    const rsvpVal = (h.type === 'post') ? '—' : h.rsvpd;
+    const rsvpRate = (h.type === 'post' || !h.sent) ? '—' : Math.round(h.rsvpd / h.sent * 100) + '%';
+    const openRate = h.sent ? Math.round(h.opened / h.sent * 100) + '%' : '—';
+    return `<div class="history-card">
       <div class="hc-header">
-        <div class="hc-event">🍷 ${h.event}</div>
+        <div class="hc-event">${icon} ${h.event}${h.note ? ` <span style="font-weight:400;color:var(--text-sub);font-size:11px;">${h.note}</span>` : ''}</div>
         <div class="hc-date">${h.date}</div>
       </div>
       <div class="hc-stats">
-        <div class="hc-stat"><strong>${h.sent}</strong>店舗に送信</div>
+        <div class="hc-stat"><strong>${h.sent}</strong>${h.type === 'post' ? '件に送信' : '店舗に送信'}</div>
         <div class="hc-stat"><strong>${h.opened}</strong>既読</div>
-        <div class="hc-stat"><strong>${h.rsvpd}</strong>RSVP</div>
+        <div class="hc-stat"><strong>${rsvpVal}</strong>RSVP</div>
       </div>
       <div class="hc-open-rate">
-        📊 既読率 ${Math.round(h.opened/h.sent*100)}% &nbsp;·&nbsp; RSVP率 ${Math.round(h.rsvpd/h.sent*100)}%
+        📊 既読率 ${openRate} &nbsp;·&nbsp; RSVP率 ${rsvpRate}
         &nbsp;&nbsp;
-        <span style="color:#9B1B4B;font-weight:700;cursor:pointer;" onclick="restorePrevList(${JSON.stringify(h)})">この宛先を再利用 →</span>
+        <span style="color:#9B1B4B;font-weight:700;cursor:pointer;" onclick="restorePrevList('${h.id}')">この宛先を再利用 →</span>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
-function restorePrevList(h) {
-  // 履歴から宛先を復元（シミュレーション: prevListを使用）
-  selectedIds = new Set(prevList);
+// 履歴の宛先を復元（id で履歴を引き、その entry 自身の recipients を使う）
+function restorePrevList(histId) {
+  const h = broadcastHistory.find(x => x.id === histId);
+  if (!h) return;
+  // entry に保存された宛先（無ければ前回宛先にフォールバック）
+  const ids = Array.isArray(h.recipients) && h.recipients.length ? h.recipients : prevList;
+  // 現存し連携済みの店舗のみ
+  selectedIds = new Set(ids.filter(id => { const s = stores.find(x => x.id === id); return s && s.lineConnected && !s.excluded; }));
   switchPanel('broadcast');
-  showToast(`「${h.event}」の宛先 ${h.sent}店舗を読み込みました`);
+  setBroadcastType('event');
+  showToast(`「${h.event}」の宛先 ${selectedIds.size}店舗を読み込みました`);
   currentMode = 'custom';
   ['all','prev','custom'].forEach(m => document.getElementById('mtab-'+m).classList.toggle('active', m==='custom'));
   renderStoreList();
@@ -2718,6 +3183,8 @@ function showToast(msg) {
 setMode('prev');
 renderStoreList();
 renderHistory();
+ensureSelectedBroadcastEvent();   // 配信カードの初期表示
+renderBroadcastEventCard();
 
 // ============================================================
 // 📋 取り扱いカタログ（localStorage経由でwine_search.htmlと連携）
@@ -2733,8 +3200,21 @@ function loadCatalog() {
   try { return JSON.parse(localStorage.getItem(CAT_KEY) || '[]'); } catch(e){ return []; }
 }
 function saveCatalog(items) {
+  // TODO(backend): replace with Supabase UPSERT into importer_catalog (auth + RLS; Storage for photos)
   const all = loadCatalog().filter(i => i.importerId !== IMP_INFO.id);
-  localStorage.setItem(CAT_KEY, JSON.stringify([...all, ...items.map(i => ({...i, importerId: IMP_INFO.id, importerName: IMP_INFO.name}))]));
+  const payload = [...all, ...items.map(i => ({...i, importerId: IMP_INFO.id, importerName: IMP_INFO.name}))];
+  try {
+    localStorage.setItem(CAT_KEY, JSON.stringify(payload));
+    return true;
+  } catch (e) {
+    console.warn('[catalog] save失敗', e);
+    if (e && (e.name === 'QuotaExceededError' || /quota/i.test(String(e.message || '')))) {
+      showToast('保存できませんでした（写真が大きすぎる可能性があります）');
+    } else {
+      showToast('保存できませんでした');
+    }
+    return false;
+  }
 }
 
 function initDemoCatalog() {
@@ -2750,21 +3230,19 @@ function initDemoCatalog() {
   saveCatalog(demo);
 }
 
-// カタログ: 写真添付（ボトル / 納品書）
+// カタログ: 写真添付（ボトル / 納品書）。容量対策で最大1024px・JPEG ~0.7 に縮小して保持
 let catPhotoData = null;
 function onCatPhoto(input) {
   const f = input.files && input.files[0];
   if (!f) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    catPhotoData = e.target.result;
+  downscaleImage(f, dataUrl => {
+    catPhotoData = dataUrl;
     document.getElementById('catPhotoPreview').innerHTML =
       `<div class="cat-photo-preview-wrap">
          <img class="cat-photo-preview" src="${catPhotoData}" alt="ワイン写真">
-         <button class="cat-photo-preview-del" onclick="removeCatPhoto()">✕</button>
+         <button class="cat-photo-preview-del" aria-label="写真を削除" onclick="removeCatPhoto()">✕</button>
        </div>`;
-  };
-  reader.readAsDataURL(f);
+  });
   input.value = '';
 }
 function removeCatPhoto() {

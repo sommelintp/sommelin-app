@@ -419,6 +419,69 @@ document.getElementById('searchInput').addEventListener('keydown', e => {
   }
 });
 
+// ── ソムリン評価（Supabase master と照合：SP＋コスパ） ──
+const SB_URL = 'https://gkhdpzfmqraliwaiubwl.supabase.co';
+const SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+function _cospa(osu){
+  if(osu==null||isNaN(osu)) return {st:'—',lbl:'コスパ算定中',bg:'#9aa0a6'};
+  if(osu>=0.5)  return {st:'★★★★★',lbl:'圧倒的コスパ',bg:'#1e8449'};
+  if(osu>=0.3)  return {st:'★★★★', lbl:'高コスパ',  bg:'#27ae60'};
+  if(osu>=0.1)  return {st:'★★★',  lbl:'良コスパ',  bg:'#9B1B4B'};
+  if(osu>=-0.1) return {st:'★★',   lbl:'価格相応',  bg:'#8a6d3b'};
+  return               {st:'★',    lbl:'やや割高',  bg:'#a5673f'};
+}
+function _p(p){ return (p==null||isNaN(p))?'—':('¥'+Math.round(p).toLocaleString('ja-JP')); }
+function _sp(s){ return (s==null||isNaN(s))?'—':Number(s).toFixed(1); }
+async function loadMaster(q){
+  const el=document.getElementById('masterSec'); if(!el) return;
+  el.innerHTML='<div style="padding:10px 4px;color:#999;font-size:12px;">🍷 ソムリン評価を照合中…</div>';
+  let rows=[];
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/rpc/match_wines',{method:'POST',
+      headers:{'Content-Type':'application/json',apikey:SB_KEY,'Authorization':'Bearer '+SB_KEY},
+      body:JSON.stringify({q:q,lim:5})});
+    if(r.ok) rows=await r.json();
+  }catch(e){}
+  if(!rows||!rows.length){ el.innerHTML=''; return; }   // 見つからなければ非表示（外部リンクは残す）
+  const top=rows[0];
+  const cp=_cospa(top.osu_gbm!=null?top.osu_gbm:top.osu_lin);
+  const region=[top.kuni,top.chiiki].filter(Boolean).join(' ');
+  const vint=(top.vintage&&top.vintage!=='NV')?(' '+top.vintage):'';
+  let alts='';
+  if(rows.length>1){
+    alts=rows.slice(1,3).map(w=>{
+      const c=_cospa(w.osu_gbm!=null?w.osu_gbm:w.osu_lin);
+      return `<div onclick="doSearch('${(w.name||'').replace(/'/g,"\\'")}')" style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;background:#faf7f8;border-radius:10px;margin-top:6px;cursor:pointer;">
+        <div style="min-width:0;"><div style="font-size:12px;font-weight:700;color:#2C1810;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(w.name||'')}</div><div style="font-size:10px;color:#999;">${escHtml([w.kuni,w.chiiki].filter(Boolean).join(' '))}</div></div>
+        <div style="text-align:right;white-space:nowrap;"><div style="font-size:11px;color:${c.bg};font-weight:800;">${c.st}</div><div style="font-size:10px;color:#888;">SP ${_sp(w.sp)}</div></div>
+      </div>`;
+    }).join('');
+  }
+  el.innerHTML=`
+    <div class="sec-head">🍷 ソムリン評価（コスパ）<span class="sec-badge" style="background:#9B1B4B18;color:#9B1B4B;">master</span></div>
+    <div style="background:#fff;border:1px solid #f0e6ea;border-radius:14px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.04);">
+      <div style="font-size:16px;font-weight:800;color:#2C1810;line-height:1.3;">${escHtml(top.name||'')}${escHtml(vint)}</div>
+      <div style="font-size:12px;color:#888;margin:3px 0 10px;">${escHtml(region)}${top.producer?(' / '+escHtml(top.producer)):''}</div>
+      <div style="display:flex;gap:10px;align-items:stretch;">
+        <div style="flex:1;text-align:center;background:#faf7f8;border-radius:10px;padding:10px;">
+          <div style="font-size:22px;font-weight:900;color:#9B1B4B;line-height:1;">${_sp(top.sp)}</div>
+          <div style="font-size:10px;color:#999;margin-top:3px;">SP（ソムリン評価）</div>
+        </div>
+        <div style="flex:1;text-align:center;background:#faf7f8;border-radius:10px;padding:10px;">
+          <div style="font-size:18px;font-weight:900;color:#2C1810;line-height:1.2;">${_p(top.price)}</div>
+          <div style="font-size:10px;color:#999;margin-top:3px;">参考価格</div>
+        </div>
+        <div style="flex:1.2;text-align:center;background:${cp.bg};color:#fff;border-radius:10px;padding:10px;">
+          <div style="font-size:15px;line-height:1.1;">${cp.st}</div>
+          <div style="font-size:11px;font-weight:800;margin-top:3px;">${cp.lbl}</div>
+        </div>
+      </div>
+      ${alts}
+    </div>
+    <hr class="sec-divider">
+  `;
+}
+
 function doSearch(q) {
   currentQuery = q;
   document.getElementById('searchInput').value = q;
@@ -497,6 +560,8 @@ function renderResults(q) {
       <button class="results-clear" onclick="clearResults()">✕ クリア</button>
     </div>
 
+    <div id="masterSec"></div>
+
     <!-- ONLINE PURCHASE -->
     <div class="sec-head">
       🛒 ネットで購入
@@ -532,6 +597,7 @@ function renderResults(q) {
     </div>
     ${renderLocalStores(q)}
   `;
+  loadMaster(q);
 }
 
 // ── ローカル在庫検索（localStorage連携） ───────────────────────
