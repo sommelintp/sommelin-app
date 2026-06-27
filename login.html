@@ -864,6 +864,71 @@ body {
 <div class="toast" id="toast"></div>
 
 <script>
+// ── Supabase Auth（外部依存なし・GoTrue REST を直叩き。scouter.html と同じキー） ──
+const SB_URL = 'https://gkhdpzfmqraliwaiubwl.supabase.co';
+const SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+const SESSION_KEY = 'sommelin_session';
+
+function saveSession(s){ try { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); } catch(e){} }
+function getSession(){ try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e){ return null; } }
+function clearSession(){ try { localStorage.removeItem(SESSION_KEY); } catch(e){} }
+function authToken(){ const s = getSession(); return s && s.access_token; }
+function sessionRole(){
+  const s = getSession();
+  return (s && s.user && s.user.user_metadata && s.user.user_metadata.role)
+      || localStorage.getItem('sommelin_role') || 'individual';
+}
+
+async function sbAuth(path, body){
+  const r = await fetch(SB_URL + '/auth/v1/' + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY },
+    body: JSON.stringify(body)
+  });
+  let data = {}; try { data = await r.json(); } catch(e){}
+  if (!r.ok) throw new Error(data.error_description || data.msg || data.error || data.message || 'error');
+  return data;
+}
+async function sbSignUp(email, password, meta){
+  const data = await sbAuth('signup', { email, password, data: meta || {} });
+  if (data.access_token) saveSession(data);
+  return data;
+}
+async function sbSignIn(email, password){
+  const data = await sbAuth('token?grant_type=password', { email, password });
+  saveSession(data);
+  return data;
+}
+async function sbRecover(email){ return sbAuth('recover', { email }); }
+
+async function saveBusinessApplication(payload){
+  const tok = authToken(); if (!tok) return false;
+  const r = await fetch(SB_URL + '/rest/v1/business_applications', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'apikey':SB_KEY, 'Authorization':'Bearer '+tok, 'Prefer':'return=minimal' },
+    body: JSON.stringify(Object.assign({ user_id: getSession().user.id }, payload))
+  });
+  return r.ok;
+}
+async function patchProfile(fields){
+  const tok = authToken(); if (!tok) return false;
+  const r = await fetch(SB_URL + '/rest/v1/profiles?id=eq.' + getSession().user.id, {
+    method: 'PATCH',
+    headers: { 'Content-Type':'application/json', 'apikey':SB_KEY, 'Authorization':'Bearer '+tok, 'Prefer':'return=minimal' },
+    body: JSON.stringify(fields)
+  });
+  return r.ok;
+}
+function authMsgJa(m){
+  m = (m || '').toLowerCase();
+  if (m.includes('already')) return 'このメールアドレスは既に登録されています';
+  if (m.includes('invalid login') || m.includes('invalid_grant') || m.includes('credentials')) return 'メールアドレスまたはパスワードが違います';
+  if (m.includes('password')) return 'パスワードの条件を満たしていません（8文字以上）';
+  if (m.includes('not confirmed') || m.includes('confirm')) return 'メール認証が未完了です。確認メールのリンクをタップしてください';
+  if (m.includes('rate')) return '回数が多すぎます。少し待って再度お試しください';
+  return 'エラーが発生しました。もう一度お試しください';
+}
+
 let selectedRole = 'store';
 
 // ── 本人確認：名刺表裏（表必須）+ URL1つ以上（必須） ──
@@ -925,20 +990,8 @@ function chooseRole(role) {
 
 // ── LINE 登録 ──
 function lineRegister() {
-  showLoading('LINEで登録中…');
-  setTimeout(() => {
-    hideLoading();
-    if (roleConfig[selectedRole].biz) {
-      // 業務者 → 確認画面へ
-      const cfg = roleConfig[selectedRole];
-      document.getElementById('verifyTitle').textContent =
-        selectedRole === 'importer' ? 'インポーターの確認' : '業務店の確認';
-      showScreen('screenVerify');
-    } else {
-      showToast('登録完了 ✓');
-      setTimeout(() => window.location.href = roleConfig[selectedRole].dest, 800);
-    }
-  }, 1600);
+  // LINEログインは別途（LINE Login channel + OIDC/backend）が必要。準備中は正直に案内する。
+  showToast('LINEでの登録は準備中です。メールアドレスでご登録ください');
 }
 
 // ── メール登録 ──
@@ -951,8 +1004,15 @@ function emailRegister() {
   if (pw !== pw2)    { markError('reg-pw2');   showToast('パスワードが一致しません'); return; }
 
   showLoading('アカウントを作成中…');
-  setTimeout(() => {
+  sbSignUp(email, pw, { role: selectedRole }).then(res => {
+    try { localStorage.setItem('sommelin_role', selectedRole); } catch(e){}
     hideLoading();
+    if (!res.access_token) {
+      // メール確認ONの設定の場合（確認メールで認証後にログイン）
+      showToast('確認メールを送信しました。メール内のリンクで認証してください');
+      setTimeout(() => showScreen('screenLogin'), 1800);
+      return;
+    }
     if (roleConfig[selectedRole].biz) {
       document.getElementById('verifyTitle').textContent =
         selectedRole === 'importer' ? 'インポーターの確認' : '業務店の確認';
@@ -961,7 +1021,7 @@ function emailRegister() {
       showToast('登録完了 ✓');
       setTimeout(() => window.location.href = roleConfig[selectedRole].dest, 800);
     }
-  }, 1600);
+  }).catch(e => { hideLoading(); showToast(authMsgJa(e.message)); });
 }
 
 // ── URL項目のトグル（展開/閉じる）──
@@ -1091,11 +1151,30 @@ function goToVerifyConfirm() {
 
 // ── 最終申請（AI自動確認 → 即時利用） ──
 function submitFinalVerify() {
-  showLoading('AIが自動確認中… 🤖');
-  setTimeout(() => {
-    hideLoading();
-    showScreen('screenPending');
-  }, 2200);
+  showLoading('申請を保存中… 🤖');
+  const urls = {};
+  ['website','gmap','tabelog'].forEach(k => {
+    if (verifyUrlSelected.has(k)) {
+      urls[k] = ((document.getElementById('cf-url-'+k)?.value) || (document.getElementById('vmurl-'+k)?.value) || '').trim();
+    }
+  });
+  const payload = {
+    role: selectedRole,
+    company: document.getElementById('cf-company')?.value.trim() || null,
+    contact_name: document.getElementById('cf-name')?.value.trim() || null,
+    job_title: document.getElementById('cf-jobtitle')?.value.trim() || null,
+    phone: document.getElementById('cf-phone')?.value.trim() || null,
+    contact_email: document.getElementById('cf-email')?.value.trim() || null,
+    urls: urls,
+    card_front_uploaded: verifyCardFront,
+    card_back_uploaded: verifyCardBack,
+    status: 'pending'
+  };
+  Promise.resolve()
+    .then(() => saveBusinessApplication(payload))
+    .then(() => patchProfile({ verification_status: 'pending', company: payload.company, phone: payload.phone, contact_email: payload.contact_email, display_name: payload.contact_name }))
+    .catch(() => {})
+    .then(() => { hideLoading(); showScreen('screenPending'); });
 }
 
 // ── ダッシュボードへ遷移 ──
@@ -1107,13 +1186,7 @@ function goToDashboard() {
 
 // ── LINE ログイン（既存ユーザー） ──
 function lineLogin() {
-  showLoading('LINEで認証中…');
-  setTimeout(() => {
-    hideLoading();
-    showToast('ログインしました ✓');
-    // デモ: 直近に選んだロールのホームへ遷移（個人=prototype / 店舗=restaurant_admin / 卸=importer_admin）
-    setTimeout(() => { window.location.href = destForRole(localStorage.getItem('sommelin_role')); }, 800);
-  }, 1800);
+  showToast('LINEログインは準備中です。メールアドレスでログインしてください');
 }
 
 // ── メールログイン ──
@@ -1123,11 +1196,13 @@ function emailLogin() {
   if (!email) { markError('login-email'); showToast('メールアドレスを入力してください'); return; }
   if (!pw)    { markError('login-pw');    showToast('パスワードを入力してください'); return; }
   showLoading('ログイン中…');
-  setTimeout(() => {
+  sbSignIn(email, pw).then(() => {
     hideLoading();
+    const role = sessionRole();
+    try { localStorage.setItem('sommelin_role', role); } catch(e){}
     showToast('ログインしました ✓');
-    setTimeout(() => { window.location.href = destForRole(localStorage.getItem('sommelin_role')); }, 800);
-  }, 1500);
+    setTimeout(() => { window.location.href = destForRole(role); }, 700);
+  }).catch(e => { hideLoading(); showToast(authMsgJa(e.message)); });
 }
 
 // ── パスワードリセット ──
@@ -1135,11 +1210,11 @@ function sendReset() {
   const email = document.getElementById('reset-email').value.trim();
   if (!email) { markError('reset-email'); showToast('メールアドレスを入力してください'); return; }
   showLoading('送信中…');
-  setTimeout(() => {
+  sbRecover(email).then(() => {
     hideLoading();
     showToast('リセットリンクを送信しました 📧');
     setTimeout(() => showScreen('screenLogin'), 1500);
-  }, 1200);
+  }).catch(e => { hideLoading(); showToast(authMsgJa(e.message)); });
 }
 
 // ── ユーティリティ ──
