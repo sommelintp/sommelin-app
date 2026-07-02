@@ -39,3 +39,4 @@
 - **コスパ**＝おすすめ度 `osu_gbm`/`osu_lin` = SP − 価格から期待されるSP（プラスほど割安）。
 - DB定義SQL: `~/dev/sommelin-trade-platform/migrations/2026-06-25_scouter_wines.sql`（テーブル＋RPC＋RLS）と `..._scouter_load_master.sql`（ステージング→wines）。
 - 今回更新済の画面: `wine_search.html`（結果トップに実SP・コスパ表示）/ `cellar.html`（端末保存=localStorage）/ `prototype.html`（マイページから scouter・cellar・検索・AIソムリエへ導線追加）/ PWA: `manifest.webmanifest`・`sw.js`。
+- **prototype.html の実データ化（2026-07-02）**: ①試飲会カレンダー/イベント一覧＝実 `events` テーブル（LINE bot蓄積・anon読取可・status=published）を `loadRealEvents()` で読込。申込みボタンは実 `registration_url` を開く（URL無しは無効化＝偽の申込完了を出さない）。②ランキング＝実 `wines` を osu_gbm 降順で `loadRealRanking()`。③カメラ画面の偽スキャン廃止→ `scouter.html`（`?mode=list` でリストモード直行）。**残モック**: 店内ワインリスト（wines/classicWines配列＝店舗ビューのデモ）・来店履歴（チェックイン機能なし）・チャット自動応答（somurinReplies）。

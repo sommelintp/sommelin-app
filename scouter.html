@@ -664,6 +664,9 @@ function trunc(s,n){ s=String(s||''); return s.length>n?s.slice(0,n-1)+'…':s; 
 document.getElementById('fileInput').addEventListener('change',e=>{ handleFile(e.target.files[0]); e.target.value=''; });
 document.getElementById('fileInput2').addEventListener('change',e=>{ handleFile(e.target.files[0]); e.target.value=''; });
 
+// ── 起動モード（?mode=list でリストモード起動。prototype.htmlからの導線用） ──
+if(new URLSearchParams(location.search).get('mode')==='list') setMode('list');
+
 // ── Service Worker（PWA） ──
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 </script>
