@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>ソムリン — 好みのワインを登録</title>
+<meta name="theme-color" content="#5C0E2A">
+<style>
+:root{ --burgundy:#9B1B4B; --wine-dark:#5C0E2A; --gold:#C9973A; }
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{
+  font-family:-apple-system,'Hiragino Sans',sans-serif;
+  background:linear-gradient(160deg,var(--wine-dark) 0%,#3d0a1c 100%);
+  color:#fff; max-width:430px; margin:0 auto; min-height:100dvh;
+  padding:0 0 40px;
+}
+.top{padding:52px 16px 6px;display:flex;align-items:center;gap:12px;}
+.top a{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;
+  font-size:18px;display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0;}
+.top .t1{font-size:17px;font-weight:800;}
+.top .t2{font-size:11px;color:rgba(255,255,255,.6);margin-top:1px;}
+.wrap{padding:10px 20px;}
+.desc{font-size:13px;color:rgba(255,255,255,.75);line-height:1.8;margin-bottom:14px;}
+
+/* profile card */
+.prof{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:16px;margin-bottom:16px;}
+.prof .ph{font-size:11px;color:rgba(255,255,255,.6);font-weight:700;}
+.prof .pv{font-size:17px;font-weight:800;margin-top:6px;line-height:1.5;}
+.prof .pn{font-size:11px;color:rgba(255,255,255,.55);margin-top:6px;line-height:1.6;}
+
+/* source segment */
+.seg{display:flex;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:4px;margin-bottom:14px;}
+.seg button{flex:1;border:none;background:none;color:rgba(255,255,255,.7);font-size:13px;font-weight:700;padding:10px;border-radius:10px;cursor:pointer;}
+.seg button.on{background:#fff;color:var(--burgundy);}
+
+.upload{width:100%;padding:16px;background:#fff;color:var(--burgundy);font-size:15px;font-weight:800;border:none;border-radius:16px;cursor:pointer;margin-bottom:10px;}
+.upload:disabled{opacity:.5;}
+.note{font-size:10px;color:rgba(255,255,255,.45);line-height:1.7;margin-bottom:16px;}
+
+/* status / results */
+.stat{font-size:13px;font-weight:700;color:rgba(255,255,255,.85);padding:8px 0;min-height:20px;}
+.rec{background:rgba(255,255,255,.08);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;gap:10px;align-items:center;}
+.rec .rn{font-size:13px;font-weight:700;line-height:1.4;}
+.rec .rr{font-size:11px;color:rgba(255,255,255,.6);margin-top:2px;}
+.rec .rm{font-size:10px;font-weight:800;white-space:nowrap;flex-shrink:0;
+  padding:3px 9px;border-radius:10px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.8);}
+.rec .rm.hit{background:var(--gold);color:#3d2a05;}
+
+.golink{display:block;text-align:center;margin-top:18px;padding:15px;background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.2);border-radius:16px;color:#fff;font-size:14px;font-weight:800;text-decoration:none;}
+
+#toast{position:fixed;bottom:40px;left:50%;transform:translateX(-50%);background:rgba(15,15,15,.92);color:#fff;
+  padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;opacity:0;transition:all .3s;z-index:400;white-space:nowrap;}
+#toast.on{opacity:1;}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <a href="scouter.html">‹</a>
+  <div><div class="t1">❤️ 好みのワインを登録</div><div class="t2">写真からAIが好みを学習します</div></div>
+</div>
+
+<div class="wrap">
+  <div class="desc">今まで飲んで好きだったワインの写真や、家のセラー・棚の写真をアップしてください。写っているボトルをAIが読み取り、あなたの好み（色・産地・価格帯）を学習します。スカウターの結果に「あなたに合うか」が表示されるようになります。</div>
+
+  <div class="prof" id="prof">
+    <div class="ph">あなたの好みプロファイル</div>
+    <div class="pv" id="profVal">読み込み中…</div>
+    <div class="pn" id="profNote"></div>
+  </div>
+
+  <div class="seg">
+    <button id="segLike" class="on" onclick="setSource('photo_like')">🍷 好きなワインの写真</button>
+    <button id="segCellar" onclick="setSource('cellar')">🧊 セラー/棚の写真</button>
+  </div>
+
+  <button class="upload" id="upBtn" onclick="document.getElementById('file').click()">📁 写真を選ぶ（複数OK）</button>
+  <input type="file" id="file" accept="image/*" multiple style="display:none">
+  <div class="note">写真は銘柄の読み取りのためソムリンのサーバーで解析されます。ラベルが読み取れたボトルだけが保存されます（写真自体は保存しません）。</div>
+
+  <div class="stat" id="stat"></div>
+  <div id="results"></div>
+
+  <a class="golink" href="scouter.html">📷 スカウターで使ってみる →</a>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// scouter.html と同じ設定を共有（?api= 上書き・匿名ID）
+const API_BASE = (()=>{
+  const p = new URLSearchParams(location.search).get('api');
+  if(p){ localStorage.setItem('somm_api_base', p.replace(/\/$/,'')); }
+  return localStorage.getItem('somm_api_base') || 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+})();
+const UID=(()=>{ let u=localStorage.getItem('somm_uid');
+  if(!u){ u=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid',u); }
+  return u; })();
+
+let SOURCE='photo_like';
+function setSource(s){
+  SOURCE=s;
+  document.getElementById('segLike').classList.toggle('on',s==='photo_like');
+  document.getElementById('segCellar').classList.toggle('on',s==='cellar');
+}
+
+function esc(x){ return (x==null?'':String(x)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2400); }
+function setStat(m){ document.getElementById('stat').textContent=m; }
+
+function showProfile(p){
+  const v=document.getElementById('profVal'), n=document.getElementById('profNote');
+  if(!p || !p.count){ v.textContent='まだ登録がありません'; n.textContent='3本以上登録すると好み判定が始まります。'; return; }
+  if(p.ready && p.summary){ v.textContent=p.summary+`（${p.count}本）`; n.textContent='スカウターの結果に「あなたに合うか」が表示されます。登録が増えるほど精度が上がります。'; }
+  else { v.textContent=`${p.count}本 登録済み`; n.textContent=`あと${Math.max(0,3-p.count)}本で好み判定が始まります。`; }
+}
+
+async function loadProfile(){
+  try{
+    const r=await fetch(API_BASE+'/api/taste/summary?userId='+encodeURIComponent(UID));
+    if(r.ok) showProfile(await r.json());
+    else document.getElementById('profVal').textContent='—';
+  }catch(e){ document.getElementById('profVal').textContent='—（オフライン）'; }
+}
+
+// 画像→長辺1568px JPEG（セラー写真は小さいラベルが多いので高めの解像度）
+function toDataUrl(file){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement('canvas');
+      const scale=Math.min(1, 1568/Math.max(img.naturalWidth,img.naturalHeight));
+      c.width=Math.round(img.naturalWidth*scale); c.height=Math.round(img.naturalHeight*scale);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      resolve(c.toDataURL('image/jpeg',0.8));
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror=()=>resolve(null);
+    img.src=URL.createObjectURL(file);
+  });
+}
+
+function recRow(b){
+  return `<div class="rec">
+    <div><div class="rn">${esc(b.name||'（銘柄名なし）')}</div>
+         <div class="rr">${esc([b.iro,b.kuni,b.chiiki,b.vintage].filter(Boolean).join('　'))}</div></div>
+    <div class="rm${b.matched?' hit':''}">${b.matched?'⭐ 評価あり SP '+(b.sp!=null?Number(b.sp).toFixed(1):'—'):'記録OK'}</div>
+  </div>`;
+}
+
+async function handleFiles(files){
+  if(!files || !files.length) return;
+  const btn=document.getElementById('upBtn'); btn.disabled=true;
+  const resEl=document.getElementById('results');
+  let total=0;
+  for(let i=0;i<files.length;i++){
+    setStat(`解析中… ${i+1}/${files.length}枚目（10秒ほど）`);
+    const dataUrl=await toDataUrl(files[i]);
+    if(!dataUrl){ continue; }
+    try{
+      const r=await fetch(API_BASE+'/api/taste/upload',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ image:dataUrl, userId:UID, source:SOURCE })
+      });
+      if(r.status===429){ toast('回数上限です。少し待ってからどうぞ'); break; }
+      if(!r.ok) throw new Error('http '+r.status);
+      const res=await r.json();
+      total+=res.saved||0;
+      (res.recognized||[]).forEach(b=>{ resEl.insertAdjacentHTML('afterbegin', recRow(b)); });
+      if(res.profile) showProfile(res.profile);
+      if(!res.saved) toast('ボトルを読み取れませんでした');
+    }catch(e){ toast('解析に失敗しました'); }
+  }
+  setStat(total?`✅ ${total}本を好みに登録しました`:'');
+  btn.disabled=false;
+}
+
+document.getElementById('file').addEventListener('change',e=>{ handleFiles(Array.from(e.target.files)); e.target.value=''; });
+loadProfile();
+</script>
+</body>
+</html>

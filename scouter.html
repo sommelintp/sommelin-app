@@ -84,6 +84,9 @@ body{
   cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:30px;}
 .shoot:active{transform:scale(.94);}
 .shoot.busy{opacity:.4;pointer-events:none;}
+.mode-seg{display:flex;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:3px;}
+.mode-seg button{border:none;background:none;color:rgba(255,255,255,.7);font-size:12px;font-weight:700;padding:6px 16px;border-radius:16px;cursor:pointer;}
+.mode-seg button.on{background:#fff;color:var(--burgundy);}
 .bot-row{display:flex;gap:10px;align-items:center;}
 .bot-btn{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:16px;
   padding:8px 14px;font-size:12px;color:#fff;cursor:pointer;display:flex;align-items:center;gap:6px;}
@@ -111,6 +114,20 @@ body{
 .cospa-badge .sub{font-size:11px;opacity:.9;margin-top:4px;}
 .pick-ribbon{margin:0 16px 4px;background:linear-gradient(90deg,var(--gold),#e0b45c);color:#3d2a05;
   border-radius:12px;padding:10px 14px;font-size:12px;font-weight:800;line-height:1.6;}
+.fit-ribbon{margin:0 16px 10px;background:linear-gradient(90deg,#f8e3ec,#fbeef4);color:#7d1240;
+  border-radius:12px;padding:10px 14px;font-size:12px;font-weight:800;line-height:1.6;}
+.fit-ribbon .fr2{font-weight:600;color:#a3547a;}
+/* list result rows */
+.li-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 16px 8px;padding:10px 12px;background:#f7f5f3;border-radius:10px;}
+.li-row.hit{background:#fdf6ee;border:1px solid #ecd9bd;}
+.li-row .ln{font-size:13px;font-weight:700;color:#2C1810;line-height:1.4;}
+.li-row .lr{font-size:11px;color:#999;margin-top:2px;}
+.li-row .lb{font-size:10px;font-weight:800;margin-top:3px;display:flex;gap:6px;flex-wrap:wrap;}
+.li-row .lb .b1{color:#7d1240;background:#f8e3ec;border-radius:8px;padding:1px 7px;}
+.li-row .lb .b2{color:#3d2a05;background:#f3e2c2;border-radius:8px;padding:1px 7px;}
+.li-row .lb .b3{color:#666;background:#eee;border-radius:8px;padding:1px 7px;}
+.li-row .lc{font-size:11px;font-weight:800;color:var(--burgundy);white-space:nowrap;text-align:right;flex-shrink:0;}
+.li-row .lc .un{color:#aaa;font-weight:700;}
 .sh-meta{margin:0 16px 12px;background:#fafafa;border-radius:12px;padding:10px 14px;font-size:12px;color:#555;line-height:1.7;}
 .sh-style{margin:0 16px 12px;background:#f6f2ee;border-left:3px solid var(--gold);border-radius:0 12px 12px 0;padding:10px 14px;font-size:12px;color:#5a4634;line-height:1.7;}
 .sh-style .dc{font-size:10px;color:#a08b74;margin-top:4px;}
@@ -152,11 +169,13 @@ body{
   <div class="perm-desc">ラベルを撮るだけ。AIソムリエが銘柄を特定して、<br>「得かどうか」と「あなたへのおすすめ」を返します。</div>
   <div class="perm-feats">
     <div class="pf">📷 ラベルを撮影 → AIが銘柄・産地・品種を特定</div>
+    <div class="pf">📋 ワインリストを撮ると<b>全銘柄まとめて評価</b>（複数ページOK）</div>
     <div class="pf">⭐ ソムリン評価済みなら<b>実SPとコスパ</b>を即表示</div>
-    <div class="pf">🧭 未登録のワインでも、近い系統の<b>実在おすすめ</b>を提案</div>
+    <div class="pf">❤️ 好みを登録すると<b>「あなたに合うか」</b>も表示</div>
   </div>
   <button class="perm-main" onclick="startScan()">📷 カメラを起動する</button>
   <button class="perm-sub" onclick="document.getElementById('fileInput').click()">写真から読み取る</button>
+  <button class="perm-sub" style="margin-top:10px" onclick="location.href='taste.html'">❤️ 好みのワインを登録（写真から）</button>
   <div class="perm-note">写真は銘柄特定と品質向上のためソムリンのサーバーで解析されます。<br>評価(SP)は実データがある場合のみ表示します（推測のスコアは出しません）。</div>
 </div>
 
@@ -184,8 +203,12 @@ body{
   </div>
 
   <div class="aBot">
+    <div class="mode-seg">
+      <button id="modeBottle" class="on" onclick="setMode('bottle')">🍾 ボトル</button>
+      <button id="modeList" onclick="setMode('list')">📋 リスト</button>
+    </div>
     <div class="shoot" id="shootBtn" onclick="scanNow()">📷</div>
-    <div class="shoot-hint">ラベルを枠に入れてシャッター</div>
+    <div class="shoot-hint" id="shootHint">ラベルを枠に入れてシャッター</div>
     <div class="bot-row">
       <label class="bot-btn">📁 写真から
         <input type="file" id="fileInput2" accept="image/*">
@@ -242,6 +265,25 @@ function fmtSP(s){ if(s==null||isNaN(s)) return '—'; return Number(s).toFixed(
 
 // ── STATE ──
 let stream=null, busy=false, lastRes=null;
+let MODE='bottle';                 // 'bottle' | 'list'
+let listItems=[], listPages=0;     // リストモードの累積（複数ページ）
+
+// 匿名ユーザーID（好みプロファイル用。端末に保存）
+const UID=(()=>{ let u=localStorage.getItem('somm_uid');
+  if(!u){ u=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid',u); }
+  return u; })();
+
+function setMode(m){
+  MODE=m;
+  document.getElementById('modeBottle').classList.toggle('on',m==='bottle');
+  document.getElementById('modeList').classList.toggle('on',m==='list');
+  if(m==='list'){
+    setSub('リストモード'); document.getElementById('shootHint').textContent='ワインリストを撮影（複数ページOK）';
+  }else{
+    setSub('ラベルを枠に入れて撮影'); document.getElementById('shootHint').textContent='ラベルを枠に入れてシャッター';
+    listItems=[]; listPages=0;   // ボトルに戻したらリスト累積はリセット
+  }
+}
 
 // ── CAMERA ──
 async function startScan(){
@@ -256,8 +298,9 @@ async function startScan(){
   }
 }
 
-// 中央フレーム（横80%・縦16%〜74%）を切り出し → 長辺1024pxのJPEGに縮小
-function grabFrame(srcEl, crop){
+// 切り出し → JPEG縮小。crop=中央フレーム（横80%・縦16%〜74%）。
+// ボトル=長辺1024 / リスト=長辺1568（小さい文字を読むため）
+function grabFrame(srcEl, crop, maxEdge){
   const c=document.getElementById('grab'); const ctx=c.getContext('2d');
   let sw,sh;
   if(srcEl.tagName==='VIDEO'){ sw=srcEl.videoWidth; sh=srcEl.videoHeight; }
@@ -265,7 +308,7 @@ function grabFrame(srcEl, crop){
   if(!sw||!sh) return null;
   let sx=0, sy=0, cw=sw, ch=sh;
   if(crop){ sx=sw*0.10; sy=sh*0.16; cw=sw*0.80; ch=sh*0.58; }
-  const scale=Math.min(1, 1024/Math.max(cw,ch));
+  const scale=Math.min(1, (maxEdge||1024)/Math.max(cw,ch));
   c.width=Math.round(cw*scale); c.height=Math.round(ch*scale);
   ctx.drawImage(srcEl, sx,sy,cw,ch, 0,0,c.width,c.height);
   return c.toDataURL('image/jpeg', 0.8);
@@ -277,8 +320,8 @@ async function scanNow(){
   if(!v.videoWidth){ toast('カメラ準備中…'); return; }
   const flash=document.getElementById('flash');
   flash.classList.add('on'); setTimeout(()=>flash.classList.remove('on'),120);
-  const dataUrl=grabFrame(v, true);
-  await identify(dataUrl);
+  if(MODE==='list'){ await identifyList(grabFrame(v, false, 1568)); }
+  else { await identify(grabFrame(v, true, 1024)); }
 }
 
 // ファイル（写真）から
@@ -288,8 +331,8 @@ function handleFile(file){
   img.onload=async ()=>{
     document.getElementById('perm').classList.add('gone');
     document.getElementById('scanview').style.display='block';
-    const dataUrl=grabFrame(img, false);
-    await identify(dataUrl);
+    if(MODE==='list'){ await identifyList(grabFrame(img, false, 1568)); }
+    else { await identify(grabFrame(img, false, 1024)); }
     URL.revokeObjectURL(img.src);
   };
   img.src=URL.createObjectURL(file);
@@ -307,7 +350,7 @@ async function identify(dataUrl){
     const r=await fetch(API_BASE+'/api/identify',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ image:dataUrl, locale:'ja-JP' })
+      body: JSON.stringify({ image:dataUrl, userId:UID, locale:'ja-JP' })
     });
     if(r.status===429){ showStatus(false); toast('回数上限です。少し待ってからどうぞ'); return; }
     if(!r.ok) throw new Error('http '+r.status);
@@ -329,6 +372,91 @@ function showApiUnset(){
   document.getElementById('errD').innerHTML='Cloud RunのURLが未設定です。<br>scouter.html の API_BASE を設定するか、<br><code>?api=https://…run.app</code> を付けて開いてください。';
   el.classList.add('on');
   setTimeout(()=>el.classList.remove('on'), 6000);
+}
+
+// ── リストモード: /api/identify-list（1枚＝1回。複数ページは撮るたび累積） ──
+async function identifyList(dataUrl){
+  if(!dataUrl){ toast('画像を取得できませんでした'); return; }
+  if(API_BASE.includes('★')){ showApiUnset(); return; }
+  busy=true; setShoot(true); showStatus(true); setStatus('リストを解析中…（10秒ほど）');
+  try{
+    const r=await fetch(API_BASE+'/api/identify-list',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ image:dataUrl, userId:UID, locale:'ja-JP' })
+    });
+    if(r.status===429){ showStatus(false); toast('回数上限です。少し待ってからどうぞ'); return; }
+    if(!r.ok) throw new Error('http '+r.status);
+    const res=await r.json();
+    showStatus(false);
+    if(!res.items || !res.items.length){
+      toast(res.isWineList===false?'ワインリストが見つかりませんでした':'銘柄を読み取れませんでした。近づいて撮り直してください');
+      return;
+    }
+    listPages++;
+    listItems=listItems.concat(res.items);
+    renderListSheet(!!(res.summary&&res.summary.hasTasteProfile));
+    openSheet();
+  }catch(e){
+    showStatus(false);
+    toast('解析に失敗しました。通信環境をご確認ください');
+  }finally{
+    busy=false; setShoot(false);
+  }
+}
+
+// リスト行のスコア（並べ替え用）: 好み度＋コスパ。実データがある行だけが上位に来る
+function liScore(it){
+  let s=0;
+  if(it.personalFit && it.personalFit.score) s+=it.personalFit.score;
+  const w=it.match && it.match.wine;
+  if(w){ const o=osuOf(w); if(o!=null) s+=Math.max(0,Math.min(60,o*60)); s+=5; }
+  return s;
+}
+
+function liRow(it, hit){
+  const inp=it.input||{}; const w=it.match&&it.match.wine;
+  const name=(w?w.name:null)||inp.name||inp.rawText||'—';
+  const meta=[];
+  if(inp.listPrice) meta.push('¥'+Number(inp.listPrice).toLocaleString('ja-JP')+(inp.byGlass?'（グラス）':''));
+  if(w) meta.push([w.kuni,w.chiiki].filter(Boolean).join(' '));
+  else if(inp.country) meta.push(inp.country);
+  const badges=[];
+  if(it.personalFit && it.personalFit.label && it.personalFit.score>=40) badges.push(`<span class="b1">❤️ ${esc(it.personalFit.label)}</span>`);
+  if(it.sommelin && it.sommelin.isPick) badges.push(`<span class="b2">${it.sommelin.level==='top'?'👑 ソムリン推し':'✨ おすすめ'}</span>`);
+  if(it.priceDelta!=null && Math.abs(it.priceDelta)>=15) badges.push(`<span class="b3">参考価格より${it.priceDelta>0?'+':''}${it.priceDelta}%</span>`);
+  const right=w
+    ? `${cospa(osuOf(w)).stars}<br>SP ${fmtSP(w.sp)}`
+    : `<span class="un">未登録</span>`;
+  return `<div class="li-row${hit?' hit':''}">
+    <div><div class="ln">${esc(trunc(name,34))}</div>
+         ${meta.length?`<div class="lr">${esc(meta.join('　'))}</div>`:''}
+         ${badges.length?`<div class="lb">${badges.join('')}</div>`:''}</div>
+    <div class="lc">${right}</div></div>`;
+}
+
+function renderListSheet(hasTaste){
+  const known=listItems.filter(i=>i.match&&i.match.status==='known').length;
+  const top=[...listItems].filter(i=>liScore(i)>0).sort((a,b)=>liScore(b)-liScore(a)).slice(0,3);
+  const topSet=new Set(top);
+  document.getElementById('sheetBody').innerHTML=`
+    <div class="sh-pill" style="background:var(--burgundy)">📋 ワインリスト ・ ${listPages}ページ ・ ${listItems.length}銘柄（評価済み ${known}）</div>
+    ${hasTaste?'':`<div class="sh-meta">❤️ <a href="taste.html" style="color:var(--burgundy);font-weight:800">好みのワインを登録</a>すると、このリストで「あなたに合う1本」が分かるようになります。</div>`}
+    ${top.length?`<div class="cand-h">このリストのおすすめ</div>${top.map(it=>liRow(it,true)).join('')}`:''}
+    <div class="cand-h">すべての銘柄（読み取り順）</div>
+    ${listItems.map(it=>liRow(it, false)).join('')}
+    <div class="sh-meta">評価(SP)はソムリンの実データがある銘柄のみ表示しています。</div>
+    <div class="sh-btns">
+      <button class="sh-main" onclick="closeSheet()">📷 次のページを撮る</button>
+      <button class="sh-sub" onclick="listItems=[];listPages=0;closeSheet();toast('リストをクリアしました')">🗑 クリア</button>
+    </div>`;
+}
+
+// 好み度リボン（本人の登録写真由来のみ＝basedOn:'history' の時だけ出す）
+function fitRibbon(res){
+  const f=res.personalFit;
+  if(!f || !f.label || f.basedOn!=='history') return '';
+  return `<div class="fit-ribbon">❤️ ${esc(f.label)}${f.score?`（${f.score}）`:''}<span class="fr2">${f.reasons&&f.reasons.length?'｜'+esc(f.reasons.join('・')):''}</span></div>`;
 }
 
 // ── 結果表示 ──
@@ -400,6 +528,7 @@ function renderKnown(res){
       <div class="sh-cell"><div class="v">${fmtPrice(w.price)}</div><div class="l">参考価格</div></div>
     </div>
     ${pick}
+    ${fitRibbon(res)}
     <div class="cospa-badge" style="background:${cp.bg}">
       <div class="stars">${cp.stars}</div>
       <div class="lbl">${cp.lbl}</div>
@@ -424,6 +553,7 @@ function renderUnlisted(res){
     <div class="sh-name">${esc(trunc(title,40))}${id.vintage?'　'+esc(id.vintage):''}</div>
     <div class="sh-region">AIソムリエがラベルから読み取った内容</div>
     ${idBlock(id)}
+    ${fitRibbon(res)}
     ${styleBlock(res)}
     <div class="sh-meta">このワインはまだソムリンの評価データにありません。<b>推測のスコアは表示しません。</b><br>今回のスキャンは記録済み — 評価が追加されると次回から表示されます。</div>
     ${recBlock(res,'代わりに、近い系統のソムリン評価済みワイン')}
