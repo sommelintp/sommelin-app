@@ -14,7 +14,7 @@
   var SB_KEY='sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
   var SESSION_KEY='sommelin_session';
   var ALLOWED=['store','retailer','admin'];          // このページに入れる役割
-  var HOME={importer:'importer_admin.html',store:'restaurant_admin.html',retailer:'restaurant_admin.html',individual:'prototype.html',admin:'restaurant_admin.html'};
+  var HOME={importer:'importer_admin.html',store:'restaurant_admin.html',retailer:'restaurant_admin.html',individual:'prototype.html',admin:'importer_admin.html'};
   var LOGIN='login.html';
   function ses(){ try{ return JSON.parse(localStorage.getItem(SESSION_KEY)||'null'); }catch(e){ return null; } }
   function save(s){ try{ localStorage.setItem(SESSION_KEY,JSON.stringify(s)); }catch(e){} }
