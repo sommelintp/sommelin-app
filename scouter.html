@@ -88,6 +88,26 @@ body{
 .mode-seg button{border:none;background:none;color:rgba(255,255,255,.7);font-size:12px;font-weight:700;padding:6px 16px;border-radius:16px;cursor:pointer;}
 .mode-seg button.on{background:#fff;color:var(--burgundy);}
 .bot-row{display:flex;gap:10px;align-items:center;}
+
+/* ── FROZEN OVERLAY（撮った写真の上に結果マーカー） ── */
+#frozen{position:absolute;inset:0;display:none;background:#000;z-index:10;}
+#frozen img{width:100%;height:100%;object-fit:contain;}
+#marks{position:absolute;inset:0;display:none;z-index:20;}
+@keyframes rPulse{0%{transform:translate(-50%,-50%) scale(.95)}50%{transform:translate(-50%,-50%) scale(1.05)}100%{transform:translate(-50%,-50%) scale(.95)}}
+.mark{position:absolute;transform:translate(-50%,-50%);background:rgba(10,10,14,.85);border:1.5px solid rgba(255,255,255,.4);
+  color:#fff;border-radius:18px;padding:5px 11px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;
+  box-shadow:0 2px 12px rgba(0,0,0,.55);text-align:center;line-height:1.3;}
+.mark.known{border-color:var(--gold);color:#ffd98a;}
+.mark.fit{border-color:#ff7aa8;}
+.mark.unread{opacity:.7;font-weight:700;}
+.mark.best{background:linear-gradient(90deg,var(--gold),#e0b45c);color:#3d2a05;border-color:#fff;
+  padding:7px 13px;font-size:13px;z-index:2;animation:rPulse 1.8s ease-in-out infinite;}
+.mark .bsub{display:block;font-size:9px;font-weight:700;}
+#frozenBar{position:absolute;left:0;right:0;bottom:0;z-index:35;padding:14px 16px 34px;display:none;
+  background:linear-gradient(0deg,rgba(0,0,0,.85),rgba(0,0,0,.5) 70%,transparent);}
+#frozenBar .fs{font-size:12px;color:rgba(255,255,255,.88);text-align:center;margin-bottom:10px;font-weight:700;line-height:1.5;}
+#frozenBar .fb1{width:100%;padding:14px;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;
+  background:#fff;color:var(--burgundy);}
 .bot-btn{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:16px;
   padding:8px 14px;font-size:12px;color:#fff;cursor:pointer;display:flex;align-items:center;gap:6px;}
 .bot-btn input{display:none;}
@@ -168,7 +188,7 @@ body{
   <div class="perm-title">ソムリン スカウター</div>
   <div class="perm-desc">ラベルを撮るだけ。AIソムリエが銘柄を特定して、<br>「得かどうか」と「あなたへのおすすめ」を返します。</div>
   <div class="perm-feats">
-    <div class="pf">📷 ラベルを撮影 → AIが銘柄・産地・品種を特定</div>
+    <div class="pf">📷 撮るだけ → 写っている<b>全ボトル</b>を写真の上でその場評価（1本でも棚ごとでもOK）</div>
     <div class="pf">📋 ワインリストを撮ると<b>全銘柄まとめて評価</b>（複数ページOK）</div>
     <div class="pf">⭐ ソムリン評価済みなら<b>実SPとコスパ</b>を即表示</div>
     <div class="pf">❤️ 好みを登録すると<b>「あなたに合うか」</b>も表示</div>
@@ -184,6 +204,14 @@ body{
   <video id="cam" autoplay playsinline muted></video>
   <canvas id="grab"></canvas>
   <div id="flash"></div>
+
+  <!-- 撮った写真＋結果マーカー（画面遷移なしのオーバーレイ表示） -->
+  <div id="frozen"><img id="frozenImg" alt=""></div>
+  <div id="marks"></div>
+  <div id="frozenBar">
+    <div class="fs" id="frozenSum">—</div>
+    <button class="fb1" onclick="resumeLive()">↺ 撮り直す</button>
+  </div>
 
   <div id="scanLine"></div>
   <div class="fc tl"></div><div class="fc tr"></div><div class="fc bl"></div><div class="fc br"></div>
@@ -204,7 +232,7 @@ body{
 
   <div class="aBot">
     <div class="mode-seg">
-      <button id="modeBottle" class="on" onclick="setMode('bottle')">🍾 ボトル</button>
+      <button id="modeBottle" class="on" onclick="setMode('bottle')">🍾 ボトル・棚</button>
       <button id="modeList" onclick="setMode('list')">📋 リスト</button>
     </div>
     <div class="shoot" id="shootBtn" onclick="scanNow()">📷</div>
@@ -264,7 +292,7 @@ function fmtPrice(p){ if(p==null||isNaN(p)) return '—'; return '¥'+Math.round
 function fmtSP(s){ if(s==null||isNaN(s)) return '—'; return Number(s).toFixed(1); }
 
 // ── STATE ──
-let stream=null, busy=false, lastRes=null;
+let stream=null, busy=false;
 let MODE='bottle';                 // 'bottle' | 'list'
 let listItems=[], listPages=0;     // リストモードの累積（複数ページ）
 
@@ -275,12 +303,13 @@ const UID=(()=>{ let u=localStorage.getItem('somm_uid');
 
 function setMode(m){
   MODE=m;
+  resumeLive();   // 静止画表示中ならライブに戻す
   document.getElementById('modeBottle').classList.toggle('on',m==='bottle');
   document.getElementById('modeList').classList.toggle('on',m==='list');
   if(m==='list'){
     setSub('リストモード'); document.getElementById('shootHint').textContent='ワインリストを撮影（複数ページOK）';
   }else{
-    setSub('ラベルを枠に入れて撮影'); document.getElementById('shootHint').textContent='ラベルを枠に入れてシャッター';
+    setSub('撮るだけで全ボトル評価'); document.getElementById('shootHint').textContent='1本でも棚ごとでもOK。撮るだけ';
     listItems=[]; listPages=0;   // ボトルに戻したらリスト累積はリセット
   }
 }
@@ -321,7 +350,7 @@ async function scanNow(){
   const flash=document.getElementById('flash');
   flash.classList.add('on'); setTimeout(()=>flash.classList.remove('on'),120);
   if(MODE==='list'){ await identifyList(grabFrame(v, false, 1568)); }
-  else { await identify(grabFrame(v, true, 1024)); }
+  else { await identifyShelf(grabFrame(v, false, 1568)); }
 }
 
 // ファイル（写真）から
@@ -332,38 +361,186 @@ function handleFile(file){
     document.getElementById('perm').classList.add('gone');
     document.getElementById('scanview').style.display='block';
     if(MODE==='list'){ await identifyList(grabFrame(img, false, 1568)); }
-    else { await identify(grabFrame(img, false, 1024)); }
+    else { await identifyShelf(grabFrame(img, false, 1568)); }
     URL.revokeObjectURL(img.src);
   };
   img.src=URL.createObjectURL(file);
 }
 
-// ── /api/identify 呼び出し ──
-async function identify(dataUrl){
+// ── 棚/ボトル スキャン: /api/identify-shelf ──
+// 撮った瞬間に画面をその写真で固定し、結果を写真の上にマーカーで重ねる（画面遷移なし）
+let shelfRes=null;
+
+async function identifyShelf(dataUrl){
   if(!dataUrl){ toast('画像を取得できませんでした'); return; }
-  if(API_BASE.includes('★')){
-    showApiUnset();
-    return;
-  }
-  busy=true; setShoot(true); showStatus(true); setStatus('AIソムリエが解析中…');
+  if(API_BASE.includes('★')){ showApiUnset(); return; }
+  busy=true; setShoot(true);
+  showFrozen(dataUrl);
+  showStatus(true); setStatus('ボトルを解析中…（数秒）');
   try{
-    const r=await fetch(API_BASE+'/api/identify',{
+    const r=await fetch(API_BASE+'/api/identify-shelf',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ image:dataUrl, userId:UID, locale:'ja-JP' })
     });
-    if(r.status===429){ showStatus(false); toast('回数上限です。少し待ってからどうぞ'); return; }
+    if(r.status===429){ toast('回数上限です。少し待ってからどうぞ'); resumeLive(); return; }
     if(!r.ok) throw new Error('http '+r.status);
     const res=await r.json();
-    lastRes=res;
     showStatus(false);
-    renderResult(res);
+    if(!res.bottles || !res.bottles.length){
+      toast('ボトルを見つけられませんでした。近づいて撮ってみてください'); resumeLive(); return;
+    }
+    shelfRes=res;
+    renderMarks(res);
+    if(res.bottles.length===1) markTap(0);   // 1本だけなら詳細カードを自動で開く
   }catch(e){
     showStatus(false);
     toast('解析に失敗しました。通信環境をご確認ください');
+    resumeLive();
   }finally{
     busy=false; setShoot(false);
   }
+}
+
+function showFrozen(dataUrl){
+  document.getElementById('frozenImg').src=dataUrl;
+  document.getElementById('frozen').style.display='block';
+  const marks=document.getElementById('marks');
+  marks.style.display='block'; marks.innerHTML='';
+  document.querySelector('.aBot').style.display='none';
+  setSub('解析中…');
+}
+
+function resumeLive(){
+  closeSheet();
+  shelfRes=null;
+  document.getElementById('frozen').style.display='none';
+  document.getElementById('marks').style.display='none';
+  document.getElementById('frozenBar').style.display='none';
+  document.querySelector('.aBot').style.display='flex';
+  showStatus(false);
+  setSub(MODE==='list'?'リストモード':'撮るだけで全ボトル評価');
+}
+
+// ベスト判定: 好み度＋コスパ＋SP（既知＝実データのボトルのみ対象）
+function bottleRank(b){
+  let s=0;
+  if(b.personalFit && b.personalFit.score) s+=b.personalFit.score;
+  const w=b.match && b.match.wine;
+  if(w){ s+=20; const o=osuOf(w); if(o!=null) s+=Math.max(0,Math.min(60,o*60)); if(w.sp) s+=Number(w.sp); }
+  return s;
+}
+
+function renderMarks(res){
+  const layer=document.getElementById('marks'); layer.innerHTML='';
+  const img=document.getElementById('frozenImg');
+  // object-fit:contain の表示領域にボトル座標（0-1比率）をマッピング
+  const W=layer.clientWidth, H=layer.clientHeight;
+  const iw=img.naturalWidth||1, ih=img.naturalHeight||1;
+  const scale=Math.min(W/iw, H/ih), dw=iw*scale, dh=ih*scale, ox=(W-dw)/2, oy=(H-dh)/2;
+
+  let best=-1, bs=0;
+  res.bottles.forEach((b,i)=>{ if(b.match.status==='known'){ const s=bottleRank(b); if(s>bs){bs=s;best=i;} } });
+
+  res.bottles.forEach((b,i)=>{
+    const el=document.createElement('button');
+    const w=b.match && b.match.wine;
+    let cls='mark', html='';
+    if(b.match.status==='known'){
+      cls+=' known';
+      const fit=b.personalFit && b.personalFit.score>=40;
+      if(fit) cls+=' fit';
+      html=(fit?'❤️':'')+'★'+fmtSP(w.sp);
+      if(i===best){ cls+=' best'; html='👑 '+html+'<span class="bsub">この中でおすすめ</span>'; }
+    }else if(b.match.status==='unlisted'){ html='未登録'; }
+    else { cls+=' unread'; html='?'; }
+    el.className=cls; el.innerHTML=html;
+    el.style.left=(ox+b.box.cx*dw)+'px';
+    el.style.top=(oy+b.box.cy*dh)+'px';
+    el.onclick=()=>markTap(i);
+    layer.appendChild(el);
+  });
+
+  const s=res.summary||{};
+  document.getElementById('frozenSum').textContent=
+    `${s.total||res.bottles.length}本を検出 ・ 評価あり ${s.known||0}本${s.fits?` ・ ❤️好み ${s.fits}本`:''}｜マーカーをタップで詳細`;
+  document.getElementById('frozenBar').style.display='block';
+  setSub('タップで詳細');
+}
+
+function markTap(i){
+  if(!shelfRes) return;
+  const b=shelfRes.bottles[i];
+  if(!b) return;
+  if(b.match.status==='unreadable'){ toast('ラベルを読み取れませんでした。近づいて撮り直してみてください'); return; }
+  renderShelfCard(b);
+  openSheet();
+}
+
+// タップ時の詳細カード（既知=実SP・コスパ／未登録=正直表示。近縁おすすめは遅延読込＝無料）
+function renderShelfCard(b){
+  const w=b.match.wine;
+  const id=b.identification||{};
+  let inner='';
+  if(w){
+    const cp=cospa(osuOf(w));
+    const lowConf=(b.match.matchScore||0)<0.75;
+    const pick=b.sommelin && b.sommelin.isPick
+      ? `<div class="pick-ribbon">${b.sommelin.level==='top'?'👑 ソムリンのおすすめ':'✨ ソムリンおすすめ'}<span style="font-weight:600">｜${esc(b.sommelin.reason||'')}</span></div>` : '';
+    inner=`
+      <div class="sh-pill" style="background:var(--burgundy)">🍷 ソムリン照合${lowConf?' ・ 要確認':'済み'}</div>
+      <div class="sh-name">${esc(w.name||'—')}${w.vintage&&w.vintage!=='NV'?'　'+esc(w.vintage):''}</div>
+      <div class="sh-region">${esc([w.kuni,w.chiiki].filter(Boolean).join(' '))}${w.producer?'　/　'+esc(trunc(w.producer,24)):''}</div>
+      <div class="sh-grid">
+        <div class="sh-cell"><div class="v" style="color:var(--burgundy)">${fmtSP(w.sp)}</div><div class="l">SP（ソムリン評価）</div></div>
+        <div class="sh-cell"><div class="v">${fmtPrice(w.price)}</div><div class="l">参考価格</div></div>
+      </div>
+      ${pick}
+      ${fitRibbon(b)}
+      <div class="cospa-badge" style="background:${cp.bg}">
+        <div class="stars">${cp.stars}</div><div class="lbl">${cp.lbl}</div><div class="sub">${cp.sub}</div>
+      </div>
+      <div id="simBox"></div>
+      <div class="sh-btns">
+        <button class="sh-main" onclick="buy('${escAttr(w.name||'')}', ${w.id})">🔍 購入先を探す</button>
+        <button class="sh-sub" onclick="closeSheet()">閉じる</button>
+      </div>`;
+  } else {
+    const title=[id.producer,id.wine].filter(Boolean).join(' ') || 'このワイン';
+    inner=`
+      <div class="sh-pill" style="background:#555">🔎 特定OK ・ ソムリンDB未登録</div>
+      <div class="sh-name">${esc(trunc(title,40))}${id.vintage?'　'+esc(id.vintage):''}</div>
+      <div class="sh-region">${esc([id.country,id.region].filter(Boolean).join(' / '))}${id.grape&&id.grape.length?'　/　'+esc(id.grape.join(', ')):''}</div>
+      ${fitRibbon(b)}
+      <div class="sh-meta">まだソムリンの評価データにありません。<b>推測のスコアは表示しません。</b>スキャンは記録済みです。</div>
+      <div id="simBox"></div>
+      <div class="sh-btns">
+        <button class="sh-main" onclick="buy('${escAttr(title)}')">🔍 ネットで探す</button>
+        <button class="sh-sub" onclick="closeSheet()">閉じる</button>
+      </div>`;
+  }
+  document.getElementById('sheetBody').innerHTML=inner;
+  loadSimilar(b);
+}
+
+// 近縁おすすめ（/api/similar＝DB照会のみ・AI呼び出しなし）
+async function loadSimilar(b){
+  try{
+    const w=b.match.wine; const id=b.identification||{};
+    const q=w ? ('wineId='+w.id)
+              : ('color='+encodeURIComponent(id.color||'')+'&country='+encodeURIComponent(id.country||''));
+    const r=await fetch(API_BASE+'/api/similar?'+q);
+    if(!r.ok) return;
+    const d=await r.json();
+    const box=document.getElementById('simBox');
+    if(!box || !d.items || !d.items.length) return;
+    box.innerHTML='<div class="cand-h">近い系統のおすすめ（ソムリン実データ）</div>'+d.items.map(x=>{
+      const c=cospa(osuOf(x));
+      return `<div class="cand-row" onclick="buy('${escAttr(x.name||'')}', ${x.id})">
+        <div><div class="cn">${esc(trunc(x.name||'',26))}</div><div class="cr">${esc([x.kuni,x.chiiki].filter(Boolean).join(' '))}　${fmtPrice(x.price)}</div></div>
+        <div class="cc">${c.stars}<br>SP ${fmtSP(x.sp)}</div></div>`;
+    }).join('');
+  }catch(e){}
 }
 
 function showApiUnset(){
@@ -459,143 +636,9 @@ function fitRibbon(res){
   return `<div class="fit-ribbon">❤️ ${esc(f.label)}${f.score?`（${f.score}）`:''}<span class="fr2">${f.reasons&&f.reasons.length?'｜'+esc(f.reasons.join('・')):''}</span></div>`;
 }
 
-// ── 結果表示 ──
-function renderResult(res){
-  const st=res.match && res.match.status;
-  if(st==='known') renderKnown(res);
-  else if(st==='unlisted') renderUnlisted(res);
-  else renderUnsure(res);
-  openSheet();
-}
-
-function styleBlock(res){
-  const s=res.profile && res.profile.style;
-  if(!s) return '';
-  return `<div class="sh-style">🗣 ${esc(s)}<div class="dc">${esc(res.profile.disclaimer||'')}</div></div>`;
-}
-
-function idBlock(id){
-  const rows=[
-    ['生産者', id.producer],
-    ['銘柄',   id.wine],
-    ['年',     id.vintage],
-    ['産地',   [id.country,id.region,id.appellation].filter(Boolean).join(' / ')],
-    ['品種',   (id.grape||[]).join(', ')],
-  ].filter(r=>r[1]);
-  if(!rows.length) return '';
-  return `<div class="idcard">${rows.map(r=>`<div class="idrow"><div class="k">${r[0]}</div><div class="v">${esc(String(r[1]))}</div></div>`).join('')}</div>`;
-}
-
-function recBlock(res, heading){
-  const recs=res.recommendations||[];
-  if(!recs.length) return '';
-  return `<div class="cand-h">${esc(heading)}</div>`+
-    recs.map(w=>{
-      const c=cospa(osuOf(w));
-      return `<div class="cand-row" onclick="buy('${escAttr(w.name||'')}')">
-        <div><div class="cn">${esc(trunc(w.name||'',26))}</div>
-             <div class="cr">${esc([w.kuni,w.chiiki].filter(Boolean).join(' '))}　${fmtPrice(w.price)}</div>
-             <div class="cw">${esc(w.why||'')}</div></div>
-        <div class="cc">${c.stars}<br>SP ${fmtSP(w.sp)}</div></div>`;
-    }).join('');
-}
-
-// known: 実データのSP・コスパ＋おすすめマーク
-function renderKnown(res){
-  const w=res.match.wine;
-  const cp=cospa(osuOf(w));
-  const region=[w.kuni,w.chiiki].filter(Boolean).join(' ');
-  const lowConf=(res.match.matchScore||0)<0.75;
-  const pick=res.sommelin && res.sommelin.isPick
-    ? `<div class="pick-ribbon">${res.sommelin.level==='top'?'👑 ソムリンのおすすめ':'✨ ソムリンおすすめ'}<span style="font-weight:600">｜${esc(res.sommelin.reason||'')}</span></div>` : '';
-  let cands='';
-  const others=(res.match.candidates||[]).filter(x=>x.id!==w.id).slice(0,3);
-  if(lowConf && others.length){
-    cands='<div class="cand-h">違う場合は候補から選択（学習に記録されます）</div>'+
-      others.map(x=>{
-        const c2=cospa(osuOf(x));
-        return `<div class="cand-row" onclick="pickCand(${x.id})">
-          <div><div class="cn">${esc(trunc(x.name||'',26))}</div><div class="cr">${esc([x.kuni,x.chiiki].filter(Boolean).join(' '))}</div></div>
-          <div class="cc">${c2.stars}<br>SP ${fmtSP(x.sp)}</div></div>`;
-      }).join('');
-  }
-  document.getElementById('sheetBody').innerHTML=`
-    <div class="sh-pill" style="background:var(--burgundy)">🍷 ソムリン照合${lowConf?' ・ 要確認':'済み'}</div>
-    <div class="sh-name">${esc(w.name||'—')}${w.vintage&&w.vintage!=='NV'?'　'+esc(w.vintage):''}</div>
-    <div class="sh-region">${esc(region)}${w.producer?'　/　'+esc(trunc(w.producer,24)):''}</div>
-    <div class="sh-grid">
-      <div class="sh-cell"><div class="v" style="color:var(--burgundy)">${fmtSP(w.sp)}</div><div class="l">SP（ソムリン評価）</div></div>
-      <div class="sh-cell"><div class="v">${fmtPrice(w.price)}</div><div class="l">参考価格</div></div>
-    </div>
-    ${pick}
-    ${fitRibbon(res)}
-    <div class="cospa-badge" style="background:${cp.bg}">
-      <div class="stars">${cp.stars}</div>
-      <div class="lbl">${cp.lbl}</div>
-      <div class="sub">${cp.sub}</div>
-    </div>
-    ${styleBlock(res)}
-    ${cands}
-    ${recBlock(res,'こちらも近い系統でおすすめ')}
-    <div class="cand-h">　</div>
-    <div class="sh-btns">
-      <button class="sh-main" onclick="buy('${escAttr(w.name||'')}')">🔍 購入先を探す</button>
-      <button class="sh-sub" onclick="closeSheet()">↺ 続けて撮る</button>
-    </div>`;
-}
-
-// unlisted: 特定はできた・DB未登録 → SPは出さない（正直）＋実在おすすめ
-function renderUnlisted(res){
-  const id=res.identification||{};
-  const title=[id.producer,id.wine].filter(Boolean).join(' ') || 'ワインを特定しました';
-  document.getElementById('sheetBody').innerHTML=`
-    <div class="sh-pill" style="background:#555">🔎 特定OK ・ ソムリンDB未登録</div>
-    <div class="sh-name">${esc(trunc(title,40))}${id.vintage?'　'+esc(id.vintage):''}</div>
-    <div class="sh-region">AIソムリエがラベルから読み取った内容</div>
-    ${idBlock(id)}
-    ${fitRibbon(res)}
-    ${styleBlock(res)}
-    <div class="sh-meta">このワインはまだソムリンの評価データにありません。<b>推測のスコアは表示しません。</b><br>今回のスキャンは記録済み — 評価が追加されると次回から表示されます。</div>
-    ${recBlock(res,'代わりに、近い系統のソムリン評価済みワイン')}
-    <div class="cand-h">　</div>
-    <div class="sh-btns">
-      <button class="sh-main" onclick="buy('${escAttr(title)}')">🔍 このワインをネットで探す</button>
-      <button class="sh-sub" onclick="closeSheet()">↺ 続けて撮る</button>
-    </div>`;
-}
-
-// unsure: ワインを検出できず/自信なし → 撮り直し
-function renderUnsure(res){
-  const raw=(res.identification && res.identification.rawLabel || '').trim();
-  document.getElementById('sheetBody').innerHTML=`
-    <div class="sh-pill" style="background:#8a6d3b">🤔 うまく読み取れませんでした</div>
-    <div class="sh-name">もう一度撮ってみてください</div>
-    <div class="sh-meta">コツ：ラベル全体を枠に入れる／明るい場所で／斜めからでもOK、ピントを合わせて。</div>
-    ${raw?`<div class="idcard"><div class="idrow"><div class="k">読めた文字</div><div class="v">${esc(trunc(raw,120))}</div></div></div>`:''}
-    <div class="sh-btns">
-      <button class="sh-main" onclick="closeSheet()">📷 撮り直す</button>
-      <button class="sh-sub" onclick="document.getElementById('fileInput2').click()">📁 写真から</button>
-    </div>`;
-}
-
-// 候補を選び直し（＝最高品質の教師データとして記録）
-function pickCand(id){
-  if(!lastRes) return;
-  const cands=lastRes.match.candidates||[];
-  const w=cands.find(x=>x.id===id); if(!w) return;
-  logAction({ ocr_text:(lastRes.identification&&lastRes.identification.rawLabel||'').slice(0,2000),
-              resolved_wine_id:id, resolve_method:'manual', resolve_conf:1,
-              action:'learn', lens_id:'sommelin', locale:'ja' });
-  lastRes.match.wine=w; lastRes.match.matchScore=1; lastRes.sommelin=null;
-  renderKnown(lastRes);
-  toast('候補を選びました（学習に記録）');
-}
-
 // ── 購入導線（既存 wine_search.html へ） ──
-function buy(name){
-  const rid=lastRes && lastRes.match && lastRes.match.wine ? lastRes.match.wine.id : null;
-  logAction({ ocr_text:(lastRes&&lastRes.identification&&lastRes.identification.rawLabel||'').slice(0,2000),
-              resolved_wine_id:rid, resolve_method:rid?'vision':'vision_unlisted',
+function buy(name, wineId){
+  logAction({ resolved_wine_id: wineId||null, resolve_method: wineId?'vision':'vision_unlisted',
               action:'buy', lens_id:'sommelin', locale:'ja' });
   const q=encodeURIComponent((name||'').trim()+' ワイン');
   window.location.href='wine_search.html?q='+q;

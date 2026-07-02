@@ -28,7 +28,7 @@
 
 ## スカウター & データ（2026-07-02 現在）
 - **スカウター＝アプリの中核入口**。本番は `scouter.html`。`wine_ar.html` は旧ARデモ。
-- **ビジョンAI版に書き換え済み（Tesseract廃止）**。流れ＝撮影（長辺1024px JPEGに縮小）→backend `POST /api/identify`→Claude vision（claude-sonnet-4-6）で銘柄特定→`match_wines` 照合→known なら実SP・コスパ／unlisted なら特定情報＋近縁おすすめ（**SP捏造なし＝no-lie原則**）。キーは Cloud Run の `ANTHROPIC_API_KEY`（設定済）。
+- **ビジョンAI版（Tesseract廃止）＋オーバーレイUX（2026-07-02改修）**。撮影（長辺1568px JPEG）→`POST /api/identify-shelf`→写真内の**全ボトル（最大12本）を位置つきで検出・照合**→撮った写真を画面に固定し、各ボトルの位置にマーカー（👑ベスト/❤️好み/★SP/未登録/?）をオーバーレイ表示。タップで下から詳細カード（近縁おすすめは `GET /api/similar`＝DB照会のみで遅延読込）。**画面遷移なし＝Googleレンズ方式**。1本だけの写真も同じ流れ（自動でカードが開く）。known のみ実SP・コスパ表示（**SP捏造なし＝no-lie原則**）。旧 `POST /api/identify`（1本用）はbackendに残置だがフロントは未使用。キーは Cloud Run の `ANTHROPIC_API_KEY`（設定済）。
 - backend 実装: `~/dev/sommelin-trade-platform/src/routes/identify.js`（CORS=GitHub Pagesのみ許可・レート制限・scan_events自動記録）。**デプロイ＝backendリポを main に push**（Cloud Build 自動）。
 - **リストモード**（2026-07-02追加）: `POST /api/identify-list`＝ワインリスト1枚を一括解析→全行を照合し SP/コスパ/好み度/リスト価格vs参考価格を返す。複数ページはフロントから1枚ずつ送って累積（リアルタイムなし＝コスト最小方針）。
 - **好み学習**（2026-07-02追加）: `taste.html`＝好きなワイン/セラー写真→`POST /api/taste/upload`（写真内の全ボトル抽出→`taste_items` に保存。写真自体は保存しない）。3本以上で `personalFit`（好み度）が identify/list の結果に出る。ユーザー識別は匿名UUID（localStorage `somm_uid`）。テーブル定義: `migrations/2026-07-02_taste_items.sql`（**Supabase SQL Editorで要実行**）。
