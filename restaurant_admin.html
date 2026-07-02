@@ -2195,52 +2195,7 @@ async function loadWineData(){
 }
 
 // tasting_events テーブル相当
-const adminEvents = [
-  {
-    id:'ev01', googleCalId:'gcal_aaa', type:'tasting', typeLabel:'試飲会',
-    date: new Date(2026,4,22), time:'14:00 – 18:00',
-    name:'ブルゴーニュ新着ワイン試飲会',
-    organizer:'山田商店（インポーター）',
-    importerEmail:'info@yamadashoten.co.jp',
-    venue:'ザ・ウエスティンホテル東京 3F',
-    isNew:true, isOnline:false, dotClass:'',
-    wines:['Gevrey-Chambertin 2022','Nuits-Saint-Georges 1er Cru 2021','Chambolle-Musigny 2021'],
-    rsvpd: true
-  },
-  {
-    id:'ev02', googleCalId:'gcal_bbb', type:'seminar', typeLabel:'セミナー',
-    date: new Date(2026,4,26), time:'19:00 – 21:00',
-    name:'イタリアワイン基礎セミナー（オンライン）',
-    organizer:'ソムリン学習センター',
-    importerEmail:'info@sommelin-academy.co.jp',
-    venue:'Zoom（オンライン）',
-    isNew:true, isOnline:true, dotClass:'online',
-    wines:['Barolo DOCG','Brunello di Montalcino','Amarone della Valpolicella'],
-    rsvpd: false
-  },
-  {
-    id:'ev03', googleCalId:'gcal_ccc', type:'fair', typeLabel:'フェア',
-    date: new Date(2026,5,3), time:'10:00 – 17:00',
-    name:'プロヴァンスワインフェア 2026',
-    organizer:'ヴィラ・ド・プロヴァンス',
-    importerEmail:'event@villa-provence.jp',
-    venue:'東京国際フォーラム ホールD',
-    isNew:false, isOnline:false, dotClass:'fair',
-    wines:['Château Sainte Roseline Rosé','Domaine Tempier Rosé'],
-    rsvpd: false
-  },
-  {
-    id:'ev04', googleCalId:'gcal_ddd', type:'tasting', typeLabel:'試飲会',
-    date: new Date(2026,5,10), time:'15:00 – 18:00',
-    name:'ナチュラルワイン試飲会 — 自然派の最前線',
-    organizer:'ル・ヴァン・ナチュール東京',
-    importerEmail:'hello@le-vin-naturel.jp',
-    venue:'表参道 THE SPACE',
-    isNew:false, isOnline:false, dotClass:'',
-    wines:['Pét-Nat Rosé 2022','Macération 2021'],
-    rsvpd: false
-  },
-];
+const adminEvents = [];   // 実データ: loadRealEvents が events テーブルから読込（失敗時は空＝ダミーを出さない）
 
 // ── 本物の試飲会データをSupabaseから読み込み、デモデータを差し替える ──
 // status='published' のみ読める(RLS)。失敗時はデモのまま＝携帯でも壊れない。同一内容の重複は除去。
@@ -2395,7 +2350,16 @@ function highlightEvent(id) {
 }
 
 function rsvpAdminEvent(id) {
-  openRsvpModal(id);
+  // 実データの申込URL（主催者のフォーム/サイト）を開く。偽の送信演出は廃止。
+  const ev = adminEvents.find(e => e.id === id);
+  if (!ev) return;
+  if (ev.registrationUrl) {
+    window.open(ev.registrationUrl, '_blank');
+    ev.rsvpd = true;
+    if (typeof renderAdminEventList === 'function') renderAdminEventList();
+  } else {
+    showToast('申込みリンク未登録のイベントです。イベント詳細内の連絡先へご連絡ください');
+  }
 }
 
 // ============================================================

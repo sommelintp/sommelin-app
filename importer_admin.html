@@ -1750,11 +1750,15 @@ function loadPersistedEvents() {
   });
 }
 function persistEvent(evObj) {
-  // TODO(backend): replace with Supabase INSERT into events (auth + RLS; reconcile events vs tasting_events)
+  // ローカル表示用の控え（正本は backend /api/importer-events → events テーブル）
   const arr = lsGet(LS.events, []);
   arr.push(evObj);
   lsSet(LS.events, arr);
 }
+
+// ── イベント作成API（backend経由・認証必須） ──
+const EV_API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+function evAuthToken(){ try{ const s=JSON.parse(localStorage.getItem('sommelin_session')||'null'); return s&&s.access_token; }catch(e){ return null; } }
 
 // ── 起動時ブートストラップ：永続化された編集をシードに反映 ──
 applyStoreEdits();                                  // 除外/メモ/削除を復元
@@ -1796,7 +1800,7 @@ function selectEvType(el, type, label) {
   });
   el.style.background = 'var(--burgundy-pale)'; el.style.borderColor = 'var(--burgundy)'; el.style.color = 'var(--burgundy)';
 }
-function saveNewEvent() {
+async function saveNewEvent() {
   const title = document.getElementById('nev-title').value.trim();
   const dateV = document.getElementById('nev-date').value;
   const venue = document.getElementById('nev-venue').value.trim();
@@ -1806,24 +1810,44 @@ function saveNewEvent() {
 
   const typeDots = { tasting:'#9B1B4B', seminar:'#9B1B4B', fair:'#C9973A', online:'#2563eb' };
   const typeLabels = { tasting:'試飲会', seminar:'セミナー', fair:'フェア', online:'オンライン' };
-  const vis = document.querySelector('input[name="nev-vis"]:checked')?.value || 'selected';
+  const vis = document.querySelector('input[name="nev-vis"]:checked')?.value || 'all_importers';
+  const timeV = document.getElementById('nev-time').value || '';
+  const descV = document.getElementById('nev-desc') ? document.getElementById('nev-desc').value.trim() : '';
   const [y,m,d] = dateV.split('-').map(Number);
 
+  // ① 正本を backend 経由で events テーブルへ保存（LINE bot と同じテーブル）
+  let savedId = null;
+  try {
+    const r = await fetch(EV_API_BASE + '/api/importer-events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (evAuthToken() || '') },
+      body: JSON.stringify({
+        title, eventDate: dateV, time: timeV, venueName: venue,
+        description: [typeLabels[selectedEvType], descV].filter(Boolean).join(' / '),
+        targetType: vis === 'selected' ? 'importer' : 'all',
+      })
+    });
+    const dres = await r.json().catch(() => ({}));
+    if (r.status === 401) { showToast('⚠️ ログインの有効期限が切れています。再ログインしてください'); return; }
+    if (!r.ok) { showToast('⚠️ 保存に失敗しました：' + (dres.message || '通信エラー')); return; }
+    savedId = dres.event && dres.event.id;
+    showToast('✓ イベントを公開しました（店舗・顧客のカレンダーに表示されます）');
+  } catch (e) { showToast('⚠️ 保存に失敗しました（通信環境をご確認ください）'); return; }
+
+  // ② ローカル表示にも即反映
   const newEv = {
-    id: 'ie' + Date.now(), mine: true, type: selectedEvType,
+    id: savedId || ('ie' + Date.now()), mine: true, type: selectedEvType,
     typeLabel: typeLabels[selectedEvType], dotColor: typeDots[selectedEvType],
     date: new Date(y, m-1, d),
-    time: document.getElementById('nev-time').value || '—',
-    name: title, organizer: '山田商店', venue,
+    time: timeV || '—',
+    name: title, organizer: '', venue,
     visibility: vis, wines: [], survey: null, rsvps: []
   };
   industryEvents.push(newEv);
-
-  // localStorage に保存（Date は復元用に分解して持つ）
   persistEvent({
     id: newEv.id, type: newEv.type, typeLabel: newEv.typeLabel, dotColor: newEv.dotColor,
     dateY: y, dateM: m - 1, dateD: d, time: newEv.time,
-    name: title, organizer: '山田商店', venue, visibility: vis, wines: [], survey: null, rsvps: []
+    name: title, organizer: '', venue, visibility: vis, wines: [], survey: null, rsvps: []
   });
 
   closeNewEvModal();
@@ -1841,85 +1865,7 @@ function saveNewEvent() {
 // 業界カレンダー データ
 // ============================================================
 // mine = 自社（山田商店）、others = 他社インポーター
-const industryEvents = [
-  // 自社イベント
-  { id:'ie01', mine:true,  type:'tasting', typeLabel:'試飲会',  dotColor:'#9B1B4B',
-    date: new Date(2026,4,22), time:'14:00〜18:00',
-    name:'ブルゴーニュ新着ワイン試飲会',
-    organizer:'山田商店', venue:'ザ・ウエスティン東京 3F',
-    notifyEmail:'info@yamadashoten.co.jp',
-    wines:[
-      { name:'Alex Gambal Charmes-Chambertin', vintage:'2019', price:36000 },
-      { name:'David Duband Gevrey-Chambertin', vintage:'2020', price:18000 },
-      { name:'Rossignol-Trapet Chambolle-Musigny', vintage:'2021', price:24000 },
-      { name:'Maison Leroy Nuits-Saint-Georges', vintage:'2018', price:68000 },
-      { name:'Henri Magnien Morey-Saint-Denis 1er Cru', vintage:'2020', price:21000 },
-    ],
-    survey:{
-      sent:5, responded:4,
-      results:[
-        { name:'Maison Leroy Nuits-Saint-Georges 2018',        votes:4, avg:4.9, star:'⭐⭐⭐⭐⭐', comments:['今回のベスト！','複雑味があって素晴らしい','余韻が長すぎる','圧倒的な存在感'] },
-        { name:'Alex Gambal Charmes-Chambertin 2019',          votes:3, avg:4.7, star:'⭐⭐⭐⭐⭐', comments:['香りが別格','エレガントで美しい','マリアージュが広い'] },
-        { name:'David Duband Gevrey-Chambertin 2020',          votes:4, avg:4.4, star:'⭐⭐⭐⭐',  comments:['バランスが良い','コスパが高い','グラスに注いだ瞬間が好き','飲みやすい'] },
-        { name:'Rossignol-Trapet Chambolle-Musigny 2021',      votes:2, avg:4.2, star:'⭐⭐⭐⭐',  comments:['繊細でエレガント','もう少し熟成させたい'] },
-        { name:'Henri Magnien Morey-Saint-Denis 1er Cru 2020', votes:1, avg:3.8, star:'⭐⭐⭐⭐',  comments:['まだ若い印象。3〜5年後に飲みたい'] },
-      ]
-    },
-    rsvps:[
-      { id:'r01', store:'Bistrot Lumière',       name:'浦川 哲矢',   title:'シェフソムリエ', email:'domaine.bouchon@gmail.com', count:2, note:'',              at:'5/08 14:32' },
-      { id:'r02', store:'レストラン フジモト',     name:'藤本 裕樹',   title:'マネージャー',   email:'fujimoto@fujimoto-r.co.jp', count:3, note:'アレルギー: ナッツ類（藤本）', at:'5/09 09:14' },
-      { id:'r03', store:'ワインバル ヴィーニョ',   name:'中山 彩花',   title:'ソムリエ',      email:'nakayama@vinho.jp',          count:1, note:'',              at:'5/10 17:05' },
-      { id:'r04', store:'オステリア ミラノ 六本木', name:'小林 健一',   title:'オーナー',      email:'kobayashi@osteria-milano.jp',count:2, note:'',              at:'5/11 11:48' },
-      { id:'r05', store:'シェ・マルク',            name:'マルク 佐藤', title:'ソムリエール',   email:'marc.s@chez-marc.jp',        count:2, note:'2名のうち1名は研修生', at:'5/12 16:20' },
-    ]
-  },
-  { id:'ie02', mine:true,  type:'seminar', typeLabel:'セミナー', dotColor:'#9B1B4B',
-    date: new Date(2026,4,26), time:'19:00〜21:00',
-    name:'イタリアワイン基礎セミナー（オンライン）',
-    organizer:'山田商店', venue:'Zoom（オンライン）',
-    notifyEmail:'info@yamadashoten.co.jp',
-    wines:[
-      { name:'Barolo Serralunga d\'Alba', vintage:'2019', price:18000 },
-      { name:'Brunello di Montalcino', vintage:'2018', price:28000 },
-      { name:'Amarone della Valpolicella', vintage:'2017', price:22000 },
-    ],
-    survey:null,
-    rsvps:[
-      { id:'r06', store:'La Table de Yoshi', name:'田中 佳子', title:'支配人',   email:'tanaka@latabledb.jp',      count:1, note:'', at:'5/13 10:00' },
-      { id:'r07', store:'ル・ブション 渋谷',  name:'渡辺 修',  title:'シェフ',   email:'watanabe@le-bouchon.co.jp', count:2, note:'', at:'5/14 20:31' },
-      { id:'r08', store:'銀座 ル・ソムリエ',  name:'松田 直樹', title:'ソムリエ', email:'matsuda@ginza-ls.jp',       count:1, note:'', at:'5/15 13:44' },
-    ]
-  },
-  { id:'ie05', mine:true,  type:'tasting', typeLabel:'試飲会', dotColor:'#9B1B4B',
-    date: new Date(2026,5,18), time:'14:00〜18:00',
-    name:'ローヌ・南仏新着試飲会',
-    organizer:'山田商店', venue:'品川 グランドホテル',
-    notifyEmail:'info@yamadashoten.co.jp',
-    rsvps:[]
-  },
-
-  // 他社イベント
-  { id:'ie03', mine:false, type:'fair',    typeLabel:'フェア',   dotColor:'#C9973A',
-    date: new Date(2026,5,3),  time:'10:00〜17:00',
-    name:'プロヴァンスワインフェア 2026',
-    organizer:'ヴィラ・ド・プロヴァンス', venue:'東京国際フォーラム ホールD' },
-  { id:'ie04', mine:false, type:'tasting', typeLabel:'試飲会',   dotColor:'#2563eb',
-    date: new Date(2026,5,10), time:'15:00〜18:00',
-    name:'ナチュラルワイン試飲会 — 自然派の最前線',
-    organizer:'ル・ヴァン・ナチュール東京', venue:'表参道 THE SPACE' },
-  { id:'ie06', mine:false, type:'tasting', typeLabel:'試飲会',   dotColor:'#2563eb',
-    date: new Date(2026,5,24), time:'13:00〜17:00',
-    name:'スペイン&ポルトガル新着試飲会',
-    organizer:'イベリア商事', venue:'渋谷 セルリアンタワー' },
-  { id:'ie07', mine:false, type:'seminar', typeLabel:'セミナー', dotColor:'#2563eb',
-    date: new Date(2026,6,2),  time:'18:30〜21:00',
-    name:'シャンパーニュ技術セミナー',
-    organizer:'シャンパーニュ・ジャポン', venue:'銀座 エノテカ本店' },
-  { id:'ie08', mine:false, type:'fair',    typeLabel:'フェア',   dotColor:'#C9973A',
-    date: new Date(2026,6,8),  time:'11:00〜18:00',
-    name:'ワイン・オブ・ザ・イヤー 大試飲会',
-    organizer:'日本ソムリエ協会', venue:'東京ビッグサイト' },
-];
+const industryEvents = [];   // 実データ: 他社分は loadIndustryEvents(events表)、自社分は localStorage から復元。モックシードは廃止
 
 // 永続化された自社イベントを取り込む（loadPersistedEvents は上で定義済み）
 loadPersistedEvents();
