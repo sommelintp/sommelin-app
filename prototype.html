@@ -2152,63 +2152,8 @@
       <input type="text" placeholder="お店を検索..." oninput="filterHistoryRests(this.value)">
     </div>
 
-    <div id="histRestList" style="padding-bottom:20px;">
-    <div class="hist-rest-card" onclick="openHistoryDetail('bistrot')">
-      <div class="hist-rest-icon">🏰</div>
-      <div class="hist-rest-info">
-        <div class="hist-rest-name">Bistrot Lumière</div>
-        <div class="hist-rest-meta">📍 恵比寿 &nbsp;·&nbsp; 最終訪問: <strong>今日</strong></div>
-        <div class="hist-rest-count">🍷 3種 飲んだ</div>
-      </div>
-      <div class="hist-rest-right">
-        <span class="hist-new-badge">NEW</span>
-        <span class="hist-arrow">›</span>
-      </div>
-    </div>
-
-    <div class="hist-rest-card" onclick="openHistoryDetail('cave')">
-      <div class="hist-rest-icon">🍽️</div>
-      <div class="hist-rest-info">
-        <div class="hist-rest-name">La Cave de Tanaka</div>
-        <div class="hist-rest-meta">📍 代官山 &nbsp;·&nbsp; 最終訪問: 3日前</div>
-        <div class="hist-rest-count">🍷 2種 飲んだ</div>
-      </div>
-      <div class="hist-rest-right">
-        <span class="hist-arrow">›</span>
-      </div>
-    </div>
-
-    <div class="hist-rest-card" onclick="openHistoryDetail('osteria')">
-      <div class="hist-rest-icon">🌿</div>
-      <div class="hist-rest-info">
-        <div class="hist-rest-name">Osteria Naturale</div>
-        <div class="hist-rest-meta">📍 中目黒 &nbsp;·&nbsp; 最終訪問: 5日前</div>
-        <div class="hist-rest-count">🍷 4種 飲んだ</div>
-      </div>
-      <div class="hist-rest-right">
-        <span class="hist-arrow">›</span>
-      </div>
-    </div>
-
-    <div class="hist-rest-card" onclick="openHistoryDetail('vino')">
-      <div class="hist-rest-icon">🍾</div>
-      <div class="hist-rest-info">
-        <div class="hist-rest-name">
-          Vino e Cucina Rosso
-          <span class="hist-lock-badge">🔒</span>
-        </div>
-        <div class="hist-rest-meta">📍 麻布十番 &nbsp;·&nbsp; 最終訪問: 2週間前</div>
-        <div class="hist-rest-count">🍷 5種 飲んだ &nbsp;·&nbsp; <em>非公開リスト</em></div>
-      </div>
-      <div class="hist-rest-right">
-        <span class="hist-arrow">›</span>
-      </div>
-    </div>
-
-    <div style="text-align:center;padding:24px 16px 0;color:var(--text-sub);font-size:12px;">
-      ソムリン君があなたのワイン旅を記録しています 🍷
-    </div>
-  </div>
+    <!-- 実データ: 端末内の来店記録（QRでリストを開くと貯まる）。renderRealVisits が描画 -->
+    <div id="histRestList" style="padding-bottom:20px;"></div>
 
   </div><!-- /histShopPane -->
 
@@ -2921,30 +2866,88 @@ function switchHistTab(tab) {
   document.getElementById('histShopPane').style.display = tab === 'shop' ? 'block' : 'none';
   document.getElementById('histWinePane').style.display  = tab === 'wine' ? 'block' : 'none';
   if (tab === 'wine') renderHistWineLog();
+  if (tab === 'shop') renderRealVisits();
 }
 
-// 全店舗のワインをフラット一覧で描画
-function renderHistWineLog() {
-  const allWines = [];
-  Object.keys(historyRestaurants).forEach(key => {
-    const r = historyRestaurants[key];
-    r.wines.forEach(w => {
-      allWines.push({ ...w, restKey: key, restName: r.name, restIcon: r.icon, restArea: r.area });
-    });
-  });
+// ── お店タブ（実データ: 端末内の来店記録 sommelin_visits） ──
+function fmtAgo(ts) {
+  const d = Math.floor((Date.now() - ts) / 86400000);
+  if (d <= 0) return '今日';
+  if (d === 1) return '昨日';
+  if (d < 7) return d + '日前';
+  if (d < 30) return Math.floor(d / 7) + '週間前';
+  return new Date(ts).toLocaleDateString('ja-JP');
+}
 
-  const container = document.getElementById('histWineLogList');
-  container.innerHTML = allWines.map((w, i) => `
-    <div class="hist-wine-log-row" onclick="openWineLogDetail(${i})">
-      <span class="hist-wine-emoji">${w.emoji}</span>
-      <div class="hist-wine-info" style="flex:1;min-width:0;">
-        <div class="hist-wine-name">${w.name} <span style="font-weight:400;color:var(--text-sub);">${w.vintage}</span></div>
-        <div class="hist-wine-sub">${w.region}</div>
-        <div class="hist-wine-log-rest">${w.restIcon} ${w.restName} · ${w.restArea}</div>
+function renderRealVisits() {
+  const container = document.getElementById('histRestList');
+  let visits = [];
+  try { visits = JSON.parse(localStorage.getItem('sommelin_visits') || '[]'); } catch (e) {}
+  // 店舗ごとに集約（最新の訪問時刻・回数）
+  const byRid = {};
+  visits.forEach(v => {
+    if (!v.rid) return;
+    if (!byRid[v.rid]) byRid[v.rid] = { rid: v.rid, name: v.name, last: v.ts, count: 0 };
+    byRid[v.rid].count++;
+    if (v.ts > byRid[v.rid].last) { byRid[v.rid].last = v.ts; byRid[v.rid].name = v.name; }
+  });
+  const rests = Object.values(byRid).sort((a, b) => b.last - a.last);
+
+  if (!rests.length) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:48px 24px;color:var(--text-sub);">
+        <div style="font-size:44px;margin-bottom:12px;">📍</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;">まだ来店記録がありません</div>
+        <div style="font-size:12px;line-height:1.8;">お店のテーブルにあるQRコードを読み込んで<br>ワインリストを開くと、ここに記録されます 🍷</div>
+      </div>`;
+    return;
+  }
+  container.innerHTML = rests.map(r => `
+    <div class="hist-rest-card" onclick="location.href='prototype.html?r=${encodeURIComponent(r.rid)}&nv=1'">
+      <div class="hist-rest-icon">🍷</div>
+      <div class="hist-rest-info">
+        <div class="hist-rest-name">${escH(r.name || 'ワインリスト')}</div>
+        <div class="hist-rest-meta">最終訪問: <strong>${fmtAgo(r.last)}</strong></div>
+        <div class="hist-rest-count">📖 リストを見た回数 ${r.count}回</div>
       </div>
-      <span class="hist-wine-stars">${'⭐'.repeat(w.rating)}</span>
+      <div class="hist-rest-right">
+        ${Date.now() - r.last < 86400000 ? '<span class="hist-new-badge">NEW</span>' : ''}
+        <span class="hist-arrow">›</span>
+      </div>
     </div>`).join('')
-    + `<div style="text-align:center;padding:20px 16px 0;color:var(--text-sub);font-size:12px;">計 ${allWines.length}本 記録済み 🍷</div>`;
+    + `<div style="text-align:center;padding:24px 16px 0;color:var(--text-sub);font-size:12px;">この記録はあなたの端末の中だけに保存されています 🔒</div>`;
+}
+
+function escH(s) { return (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+// ── ワインタブ（実データ: cellar.html と共通の端末内セラー somm_cellar_v1） ──
+const HIST_EMOJI = { sparkling:'🥂', white:'🤍', red:'🍷', rose:'🌸', orange:'🍊' };
+function renderHistWineLog() {
+  const container = document.getElementById('histWineLogList');
+  let cellar = [];
+  try { const s = localStorage.getItem('somm_cellar_v1'); if (s) cellar = JSON.parse(s) || []; } catch (e) {}
+
+  if (!cellar.length) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:48px 24px;color:var(--text-sub);">
+        <div style="font-size:44px;margin-bottom:12px;">🍷</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;">まだワインの記録がありません</div>
+        <div style="font-size:12px;line-height:1.8;">マイセラーに登録したワインがここに表示されます</div>
+        <button onclick="location.href='cellar.html'" style="margin-top:16px;padding:12px 24px;background:var(--burgundy);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;">🍾 マイセラーを開く</button>
+      </div>`;
+    return;
+  }
+  container.innerHTML = cellar.map(w => `
+    <div class="hist-wine-log-row" onclick="location.href='cellar.html'">
+      <span class="hist-wine-emoji">${HIST_EMOJI[w.cat] || '🍷'}</span>
+      <div class="hist-wine-info" style="flex:1;min-width:0;">
+        <div class="hist-wine-name">${escH(w.name)} <span style="font-weight:400;color:var(--text-sub);">${escH(w.vintage || '')}</span></div>
+        <div class="hist-wine-sub">${escH(w.region || '')}${w.producer ? ' · ' + escH(w.producer) : ''}</div>
+        ${w.note ? `<div class="hist-wine-log-rest">💬 ${escH(w.note)}</div>` : ''}
+      </div>
+      <span class="hist-wine-stars" style="font-size:11px;color:var(--text-sub);">${w.bottles ? w.bottles + '本' : ''}</span>
+    </div>`).join('')
+    + `<div style="text-align:center;padding:20px 16px 0;color:var(--text-sub);font-size:12px;">計 ${cellar.length}本 セラーに記録済み 🍷</div>`;
 }
 
 // ワインログ詳細モーダルを開く
@@ -3089,6 +3092,69 @@ async function loadRealRanking() {
   } catch (e) {
     box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">ランキングを読み込めませんでした（通信環境をご確認ください）</div>';
   }
+}
+
+// ===== 実店舗ワインリスト（QR: prototype.html?r=<店舗ID> → restaurant_wines） =====
+async function loadRestaurantList(rid) {
+  const hdrs = { apikey: EV_SB_KEY, Authorization: 'Bearer ' + EV_SB_KEY };
+  try {
+    const [rs, rw] = await Promise.all([
+      fetch(EV_SB_URL + '/rest/v1/restaurant_settings?owner_id=eq.' + encodeURIComponent(rid) + '&select=display_name,is_public', { headers: hdrs }),
+      fetch(EV_SB_URL + '/rest/v1/restaurant_wines?owner_id=eq.' + encodeURIComponent(rid) + '&order=cat.asc,name.asc&limit=500', { headers: hdrs }),
+    ]);
+    if (!rw.ok) return;
+    const rows = await rw.json();
+    const st = rs.ok ? (await rs.json())[0] : null;
+    const shopName = (st && st.display_name) || 'ワインリスト';
+    document.querySelectorAll('.restaurant-name').forEach(el => el.textContent = shopName);
+
+    // 来店記録（端末内のみ・履歴画面用。履歴からの再訪問 nv=1 は記録しない）
+    if (!new URLSearchParams(location.search).get('nv')) {
+      try {
+        const v = JSON.parse(localStorage.getItem('sommelin_visits') || '[]');
+        v.unshift({ rid, name: shopName, ts: Date.now() });
+        localStorage.setItem('sommelin_visits', JSON.stringify(v.slice(0, 200)));
+      } catch (e) {}
+    }
+
+    // デモデータを実店舗リストへ差し替え
+    classicWines = rows.map((r, i) => ({
+      idx: i,
+      cat: r.cat || 'red',
+      name: r.name + (r.vintage && r.vintage !== 'NV' ? ' ' + r.vintage : ''),
+      producer: [r.region, r.grapes].filter(Boolean).join(' / ') || r.producer || '',
+      region: r.region || 'その他',
+      priceGlass: r.price_glass || 0,
+      priceBottle: r.price_bottle || 0,
+      hasMarriage: false,
+      soldOut: r.available === false,
+      wineId: r.wine_id || null,
+    }));
+    wines = classicWines.map(w => ({ name: w.name, producer: w.producer, note: '', flavors: [], mariage: [] }));
+
+    // マスター一致分に実SP・コスパを添える（無いものには出さない）
+    const ids = rows.map(r => r.wine_id).filter(Boolean);
+    if (ids.length) {
+      const mr = await fetch(EV_SB_URL + '/rest/v1/wines?id=in.(' + ids.join(',') + ')&select=id,sp,osu_gbm', { headers: hdrs });
+      if (mr.ok) {
+        const byId = {};
+        (await mr.json()).forEach(x => byId[x.id] = x);
+        classicWines.forEach(w => { const m = w.wineId && byId[w.wineId]; if (m && m.sp != null) { w.sp = m.sp; w.osu = m.osu_gbm; } });
+      }
+    }
+
+    // 店舗ビュー（クラシックリスト）で表示
+    isListView = true;
+    switchTab('wine');
+    document.getElementById('wineList').style.display = 'none';
+    document.getElementById('wineList').classList.add('hidden');
+    const cl = document.getElementById('classicList');
+    cl.style.display = 'block'; cl.classList.add('active');
+    renderClassicList('all');
+    if (!rows.length) {
+      cl.innerHTML = '<div style="text-align:center;padding:50px 20px;color:var(--text-sub);font-size:13px;">このお店のワインリストはまだ公開されていません 🍷</div>';
+    }
+  } catch (e) {}
 }
 
 let currentCalYear  = new Date().getFullYear();
@@ -3324,7 +3390,7 @@ function renderClassicList(filter) {
         html += `
           <div class="classic-row" onclick="openWine(${w.idx})">
             <div class="classic-row-left">
-              <div class="classic-wine-name">${w.name}</div>
+              <div class="classic-wine-name">${w.name}${w.sp != null ? ` <span style="font-size:10px;font-weight:800;color:#C9973A;">⭐${Number(w.sp).toFixed(1)}</span>` : ''}</div>
               <div class="classic-origin">${w.producer}</div>
             </div>
             <div class="classic-dots"></div>
@@ -3344,7 +3410,8 @@ function renderClassicList(filter) {
 }
 
 // クラシックビュー用のフラットなワインデータ
-const classicWines = [
+// （デモ: Bistrot Lumière。QR=?r=<店舗ID> で開くと実店舗のリストに差し替わる）
+let classicWines = [
   { idx:0, cat:'sparkling', name:'Billecart-Salmon Blanc de Blancs NV', producer:'シャンパーニュ / シャルドネ100%', region:'シャンパーニュ', priceGlass:2800, priceBottle:14000, hasMarriage:true },
   { idx:1, cat:'white', name:'Chablis 1er Cru Montée de Tonnerre 2021', producer:'ブルゴーニュ / シャルドネ', region:'ブルゴーニュ', priceGlass:1800, priceBottle:9800, hasMarriage:true },
   { idx:2, cat:'white', name:'Sancerre "La Moussière" 2022', producer:'ロワール / ソーヴィニョン・ブラン', region:'ロワール', priceGlass:1600, priceBottle:8200, hasMarriage:true },
@@ -3358,7 +3425,7 @@ const classicWines = [
 ];
 
 // ===== WINE DATA =====
-const wines = [
+let wines = [
   {
     name: "Champagne Billecart-Salmon Blanc de Blancs",
     producer: "🇫🇷 Billecart-Salmon — シャンパーニュ / シャルドネ 100%",
@@ -3559,12 +3626,38 @@ function toggleChat() {
   document.getElementById('chatBadge').style.display = 'none';
 }
 
-const somurinReplies = {
-  '今日は肉料理を食べます': "いいですね！お肉なら、今夜はバローロかヴォルネイがおすすめです。バローロはしっかりとした赤身肉と最高の相性ですよ 🥩",
-  '魚介類が食べたいです': "魚介でしたら、シャブリかシャンパーニュをぜひ。特にシャブリは帆立や白身魚との相性が抜群です 🐟",
-  '泡系が飲みたいです': "ビラール=サルモンのブラン・ド・ブランは今夜一番のおすすめです。繊細な泡と白桃のアロマで、乾杯にも最高ですよ ✨",
-  'おすすめを教えてください': "今夜のイチ推しはバローロです！2019年は特に出来が良く、55件のマリアージュでも最高評価をいただいています 🍷",
-};
+// ── 実AIチャット（backend /api/chat = Claude Haiku。定型返信は廃止） ──
+const CHAT_API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+const CHAT_UID2 = (() => { try { return localStorage.getItem('somm_uid') || ''; } catch (e) { return ''; } })();
+let protoChatHist = [];
+let protoChatBusy = false;
+
+async function askSomurin(text) {
+  if (protoChatBusy) return;
+  protoChatBusy = true;
+  protoChatHist.push({ role: 'user', content: text });
+  addChatMsg('somurin', '考え中… 🍷');
+  const msgs = document.getElementById('chatMessages');
+  const thinkingEl = msgs.lastElementChild;
+  try {
+    const r = await fetch(CHAT_API_BASE + '/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: protoChatHist.slice(-8), userId: CHAT_UID2 })
+    });
+    thinkingEl.remove();
+    if (r.status === 429) { addChatMsg('somurin', '少し混み合っています。しばらくしてからどうぞ 🙏'); return; }
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    protoChatHist.push({ role: 'assistant', content: d.reply });
+    addChatMsg('somurin', escH(d.reply).replace(/\n/g, '<br>'));
+  } catch (e) {
+    thinkingEl.remove();
+    addChatMsg('somurin', 'ごめんなさい、うまく応答できませんでした。通信環境をご確認ください 🙏');
+  } finally {
+    protoChatBusy = false;
+  }
+}
 
 function addChatMsg(from, text) {
   const msgs = document.getElementById('chatMessages');
@@ -3594,21 +3687,16 @@ function addChatMsg(from, text) {
 function sendQuickReply(btn, text) {
   addChatMsg('user', text);
   document.getElementById('quickReplies').style.display = 'none';
-  setTimeout(() => {
-    const reply = somurinReplies[text] || "なるほど！もう少し教えていただけますか？";
-    addChatMsg('somurin', reply);
-  }, 700);
+  askSomurin(text);
 }
 
 function sendMessage() {
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
-  if (!text) return;
-  addChatMsg('user', text);
+  if (!text || protoChatBusy) return;
+  addChatMsg('user', escH(text));
   input.value = '';
-  setTimeout(() => {
-    addChatMsg('somurin', "なるほど！今夜の料理の好みを考えると、シャブリかバローロがぴったりだと思います。もっと詳しく教えていただけますか？ 🍷");
-  }, 800);
+  askSomurin(text);
 }
 
 function handleEnter(e) {
@@ -3628,9 +3716,13 @@ function handleEnter(e) {
   document.getElementById('nav-history').classList.add('active');
   // show chat button
   document.getElementById('chatBtn').style.display = 'flex';
-  // 実データ読込（試飲会イベント・ランキング）
+  // 実データ読込（試飲会イベント・ランキング・来店履歴）
   loadRealEvents();
   loadRealRanking();
+  renderRealVisits();
+  // QRから開いた場合は実店舗のワインリストを表示
+  const _rid = new URLSearchParams(location.search).get('r');
+  if (_rid) loadRestaurantList(_rid);
 })();
 </script>
 </body>

@@ -295,6 +295,7 @@ function fmtSP(s){ if(s==null||isNaN(s)) return '—'; return Number(s).toFixed(
 let stream=null, busy=false;
 let MODE='bottle';                 // 'bottle' | 'list'
 let listItems=[], listPages=0;     // リストモードの累積（複数ページ）
+let listPlace=null, lastListScanId=null, listHasTaste=false;  // お店記録（みんなのワイン地図）
 
 // 匿名ユーザーID（好みプロファイル用。端末に保存）
 const UID=(()=>{ let u=localStorage.getItem('somm_uid');
@@ -310,7 +311,7 @@ function setMode(m){
     setSub('リストモード'); document.getElementById('shootHint').textContent='ワインリストを撮影（複数ページOK）';
   }else{
     setSub('撮るだけで全ボトル評価'); document.getElementById('shootHint').textContent='1本でも棚ごとでもOK。撮るだけ';
-    listItems=[]; listPages=0;   // ボトルに戻したらリスト累積はリセット
+    listItems=[]; listPages=0; listPlace=null; lastListScanId=null;   // ボトルに戻したらリスト累積はリセット
   }
 }
 
@@ -572,7 +573,9 @@ async function identifyList(dataUrl){
     }
     listPages++;
     listItems=listItems.concat(res.items);
-    renderListSheet(!!(res.summary&&res.summary.hasTasteProfile));
+    lastListScanId=res.scanId||lastListScanId;
+    listHasTaste=!!(res.summary&&res.summary.hasTasteProfile);
+    renderListSheet();
     openSheet();
   }catch(e){
     showStatus(false);
@@ -612,21 +615,102 @@ function liRow(it, hit){
     <div class="lc">${right}</div></div>`;
 }
 
-function renderListSheet(hasTaste){
+function renderListSheet(){
   const known=listItems.filter(i=>i.match&&i.match.status==='known').length;
   const top=[...listItems].filter(i=>liScore(i)>0).sort((a,b)=>liScore(b)-liScore(a)).slice(0,3);
-  const topSet=new Set(top);
+  const placeHtml = listPlace
+    ? `<div class="sh-meta">📍 <b>${esc(listPlace.name)}</b> のリストとして記録済み。ご協力ありがとうございます 🍷</div>`
+    : `<div class="sh-btns" style="margin-bottom:10px"><button class="sh-sub" style="flex:1;text-align:left" onclick="openPlacePicker()">📍 このお店を記録する<span style="font-weight:500;color:#999">（みんなのワイン地図に協力・匿名）</span></button></div>`;
   document.getElementById('sheetBody').innerHTML=`
     <div class="sh-pill" style="background:var(--burgundy)">📋 ワインリスト ・ ${listPages}ページ ・ ${listItems.length}銘柄（評価済み ${known}）</div>
-    ${hasTaste?'':`<div class="sh-meta">❤️ <a href="taste.html" style="color:var(--burgundy);font-weight:800">好みのワインを登録</a>すると、このリストで「あなたに合う1本」が分かるようになります。</div>`}
+    ${placeHtml}
+    ${listHasTaste?'':`<div class="sh-meta">❤️ <a href="taste.html" style="color:var(--burgundy);font-weight:800">好みのワインを登録</a>すると、このリストで「あなたに合う1本」が分かるようになります。</div>`}
     ${top.length?`<div class="cand-h">このリストのおすすめ</div>${top.map(it=>liRow(it,true)).join('')}`:''}
     <div class="cand-h">すべての銘柄（読み取り順）</div>
     ${listItems.map(it=>liRow(it, false)).join('')}
     <div class="sh-meta">評価(SP)はソムリンの実データがある銘柄のみ表示しています。</div>
     <div class="sh-btns">
       <button class="sh-main" onclick="closeSheet()">📷 次のページを撮る</button>
-      <button class="sh-sub" onclick="listItems=[];listPages=0;closeSheet();toast('リストをクリアしました')">🗑 クリア</button>
+      <button class="sh-sub" onclick="listItems=[];listPages=0;listPlace=null;lastListScanId=null;closeSheet();toast('リストをクリアしました')">🗑 クリア</button>
     </div>`;
+}
+
+// ── 「このお店を記録」（みんなのワイン地図。GPS→OSM候補 or 店名手入力→backend保存） ──
+let _ppItems=[], _ppLoc=null;
+
+function openPlacePicker(){
+  document.getElementById('sheetBody').innerHTML=`
+    <div class="sh-pill" style="background:var(--burgundy)">📍 どこのお店ですか？</div>
+    <div class="sh-meta">お店を選ぶと「この店にはこのワインがある」という情報がソムリンに貯まり、みんなの「どこで飲める？」に役立ちます。記録は匿名です。</div>
+    <div id="ppBody"><div class="cand-h">現在地から近くのお店を探しています…</div></div>
+    <div class="cand-h">見つからない場合は店名を入力</div>
+    <div style="display:flex;gap:8px;margin:0 16px 12px;">
+      <input id="ppManual" placeholder="お店の名前" style="flex:1;padding:12px;border:1px solid #ddd;border-radius:10px;font-size:14px;min-width:0;">
+      <button class="sh-sub" onclick="reportPlaceManual()">記録</button>
+    </div>
+    <div class="sh-btns"><button class="sh-sub" style="flex:1" onclick="renderListSheet()">← リストに戻る</button></div>`;
+  if(!navigator.geolocation){
+    document.getElementById('ppBody').innerHTML='<div class="cand-h">位置情報が使えない端末です。店名を入力してください。</div>';
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    _ppLoc={ lat:pos.coords.latitude, lng:pos.coords.longitude };
+    try{
+      const r=await fetch(API_BASE+'/api/places/nearby?lat='+_ppLoc.lat+'&lng='+_ppLoc.lng);
+      const d=await r.json();
+      const box=document.getElementById('ppBody'); if(!box) return;
+      if(!d.items || !d.items.length){
+        box.innerHTML='<div class="cand-h">近くのお店が見つかりませんでした。店名を入力してください。</div>';
+        return;
+      }
+      _ppItems=d.items;
+      box.innerHTML='<div class="cand-h">近くのお店（タップで選択）</div>'+d.items.map((p,i)=>`
+        <div class="cand-row" onclick="reportPlacePick(${i})">
+          <div><div class="cn">${esc(p.name)}</div><div class="cr">約${p.dist}m</div></div>
+          <div class="cc">›</div></div>`).join('');
+    }catch(e){
+      const box=document.getElementById('ppBody');
+      if(box) box.innerHTML='<div class="cand-h">検索に失敗しました。店名を入力してください。</div>';
+    }
+  }, err=>{
+    const box=document.getElementById('ppBody');
+    if(box) box.innerHTML='<div class="cand-h">位置情報を取得できませんでした。店名を入力してください。</div>';
+  }, { timeout:8000, maximumAge:60000 });
+}
+
+function listReportItems(){
+  return listItems.slice(0,60).map(it=>({
+    name:(it.match&&it.match.wine&&it.match.wine.name)||it.input.name||it.input.rawText,
+    producer:it.input.producer||null,
+    vintage:it.input.vintage!=null?it.input.vintage:null,
+    color:it.input.color||null,
+    listPrice:it.input.listPrice||null,
+    byGlass:it.input.byGlass===true,
+    wineId:it.match&&it.match.wine?it.match.wine.id:null,
+  }));
+}
+
+async function sendPlaceReport(place){
+  try{
+    const r=await fetch(API_BASE+'/api/report-place',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ place, items:listReportItems(), scanId:lastListScanId })
+    });
+    if(!r.ok) throw 0;
+    const d=await r.json();
+    listPlace={ id:d.placeId, name:place.name };
+    toast('記録しました。ありがとうございます！ 🍷');
+  }catch(e){
+    toast('保存に失敗しました。通信環境をご確認ください');
+  }
+  renderListSheet();
+}
+function reportPlacePick(i){ const p=_ppItems[i]; if(p) sendPlaceReport({ id:p.id, name:p.name, lat:p.lat, lng:p.lng, kind:p.kind }); }
+function reportPlaceManual(){
+  const v=document.getElementById('ppManual').value.trim();
+  if(!v){ toast('店名を入力してください'); return; }
+  sendPlaceReport({ name:v, lat:_ppLoc&&_ppLoc.lat, lng:_ppLoc&&_ppLoc.lng });
 }
 
 // 好み度リボン（本人の登録写真由来のみ＝basedOn:'history' の時だけ出す）

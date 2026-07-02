@@ -2128,26 +2128,65 @@ const restaurant = {
   name: 'Bistrot Lumière',
   slug: 'bistrot-lumiere',
   isPrivate: false,
-  qrUrl: 'https://sommelin.app/r/bistrot-lumiere',
+  qrUrl: '',                     // ログイン店舗のIDから実URLを生成（loadWineData）
   listVersion: 3,
   listUpdatedAt: '2026-05-19'
 };
 
-// wines テーブル相当
-let wineData = [
-  { id:'w01', cat:'sparkling', name:'Billecart-Salmon Blanc de Blancs', producer:'Billecart-Salmon', vintage:'NV',   region:'Champagne',  grapes:'Chardonnay',          priceGlass:2800, priceBottle:14000, available:true,  stock:6  },
-  { id:'w02', cat:'sparkling', name:'Moët & Chandon Brut Impérial',     producer:'Moët & Chandon', vintage:'NV',   region:'Champagne',  grapes:'Pinot Noir, Chardonnay', priceGlass:2200, priceBottle:11000, available:true,  stock:12 },
-  { id:'w03', cat:'white',     name:'Chablis 1er Cru Montée de Tonnerre', producer:'Moreau-Naudet', vintage:'2021', region:'Chablis',    grapes:'Chardonnay',          priceGlass:1800, priceBottle:9000,  available:true,  stock:9  },
-  { id:'w04', cat:'white',     name:'Sancerre Blanc',                   producer:'Henri Bourgeois', vintage:'2022', region:'Loire',      grapes:'Sauvignon Blanc',     priceGlass:1600, priceBottle:8000,  available:true,  stock:8  },
-  { id:'w05', cat:'white',     name:'Domaine Leflaive Mâcon-Verzé',     producer:'Domaine Leflaive', vintage:'2022', region:'Bourgogne', grapes:'Chardonnay',          priceGlass:1800, priceBottle:9000,  available:true,  stock:5  },
-  { id:'w06', cat:'red',       name:'Ch. Pichon Baron',                 producer:'Ch. Pichon Baron', vintage:'2018', region:'Pauillac',  grapes:'Cabernet Sauvignon',  priceGlass:3200, priceBottle:16000, available:true,  stock:3  },
-  { id:'w07', cat:'red',       name:'Gevrey-Chambertin',                producer:'Rossignol-Trapet', vintage:'2021', region:'Bourgogne', grapes:'Pinot Noir',          priceGlass:2800, priceBottle:14000, available:true,  stock:7  },
-  { id:'w08', cat:'red',       name:"Barolo \"Serralunga d'Alba\"",     producer:'Fontanafredda',  vintage:'2019', region:'Piemonte',   grapes:'Nebbiolo',            priceGlass:2400, priceBottle:12000, available:true,  stock:4  },
-  { id:'w09', cat:'red',       name:"Volnay 1er Cru Caillerets",        producer:"Marquis d'Angerville", vintage:'2020', region:'Bourgogne', grapes:'Pinot Noir',     priceGlass:3600, priceBottle:18000, available:false, stock:0  },
-  { id:'w10', cat:'rose',      name:'Pét-Nat Rosé',                     producer:'La Grange Tiphaine', vintage:'2022', region:'Loire',  grapes:'Gamay',               priceGlass:1400, priceBottle:7000,  available:true,  stock:10 },
-  { id:'w11', cat:'orange',    name:'Ramato Pinot Grigio',              producer:'Vodopivec',      vintage:'2020', region:'Friuli',     grapes:'Pinot Grigio',        priceGlass:1600, priceBottle:8000,  available:true,  stock:6  },
-  { id:'w12', cat:'orange',    name:"Skin Contact Mtsvane",             producer:"Pheasant's Tears", vintage:'2021', region:'Kakheti',  grapes:'Mtsvane',             priceGlass:1800, priceBottle:9000,  available:true,  stock:2  },
-];
+// ── 店内ワインリスト（実データ: Supabase restaurant_wines。旧デモ配列は廃止） ──
+const RW_SB_URL = 'https://gkhdpzfmqraliwaiubwl.supabase.co';
+const RW_SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+const RW_API    = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+
+let wineData = [];
+let RW_UID = null;
+
+function rwToken(){ try{ const s=JSON.parse(localStorage.getItem('sommelin_session')||'null'); return s&&s.access_token; }catch(e){ return null; } }
+async function rwUid(){
+  if (RW_UID) return RW_UID;
+  try{
+    const s=JSON.parse(localStorage.getItem('sommelin_session')||'null');
+    if (s && s.user && s.user.id) return RW_UID = s.user.id;
+    const r=await fetch(RW_SB_URL+'/auth/v1/user',{headers:{apikey:RW_SB_KEY,Authorization:'Bearer '+rwToken()}});
+    if (r.ok){ const u=await r.json(); return RW_UID = u.id; }
+  }catch(e){}
+  return null;
+}
+async function rwFetch(path, opts){
+  opts = opts||{};
+  opts.headers = Object.assign({ apikey:RW_SB_KEY, Authorization:'Bearer '+(rwToken()||RW_SB_KEY), 'Content-Type':'application/json' }, opts.headers||{});
+  return fetch(RW_SB_URL+'/rest/v1/'+path, opts);
+}
+function dbToUi(r){ return { id:r.id, cat:r.cat||'red', name:r.name, producer:r.producer||'', vintage:r.vintage||'', region:r.region||'', grapes:r.grapes||'', priceGlass:r.price_glass||0, priceBottle:r.price_bottle||0, available:r.available!==false, stock:r.stock||0, wineId:r.wine_id||null, hasLabel:!!r.wine_id }; }
+function uiToDb(w, uid){ return { owner_id:uid, cat:w.cat||null, name:w.name, producer:w.producer||null, vintage:w.vintage||null, region:w.region||null, grapes:w.grapes||null, price_glass:w.priceGlass||null, price_bottle:w.priceBottle||null, available:w.available!==false, stock:w.stock||0, wine_id:w.wineId||null }; }
+
+async function loadWineData(){
+  const uid = await rwUid(); if(!uid) return;
+  try{
+    const r = await rwFetch('restaurant_wines?owner_id=eq.'+uid+'&order=created_at.asc&limit=500');
+    if (r.ok){
+      wineData = (await r.json()).map(dbToUi);
+      const cat = (typeof currentCat !== 'undefined' && currentCat) || 'all';
+      const q   = (typeof currentSearch !== 'undefined' && currentSearch) || '';
+      if (typeof renderWineTable === 'function') renderWineTable(cat, q);
+    }
+    // 公開設定
+    const rs = await rwFetch('restaurant_settings?owner_id=eq.'+uid+'&select=is_public');
+    if (rs.ok){
+      const rows = await rs.json();
+      const pub = rows.length ? rows[0].is_public !== false : true;
+      restaurant.isPrivate = !pub;
+      const t = document.getElementById('privacyToggle'); if (t) t.checked = pub;
+      document.getElementById('privacyIcon').textContent = pub ? '🔓' : '🔒';
+      document.getElementById('privacyStatus').textContent = pub ? '公開中' : '非公開';
+      document.getElementById('privacyWarning').classList.toggle('show', !pub);
+    }
+    // QR: 客用ページの実URL
+    restaurant.qrUrl = 'https://sommelintp.github.io/sommelin-app/prototype.html?r=' + uid;
+    const qt = document.getElementById('qrUrlText'); if (qt) qt.textContent = restaurant.qrUrl;
+    qrRendered = false;   // 次にQRパネルを開いた時に実URLで描画
+  }catch(e){}
+}
 
 // tasting_events テーブル相当
 const adminEvents = [
@@ -2714,15 +2753,22 @@ function filterWines(q) {
   renderWineTable(currentCat, q);
 }
 
-function toggleAvailability(id, val) {
+async function toggleAvailability(id, val) {
   const w = wineData.find(w => w.id === id);
-  if (w) { w.available = val; showToast(val ? `${w.name.split(' ')[0]}… を提供中に変更しました` : `売り切れに設定しました`); }
+  if (!w) return;
+  w.available = val;
+  showToast(val ? `${w.name.split(' ')[0]}… を提供中に変更しました` : `売り切れに設定しました`);
+  try { await rwFetch('restaurant_wines?id=eq.' + id, { method:'PATCH', body: JSON.stringify({ available: val }) }); } catch (e) {}
 }
 
-function deleteWine(id) {
+async function deleteWine(id) {
   const w = wineData.find(w => w.id === id);
   if (!w) return;
   if (!confirm(`「${w.name}」を削除しますか？`)) return;
+  try {
+    const r = await rwFetch('restaurant_wines?id=eq.' + id, { method:'DELETE' });
+    if (!r.ok) throw 0;
+  } catch (e) { showToast('⚠️ 削除に失敗しました'); return; }
   wineData = wineData.filter(w => w.id !== id);
   renderWineTable(currentCat, currentSearch);
   showToast('削除しました');
@@ -2906,21 +2952,12 @@ function selectWineCandidate(i) {
 // ============================================================
 // 📋 ワインリスト写真 一括インポート
 // ============================================================
-let listCaptured = false;
-// 一括インポート用サンプルデータ（AI解析シミュレーション）
-const bulkListSamples = [
-  { cat:'sparkling', emoji:'🥂', name:'Billecart-Salmon Rosé',      producer:'Billecart-Salmon',  vintage:'NV',   region:'Champagne',  grapes:'Pinot Noir, Chardonnay', confidence:98 },
-  { cat:'white',     emoji:'🤍', name:'Puligny-Montrachet',          producer:'Louis Jadot',       vintage:'2021', region:'Bourgogne',  grapes:'Chardonnay',             confidence:95 },
-  { cat:'white',     emoji:'🤍', name:'Grüner Veltliner Smaragd',    producer:'F.X. Pichler',      vintage:'2022', region:'Wachau',     grapes:'Grüner Veltliner',        confidence:91 },
-  { cat:'red',       emoji:'🍷', name:'Barolo Cannubi',               producer:'Borgogno',          vintage:'2018', region:'Piemonte',   grapes:'Nebbiolo',               confidence:97 },
-  { cat:'red',       emoji:'🍷', name:'Pommard 1er Cru Les Rugiens', producer:'Domaine de Courcel', vintage:'2020', region:'Bourgogne',  grapes:'Pinot Noir',             confidence:89 },
-  { cat:'red',       emoji:'🍷', name:'Tignanello',                   producer:'Antinori',          vintage:'2019', region:'Toscana',    grapes:'Sangiovese, Cabernet',   confidence:94 },
-  { cat:'rose',      emoji:'🌸', name:'Whispering Angel',             producer:'Château d\'Esclans', vintage:'2023', region:'Provence',  grapes:'Grenache, Cinsault',      confidence:99 },
-];
+// 写真1枚 → backend /api/identify-list（Claude vision）で実解析 → 選択して一括登録
 let bulkChecked = [];
+let _listDataUrl = null;
 
 function openListCapture() {
-  listCaptured = false;
+  _listDataUrl = null;
   document.getElementById('listAnalyzeBtn').disabled = true;
   document.getElementById('listCaptureTip').textContent = '📄 メニュー・手書きリスト・印刷リスト、どれでも読み込めます';
   document.getElementById('listCamOverlay').classList.add('open');
@@ -2930,38 +2967,87 @@ function closeListCapture() {
   document.getElementById('listCamOverlay').classList.remove('open');
 }
 
+// シャッター = 端末カメラ/写真の選択（長辺1568pxのJPEGに縮小して送信）
 function captureList() {
-  listCaptured = true;
-  document.getElementById('listAnalyzeBtn').disabled = false;
-  document.getElementById('listCaptureTip').textContent = '✅ リストを撮影しました。「読み込む」を押してください';
-  const shutter = document.querySelector('#listCamOverlay .cam-shutter');
-  shutter.style.transform = 'scale(0.88)';
-  setTimeout(() => shutter.style.transform = '', 120);
+  let inp = document.getElementById('rwListInput');
+  if (!inp) {
+    inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'image/*'; inp.capture = 'environment';
+    inp.id = 'rwListInput'; inp.style.display = 'none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change', e => {
+      const f = e.target.files[0]; e.target.value = '';
+      if (!f) return;
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        const sc = Math.min(1, 1568 / Math.max(img.naturalWidth, img.naturalHeight));
+        c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        _listDataUrl = c.toDataURL('image/jpeg', 0.8);
+        URL.revokeObjectURL(img.src);
+        document.getElementById('listAnalyzeBtn').disabled = false;
+        document.getElementById('listCaptureTip').textContent = '✅ リストを撮影しました。「読み込む」を押してください';
+      };
+      img.src = URL.createObjectURL(f);
+    });
+  }
+  inp.click();
 }
 
-function analyzeList() {
+const RW_CAT = { sparkling:'sparkling', white:'white', red:'red', rose:'rose', orange:'orange' };
+const RW_EMOJI = { sparkling:'🥂', white:'🤍', red:'🍷', rose:'🌸', orange:'🍊' };
+
+async function analyzeList() {
+  if (!_listDataUrl) return;
   closeListCapture();
   const overlay = document.getElementById('analyzingOverlay');
-  document.getElementById('analyzingCount').textContent = 'ワインリストを解析中…';
+  document.getElementById('analyzingCount').textContent = 'AIがワインリストを解析中…（10秒ほど）';
   overlay.classList.add('open');
-  setTimeout(() => {
+  try {
+    const uid = await rwUid();
+    const r = await fetch(RW_API + '/api/identify-list', {
+      method:'POST', headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ image:_listDataUrl, userId:'store-' + (uid || 'unknown'), locale:'ja-JP' })
+    });
     overlay.classList.remove('open');
-    showBulkResults();
-  }, 2200);
+    if (r.status === 429) { showToast('⚠️ 回数上限です。少し待ってからお試しください'); return; }
+    if (!r.ok) throw 0;
+    const res = await r.json();
+    const items = (res.items || []).filter(it => it.input && (it.input.name || it.input.rawText));
+    if (!items.length) { showToast('銘柄を読み取れませんでした。近づいて撮り直してください'); return; }
+    const rows = items.map(it => {
+      const inp = it.input, w = it.match && it.match.wine;
+      const cat = RW_CAT[inp.color] || 'red';
+      return {
+        cat, emoji: RW_EMOJI[cat] || '🍷',
+        name: inp.name || inp.rawText,
+        producer: (w && w.producer) || inp.producer || '',
+        vintage: inp.vintage != null ? String(inp.vintage) : (w && w.vintage) || '',
+        region: w ? [w.kuni, w.chiiki].filter(Boolean).join(' ') : (inp.country || ''),
+        grapes: '',
+        priceGlass: inp.byGlass && inp.listPrice ? inp.listPrice : 0,
+        priceBottle: !inp.byGlass && inp.listPrice ? inp.listPrice : 0,
+        wineId: w ? w.id : null,
+        confidence: w ? Math.round((it.match.matchScore || 0) * 100) : Math.round((res.confidence || 0) * 100),
+      };
+    });
+    showBulkResults(rows);
+  } catch (e) {
+    overlay.classList.remove('open');
+    showToast('⚠️ 解析に失敗しました（通信環境をご確認ください）');
+  }
 }
 
-function showBulkResults() {
-  // ランダムに5〜7本を選んで表示（毎回少し違う結果を演出）
-  const count = 5 + Math.floor(Math.random() * 3);
-  const shuffled = [...bulkListSamples].sort(() => 0.5 - Math.random()).slice(0, count);
-
-  bulkChecked = shuffled.map((_, i) => i); // 全チェック済み
+function showBulkResults(rows) {
+  const count = rows.length;
+  bulkChecked = rows.map((_, i) => i); // 全チェック済み
   document.getElementById('brTitle').textContent = `📖 ${count}本のワインが見つかりました`;
   document.getElementById('brSub').textContent   = '追加するワインを選択してください（すべてチェック済み）';
   document.getElementById('brAddBtn').textContent = `✓ ${count}本を追加する`;
   document.getElementById('bulkWineList').dataset.count = count;
 
-  renderBulkList(shuffled);
+  renderBulkList(rows);
   document.getElementById('bulkResultsBg').classList.add('open');
 }
 
@@ -3011,17 +3097,23 @@ function toggleAllBulk() {
   document.getElementById('brAddBtn').textContent = n > 0 ? `✓ ${n}本を追加する` : '選択してください';
 }
 
-function confirmBulkAdd() {
+async function confirmBulkAdd() {
   const added = bulkChecked.map(i => window._bulkWines[i]);
-  added.forEach(w => {
-    wineData.push({
-      id: 'w' + Date.now() + Math.random().toString(36).slice(2,6),
+  if (!added.length) return;
+  const uid = await rwUid();
+  if (!uid) { alert('ログイン情報を確認できません。再ログインしてください。'); return; }
+  try {
+    const payload = added.map(w => uiToDb({
       cat: w.cat, name: w.name, producer: w.producer,
       vintage: w.vintage, region: w.region, grapes: w.grapes,
-      priceGlass: 0, priceBottle: 0, stock: 0,
-      available: true, hasLabel: true   // リストスキャン = ラベル情報あり
-    });
-  });
+      priceGlass: w.priceGlass || 0, priceBottle: w.priceBottle || 0,
+      stock: 0, available: true, wineId: w.wineId || null,
+    }, uid));
+    const r = await rwFetch('restaurant_wines',
+      { method:'POST', headers:{ Prefer:'return=representation' }, body: JSON.stringify(payload) });
+    if (!r.ok) throw 0;
+    (await r.json()).forEach(row => wineData.push(dbToUi(row)));
+  } catch (e) { showToast('⚠️ 登録に失敗しました（通信環境をご確認ください）'); return; }
   closeBulkResults();
   renderWineTable(currentCat, currentSearch);
   showToast(`${added.length}本のワインを追加しました ✓`);
@@ -3042,7 +3134,7 @@ function closeWineModalBg(e) {
   if (e.target === document.getElementById('wineModal')) closeWineModal();
 }
 
-function saveWine() {
+async function saveWine() {
   const data = {
     cat: document.getElementById('fCat').value,
     name: document.getElementById('fName').value.trim(),
@@ -3058,16 +3150,27 @@ function saveWine() {
   };
   if (!data.name) { alert('ワイン名を入力してください'); return; }
 
-  if (editingWineId) {
-    const w = wineData.find(w => w.id === editingWineId);
-    // 編集時はhasLabelを維持（上書きしない）
-    data.hasLabel = w.hasLabel || pendingHasLabel;
-    Object.assign(w, data);
-    showToast('更新しました ✓');
-  } else {
-    wineData.push({ id: 'w' + Date.now(), ...data });
-    showToast('追加しました ✓');
-  }
+  const uid = await rwUid();
+  if (!uid) { alert('ログイン情報を確認できません。再ログインしてください。'); return; }
+
+  try {
+    if (editingWineId) {
+      const w = wineData.find(w => w.id === editingWineId);
+      data.hasLabel = w.hasLabel || pendingHasLabel;   // 編集時はhasLabelを維持
+      const r = await rwFetch('restaurant_wines?id=eq.' + editingWineId + '&owner_id=eq.' + uid,
+        { method:'PATCH', body: JSON.stringify(uiToDb({ ...w, ...data }, uid)) });
+      if (!r.ok) throw 0;
+      Object.assign(w, data);
+      showToast('更新しました ✓');
+    } else {
+      const r = await rwFetch('restaurant_wines',
+        { method:'POST', headers:{ Prefer:'return=representation' }, body: JSON.stringify(uiToDb(data, uid)) });
+      if (!r.ok) throw 0;
+      const rows = await r.json();
+      wineData.push(dbToUi(rows[0]));
+      showToast('追加しました ✓');
+    }
+  } catch (e) { showToast('⚠️ 保存に失敗しました（通信環境をご確認ください）'); return; }
   pendingHasLabel = false;
   closeWineModal();
   renderWineTable(currentCat, currentSearch);
@@ -3080,6 +3183,7 @@ let qrRendered = false;
 
 function renderQr() {
   if (qrRendered) return;
+  if (!restaurant.qrUrl) return;   // ログイン確認前はURL未確定（loadWineData後に描画）
   qrRendered = true;
   const container = document.getElementById('qrCodeContainer');
   container.innerHTML = '';
@@ -3102,11 +3206,21 @@ function copyUrl() {
   }
 }
 
-function togglePrivacy(isPublic) {
+async function togglePrivacy(isPublic) {
   restaurant.isPrivate = !isPublic;
   document.getElementById('privacyIcon').textContent = isPublic ? '🔓' : '🔒';
   document.getElementById('privacyStatus').textContent = isPublic ? '公開中' : '非公開';
   document.getElementById('privacyWarning').classList.toggle('show', !isPublic);
+  const uid = await rwUid();
+  if (uid) {
+    try {
+      await rwFetch('restaurant_settings', {
+        method:'POST',
+        headers:{ Prefer:'resolution=merge-duplicates' },
+        body: JSON.stringify({ owner_id: uid, is_public: isPublic })
+      });
+    } catch (e) {}
+  }
   showToast(isPublic ? 'ワインリストを公開しました 🔓' : 'ワインリストを非公開にしました 🔒');
 }
 
@@ -3243,6 +3357,9 @@ function publishStock() {
   const myItems = loadStock().filter(i => i.storeId === STORE_INFO.id && i.inStock);
   showToast(`🌐 ${myItems.length}件の在庫情報を公開しました ✓`);
 }
+
+// ── 起動時: ログイン店舗のワインリスト・公開設定・QRを実データで読込 ──
+loadWineData();
 </script>
 </body>
 </html>

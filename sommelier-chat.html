@@ -413,6 +413,11 @@ const FREE_LIMIT = 5;
 let usageCount = 0;
 let isBotTyping = false;
 
+// ── 実AIチャット（backend /api/chat = Claude Haiku。キーはbackendのみ） ──
+const CHAT_API = (localStorage.getItem('somm_api_base') || 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app');
+const CHAT_UID = (() => { try { return localStorage.getItem('somm_uid') || ''; } catch(e){ return ''; } })();
+let chatHistory = [];   // {role:'user'|'assistant', content}
+
 /* ===== INIT ===== */
 window.addEventListener('load', () => {
   document.getElementById('initTime').textContent = nowTime();
@@ -463,7 +468,7 @@ function sendChip(text) {
   sendMessage();
 }
 
-function sendMessage() {
+async function sendMessage() {
   const input = document.getElementById('msgInput');
   const text = input.value.trim();
   if (!text || isBotTyping) return;
@@ -476,13 +481,28 @@ function sendMessage() {
   updateUsageDisplay();
 
   addUserMessage(text);
+  chatHistory.push({ role: 'user', content: text });
   showTyping();
+  isBotTyping = true;
 
-  setTimeout(() => {
+  try {
+    const r = await fetch(CHAT_API + '/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: chatHistory.slice(-8), userId: CHAT_UID })
+    });
     hideTyping();
-    const resp = generateResponse(text);
-    addBotMessage(resp);
-  }, 900 + Math.random() * 600);
+    if (r.status === 429) { addBotMessage({ text: '少し混み合っています。しばらくしてからもう一度どうぞ 🙏' }); return; }
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    chatHistory.push({ role: 'assistant', content: d.reply });
+    addBotMessage({ text: d.reply });
+  } catch (e) {
+    hideTyping();
+    addBotMessage({ text: 'ごめんなさい、うまく応答できませんでした。通信環境を確認してもう一度お試しください 🙏' });
+  } finally {
+    isBotTyping = false;
+  }
 }
 
 /* ===== MESSAGE BUILDERS ===== */

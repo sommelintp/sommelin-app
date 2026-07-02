@@ -39,4 +39,9 @@
 - **コスパ**＝おすすめ度 `osu_gbm`/`osu_lin` = SP − 価格から期待されるSP（プラスほど割安）。
 - DB定義SQL: `~/dev/sommelin-trade-platform/migrations/2026-06-25_scouter_wines.sql`（テーブル＋RPC＋RLS）と `..._scouter_load_master.sql`（ステージング→wines）。
 - 今回更新済の画面: `wine_search.html`（結果トップに実SP・コスパ表示）/ `cellar.html`（端末保存=localStorage）/ `prototype.html`（マイページから scouter・cellar・検索・AIソムリエへ導線追加）/ PWA: `manifest.webmanifest`・`sw.js`。
-- **prototype.html の実データ化（2026-07-02）**: ①試飲会カレンダー/イベント一覧＝実 `events` テーブル（LINE bot蓄積・anon読取可・status=published）を `loadRealEvents()` で読込。申込みボタンは実 `registration_url` を開く（URL無しは無効化＝偽の申込完了を出さない）。②ランキング＝実 `wines` を osu_gbm 降順で `loadRealRanking()`。③カメラ画面の偽スキャン廃止→ `scouter.html`（`?mode=list` でリストモード直行）。**残モック**: 店内ワインリスト（wines/classicWines配列＝店舗ビューのデモ）・来店履歴（チェックイン機能なし）・チャット自動応答（somurinReplies）。
+- **prototype.html の実データ化（2026-07-02）**: ①試飲会カレンダー/イベント一覧＝実 `events` テーブル（LINE bot蓄積・anon読取可・status=published）を `loadRealEvents()` で読込。申込みボタンは実 `registration_url` を開く（URL無しは無効化＝偽の申込完了を出さない）。②ランキング＝実 `wines` を osu_gbm 降順で `loadRealRanking()`。③カメラ画面の偽スキャン廃止→ `scouter.html`（`?mode=list` でリストモード直行）。
+- **残モック3機能も実装済み（2026-07-03）**:
+  - **店内ワインリスト**: `restaurant_admin.html` のリスト管理を Supabase `restaurant_wines`＋`restaurant_settings` に配線（CRUD・公開切替・QR=`prototype.html?r=<owner_id>`）。写真一括インポートは実 `/api/identify-list`（マスター一致分は wine_id 保存）。客側は `prototype.html?r=` で実店舗リスト表示＝クラシックビュー（マスター一致ワインに⭐SP表示）。デモ（Bistrot Lumière）は ?r= 無しの時のみ。テーブル定義: `migrations/2026-07-03_restaurant_wines.sql`（**SQL Editorで要実行**）。
+  - **来店履歴**: 端末内 localStorage（`sommelin_visits`=QRでリストを開くと記録／ワインタブ=cellar.htmlと共通の `somm_cellar_v1`）。サーバー送信なし・空状態あり。
+  - **AIチャット**: backend `POST /api/chat`（Haiku・レート制限・no-lie=個別SP/在庫は断定せずスカウターへ誘導・taste_profileがあれば好みを加味）。`sommelier-chat.html`（FREE_LIMIT=5/セッション維持）と `prototype.html` のウィジェット両方を配線。定型返信(somurinReplies)は廃止。
+- **街のワインデータ収集（2026-07-03）**: スカウターのリストモードで解析後に「📍 このお店を記録（匿名・任意）」→ GPS→`GET /api/places/nearby`（OSM Overpass=無料・キー不要）で近隣店候補→選択 or 店名手入力→`POST /api/report-place` が `places`(upsert)＋`venue_list_items`(リスト全行・未登録銘柄も生名で)＋`price_sightings`(マスター一致×ボトル価格) に保存。「どこで飲める？」機能の燃料。テーブル定義: `migrations/2026-07-03_venue_sightings.sql`（**SQL Editorで要実行**）。
