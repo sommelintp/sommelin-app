@@ -591,13 +591,14 @@ function renderResults(q) {
 
     <hr class="sec-divider">
 
-    <!-- REAL STORES -->
+    <!-- REAL STORES（実データ: 公開店舗の restaurant_wines を検索） -->
     <div class="sec-head">
       🏪 近くのお店で買う・飲む
     </div>
-    ${renderLocalStores(q)}
+    <div id="localStores"><div style="text-align:center;padding:24px;color:#999;font-size:13px;">お店の在庫を確認中…</div></div>
   `;
   loadMaster(q);
+  loadLocalStores(q);
 }
 
 // ── ローカル在庫検索（localStorage連携） ───────────────────────
@@ -613,152 +614,87 @@ function matchWine(wineName, query) {
     terms.some(t => t.length >= 4 && wn.includes(t.replace(/[\s\-\.]/g,'')));
 }
 
-function getLocalStoreInventory() {
-  try { return JSON.parse(localStorage.getItem('sommelin_store_inventory') || '[]'); } catch(e){ return []; }
-}
-function getImporterCatalog() {
-  try { return JSON.parse(localStorage.getItem('sommelin_importer_catalog') || '[]'); } catch(e){ return []; }
-}
-
-// デモデータをseed（wine_search.html単独で開いた時にデータが無い場合）
-function seedDemoDataIfNeeded() {
-  if (!getLocalStoreInventory().length) {
-    const demo = [
-      { id:'si1', storeId:'bistrot-lumiere', storeName:'Bistrot Lumière', storeAddr:'渋谷区神宮前3-5-6', storeType:'restaurant',
-        name:'Alex Gambal Charmes-Chambertin', vintage:'2019', region:'Bourgogne, France', price:36000, qty:2, type:'bottle', inStock:true },
-      { id:'si2', storeId:'bistrot-lumiere', storeName:'Bistrot Lumière', storeAddr:'渋谷区神宮前3-5-6', storeType:'restaurant',
-        name:'Maison Leroy Nuits-Saint-Georges', vintage:'2018', region:'Bourgogne, France', price:68000, qty:1, type:'bottle', inStock:true },
-      { id:'si4', storeId:'bistrot-lumiere', storeName:'Bistrot Lumière', storeAddr:'渋谷区神宮前3-5-6', storeType:'restaurant',
-        name:'Opus One', vintage:'2020', region:'Napa Valley, USA', price:52000, qty:3, type:'bottle', inStock:true },
-      { id:'si5', storeId:'bistrot-lumiere', storeName:'Bistrot Lumière', storeAddr:'渋谷区神宮前3-5-6', storeType:'restaurant',
-        name:'Sassicaia', vintage:'2020', region:'Bolgheri, Italy', price:24000, qty:2, type:'both', inStock:true },
-      { id:'sk1', storeId:'wine-bar-vinho', storeName:'ワインバル ヴィーニョ', storeAddr:'港区南青山5-3-10', storeType:'restaurant',
-        name:'Sassicaia', vintage:'2019', region:'Bolgheri, Italy', price:26000, qty:1, type:'bottle', inStock:true },
-      { id:'sk2', storeId:'wine-bar-vinho', storeName:'ワインバル ヴィーニョ', storeAddr:'港区南青山5-3-10', storeType:'restaurant',
-        name:'Château Mouton Rothschild', vintage:'2018', region:'Pauillac, France', price:65000, qty:1, type:'bottle', inStock:true },
-    ];
-    localStorage.setItem('sommelin_store_inventory', JSON.stringify(demo));
-  }
-  if (!getImporterCatalog().length) {
-    const demo = [
-      { id:'ic1', importerId:'yamada-shoten', importerName:'山田商店（インポーター）',
-        name:'Alex Gambal Charmes-Chambertin', producer:'Alex Gambal', vintage:'2019', region:'Bourgogne, France', price:36000, available:true, desc:'ブルゴーニュの新星。緻密なタンニンと赤果実の香り。' },
-      { id:'ic2', importerId:'yamada-shoten', importerName:'山田商店（インポーター）',
-        name:'David Duband Gevrey-Chambertin', producer:'David Duband', vintage:'2020', region:'Bourgogne, France', price:18000, available:true, desc:'コスパ優秀な村名格。飲みやすくエレガント。' },
-      { id:'ic3', importerId:'yamada-shoten', importerName:'山田商店（インポーター）',
-        name:'Maison Leroy Nuits-Saint-Georges', producer:'Maison Leroy', vintage:'2018', region:'Bourgogne, France', price:68000, available:true, desc:'ルロワの最高峰。圧倒的な存在感と長い余韻。' },
-      { id:'ic4', importerId:'yamada-shoten', importerName:'山田商店（インポーター）',
-        name:'Sassicaia', producer:'Tenuta San Guido', vintage:'2020', region:'Bolgheri, Italy', price:24000, available:true, desc:'イタリアのスーパータスカンの王様。' },
-      { id:'ic5', importerId:'yamada-shoten', importerName:'山田商店（インポーター）',
-        name:'Opus One', producer:'Mondavi × Rothschild', vintage:'2020', region:'Napa Valley, USA', price:52000, available:true, desc:'カリフォルニアとボルドーの夢のコラボ。' },
-    ];
-    localStorage.setItem('sommelin_importer_catalog', JSON.stringify(demo));
-  }
+// ── 近くのお店（実データ: 公開店舗の restaurant_wines。旧localStorageデモは廃止） ──
+function emptyStoreHtml(q) {
+  return `<div class="store-coming">
+    <div class="store-coming-emoji">🗺️</div>
+    <h3>「${escHtml(q)}」を取り扱うお店を募集中</h3>
+    <p>ワインショップ・レストランが在庫情報を<br>登録することで、ここに表示されます。</p>
+    <button class="store-register-btn" onclick="location.href='restaurant_admin.html'">
+      🏪 店舗として登録する
+    </button>
+    <div class="register-note">※ 登録は無料です。掲載後はソムリンユーザーへ公開されます。</div>
+  </div>`;
 }
 
-const STORE_DISTS = {
-  'bistrot-lumiere': '0.3km',
-  'wine-bar-vinho':  '1.2km',
-};
+async function loadLocalStores(q) {
+  const box = document.getElementById('localStores');
+  if (!box) return;
+  try {
+    // クエリ整形（scouterからの「◯◯ ワイン」形式にも対応）
+    const clean = (q || '').replace(/ワイン/g, ' ').trim();
+    const tokens = clean.split(/\s+/).filter(t => t.length >= 2);
+    const key = tokens.sort((a, b) => b.length - a.length)[0] || clean;
+    if (!key) { box.innerHTML = emptyStoreHtml(q); return; }
 
-function renderLocalStores(q) {
-  seedDemoDataIfNeeded();
-  const inv = getLocalStoreInventory().filter(i => i.inStock && matchWine(i.name, q));
-  const cat = getImporterCatalog().filter(i => i.available && matchWine(i.name, q));
+    const H = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY };
+    // RLS: 公開設定ONの店舗の行しか返らない（非公開店は自動的に除外される）
+    const rw = await fetch(SB_URL + '/rest/v1/restaurant_wines'
+      + '?select=owner_id,name,vintage,region,price_bottle,price_glass,stock'
+      + '&available=eq.true&name=ilike.' + encodeURIComponent('*' + key + '*') + '&limit=100', { headers: H });
+    let rows = rw.ok ? await rw.json() : [];
+    if (tokens.length > 1) rows = rows.filter(r => matchWine(r.name, clean));
+    if (!rows.length) { box.innerHTML = emptyStoreHtml(q); return; }
 
-  // ── 近くのお店（在庫あり） ──
-  let html = '';
+    // 店舗名・住所（restaurant_settings。公開店のみ読める）
+    const owners = [...new Set(rows.map(r => r.owner_id))];
+    const rs = await fetch(SB_URL + '/rest/v1/restaurant_settings?owner_id=in.(' + owners.join(',') + ')&select=owner_id,display_name,address', { headers: H });
+    const settings = rs.ok ? await rs.json() : [];
+    const byOwner = {}; settings.forEach(s => byOwner[s.owner_id] = s);
 
-  if (inv.length === 0 && cat.length === 0) {
-    html += `<div class="store-coming">
-      <div class="store-coming-emoji">🗺️</div>
-      <h3>「${escHtml(q)}」を取り扱うお店を募集中</h3>
-      <p>ワインショップ・レストランが在庫情報を<br>登録することで、ここに表示されます。</p>
-      <button class="store-register-btn" onclick="location.href='restaurant_admin.html'">
-        🏪 店舗として登録する
-      </button>
-      <div class="register-note">※ 登録は無料です。掲載後はソムリンユーザーへ公開されます。</div>
-    </div>`;
-    return html;
-  }
-
-  // 在庫ありのお店をまとめる（store単位にグループ化）
-  if (inv.length > 0) {
     const byStore = {};
-    inv.forEach(i => {
-      if (!byStore[i.storeId]) byStore[i.storeId] = { name:i.storeName, addr:i.storeAddr, type:i.storeType, wines:[] };
-      byStore[i.storeId].wines.push(i);
+    rows.forEach(r => {
+      const s = byOwner[r.owner_id];
+      if (!s || !s.display_name) return;   // 店舗名未設定の店は表示しない
+      if (!byStore[r.owner_id]) byStore[r.owner_id] = { name: s.display_name, addr: s.address || '', wines: [] };
+      byStore[r.owner_id].wines.push(r);
     });
+    const stores = Object.entries(byStore);
+    if (!stores.length) { box.innerHTML = emptyStoreHtml(q); return; }
 
-    html += `<div class="lstore-count">📍 ${Object.keys(byStore).length}軒で在庫を確認</div>`;
-
-    Object.entries(byStore).forEach(([sid, store]) => {
-      const dist = STORE_DISTS[sid] || '近隣';
-      const typeLabel = store.type === 'restaurant' ? '🍽 レストラン' : '🏪 ワインショップ';
+    let html = `<div class="lstore-count">📍 ${stores.length}軒で取り扱いを確認</div>`;
+    stores.forEach(([oid, store]) => {
       html += `<div class="lstore-card">
         <div class="lstore-head">
           <div>
             <div class="lstore-name">${escHtml(store.name)}</div>
-            <div class="lstore-meta">${typeLabel}　📍 ${escHtml(store.addr)}　<span class="lstore-dist">${dist}</span></div>
+            <div class="lstore-meta">🏪 登録店舗${store.addr ? '　📍 ' + escHtml(store.addr) : ''}</div>
           </div>
-          <button class="lstore-inquiry" onclick="inquireStore('${sid}','${escHtml(store.name)}')">問い合わせ</button>
+          <button class="lstore-inquiry" onclick="inquireStore('${oid}','${escHtml(store.name)}')">問い合わせ</button>
         </div>
-        ${store.wines.map(w => `
+        ${store.wines.map(w => {
+          const price = w.price_bottle || w.price_glass || 0;
+          const t = (w.price_bottle && w.price_glass) ? 'ボトル/グラス' : (w.price_glass ? 'グラス' : 'ボトル');
+          return `
         <div class="lstore-wine">
           <div class="lstore-wine-info">
             <div class="lstore-wine-name">${escHtml(w.name)}</div>
-            <div class="lstore-wine-meta">${w.vintage}　${w.region}</div>
+            <div class="lstore-wine-meta">${escHtml(w.vintage || '')}　${escHtml(w.region || '')}</div>
           </div>
           <div class="lstore-wine-right">
-            <div class="lstore-price">¥${(w.price||0).toLocaleString()}</div>
-            <div class="lstore-type">${w.type==='bottle'?'ボトル':w.type==='glass'?'グラス':'ボトル/グラス'}</div>
+            <div class="lstore-price">¥${price.toLocaleString()}</div>
+            <div class="lstore-type">${t}</div>
           </div>
-        </div>`).join('')}
+        </div>`;
+        }).join('')}
       </div>`;
     });
-  }
-
-  // ── インポーターから直接購入 ──
-  if (cat.length > 0) {
-    html += `<div class="imp-section-label">📦 インポーターから直接問い合わせ</div>`;
-    const byImp = {};
-    cat.forEach(i => {
-      if (!byImp[i.importerId]) byImp[i.importerId] = { name:i.importerName, wines:[] };
-      byImp[i.importerId].wines.push(i);
-    });
-    Object.entries(byImp).forEach(([iid, imp]) => {
-      html += `<div class="lstore-card imp-card">
-        <div class="lstore-head">
-          <div>
-            <div class="lstore-name">${escHtml(imp.name)}</div>
-            <div class="lstore-meta">🏢 輸入元　飲食店・酒販店向け卸売</div>
-          </div>
-          <button class="lstore-inquiry imp-btn" onclick="inquireImporter('${iid}','${escHtml(imp.name)}')">問い合わせ</button>
-        </div>
-        ${imp.wines.map(w => `
-        <div class="lstore-wine">
-          <div class="lstore-wine-info">
-            <div class="lstore-wine-name">${escHtml(w.name)}</div>
-            <div class="lstore-wine-meta">${w.producer}　${w.vintage}　${w.region}</div>
-            ${w.desc ? `<div style="font-size:11px;color:#888;margin-top:2px;">${escHtml(w.desc)}</div>` : ''}
-          </div>
-          <div class="lstore-wine-right">
-            <div class="lstore-price">¥${(w.price||0).toLocaleString()}</div>
-            <div class="lstore-type">卸値別途</div>
-          </div>
-        </div>`).join('')}
-      </div>`;
-    });
-  }
-
-  return html;
+    box.innerHTML = html;
+  } catch (e) { box.innerHTML = emptyStoreHtml(q); }
 }
 
 function inquireStore(sid, storeName) {
   showQuickModal(`📞 ${storeName} に問い合わせ`, `ご来店予約・在庫確認のお問い合わせを\nLINEまたは電話でお受けしています。\n\n🍷 ソムリンから問い合わせ機能は\n近日公開予定です！`);
-}
-function inquireImporter(iid, name) {
-  showQuickModal(`📦 ${name} に問い合わせ`, `インポーターへのお問い合わせ（卸値・最小発注数など）を\nソムリン経由でお送りできます。\n\n近日公開予定です。しばらくお待ちください。`);
 }
 function showQuickModal(title, msg) {
   const m = document.createElement('div');

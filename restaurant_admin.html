@@ -1654,8 +1654,10 @@
 
 </div>
 
-<!-- 在庫公開フッター -->
+<!-- 在庫公開フッター（店舗名・住所は restaurant_settings に保存され、ワイン検索に表示される） -->
 <div class="stk-publish-bar" id="stkPublishBar">
+  <input class="stk-input" id="stkStoreName" placeholder="店舗名（検索結果に表示されます）" style="margin-bottom:8px;">
+  <input class="stk-input" id="stkStoreAddr" placeholder="住所（例: 渋谷区神宮前3-5-6）" style="margin-bottom:8px;">
   <button class="stk-pub-btn" onclick="publishStock()">🌐 在庫情報をソムリンに公開する</button>
 </div>
 
@@ -2170,8 +2172,8 @@ async function loadWineData(){
       const q   = (typeof currentSearch !== 'undefined' && currentSearch) || '';
       if (typeof renderWineTable === 'function') renderWineTable(cat, q);
     }
-    // 公開設定
-    const rs = await rwFetch('restaurant_settings?owner_id=eq.'+uid+'&select=is_public');
+    // 公開設定＋店舗プロフィール
+    const rs = await rwFetch('restaurant_settings?owner_id=eq.'+uid+'&select=is_public,display_name,address');
     if (rs.ok){
       const rows = await rs.json();
       const pub = rows.length ? rows[0].is_public !== false : true;
@@ -2180,6 +2182,10 @@ async function loadWineData(){
       document.getElementById('privacyIcon').textContent = pub ? '🔓' : '🔒';
       document.getElementById('privacyStatus').textContent = pub ? '公開中' : '非公開';
       document.getElementById('privacyWarning').classList.toggle('show', !pub);
+      if (rows.length){
+        const nEl = document.getElementById('stkStoreName'); if (nEl && rows[0].display_name) nEl.value = rows[0].display_name;
+        const aEl = document.getElementById('stkStoreAddr'); if (aEl && rows[0].address) aEl.value = rows[0].address;
+      }
     }
     // QR: 客用ページの実URL
     restaurant.qrUrl = 'https://sommelintp.github.io/sommelin-app/prototype.html?r=' + uid;
@@ -3244,79 +3250,52 @@ renderAdminCalendar();
 setTimeout(renderLineQr, 300);
 
 // ============================================================
-// 📦 在庫管理（localStorage経由でwine_search.htmlと連携）
+// 📦 在庫管理（実データ: ワインリストと同じ restaurant_wines。「在庫」は同データの簡易ビュー）
+//    旧localStorage連携は構造的に他端末へ届かない見せかけだったため廃止。
+//    公開＝restaurant_settings（店舗名/住所/is_public）→ wine_search.html の「近くのお店」に実表示。
 // ============================================================
-const STORE_INFO = {
-  id: 'bistrot-lumiere',
-  name: 'Bistrot Lumière',
-  addr: '渋谷区神宮前3-5-6',
-  type: 'restaurant',
-  dist: '0.3km',
-  tel: '03-1234-5678',
-};
-
-const STK_KEY = 'sommelin_store_inventory';
-
-function loadStock() {
-  try { return JSON.parse(localStorage.getItem(STK_KEY) || '[]'); } catch(e){ return []; }
-}
-function saveStock(items) {
-  // 他店のデータを保持しつつ自店分のみ上書き
-  const all = loadStock().filter(i => i.storeId !== STORE_INFO.id);
-  localStorage.setItem(STK_KEY, JSON.stringify([...all, ...items.map(i => ({...i, storeId: STORE_INFO.id, storeName: STORE_INFO.name, storeAddr: STORE_INFO.addr, storeType: STORE_INFO.type}))]));
-}
-
-// デモデータを初回のみ注入
-function initDemoStock() {
-  const existing = loadStock().filter(i => i.storeId === STORE_INFO.id);
-  if (existing.length > 0) return; // 既にデータあり
-  const demo = [
-    { id:'si1', name:'Alex Gambal Charmes-Chambertin', vintage:'2019', region:'Bourgogne, France', price:36000, qty:2, type:'bottle', inStock:true },
-    { id:'si2', name:'Maison Leroy Nuits-Saint-Georges', vintage:'2018', region:'Bourgogne, France', price:68000, qty:1, type:'bottle', inStock:true },
-    { id:'si3', name:'Château Pichon Baron', vintage:'2015', region:'Pauillac, France', price:28000, qty:0, type:'bottle', inStock:false },
-    { id:'si4', name:'Opus One', vintage:'2020', region:'Napa Valley, USA', price:52000, qty:3, type:'bottle', inStock:true },
-    { id:'si5', name:'Sassicaia', vintage:'2020', region:'Bolgheri, Italy', price:24000, qty:2, type:'both', inStock:true },
-  ];
-  saveStock(demo);
+function stockPriceLabel(w) {
+  if (w.priceBottle && w.priceGlass) return { price: w.priceBottle, type: 'ボトル/グラス' };
+  if (w.priceGlass) return { price: w.priceGlass, type: 'グラス' };
+  return { price: w.priceBottle || 0, type: 'ボトル' };
 }
 
 function renderStock() {
-  initDemoStock();
-  const items = loadStock().filter(i => i.storeId === STORE_INFO.id);
-  const inCount  = items.filter(i => i.inStock).length;
-  const outCount = items.filter(i => !i.inStock).length;
+  const items = wineData;
+  const inCount  = items.filter(i => i.available).length;
   document.getElementById('stkTotal').textContent = items.length;
   document.getElementById('stkIn').textContent    = inCount;
-  document.getElementById('stkOut').textContent   = outCount;
+  document.getElementById('stkOut').textContent   = items.length - inCount;
 
   const list = document.getElementById('stkList');
   if (items.length === 0) {
     list.innerHTML = `<div style="text-align:center;padding:32px 16px;color:var(--text-sub);">
       <div style="font-size:36px;margin-bottom:12px;">📦</div>
-      まだ在庫が登録されていません。<br>上のフォームからワインを追加してください。</div>`;
-    return;
+      まだ在庫が登録されていません。<br>上のフォームから追加するか、「ワインリスト」タブの写真一括インポートをご利用ください。</div>`;
+  } else {
+    list.innerHTML = items.map(it => {
+      const pl = stockPriceLabel(it);
+      return `
+      <div class="inv-card${it.available ? '' : ' out-of-stock'}" id="inv-${it.id}">
+        <div class="inv-info">
+          <div class="inv-name">${it.name}</div>
+          <div class="inv-meta">${it.vintage || ''}　${it.region || ''}</div>
+          <div class="inv-price">¥${(pl.price||0).toLocaleString()}　<span style="font-size:11px;font-weight:500;color:var(--text-sub);">${pl.type} ${it.stock || 0}本</span></div>
+        </div>
+        <div class="inv-right">
+          <button class="inv-toggle ${it.available?'in-stock':'no-stock'}" onclick="toggleStock('${it.id}')">
+            ${it.available ? '在庫あり' : '在庫なし'}
+          </button>
+          <button class="inv-del" onclick="deleteStock('${it.id}')" title="削除">✕</button>
+        </div>
+      </div>`;
+    }).join('');
   }
-  list.innerHTML = items.map(it => `
-    <div class="inv-card${it.inStock ? '' : ' out-of-stock'}" id="inv-${it.id}">
-      <div class="inv-info">
-        <div class="inv-name">${it.name}</div>
-        <div class="inv-meta">${it.vintage}　${it.region}</div>
-        <div class="inv-price">¥${(it.price||0).toLocaleString()}　<span style="font-size:11px;font-weight:500;color:var(--text-sub);">${it.type==='bottle'?'ボトル':it.type==='glass'?'グラス':'ボトル/グラス'} ${it.qty}本</span></div>
-      </div>
-      <div class="inv-right">
-        <button class="inv-toggle ${it.inStock?'in-stock':'no-stock'}" onclick="toggleStock('${it.id}')">
-          ${it.inStock ? '在庫あり' : '在庫なし'}
-        </button>
-        <button class="inv-del" onclick="deleteStock('${it.id}')" title="削除">✕</button>
-      </div>
-    </div>`).join('');
-
-  // 公開バーを表示
   const bar = document.getElementById('stkPublishBar');
   if (bar) bar.classList.toggle('show', items.length > 0);
 }
 
-function addStockItem() {
+async function addStockItem() {
   const name    = document.getElementById('stkName').value.trim();
   const vintage = document.getElementById('stkVintage').value.trim();
   const price   = parseInt(document.getElementById('stkPrice').value) || 0;
@@ -3324,38 +3303,71 @@ function addStockItem() {
   const qty     = parseInt(document.getElementById('stkQty').value) || 1;
   const type    = document.getElementById('stkType').value;
   if (!name) { showToast('ワイン名を入力してください'); return; }
-  const myItems = loadStock().filter(i => i.storeId === STORE_INFO.id);
-  myItems.push({ id:'si'+Date.now(), name, vintage, price, region, qty, type, inStock:true });
-  saveStock(myItems);
-  // フォームリセット
+  const uid = await rwUid();
+  if (!uid) { alert('ログイン情報を確認できません。再ログインしてください。'); return; }
+
+  const w = {
+    cat: null, name, producer: '', vintage, region, grapes: '',
+    priceGlass:  (type === 'glass' || type === 'both') ? price : 0,
+    priceBottle: (type === 'bottle' || type === 'both') ? price : 0,
+    stock: qty, available: true, wineId: null,
+  };
+  try {
+    const r = await rwFetch('restaurant_wines',
+      { method:'POST', headers:{ Prefer:'return=representation' }, body: JSON.stringify(uiToDb(w, uid)) });
+    if (!r.ok) throw 0;
+    wineData.push(dbToUi((await r.json())[0]));
+  } catch (e) { showToast('⚠️ 保存に失敗しました（通信環境をご確認ください）'); return; }
+
   ['stkName','stkVintage','stkPrice','stkRegion'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('stkQty').value = '1';
   renderStock();
-  showToast('✓ 在庫に追加しました');
+  showToast('✓ 在庫に追加しました（ワインリストにも反映されます）');
 }
 
-function toggleStock(id) {
-  const myItems = loadStock().filter(i => i.storeId === STORE_INFO.id);
-  const it = myItems.find(i => i.id === id);
+async function toggleStock(id) {
+  const it = wineData.find(i => i.id === id);
   if (!it) return;
-  it.inStock = !it.inStock;
-  if (!it.inStock) it.qty = 0;
-  else if (it.qty === 0) it.qty = 1;
-  saveStock(myItems);
+  it.available = !it.available;
+  if (!it.available) it.stock = 0;
+  else if (!it.stock) it.stock = 1;
   renderStock();
-  showToast(it.inStock ? '✓ 在庫ありに変更しました' : '在庫なしに変更しました');
+  try { await rwFetch('restaurant_wines?id=eq.' + id, { method:'PATCH', body: JSON.stringify({ available: it.available, stock: it.stock }) }); } catch (e) {}
+  showToast(it.available ? '✓ 在庫ありに変更しました' : '在庫なしに変更しました');
 }
 
-function deleteStock(id) {
-  const myItems = loadStock().filter(i => i.storeId === STORE_INFO.id && i.id !== id);
-  saveStock(myItems);
+async function deleteStock(id) {
+  const it = wineData.find(i => i.id === id);
+  if (!it) return;
+  if (!confirm(`「${it.name}」を削除しますか？`)) return;
+  try {
+    const r = await rwFetch('restaurant_wines?id=eq.' + id, { method:'DELETE' });
+    if (!r.ok) throw 0;
+  } catch (e) { showToast('⚠️ 削除に失敗しました'); return; }
+  wineData = wineData.filter(i => i.id !== id);
   renderStock();
   showToast('削除しました');
 }
 
-function publishStock() {
-  const myItems = loadStock().filter(i => i.storeId === STORE_INFO.id && i.inStock);
-  showToast(`🌐 ${myItems.length}件の在庫情報を公開しました ✓`);
+async function publishStock() {
+  const name = (document.getElementById('stkStoreName').value || '').trim();
+  const addr = (document.getElementById('stkStoreAddr').value || '').trim();
+  if (!name) { showToast('店舗名を入力してください'); return; }
+  const uid = await rwUid();
+  if (!uid) { alert('ログイン情報を確認できません。再ログインしてください。'); return; }
+  try {
+    const r = await rwFetch('restaurant_settings', {
+      method:'POST',
+      headers:{ Prefer:'resolution=merge-duplicates' },
+      body: JSON.stringify({ owner_id: uid, display_name: name, address: addr || null, is_public: true })
+    });
+    if (!r.ok) throw 0;
+  } catch (e) { showToast('⚠️ 公開に失敗しました（通信環境をご確認ください）'); return; }
+  restaurant.isPrivate = false;
+  const t = document.getElementById('privacyToggle'); if (t) t.checked = true;
+  document.getElementById('privacyIcon').textContent = '🔓';
+  document.getElementById('privacyStatus').textContent = '公開中';
+  showToast(`🌐 公開しました。ワイン検索に「${name}」として表示されます ✓`);
 }
 
 // ── 起動時: ログイン店舗のワインリスト・公開設定・QRを実データで読込 ──
