@@ -4,6 +4,42 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>ソムリン君を育てよう — Sommelin</title>
+
+<!-- ── 入口ガード（オンボーディングは「ログイン済みの個人」向け）2026-06-28 Phase1 ── -->
+<style id="obGuard">body{visibility:hidden}</style>
+<noscript><style>body{visibility:visible!important}</style></noscript>
+<script>
+(function(){
+  var SESSION_KEY='sommelin_session';
+  var s; try{ s=JSON.parse(localStorage.getItem(SESSION_KEY)||'null'); }catch(e){ s=null; }
+  // 1) 未ログインはログインへ
+  if(!s||!s.access_token){ location.replace('login.html'); return; }
+  // 2) 業務者（インポーター/酒販/飲食）は各管理画面へ（オンボーディングは個人向け）
+  var BIZ={importer:'importer_admin.html',store:'restaurant_admin.html',retailer:'restaurant_admin.html'};
+  var role; try{ role=localStorage.getItem('sommelin_role'); }catch(e){}
+  if(role && BIZ[role]){ location.replace(BIZ[role]); return; }
+  // 3) 個人（または役割不明）は表示。flashを避けるためここで解除
+  var st=document.getElementById('obGuard'); if(st&&st.parentNode){ st.parentNode.removeChild(st); }
+  // 4) 背景でトークン検証＆役割を最新化（失敗してもオンボーディングは継続。401のみログインへ戻す）
+  var SB_URL='https://gkhdpzfmqraliwaiubwl.supabase.co';
+  var SB_KEY='sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+  fetch(SB_URL+'/auth/v1/user',{headers:{apikey:SB_KEY,Authorization:'Bearer '+s.access_token}})
+    .then(function(r){
+      if(r.status===401){ try{localStorage.removeItem(SESSION_KEY);}catch(e){} location.replace('login.html'); return null; }
+      return r.ok?r.json():null;
+    })
+    .then(function(u){
+      if(!u) return;
+      return fetch(SB_URL+'/rest/v1/profiles?id=eq.'+u.id+'&select=role',{headers:{apikey:SB_KEY,Authorization:'Bearer '+s.access_token}})
+        .then(function(r){ return r.ok?r.json():[]; })
+        .then(function(rows){
+          var rl=(rows&&rows[0]&&rows[0].role);
+          if(rl){ try{localStorage.setItem('sommelin_role',rl);}catch(e){} if(BIZ[rl]){ location.replace(BIZ[rl]); } }
+        });
+    })
+    .catch(function(){});
+})();
+</script>
 <style>
   :root {
     --burgundy: #9B1B4B;
@@ -430,6 +466,39 @@
 <div class="toast" id="toast"></div>
 
 <script>
+/* ===== 認証セッション（オンボーディングの配線）===== */
+const SB_URL = 'https://gkhdpzfmqraliwaiubwl.supabase.co';
+const SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+const SESSION_KEY = 'sommelin_session';
+function getSession(){ try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e){ return null; } }
+function authToken(){ const s = getSession(); return s && s.access_token; }
+function sessionUser(){ const s = getSession(); return (s && s.user) || null; }
+function sessionRole(){
+  const s = getSession();
+  return (s && s.user && s.user.user_metadata && s.user.user_metadata.role)
+      || (function(){ try { return localStorage.getItem('sommelin_role'); } catch(e){ return null; } })()
+      || 'individual';
+}
+function currentNickname(){
+  const u = sessionUser();
+  const dn = u && u.user_metadata && u.user_metadata.display_name;
+  if (dn) return dn;
+  try { return localStorage.getItem('sommelin_nickname') || ''; } catch(e){ return ''; }
+}
+// プロフィール更新（RLS: 本人のみ。失敗してもオンボーディングは止めない）
+async function patchProfile(fields){
+  const tok = authToken(); const u = sessionUser();
+  if (!tok || !u) return false;
+  try {
+    const r = await fetch(SB_URL + '/rest/v1/profiles?id=eq.' + u.id, {
+      method: 'PATCH',
+      headers: { 'Content-Type':'application/json', 'apikey':SB_KEY, 'Authorization':'Bearer '+tok, 'Prefer':'return=minimal' },
+      body: JSON.stringify(fields)
+    });
+    return r.ok;
+  } catch(e){ return false; }
+}
+
 /* ===== STAGES ===== */
 const stages = [
   { min:0,  max:20,  emoji:'🥚', title:'たまごソムリン',    desc:'ミッションをこなして、ソムリン君を成長させよう！', color:'#C8B4A0' },
@@ -563,9 +632,13 @@ function updateScore(animate) {
 
 // オンボーディング完了/スキップ時にロール別ホームへ遷移（行き止まり解消）
 function enterApp() {
-  var home = { store: 'restaurant_admin.html', importer: 'importer_admin.html', individual: 'prototype.html' };
-  var role = null;
-  try { role = localStorage.getItem('sommelin_role'); } catch (e) {}
+  try { localStorage.setItem('sommelin_onboarded', '1'); } catch (e) {}   // 配線: 完了フラグ
+  var home = {
+    store: 'restaurant_admin.html', retailer: 'restaurant_admin.html',
+    importer: 'importer_admin.html', admin: 'importer_admin.html',
+    individual: 'prototype.html'
+  };
+  var role = sessionRole();                                               // 配線: セッション準拠の役割
   window.location.href = home[role] || 'prototype.html';
 }
 
@@ -706,13 +779,22 @@ function initModalLogic(m) {
   if (m.type === 'nickname') {
     const inp = document.getElementById('nicknameInput');
     const btn = document.getElementById('nickBtn');
-    if (inp && btn) inp.addEventListener('input', () => { btn.disabled = !inp.value.trim(); });
+    if (inp) { const pre = currentNickname(); if (pre) inp.value = pre; }   // 配線: 既存の表示名をプリフィル
+    if (inp && btn) {
+      const sync = () => { btn.disabled = !inp.value.trim(); };
+      inp.addEventListener('input', sync);
+      sync();
+    }
   }
 }
 
 /* ===== ACTION HANDLERS ===== */
 function doNickname() {
-  if (document.getElementById('nicknameInput')?.value.trim()) completeMission('nickname');
+  const v = document.getElementById('nicknameInput')?.value.trim();
+  if (!v) return;
+  patchProfile({ display_name: v });               // 配線: ニックネーム → profiles.display_name
+  try { localStorage.setItem('sommelin_nickname', v); } catch(e){}
+  completeMission('nickname');
 }
 function simulateAvatar() {
   const a = document.getElementById('avatarArea');

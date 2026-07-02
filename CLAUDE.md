@@ -26,9 +26,12 @@
 - git commit が bus error: `rm -f .git/index && git reset` → 再 add/commit/push（iCloud 起因。`~/dev` では基本起きない）。
 - SQL は Supabase の SQL Editor で実行（ターミナル貼り付けは NG）。
 
-## スカウター & データ（2026-06-25 現在）
+## スカウター & データ（2026-07-02 現在）
 - **スカウター＝アプリの中核入口**。本番は `scouter.html`。`wine_ar.html` は旧ARデモ。
-- **OCR版(Tesseract)は実機で実用不可と判明 → Claudeビジョンで画像認識に作り直し中**。流れ＝撮影→backend `/api/identify`→Claude vision で銘柄特定→`wines` 照合→SP・コスパ表示。キーは Cloud Run の `ANTHROPIC_API_KEY`（設定済）。
+- **ビジョンAI版に書き換え済み（Tesseract廃止）**。流れ＝撮影（長辺1024px JPEGに縮小）→backend `POST /api/identify`→Claude vision（claude-sonnet-4-6）で銘柄特定→`match_wines` 照合→known なら実SP・コスパ／unlisted なら特定情報＋近縁おすすめ（**SP捏造なし＝no-lie原則**）。キーは Cloud Run の `ANTHROPIC_API_KEY`（設定済）。
+- backend 実装: `~/dev/sommelin-trade-platform/src/routes/identify.js`（CORS=GitHub Pagesのみ許可・レート制限・scan_events自動記録）。**デプロイ＝backendリポを main に push**（Cloud Build 自動）。
+- **要設定**: `scouter.html` 冒頭の `API_BASE` に Cloud Run のURLを入れる（暫定は `?api=https://…run.app` パラメータでも設定可＝localStorageに保存）。
+- 設計書: `Documents/Claude/Projects/ソムリンアプリ/スカウター_ビジョンAI_エンドポイント設計.md`（no-lie原則・レスポンス契約・フライホイール）。
 - フロントは Supabase を **publishable キーで直接 read/rpc**（既存の管理画面と同方式）。秘密鍵は backend のみ。publishableキーは `gkhdpzfmqraliwaiubwl.supabase.co` / `sb_publishable_...`。
 - **wines マスター**: `cospa_clean_scored.csv` 由来（列= name/producer/iro/kuni/chiiki/vintage/price/sp/osu_gbm 等）。あいまい一致は RPC `match_wines(q,lim)`。現在 **15,563件**投入済（フル 62,566 は投入途中＝要再投入）。横文字名 `name_romanized` は未投入（英字ラベル照合用に要充填）。
 - **コスパ**＝おすすめ度 `osu_gbm`/`osu_lin` = SP − 価格から期待されるSP（プラスほど割安）。

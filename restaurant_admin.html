@@ -4,6 +4,46 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Sommelin 管理画面 — Bistrot Lumière</title>
+
+<!-- ── 入口ガード（認証＋役割）2026-06-28 Phase1 — store/retailer/admin のみ ── -->
+<style id="authGuardStyle">body{visibility:hidden}</style>
+<noscript><style>body{visibility:visible!important}</style></noscript>
+<script>
+(function(){
+  var SB_URL='https://gkhdpzfmqraliwaiubwl.supabase.co';
+  var SB_KEY='sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+  var SESSION_KEY='sommelin_session';
+  var ALLOWED=['store','retailer','admin'];          // このページに入れる役割
+  var HOME={importer:'importer_admin.html',store:'restaurant_admin.html',retailer:'restaurant_admin.html',individual:'prototype.html',admin:'restaurant_admin.html'};
+  var LOGIN='login.html';
+  function ses(){ try{ return JSON.parse(localStorage.getItem(SESSION_KEY)||'null'); }catch(e){ return null; } }
+  function save(s){ try{ localStorage.setItem(SESSION_KEY,JSON.stringify(s)); }catch(e){} }
+  function bye(){ try{ localStorage.removeItem(SESSION_KEY); }catch(e){} location.replace(LOGIN); }
+  function go(u){ location.replace(u); }
+  function show(){ var e=document.getElementById('authGuardStyle'); if(e&&e.parentNode){ e.parentNode.removeChild(e); } }
+  function getUser(tok){ return fetch(SB_URL+'/auth/v1/user',{headers:{apikey:SB_KEY,Authorization:'Bearer '+tok}}); }
+  var s=ses();
+  if(!s||!s.access_token){ go(LOGIN); return; }       // 未ログイン
+  getUser(s.access_token).then(function(r){
+    if(r.ok) return r.json();
+    if(s.refresh_token){
+      return fetch(SB_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_KEY},body:JSON.stringify({refresh_token:s.refresh_token})})
+        .then(function(rr){ if(!rr.ok) throw 0; return rr.json(); })
+        .then(function(ns){ save(ns); s=ns; return getUser(ns.access_token).then(function(r2){ if(!r2.ok) throw 0; return r2.json(); }); });
+    }
+    throw 0;
+  }).then(function(user){
+    return fetch(SB_URL+'/rest/v1/profiles?id=eq.'+user.id+'&select=role,verification_status',{headers:{apikey:SB_KEY,Authorization:'Bearer '+s.access_token}})
+      .then(function(r){ return r.ok?r.json():[]; })
+      .then(function(rows){
+        var role=(rows&&rows[0]&&rows[0].role)||(user.user_metadata&&user.user_metadata.role)||'individual';
+        try{ localStorage.setItem('sommelin_role',role); }catch(e){}
+        if(ALLOWED.indexOf(role)===-1){ go(HOME[role]||LOGIN); return; }
+        show();
+      });
+  }).catch(function(){ bye(); });
+})();
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root {

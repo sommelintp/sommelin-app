@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>ソムリン スカウター — ワインをかざすだけ</title>
+<title>ソムリン スカウター — 撮るだけでワインがわかる</title>
 
 <!-- PWA / iOS -->
 <link rel="manifest" href="manifest.webmanifest">
@@ -12,9 +12,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="スカウター">
 <link rel="apple-touch-icon" href="assets/sommelin/sommelin-logo.png">
-
-<!-- 端末OCR（無料・オンデバイス） -->
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
 <style>
 :root{ --burgundy:#9B1B4B; --wine-dark:#5C0E2A; --gold:#C9973A; --ok:#00DCAA; }
@@ -38,14 +35,17 @@ body{
 .perm-title{font-size:24px;font-weight:800;margin-bottom:8px;line-height:1.3;}
 .perm-desc{font-size:13px;color:rgba(255,255,255,.72);line-height:1.8;margin-bottom:22px;}
 .perm-feats{text-align:left;width:100%;background:rgba(255,255,255,.1);border-radius:14px;padding:14px 16px;margin-bottom:24px;}
-.pf{font-size:13px;color:rgba(255,255,255,.85);padding:5px 0;display:flex;gap:8px;align-items:flex-start;}
+.pf{font-size:13px;color:rgba(255,255,255,.85);padding:5px 0;line-height:1.7;}
 .perm-main{width:100%;padding:16px;background:#fff;color:var(--burgundy);font-size:16px;font-weight:800;border:none;border-radius:16px;cursor:pointer;margin-bottom:12px;}
 .perm-sub{background:none;border:none;color:rgba(255,255,255,.6);font-size:13px;cursor:pointer;text-decoration:underline;}
+.perm-note{font-size:10px;color:rgba(255,255,255,.45);margin-top:14px;line-height:1.6;}
 
 /* ── SCAN VIEW ── */
 #scanview{position:fixed;inset:0;max-width:430px;margin:0 auto;display:none;}
 #cam{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;}
 #grab{display:none;}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:18;transition:opacity .25s;}
+#flash.on{opacity:.65;transition:none;}
 
 /* scan frame */
 #scanLine{position:absolute;left:0;right:0;height:2px;
@@ -59,18 +59,6 @@ body{
 .fc.bl{top:74%;left:18px;border-bottom:2px solid rgba(0,220,170,.7);border-left:2px solid rgba(0,220,170,.7);}
 .fc.br{top:74%;right:18px;border-bottom:2px solid rgba(0,220,170,.7);border-right:2px solid rgba(0,220,170,.7);}
 
-/* center hit chip */
-#hitChip{position:absolute;top:45%;left:50%;transform:translate(-50%,-50%) scale(.6);opacity:0;z-index:24;
-  pointer-events:none;transition:all .35s cubic-bezier(.34,1.56,.64,1);text-align:center;}
-#hitChip.on{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:all;}
-.hit-ring{width:96px;height:96px;border-radius:50%;border:3px solid var(--ok);margin:0 auto 12px;
-  box-shadow:0 0 26px rgba(0,220,170,.6),inset 0 0 14px rgba(0,220,170,.2);
-  display:flex;align-items:center;justify-content:center;font-size:38px;animation:rPulse 1.8s ease-in-out infinite;cursor:pointer;}
-@keyframes rPulse{0%{transform:scale(.92)}50%{transform:scale(1.06)}100%{transform:scale(.92)}}
-.hit-badge{display:inline-block;background:var(--ok);color:#04241c;font-size:13px;font-weight:800;
-  padding:6px 14px;border-radius:20px;box-shadow:0 3px 12px rgba(0,0,0,.4);cursor:pointer;max-width:300px;}
-.hit-hint{font-size:10px;color:rgba(255,255,255,.7);margin-top:6px;}
-
 /* status */
 #status{position:absolute;top:46%;left:50%;transform:translate(-50%,-50%);z-index:22;text-align:center;pointer-events:none;}
 #status.gone{display:none;}
@@ -81,11 +69,12 @@ body{
 /* top bar */
 .aTop{position:absolute;top:0;left:0;right:0;z-index:30;padding:48px 16px 14px;display:flex;align-items:center;gap:12px;
   background:linear-gradient(180deg,rgba(0,0,0,.6),transparent);}
-.aTop a,.aTop button{width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.4);border:none;color:#fff;
+.aTop a{width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.4);border:none;color:#fff;
   font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;backdrop-filter:blur(8px);flex-shrink:0;}
 .aTop-title{flex:1;text-align:center;}
 .aTop-title .t1{font-size:15px;font-weight:800;}
 .aTop-title .t2{font-size:10px;color:rgba(255,255,255,.65);margin-top:1px;}
+.aTop-sp{width:36px;flex-shrink:0;}
 
 /* bottom controls */
 .aBot{position:absolute;bottom:0;left:0;right:0;z-index:30;padding:14px 0 30px;
@@ -94,10 +83,12 @@ body{
 .shoot{width:74px;height:74px;border-radius:50%;border:4px solid #fff;background:rgba(255,255,255,.18);
   cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:30px;}
 .shoot:active{transform:scale(.94);}
+.shoot.busy{opacity:.4;pointer-events:none;}
 .bot-row{display:flex;gap:10px;align-items:center;}
 .bot-btn{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:16px;
   padding:8px 14px;font-size:12px;color:#fff;cursor:pointer;display:flex;align-items:center;gap:6px;}
 .bot-btn input{display:none;}
+.shoot-hint{font-size:11px;color:rgba(255,255,255,.75);text-shadow:0 1px 4px rgba(0,0,0,.6);}
 
 /* ── RESULT SHEET ── */
 #backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:80;opacity:0;pointer-events:none;transition:opacity .3s;}
@@ -118,19 +109,26 @@ body{
 .cospa-badge .stars{font-size:22px;letter-spacing:2px;}
 .cospa-badge .lbl{font-size:14px;font-weight:800;margin-top:4px;}
 .cospa-badge .sub{font-size:11px;opacity:.9;margin-top:4px;}
+.pick-ribbon{margin:0 16px 4px;background:linear-gradient(90deg,var(--gold),#e0b45c);color:#3d2a05;
+  border-radius:12px;padding:10px 14px;font-size:12px;font-weight:800;line-height:1.6;}
 .sh-meta{margin:0 16px 12px;background:#fafafa;border-radius:12px;padding:10px 14px;font-size:12px;color:#555;line-height:1.7;}
+.sh-style{margin:0 16px 12px;background:#f6f2ee;border-left:3px solid var(--gold);border-radius:0 12px 12px 0;padding:10px 14px;font-size:12px;color:#5a4634;line-height:1.7;}
+.sh-style .dc{font-size:10px;color:#a08b74;margin-top:4px;}
 .sh-btns{display:flex;gap:10px;padding:0 16px;}
 .sh-main{flex:1;padding:14px;background:var(--burgundy);color:#fff;font-size:14px;font-weight:800;border:none;border-radius:14px;cursor:pointer;}
 .sh-sub{padding:14px 16px;background:#f5f3f0;color:#555;font-size:13px;border:none;border-radius:14px;cursor:pointer;}
-.cand{margin:2px 16px 0;}
 .cand-h{font-size:11px;color:#999;margin:10px 16px 6px;font-weight:700;}
 .cand-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 16px 8px;padding:10px 12px;background:#f7f5f3;border-radius:10px;cursor:pointer;}
 .cand-row .cn{font-size:13px;font-weight:700;color:#2C1810;}
-.cand-row .cr{font-size:11px;color:#999;}
-.cand-row .cc{font-size:11px;font-weight:800;color:var(--burgundy);white-space:nowrap;}
+.cand-row .cr{font-size:11px;color:#999;margin-top:2px;}
+.cand-row .cw{font-size:10px;color:var(--burgundy);margin-top:3px;}
+.cand-row .cc{font-size:11px;font-weight:800;color:var(--burgundy);white-space:nowrap;text-align:right;}
 
-/* unknown */
-.unk-ocr{margin:6px 16px 12px;background:#1c1c22;color:#cfcfe0;border-radius:12px;padding:12px 14px;font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:120px;overflow:auto;}
+/* identification card (unlisted) */
+.idcard{margin:6px 16px 12px;background:#faf8f6;border:1px solid #eee5dc;border-radius:12px;padding:12px 14px;}
+.idrow{display:flex;gap:10px;font-size:12px;padding:3px 0;line-height:1.6;}
+.idrow .k{color:#a09383;width:64px;flex-shrink:0;}
+.idrow .v{color:#2C1810;font-weight:600;word-break:break-word;}
 
 /* toast */
 #toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%) translateY(16px);background:rgba(15,15,15,.92);color:#fff;
@@ -151,51 +149,47 @@ body{
 <div id="perm">
   <div class="perm-em">🍷</div>
   <div class="perm-title">ソムリン スカウター</div>
-  <div class="perm-desc">ワインのラベルやワインリストにかざすだけ。<br>その場で「コスパ＝得かどうか」が出ます。</div>
+  <div class="perm-desc">ラベルを撮るだけ。AIソムリエが銘柄を特定して、<br>「得かどうか」と「あなたへのおすすめ」を返します。</div>
   <div class="perm-feats">
-    <div class="pf">📷 ラベル／リストにかざして読み取り（端末内で処理）</div>
-    <div class="pf">⭐ ソムリン評価(SP)と<b>コスパ（おすすめ度）</b>を即表示</div>
-    <div class="pf">🔒 カメラ映像は端末の外に送信しません</div>
+    <div class="pf">📷 ラベルを撮影 → AIが銘柄・産地・品種を特定</div>
+    <div class="pf">⭐ ソムリン評価済みなら<b>実SPとコスパ</b>を即表示</div>
+    <div class="pf">🧭 未登録のワインでも、近い系統の<b>実在おすすめ</b>を提案</div>
   </div>
   <button class="perm-main" onclick="startScan()">📷 カメラを起動する</button>
   <button class="perm-sub" onclick="document.getElementById('fileInput').click()">写真から読み取る</button>
+  <div class="perm-note">写真は銘柄特定と品質向上のためソムリンのサーバーで解析されます。<br>評価(SP)は実データがある場合のみ表示します（推測のスコアは出しません）。</div>
 </div>
 
 <!-- ② SCAN VIEW -->
 <div id="scanview">
   <video id="cam" autoplay playsinline muted></video>
   <canvas id="grab"></canvas>
+  <div id="flash"></div>
 
   <div id="scanLine"></div>
   <div class="fc tl"></div><div class="fc tr"></div><div class="fc bl"></div><div class="fc br"></div>
 
-  <div id="status"><div class="st-ring"></div><div class="st-txt" id="stTxt">準備中…</div></div>
-
-  <div id="hitChip">
-    <div class="hit-ring" id="hitRing" onclick="openLast()">✨</div>
-    <div class="hit-badge" id="hitBadge" onclick="openLast()">—</div>
-    <div class="hit-hint">タップで詳細</div>
-  </div>
+  <div id="status" class="gone"><div class="st-ring"></div><div class="st-txt" id="stTxt">準備中…</div></div>
 
   <div id="err">
     <div class="e1" id="errT">カメラを起動できません</div>
     <div class="e2" id="errD">設定でカメラを許可するか、「写真から読み取る」をお試しください。</div>
-    <div style="margin-top:14px;"><button class="bot-btn" onclick="document.getElementById('fileInput').click()">📁 写真から読み取る</button></div>
+    <div style="margin-top:14px;"><button class="bot-btn" style="margin:0 auto" onclick="document.getElementById('fileInput').click()">📁 写真から読み取る</button></div>
   </div>
 
   <div class="aTop">
     <a href="prototype.html" title="ホーム">‹</a>
-    <div class="aTop-title"><div class="t1">スカウター</div><div class="t2" id="subTxt">かざして読み取り</div></div>
-    <button onclick="toggleAuto()" id="autoBtn" title="自動スキャン">⏸</button>
+    <div class="aTop-title"><div class="t1">スカウター</div><div class="t2" id="subTxt">ラベルを枠に入れて撮影</div></div>
+    <div class="aTop-sp"></div>
   </div>
 
   <div class="aBot">
-    <div class="shoot" onclick="scanNow()">📷</div>
+    <div class="shoot" id="shootBtn" onclick="scanNow()">📷</div>
+    <div class="shoot-hint">ラベルを枠に入れてシャッター</div>
     <div class="bot-row">
-      <label class="bot-btn">📁 写真
+      <label class="bot-btn">📁 写真から
         <input type="file" id="fileInput2" accept="image/*">
       </label>
-      <button class="bot-btn" onclick="resumeScan()">🔄 もう一度</button>
     </div>
   </div>
 </div>
@@ -212,22 +206,18 @@ body{
 <div id="toast"></div>
 
 <script>
-// ── Supabase（フロントは publishable キー＝anon。RLSで読み取りのみ） ──
+// ── backend（ビジョンAI）。キーは backend のみ・フロントには置かない ──
+// Cloud Run の URL を下に設定（?api=https://... で上書き可・端末に保存されます）
+const API_BASE = (()=>{
+  const p = new URLSearchParams(location.search).get('api');
+  if(p){ localStorage.setItem('somm_api_base', p.replace(/\/$/,'')); }
+  return localStorage.getItem('somm_api_base') || 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+})();
+
+// ── Supabase（ユーザー操作の記録のみ。publishable キー＝anon・RLSでinsert限定） ──
 const SB_URL = 'https://gkhdpzfmqraliwaiubwl.supabase.co';
 const SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
-
-async function rpcMatch(q){
-  try{
-    const r = await fetch(SB_URL+'/rest/v1/rpc/match_wines',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
-      body: JSON.stringify({ q:q, lim:6 })
-    });
-    if(!r.ok) return [];
-    return await r.json();
-  }catch(e){ return []; }
-}
-async function logScan(ev){
+async function logAction(ev){
   try{
     await fetch(SB_URL+'/rest/v1/scan_events',{
       method:'POST',
@@ -246,77 +236,49 @@ function cospa(osu){
   if(osu>=-0.1) return {stars:'★★',    lbl:'価格相応',   sub:'評価と価格がほぼ釣り合う', bg:'#8a6d3b'};
   return                {stars:'★',     lbl:'やや割高',   sub:'価格のわりに評価は控えめ', bg:'#a5673f'};
 }
+function osuOf(w){ return w && (w.osu_gbm!=null ? w.osu_gbm : w.osu_lin); }
 function fmtPrice(p){ if(p==null||isNaN(p)) return '—'; return '¥'+Math.round(p).toLocaleString('ja-JP'); }
 function fmtSP(s){ if(s==null||isNaN(s)) return '—'; return Number(s).toFixed(1); }
-function colorJP(iro){ return iro||''; }
 
 // ── STATE ──
-let stream=null, worker=null, ocrReady=false, busy=false, scanning=false, autoOn=true, autoTimer=null;
-let lastHit=null, lastText='';
-
-// ── OCR worker ──
-async function initOCR(){
-  if(ocrReady) return;
-  setStatus('文字認識エンジンを準備中…');
-  try{
-    worker = await Tesseract.createWorker('jpn+eng');
-    ocrReady=true;
-  }catch(e){
-    worker = await Tesseract.createWorker('eng'); // 念のため英語のみで再試行
-    ocrReady=true;
-  }
-}
+let stream=null, busy=false, lastRes=null;
 
 // ── CAMERA ──
 async function startScan(){
   document.getElementById('perm').classList.add('gone');
   document.getElementById('scanview').style.display='block';
-  showStatus(true); setStatus('カメラを起動中…');
   try{
     stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:'environment' } }, audio:false });
     const v=document.getElementById('cam'); v.srcObject=stream; await v.play().catch(()=>{});
+    setSub('ラベルを枠に入れて撮影');
   }catch(e){
     document.getElementById('err').classList.add('on');
-    showStatus(false);
   }
-  await initOCR();
-  scanning=true; autoOn=true; updateAutoBtn();
-  setStatus('ラベルやリストにかざしてください');
-  startAuto();
 }
 
-function startAuto(){
-  stopAuto();
-  autoTimer=setInterval(()=>{ if(autoOn && scanning && !busy) scanNow(); }, 2800);
-}
-function stopAuto(){ if(autoTimer){ clearInterval(autoTimer); autoTimer=null; } }
-function toggleAuto(){ autoOn=!autoOn; updateAutoBtn(); if(autoOn) toast('自動スキャン ON'); else toast('自動スキャン OFF'); }
-function updateAutoBtn(){ document.getElementById('autoBtn').textContent = autoOn?'⏸':'▶'; }
-
-// 中央フレーム領域を切り出して canvas へ
-function grabFrame(srcEl){
+// 中央フレーム（横80%・縦16%〜74%）を切り出し → 長辺1024pxのJPEGに縮小
+function grabFrame(srcEl, crop){
   const c=document.getElementById('grab'); const ctx=c.getContext('2d');
   let sw,sh;
   if(srcEl.tagName==='VIDEO'){ sw=srcEl.videoWidth; sh=srcEl.videoHeight; }
   else { sw=srcEl.naturalWidth||srcEl.width; sh=srcEl.naturalHeight||srcEl.height; }
-  if(!sw||!sh){ return null; }
-  // 中央の枠（横80%・縦16%〜74%）にクロップしてOCR精度↑
-  const cropX=sw*0.10, cropY=sh*0.16, cropW=sw*0.80, cropH=sh*0.58;
-  const scale=Math.min(1, 1100/cropW);  // 大きすぎる画像は縮小
-  c.width=Math.round(cropW*scale); c.height=Math.round(cropH*scale);
-  ctx.drawImage(srcEl, cropX,cropY,cropW,cropH, 0,0,c.width,c.height);
-  return c;
+  if(!sw||!sh) return null;
+  let sx=0, sy=0, cw=sw, ch=sh;
+  if(crop){ sx=sw*0.10; sy=sh*0.16; cw=sw*0.80; ch=sh*0.58; }
+  const scale=Math.min(1, 1024/Math.max(cw,ch));
+  c.width=Math.round(cw*scale); c.height=Math.round(ch*scale);
+  ctx.drawImage(srcEl, sx,sy,cw,ch, 0,0,c.width,c.height);
+  return c.toDataURL('image/jpeg', 0.8);
 }
 
 async function scanNow(){
-  if(!ocrReady){ await initOCR(); }
-  if(busy || !ocrReady) return;
+  if(busy) return;
   const v=document.getElementById('cam');
   if(!v.videoWidth){ toast('カメラ準備中…'); return; }
-  busy=true; hideHit(); showStatus(true); setStatus('読み取り中…');
-  const c=grabFrame(v);
-  await runOCR(c);
-  busy=false;
+  const flash=document.getElementById('flash');
+  flash.classList.add('on'); setTimeout(()=>flash.classList.remove('on'),120);
+  const dataUrl=grabFrame(v, true);
+  await identify(dataUrl);
 }
 
 // ファイル（写真）から
@@ -326,170 +288,197 @@ function handleFile(file){
   img.onload=async ()=>{
     document.getElementById('perm').classList.add('gone');
     document.getElementById('scanview').style.display='block';
-    if(!ocrReady){ showStatus(true); setStatus('文字認識エンジンを準備中…'); await initOCR(); }
-    busy=true; showStatus(true); setStatus('写真を読み取り中…');
-    const c=grabFromImage(img);
-    await runOCR(c);
-    busy=false;
+    const dataUrl=grabFrame(img, false);
+    await identify(dataUrl);
+    URL.revokeObjectURL(img.src);
   };
   img.src=URL.createObjectURL(file);
 }
-function grabFromImage(img){
-  const c=document.getElementById('grab'); const ctx=c.getContext('2d');
-  const sw=img.naturalWidth, sh=img.naturalHeight;
-  const scale=Math.min(1, 1400/sw);
-  c.width=Math.round(sw*scale); c.height=Math.round(sh*scale);
-  ctx.drawImage(img,0,0,c.width,c.height);
-  return c;
-}
 
-async function runOCR(canvas){
-  if(!canvas){ setStatus('画像を取得できませんでした'); return; }
-  let text='',conf=0;
+// ── /api/identify 呼び出し ──
+async function identify(dataUrl){
+  if(!dataUrl){ toast('画像を取得できませんでした'); return; }
+  if(API_BASE.includes('★')){
+    showApiUnset();
+    return;
+  }
+  busy=true; setShoot(true); showStatus(true); setStatus('AIソムリエが解析中…');
   try{
-    const {data}=await worker.recognize(canvas);
-    text=(data.text||'').trim(); conf=data.confidence||0;
-  }catch(e){ setStatus('読み取りに失敗しました。もう一度かざしてください'); return; }
-  lastText=text;
-  await matchText(text, conf);
-}
-
-// OCRテキスト → 候補抽出 → match_wines
-async function matchText(text, conf){
-  const lines=(text||'').split(/\n+/).map(s=>s.replace(/\s+/g,' ').trim()).filter(s=>s.length>=2);
-  lines.sort((a,b)=>b.length-a.length);
-  const cands=[];
-  for(const l of lines.slice(0,3)){
-    cands.push(l);
-    const d=l.replace(/\s/g,''); if(d!==l && d.length>=2) cands.push(d); // 日本語用に空白除去
-  }
-  if(cands.length===0){ showUnknown(text, conf); return; }
-
-  let results=[];
-  for(const q of cands.slice(0,4)){
-    const r=await rpcMatch(q);
-    results=results.concat(r);
-    if(results.some(x=>x.sim>=0.6)) break;
-  }
-  // 重複排除＋類似度順
-  const seen=new Set();
-  results=results.filter(r=>{ if(seen.has(r.id))return false; seen.add(r.id); return true; })
-                 .sort((a,b)=>(b.sim||0)-(a.sim||0));
-
-  if(results.length && (results[0].sim||0)>=0.30){
-    showHit(results, text, conf);
-  } else {
-    showUnknown(text, conf);
+    const r=await fetch(API_BASE+'/api/identify',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ image:dataUrl, locale:'ja-JP' })
+    });
+    if(r.status===429){ showStatus(false); toast('回数上限です。少し待ってからどうぞ'); return; }
+    if(!r.ok) throw new Error('http '+r.status);
+    const res=await r.json();
+    lastRes=res;
+    showStatus(false);
+    renderResult(res);
+  }catch(e){
+    showStatus(false);
+    toast('解析に失敗しました。通信環境をご確認ください');
+  }finally{
+    busy=false; setShoot(false);
   }
 }
 
-// ── 一致表示 ──
-function showHit(results, text, conf){
-  const top=results[0];
-  lastHit={ results, text, conf };
-  const cp=cospa(top.osu_gbm!=null?top.osu_gbm:top.osu_lin);
-  // 中央チップ
-  document.getElementById('hitRing').textContent='🍷';
-  document.getElementById('hitBadge').textContent = trunc(top.name||'一致', 18)+'  '+cp.stars;
-  showHit_chip(true); showStatus(false); setSub('一致しました');
-  // 自動でシートを開く（落ち着いて見られるよう一旦停止）
-  scanning=false;
-  openSheetHit(results, text, conf);
-  logScan({ ocr_text:text, ocr_conf:conf, resolved_wine_id:top.id, resolve_method:'master', resolve_conf:top.sim, action:'view', lens_id:'sommelin', locale:'ja' });
+function showApiUnset(){
+  const el=document.getElementById('err');
+  document.getElementById('errT').textContent='バックエンド未設定';
+  document.getElementById('errD').innerHTML='Cloud RunのURLが未設定です。<br>scouter.html の API_BASE を設定するか、<br><code>?api=https://…run.app</code> を付けて開いてください。';
+  el.classList.add('on');
+  setTimeout(()=>el.classList.remove('on'), 6000);
 }
 
-function openLast(){ if(lastHit) openSheetHit(lastHit.results, lastHit.text, lastHit.conf); }
+// ── 結果表示 ──
+function renderResult(res){
+  const st=res.match && res.match.status;
+  if(st==='known') renderKnown(res);
+  else if(st==='unlisted') renderUnlisted(res);
+  else renderUnsure(res);
+  openSheet();
+}
 
-function openSheetHit(results, text, conf){
-  const top=results[0];
-  const cp=cospa(top.osu_gbm!=null?top.osu_gbm:top.osu_lin);
-  const region=[top.kuni,top.chiiki].filter(Boolean).join(' ');
-  const vint=(top.vintage && top.vintage!=='NV')?top.vintage:(top.vintage==='NV'?'NV':'');
-  const lowConf = (top.sim||0)<0.5;
-  let others='';
-  if(results.length>1){
-    others='<div class="cand-h">他の候補</div>'+
-      results.slice(1,4).map(w=>{
-        const c2=cospa(w.osu_gbm!=null?w.osu_gbm:w.osu_lin);
-        return `<div class="cand-row" onclick='pickCand(${w.id})'>
-          <div><div class="cn">${esc(trunc(w.name||'',26))}</div><div class="cr">${esc([w.kuni,w.chiiki].filter(Boolean).join(' '))}</div></div>
-          <div class="cc">${c2.stars}<br>SP ${fmtSP(w.sp)}</div></div>`;
+function styleBlock(res){
+  const s=res.profile && res.profile.style;
+  if(!s) return '';
+  return `<div class="sh-style">🗣 ${esc(s)}<div class="dc">${esc(res.profile.disclaimer||'')}</div></div>`;
+}
+
+function idBlock(id){
+  const rows=[
+    ['生産者', id.producer],
+    ['銘柄',   id.wine],
+    ['年',     id.vintage],
+    ['産地',   [id.country,id.region,id.appellation].filter(Boolean).join(' / ')],
+    ['品種',   (id.grape||[]).join(', ')],
+  ].filter(r=>r[1]);
+  if(!rows.length) return '';
+  return `<div class="idcard">${rows.map(r=>`<div class="idrow"><div class="k">${r[0]}</div><div class="v">${esc(String(r[1]))}</div></div>`).join('')}</div>`;
+}
+
+function recBlock(res, heading){
+  const recs=res.recommendations||[];
+  if(!recs.length) return '';
+  return `<div class="cand-h">${esc(heading)}</div>`+
+    recs.map(w=>{
+      const c=cospa(osuOf(w));
+      return `<div class="cand-row" onclick="buy('${escAttr(w.name||'')}')">
+        <div><div class="cn">${esc(trunc(w.name||'',26))}</div>
+             <div class="cr">${esc([w.kuni,w.chiiki].filter(Boolean).join(' '))}　${fmtPrice(w.price)}</div>
+             <div class="cw">${esc(w.why||'')}</div></div>
+        <div class="cc">${c.stars}<br>SP ${fmtSP(w.sp)}</div></div>`;
+    }).join('');
+}
+
+// known: 実データのSP・コスパ＋おすすめマーク
+function renderKnown(res){
+  const w=res.match.wine;
+  const cp=cospa(osuOf(w));
+  const region=[w.kuni,w.chiiki].filter(Boolean).join(' ');
+  const lowConf=(res.match.matchScore||0)<0.75;
+  const pick=res.sommelin && res.sommelin.isPick
+    ? `<div class="pick-ribbon">${res.sommelin.level==='top'?'👑 ソムリンのおすすめ':'✨ ソムリンおすすめ'}<span style="font-weight:600">｜${esc(res.sommelin.reason||'')}</span></div>` : '';
+  let cands='';
+  const others=(res.match.candidates||[]).filter(x=>x.id!==w.id).slice(0,3);
+  if(lowConf && others.length){
+    cands='<div class="cand-h">違う場合は候補から選択（学習に記録されます）</div>'+
+      others.map(x=>{
+        const c2=cospa(osuOf(x));
+        return `<div class="cand-row" onclick="pickCand(${x.id})">
+          <div><div class="cn">${esc(trunc(x.name||'',26))}</div><div class="cr">${esc([x.kuni,x.chiiki].filter(Boolean).join(' '))}</div></div>
+          <div class="cc">${c2.stars}<br>SP ${fmtSP(x.sp)}</div></div>`;
       }).join('');
   }
   document.getElementById('sheetBody').innerHTML=`
-    <div class="sh-pill" style="background:var(--burgundy)">🍷 ソムリン${lowConf?' ・ 確認':''}</div>
-    <div class="sh-name">${esc(top.name||'—')}${vint?'　'+esc(vint):''}</div>
-    <div class="sh-region">${esc(region)}${top.producer?'　/　'+esc(trunc(top.producer,24)):''}</div>
+    <div class="sh-pill" style="background:var(--burgundy)">🍷 ソムリン照合${lowConf?' ・ 要確認':'済み'}</div>
+    <div class="sh-name">${esc(w.name||'—')}${w.vintage&&w.vintage!=='NV'?'　'+esc(w.vintage):''}</div>
+    <div class="sh-region">${esc(region)}${w.producer?'　/　'+esc(trunc(w.producer,24)):''}</div>
     <div class="sh-grid">
-      <div class="sh-cell"><div class="v" style="color:var(--burgundy)">${fmtSP(top.sp)}</div><div class="l">SP（ソムリン評価）</div></div>
-      <div class="sh-cell"><div class="v">${fmtPrice(top.price)}</div><div class="l">参考価格</div></div>
+      <div class="sh-cell"><div class="v" style="color:var(--burgundy)">${fmtSP(w.sp)}</div><div class="l">SP（ソムリン評価）</div></div>
+      <div class="sh-cell"><div class="v">${fmtPrice(w.price)}</div><div class="l">参考価格</div></div>
     </div>
+    ${pick}
     <div class="cospa-badge" style="background:${cp.bg}">
       <div class="stars">${cp.stars}</div>
       <div class="lbl">${cp.lbl}</div>
       <div class="sub">${cp.sub}</div>
     </div>
-    ${lowConf?'<div class="sh-meta">読み取りが不確かです。下の候補から正しいものを選ぶと精度が上がります。</div>':''}
-    ${others}
+    ${styleBlock(res)}
+    ${cands}
+    ${recBlock(res,'こちらも近い系統でおすすめ')}
     <div class="cand-h">　</div>
     <div class="sh-btns">
-      <button class="sh-main" onclick="buy('${escAttr(top.name||'')}')">🔍 購入先を探す</button>
-      <button class="sh-sub" onclick="resumeScan()">↺ 続けてスキャン</button>
+      <button class="sh-main" onclick="buy('${escAttr(w.name||'')}')">🔍 購入先を探す</button>
+      <button class="sh-sub" onclick="closeSheet()">↺ 続けて撮る</button>
     </div>`;
-  openSheet();
-}
-function pickCand(id){
-  if(!lastHit) return;
-  const w=lastHit.results.find(x=>x.id===id); if(!w) return;
-  const re=[w].concat(lastHit.results.filter(x=>x.id!==id));
-  logScan({ ocr_text:lastHit.text, resolved_wine_id:id, resolve_method:'manual', resolve_conf:1, action:'learn', lens_id:'sommelin', locale:'ja' });
-  openSheetHit(re, lastHit.text, lastHit.conf);
-  toast('候補を選びました（学習に記録）');
 }
 
-// ── 未知 ──
-function showUnknown(text, conf){
-  scanning=false; showStatus(false); hideHit(); setSub('一致なし');
-  const t=(text||'').trim() || '（文字を読み取れませんでした）';
+// unlisted: 特定はできた・DB未登録 → SPは出さない（正直）＋実在おすすめ
+function renderUnlisted(res){
+  const id=res.identification||{};
+  const title=[id.producer,id.wine].filter(Boolean).join(' ') || 'ワインを特定しました';
   document.getElementById('sheetBody').innerHTML=`
-    <div class="sh-pill" style="background:#555">❓ 未知のワイン</div>
-    <div class="sh-name">マスターに見つかりませんでした</div>
-    <div class="sh-region">読み取った文字（学習の手がかりになります）</div>
-    <div class="unk-ocr">${esc(t)}</div>
-    <div class="sh-meta">この1枚を記録しておくと、後でマスターに追加され「次回から一致」します（P1で自動補完予定）。</div>
-    <div class="sh-btns">
-      <button class="sh-main" onclick='learnUnknown()'>📝 この内容で記録（学習）</button>
-      <button class="sh-sub" onclick="buy(unkQuery())">🔍 ネットで探す</button>
-    </div>
+    <div class="sh-pill" style="background:#555">🔎 特定OK ・ ソムリンDB未登録</div>
+    <div class="sh-name">${esc(trunc(title,40))}${id.vintage?'　'+esc(id.vintage):''}</div>
+    <div class="sh-region">AIソムリエがラベルから読み取った内容</div>
+    ${idBlock(id)}
+    ${styleBlock(res)}
+    <div class="sh-meta">このワインはまだソムリンの評価データにありません。<b>推測のスコアは表示しません。</b><br>今回のスキャンは記録済み — 評価が追加されると次回から表示されます。</div>
+    ${recBlock(res,'代わりに、近い系統のソムリン評価済みワイン')}
     <div class="cand-h">　</div>
-    <div class="sh-btns"><button class="sh-sub" style="flex:1" onclick="resumeScan()">↺ もう一度かざす</button></div>`;
-  openSheet();
-  logScan({ ocr_text:text, ocr_conf:conf, resolve_method:'unknown', action:'view', lens_id:'sommelin', locale:'ja' });
+    <div class="sh-btns">
+      <button class="sh-main" onclick="buy('${escAttr(title)}')">🔍 このワインをネットで探す</button>
+      <button class="sh-sub" onclick="closeSheet()">↺ 続けて撮る</button>
+    </div>`;
 }
-function unkQuery(){ return (lastText||'').split(/\n+/).map(s=>s.trim()).filter(s=>s.length>=2).sort((a,b)=>b.length-a.length)[0]||'ワイン'; }
-function learnUnknown(){
-  logScan({ ocr_text:lastText, resolve_method:'unknown', action:'learn', lens_id:'sommelin', locale:'ja' });
-  toast('記録しました。ありがとうございます！');
-  resumeScan();
+
+// unsure: ワインを検出できず/自信なし → 撮り直し
+function renderUnsure(res){
+  const raw=(res.identification && res.identification.rawLabel || '').trim();
+  document.getElementById('sheetBody').innerHTML=`
+    <div class="sh-pill" style="background:#8a6d3b">🤔 うまく読み取れませんでした</div>
+    <div class="sh-name">もう一度撮ってみてください</div>
+    <div class="sh-meta">コツ：ラベル全体を枠に入れる／明るい場所で／斜めからでもOK、ピントを合わせて。</div>
+    ${raw?`<div class="idcard"><div class="idrow"><div class="k">読めた文字</div><div class="v">${esc(trunc(raw,120))}</div></div></div>`:''}
+    <div class="sh-btns">
+      <button class="sh-main" onclick="closeSheet()">📷 撮り直す</button>
+      <button class="sh-sub" onclick="document.getElementById('fileInput2').click()">📁 写真から</button>
+    </div>`;
+}
+
+// 候補を選び直し（＝最高品質の教師データとして記録）
+function pickCand(id){
+  if(!lastRes) return;
+  const cands=lastRes.match.candidates||[];
+  const w=cands.find(x=>x.id===id); if(!w) return;
+  logAction({ ocr_text:(lastRes.identification&&lastRes.identification.rawLabel||'').slice(0,2000),
+              resolved_wine_id:id, resolve_method:'manual', resolve_conf:1,
+              action:'learn', lens_id:'sommelin', locale:'ja' });
+  lastRes.match.wine=w; lastRes.match.matchScore=1; lastRes.sommelin=null;
+  renderKnown(lastRes);
+  toast('候補を選びました（学習に記録）');
 }
 
 // ── 購入導線（既存 wine_search.html へ） ──
 function buy(name){
-  logScan({ ocr_text:lastText, resolve_method:'master', action:'buy', lens_id:'sommelin', locale:'ja' });
+  const rid=lastRes && lastRes.match && lastRes.match.wine ? lastRes.match.wine.id : null;
+  logAction({ ocr_text:(lastRes&&lastRes.identification&&lastRes.identification.rawLabel||'').slice(0,2000),
+              resolved_wine_id:rid, resolve_method:rid?'vision':'vision_unlisted',
+              action:'buy', lens_id:'sommelin', locale:'ja' });
   const q=encodeURIComponent((name||'').trim()+' ワイン');
   window.location.href='wine_search.html?q='+q;
 }
 
 // ── シート開閉・状態 ──
-function openSheet(){ document.getElementById('backdrop').classList.add('on'); document.getElementById('sheet').classList.add('on'); }
-function closeSheet(){ document.getElementById('backdrop').classList.remove('on'); document.getElementById('sheet').classList.remove('on'); }
-function resumeScan(){ closeSheet(); hideHit(); scanning=true; showStatus(true); setStatus('かざして読み取り'); setSub('かざして読み取り'); }
+function openSheet(){ document.getElementById('backdrop').classList.add('on'); document.getElementById('sheet').classList.add('on'); setSub('結果を表示中'); }
+function closeSheet(){ document.getElementById('backdrop').classList.remove('on'); document.getElementById('sheet').classList.remove('on'); setSub('ラベルを枠に入れて撮影'); }
 
 function showStatus(on){ document.getElementById('status').classList.toggle('gone', !on); }
 function setStatus(t){ document.getElementById('stTxt').textContent=t; }
 function setSub(t){ document.getElementById('subTxt').textContent=t; }
-function showHit_chip(on){ document.getElementById('hitChip').classList.toggle('on', on); }
-function hideHit(){ showHit_chip(false); }
+function setShoot(b){ document.getElementById('shootBtn').classList.toggle('busy', b); }
 
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2400); }
 
@@ -499,8 +488,8 @@ function escAttr(s){ return esc(s).replace(/'/g,"&#39;"); }
 function trunc(s,n){ s=String(s||''); return s.length>n?s.slice(0,n-1)+'…':s; }
 
 // ── inputs ──
-document.getElementById('fileInput').addEventListener('change',e=>handleFile(e.target.files[0]));
-document.getElementById('fileInput2').addEventListener('change',e=>handleFile(e.target.files[0]));
+document.getElementById('fileInput').addEventListener('change',e=>{ handleFile(e.target.files[0]); e.target.value=''; });
+document.getElementById('fileInput2').addEventListener('change',e=>{ handleFile(e.target.files[0]); e.target.value=''; });
 
 // ── Service Worker（PWA） ──
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
