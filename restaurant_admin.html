@@ -3147,6 +3147,7 @@ function closeWineModalBg(e) {
 }
 
 async function saveWine() {
+  if(window.sommLog) sommLog('wine_add');
   const data = {
     cat: document.getElementById('fCat').value,
     name: document.getElementById('fName').value.trim(),
@@ -3522,6 +3523,7 @@ async function tnSaveStaged() {
     condition_issue: s.condition_issue === true,
   }));
   try {
+    if(window.sommLog) sommLog('tasting_save');
     const r = await rwFetch('tasting_notes', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify(payload) });
     if (!r.ok) throw 0;
     const rows = await r.json();
@@ -3774,6 +3776,29 @@ setTimeout(initRoleSwitcher, 1500);   // 入口ガードがrolesを更新した�
 
 // ── 起動時: ログイン店舗のワインリスト・公開設定・QRを実データで読込 ──
 loadWineData();
+</script>
+<script>
+/* ===== 利用ログ（app_events・書き込み専用。読み取り不可） ===== */
+(function(){
+  var PAGE='store_admin';
+  var U='https://gkhdpzfmqraliwaiubwl.supabase.co/rest/v1/app_events';
+  var K='sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+  var uid='na';
+  try{
+    uid=localStorage.getItem('somm_uid');
+    if(!uid){ uid=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid',uid); }
+  }catch(e){}
+  window.sommLog=function(event,meta){
+    try{
+      var role=null,auth=null;
+      try{ role=localStorage.getItem('sommelin_role')||null; }catch(e){}
+      try{ var t=JSON.parse(localStorage.getItem('sb-gkhdpzfmqraliwaiubwl-auth-token')||'null'); auth=(t&&t.user&&t.user.id)||null; }catch(e){}
+      fetch(U,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','apikey':K,'Authorization':'Bearer '+K,'Prefer':'return=minimal'},
+        body:JSON.stringify({uid:uid,auth_uid:auth,role:role,page:PAGE,event:event,meta:meta||null})}).catch(function(){});
+    }catch(e){}
+  };
+  sommLog('page_view');
+})();
 </script>
 </body>
 </html>

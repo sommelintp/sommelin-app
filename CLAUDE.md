@@ -27,6 +27,13 @@
 - git commit が bus error: `rm -f .git/index && git reset` → 再 add/commit/push（iCloud 起因。`~/dev` では基本起きない）。
 - SQL は Supabase の SQL Editor で実行（ターミナル貼り付けは NG）。
 
+## 事業方針とマイルストーン（2026-07-04 オーナー決定）
+- **課金は当面見送り・無料でたくさん使ってもらう**。利用ログで「どの機能に価値があるか」を観測してからプラン設計→有料化（クォータ基盤は実装済みで待機。CHAT_FREE_LIMITはCloud Run環境変数で緩められる）。
+- **2026-07-08 に知り合いへお披露目**。それまでの優先順: ①利用ログ基盤（済） ②年間ベスト表彰ページ ③winesフル投入 ④デモ動線の掃除。
+- **データ=資産**: winesマスターのSP/コスパは競争力の源泉。`wines`が全件anon読み取り可なのは**デモ後に要修正**（読み方を変える大工事のためデモ直前は避ける）。
+- **著作権ルール（2026-07-04 オーナー指示）**: 他媒体（雑誌・批評家・他サイト）の**文章は絶対にそのまま使わない**。事実（銘柄名・産地・価格・点数）はOK、表現はNG。①`external_ratings`は数値スコア＋出典名＋URLのみ（批評文のテキスト欄を作らない・追加しない）②AIチャットのsystemプロンプトに引用・転載禁止を明記済み③ワイン説明文は常にAI生成 or 自社作成のオリジナルのみ④外部データの大量一括取り込みをする際は出典元の利用規約を確認してから。
+- **共通利用ログ基盤（2026-07-04実装）**: `app_events`テーブル（uid/auth_uid/role/page/event/meta。書き込み専用・anonから読み取り不可。定義: `migrations/2026-07-04_app_events.sql` **SQL Editorで要実行**）。全11ページに共通スニペット（`sommLog(event, meta)`＋自動page_view）を挿入済み。主要アクション: scan(shelf/list)・chat_send(photo有無)・search・cellar_add・taste_upload・report_place・tab_view・wine_add・tasting_save・event_create。**新機能には必ずsommLogを仕込むこと**。分析はSQL Editorで（migrationファイル末尾にクエリ例）。
+
 ## 認証・複数業態（2026-07-03）
 - **複数業態アカウント**: `profiles.roles text[]`（例 `{importer,store}`）を追加。既存 `role` は「メイン業態」（ログイン後の初期画面決定用）として残す。入口ガード3枚（importer_admin/restaurant_admin/onboarding）とbackend `verifyRole` は**配列の交差判定**に変更。ガードが `localStorage.sommelin_roles`（JSON配列）を保存。両業態持ちはヘッダーのバッジが**切替ボタン**になる（「インポーター ⇄ 店舗」タップで相互移動。単一業態では通常表示のまま）。業態の追加はv1では運営がSQLで実施（`migrations/2026-07-03_multi_roles.sql` 末尾に例。**SQL Editorで要実行**）。サインアップトリガー `handle_new_user` も roles 初期化に更新済み。
 - **業態の可視化＋ログアウト＋ロゴ（2026-07-03 実機FB）**: 絵文字統一＝🚢インポーター/🛒酒販店/🍽レストラン。管理画面ヘッダーは店名の下段に**金色の業態バッジ**（現在の業態を明示）＋他業態持ちには「⇄ ○○に切替」ボタン（roleRow）。ヘッダー右上に⏻ログアウト（Supabaseセッション無効化＋localStorage消去→login.html）。**ヘッダーの店名・アイコンは実データ**（ガードが `profiles.display_name/avatar_url` を `localStorage.sommelin_profile` に保存→`initHeaderIdentity()` が反映）。アイコンタップ→ロゴ変更（256px正方形にトリミング→Storage `avatars/<uid>/logo.jpg` にupsert→`profiles.avatar_url` 更新。バケット/RLS: `migrations/2026-07-03_avatars.sql` **SQL Editorで要実行**）。login.htmlの業種選択に「複数業態はまず主な業態で登録→後から追加」の案内追加・酒販店絵文字🛒に統一。

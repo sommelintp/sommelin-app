@@ -373,6 +373,7 @@ function handleFile(file){
 let shelfRes=null;
 
 async function identifyShelf(dataUrl){
+  if(window.sommLog) sommLog('scan',{mode:'shelf'});
   if(!dataUrl){ toast('画像を取得できませんでした'); return; }
   if(API_BASE.includes('★')){ showApiUnset(); return; }
   busy=true; setShoot(true);
@@ -554,6 +555,7 @@ function showApiUnset(){
 
 // ── リストモード: /api/identify-list（1枚＝1回。複数ページは撮るたび累積） ──
 async function identifyList(dataUrl){
+  if(window.sommLog) sommLog('scan',{mode:'list'});
   if(!dataUrl){ toast('画像を取得できませんでした'); return; }
   if(API_BASE.includes('★')){ showApiUnset(); return; }
   busy=true; setShoot(true); showStatus(true); setStatus('リストを解析中…（10秒ほど）');
@@ -691,6 +693,7 @@ function listReportItems(){
 }
 
 async function sendPlaceReport(place){
+  if(window.sommLog) sommLog('report_place');
   try{
     const r=await fetch(API_BASE+'/api/report-place',{
       method:'POST',
@@ -753,6 +756,29 @@ if(new URLSearchParams(location.search).get('mode')==='list') setMode('list');
 
 // ── Service Worker（PWA） ──
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
+</script>
+<script>
+/* ===== 利用ログ（app_events・書き込み専用。読み取り不可） ===== */
+(function(){
+  var PAGE='scouter';
+  var U='https://gkhdpzfmqraliwaiubwl.supabase.co/rest/v1/app_events';
+  var K='sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+  var uid='na';
+  try{
+    uid=localStorage.getItem('somm_uid');
+    if(!uid){ uid=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid',uid); }
+  }catch(e){}
+  window.sommLog=function(event,meta){
+    try{
+      var role=null,auth=null;
+      try{ role=localStorage.getItem('sommelin_role')||null; }catch(e){}
+      try{ var t=JSON.parse(localStorage.getItem('sb-gkhdpzfmqraliwaiubwl-auth-token')||'null'); auth=(t&&t.user&&t.user.id)||null; }catch(e){}
+      fetch(U,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','apikey':K,'Authorization':'Bearer '+K,'Prefer':'return=minimal'},
+        body:JSON.stringify({uid:uid,auth_uid:auth,role:role,page:PAGE,event:event,meta:meta||null})}).catch(function(){});
+    }catch(e){}
+  };
+  sommLog('page_view');
+})();
 </script>
 </body>
 </html>

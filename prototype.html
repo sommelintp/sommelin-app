@@ -2665,6 +2665,7 @@
 <script>
 // ===== TAB SWITCH =====
 function switchTab(tab) {
+  if (window.sommLog) sommLog('tab_view', { tab });
   const wineList      = document.getElementById('wineList');
   const classicList   = document.getElementById('classicList');
   const calScreen     = document.getElementById('calendarScreen');
@@ -3746,6 +3747,7 @@ function sendMessage() {
   if ((!text && !photo) || protoChatBusy) return;
   if (!text && photo) text = 'この写真のワインについて教えて';
   addChatMsg('user', escH(text), photo);
+  if (window.sommLog) sommLog('chat_send', { photo: !!photo, widget: true });
   input.value = '';
   removeChatPendingPhoto();
   askSomurin(text, photo);
@@ -3775,6 +3777,29 @@ function handleEnter(e) {
   // QRから開いた場合は実店舗のワインリストを表示
   const _rid = new URLSearchParams(location.search).get('r');
   if (_rid) loadRestaurantList(_rid);
+})();
+</script>
+<script>
+/* ===== 利用ログ（app_events・書き込み専用。読み取り不可） ===== */
+(function(){
+  var PAGE='app';
+  var U='https://gkhdpzfmqraliwaiubwl.supabase.co/rest/v1/app_events';
+  var K='sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+  var uid='na';
+  try{
+    uid=localStorage.getItem('somm_uid');
+    if(!uid){ uid=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid',uid); }
+  }catch(e){}
+  window.sommLog=function(event,meta){
+    try{
+      var role=null,auth=null;
+      try{ role=localStorage.getItem('sommelin_role')||null; }catch(e){}
+      try{ var t=JSON.parse(localStorage.getItem('sb-gkhdpzfmqraliwaiubwl-auth-token')||'null'); auth=(t&&t.user&&t.user.id)||null; }catch(e){}
+      fetch(U,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','apikey':K,'Authorization':'Bearer '+K,'Prefer':'return=minimal'},
+        body:JSON.stringify({uid:uid,auth_uid:auth,role:role,page:PAGE,event:event,meta:meta||null})}).catch(function(){});
+    }catch(e){}
+  };
+  sommLog('page_view');
 })();
 </script>
 </body>
