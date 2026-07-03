@@ -30,11 +30,15 @@
     })
     .then(function(u){
       if(!u) return;
-      return fetch(SB_URL+'/rest/v1/profiles?id=eq.'+u.id+'&select=role',{headers:{apikey:SB_KEY,Authorization:'Bearer '+s.access_token}})
+      return fetch(SB_URL+'/rest/v1/profiles?id=eq.'+u.id+'&select=role,roles',{headers:{apikey:SB_KEY,Authorization:'Bearer '+s.access_token}})
         .then(function(r){ return r.ok?r.json():[]; })
         .then(function(rows){
           var rl=(rows&&rows[0]&&rows[0].role);
-          if(rl){ try{localStorage.setItem('sommelin_role',rl);}catch(e){} if(BIZ[rl]){ location.replace(BIZ[rl]); } }
+          var rls=(rows&&rows[0]&&rows[0].roles)||(rl?[rl]:[]);
+          if(rl){ try{localStorage.setItem('sommelin_role',rl); localStorage.setItem('sommelin_roles',JSON.stringify(rls));}catch(e){} }
+          // 業務業態をひとつでも持っていれば管理画面へ（メイン業態を優先）
+          if(rl && BIZ[rl]){ location.replace(BIZ[rl]); return; }
+          for(var i=0;i<rls.length;i++){ if(BIZ[rls[i]]){ location.replace(BIZ[rls[i]]); return; } }
         });
     })
     .catch(function(){});

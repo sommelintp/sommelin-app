@@ -26,6 +26,9 @@
 - git commit が bus error: `rm -f .git/index && git reset` → 再 add/commit/push（iCloud 起因。`~/dev` では基本起きない）。
 - SQL は Supabase の SQL Editor で実行（ターミナル貼り付けは NG）。
 
+## 認証・複数業態（2026-07-03）
+- **複数業態アカウント**: `profiles.roles text[]`（例 `{importer,store}`）を追加。既存 `role` は「メイン業態」（ログイン後の初期画面決定用）として残す。入口ガード3枚（importer_admin/restaurant_admin/onboarding）とbackend `verifyRole` は**配列の交差判定**に変更。ガードが `localStorage.sommelin_roles`（JSON配列）を保存。両業態持ちはヘッダーのバッジが**切替ボタン**になる（「インポーター ⇄ 店舗」タップで相互移動。単一業態では通常表示のまま）。業態の追加はv1では運営がSQLで実施（`migrations/2026-07-03_multi_roles.sql` 末尾に例。**SQL Editorで要実行**）。サインアップトリガー `handle_new_user` も roles 初期化に更新済み。
+
 ## スカウター & データ（2026-07-02 現在）
 - **スカウター＝アプリの中核入口**。本番は `scouter.html`。`wine_ar.html` は旧ARデモ。
 - **ビジョンAI版（Tesseract廃止）＋オーバーレイUX（2026-07-02改修）**。撮影（長辺1568px JPEG）→`POST /api/identify-shelf`→写真内の**全ボトル（最大12本）を位置つきで検出・照合**→撮った写真を画面に固定し、各ボトルの位置にマーカー（👑ベスト/❤️好み/★SP/未登録/?）をオーバーレイ表示。タップで下から詳細カード（近縁おすすめは `GET /api/similar`＝DB照会のみで遅延読込）。**画面遷移なし＝Googleレンズ方式**。1本だけの写真も同じ流れ（自動でカードが開く）。known のみ実SP・コスパ表示（**SP捏造なし＝no-lie原則**）。旧 `POST /api/identify`（1本用）はbackendに残置だがフロントは未使用。キーは Cloud Run の `ANTHROPIC_API_KEY`（設定済）。

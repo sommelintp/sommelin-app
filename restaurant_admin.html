@@ -33,12 +33,15 @@
     }
     throw 0;
   }).then(function(user){
-    return fetch(SB_URL+'/rest/v1/profiles?id=eq.'+user.id+'&select=role,verification_status',{headers:{apikey:SB_KEY,Authorization:'Bearer '+s.access_token}})
+    return fetch(SB_URL+'/rest/v1/profiles?id=eq.'+user.id+'&select=role,roles,verification_status',{headers:{apikey:SB_KEY,Authorization:'Bearer '+s.access_token}})
       .then(function(r){ return r.ok?r.json():[]; })
       .then(function(rows){
         var role=(rows&&rows[0]&&rows[0].role)||(user.user_metadata&&user.user_metadata.role)||'individual';
-        try{ localStorage.setItem('sommelin_role',role); }catch(e){}
-        if(ALLOWED.indexOf(role)===-1){ go(HOME[role]||LOGIN); return; }
+        var roles=(rows&&rows[0]&&rows[0].roles)||[role];
+        if(roles.indexOf(role)===-1) roles.push(role);
+        try{ localStorage.setItem('sommelin_role',role); localStorage.setItem('sommelin_roles',JSON.stringify(roles)); }catch(e){}
+        var ok=false; for(var i=0;i<roles.length;i++){ if(ALLOWED.indexOf(roles[i])!==-1){ ok=true; break; } }
+        if(!ok){ go(HOME[role]||LOGIN); return; }
         show();
       });
   }).catch(function(){ bye(); });
@@ -1384,7 +1387,7 @@
     <div class="top-header-rest">Bistrot Lumière</div>
     <div class="top-header-sub">Sommelin 管理画面</div>
   </div>
-  <div class="top-header-badge">スタッフ</div>
+  <div class="top-header-badge" id="roleBadge">スタッフ</div>
 </div>
 
 <!-- TAB NAV -->
@@ -3644,6 +3647,22 @@ async function tnPairing(id, btn) {
   } catch (e) { showToast('⚠️ 提案の取得に失敗しました'); }
   btn.disabled = false; btn.textContent = '🍽 合う料理をAIに聞く';
 }
+
+// ── 複数業態: インポーター業態も持っていればバッジが切替ボタンになる ──
+function initRoleSwitcher() {
+  let roles = [];
+  try { roles = JSON.parse(localStorage.getItem('sommelin_roles') || '[]'); } catch (e) {}
+  const el = document.getElementById('roleBadge');
+  if (!el) return;
+  if (roles.includes('importer')) {
+    el.textContent = '店舗 ⇄ インポーター';
+    el.style.cursor = 'pointer';
+    el.title = 'インポーター管理に切り替え';
+    el.onclick = () => { location.href = 'importer_admin.html'; };
+  }
+}
+initRoleSwitcher();
+setTimeout(initRoleSwitcher, 1500);   // 入口ガードがrolesを更新した後にもう一度
 
 // ── 起動時: ログイン店舗のワインリスト・公開設定・QRを実データで読込 ──
 loadWineData();

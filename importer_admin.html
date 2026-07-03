@@ -34,13 +34,16 @@
     }
     throw 0;
   }).then(function(user){
-    // 権威ある役割は profiles から取得（localStorage/メタデータは補助）
-    return fetch(SB_URL+'/rest/v1/profiles?id=eq.'+user.id+'&select=role,verification_status',{headers:{apikey:SB_KEY,Authorization:'Bearer '+s.access_token}})
+    // 権威ある役割は profiles から取得（localStorage/メタデータは補助）。roles=複数業態対応
+    return fetch(SB_URL+'/rest/v1/profiles?id=eq.'+user.id+'&select=role,roles,verification_status',{headers:{apikey:SB_KEY,Authorization:'Bearer '+s.access_token}})
       .then(function(r){ return r.ok?r.json():[]; })
       .then(function(rows){
         var role=(rows&&rows[0]&&rows[0].role)||(user.user_metadata&&user.user_metadata.role)||'individual';
-        try{ localStorage.setItem('sommelin_role',role); }catch(e){}
-        if(ALLOWED.indexOf(role)===-1){ go(HOME[role]||LOGIN); return; }   // 役割違いは適切なホームへ
+        var roles=(rows&&rows[0]&&rows[0].roles)||[role];
+        if(roles.indexOf(role)===-1) roles.push(role);
+        try{ localStorage.setItem('sommelin_role',role); localStorage.setItem('sommelin_roles',JSON.stringify(roles)); }catch(e){}
+        var ok=false; for(var i=0;i<roles.length;i++){ if(ALLOWED.indexOf(roles[i])!==-1){ ok=true; break; } }
+        if(!ok){ go(HOME[role]||LOGIN); return; }   // どの業態でも入れなければ適切なホームへ
         show();
       });
   }).catch(function(){ bye(); });                      // 検証失敗はログインへ
@@ -1129,7 +1132,7 @@
     <div class="th-name">山田商店</div>
     <div class="th-sub">Sommelin インポーター管理</div>
   </div>
-  <div class="th-badge">インポーター</div>
+  <div class="th-badge" id="roleBadge">インポーター</div>
 </div>
 
 <!-- TAB NAV -->
@@ -1798,6 +1801,22 @@ function persistEvent(evObj) {
   arr.push(evObj);
   lsSet(LS.events, arr);
 }
+
+// ── 複数業態: 店舗系の業態も持っていればバッジが切替ボタンになる ──
+function initRoleSwitcher() {
+  let roles = [];
+  try { roles = JSON.parse(localStorage.getItem('sommelin_roles') || '[]'); } catch (e) {}
+  const el = document.getElementById('roleBadge');
+  if (!el) return;
+  if (roles.includes('store') || roles.includes('retailer')) {
+    el.textContent = 'インポーター ⇄ 店舗';
+    el.style.cursor = 'pointer';
+    el.title = '店舗管理に切り替え';
+    el.onclick = () => { location.href = 'restaurant_admin.html'; };
+  }
+}
+initRoleSwitcher();
+setTimeout(initRoleSwitcher, 1500);   // 入口ガードがrolesを更新した後にもう一度
 
 // ── イベント作成API（backend経由・認証必須） ──
 const EV_API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
