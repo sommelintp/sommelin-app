@@ -1403,13 +1403,14 @@
   .ranking-tab {
     flex: 1;
     text-align: center;
-    padding: 14px;
-    font-size: 13px;
+    padding: 14px 2px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--text-sub);
     cursor: pointer;
     border-bottom: 3px solid transparent;
     transition: all 0.15s;
+    white-space: nowrap;
   }
   .ranking-tab.active { color: var(--burgundy); border-bottom-color: var(--burgundy); }
 
@@ -2305,65 +2306,33 @@
 <div id="rankingScreen" class="screen">
   <div class="screen-header">
     <h2>🏆 ランキング</h2>
-    <p>ソムリン実評価（SP）×コスパで選ぶおすすめワイン</p>
+    <p>みんなの評価 × ソムリン実評価で選ぶ人気ワイン</p>
   </div>
   <div class="ranking-tabs">
-    <div class="ranking-tab active" id="rtab-wine" onclick="switchRankingTab('wine')">🍷 人気ワイン</div>
-    <div class="ranking-tab" id="rtab-user" onclick="switchRankingTab('user')">👑 アクティブユーザー</div>
+    <div class="ranking-tab active" id="rtab-pop" onclick="switchRankingTab('pop')">🏆 総合人気</div>
+    <div class="ranking-tab" id="rtab-cospa" onclick="switchRankingTab('cospa')">💰 コスパ</div>
+    <div class="ranking-tab" id="rtab-store" onclick="switchRankingTab('store')">🏪 お店</div>
+    <div class="ranking-tab" id="rtab-best" onclick="switchRankingTab('best')">👑 年間ベスト</div>
   </div>
 
-  <!-- Wine ranking（実データ: winesマスターのコスパ順。loadRealRankingが描画） -->
-  <div id="rankingWines" class="ranking-list">
+  <!-- 総合人気（実データ: /api/top-wines＝信頼度加重の総合スコア順。loadTopWinesが描画） -->
+  <div id="rankingPop" class="ranking-list">
     <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>
   </div>
 
-  <!-- User ranking -->
-  <div id="rankingUsers" class="ranking-list" style="display:none;">
-    <div class="ranking-user-card">
-      <div class="rank-badge r1" style="margin-right:-4px">1</div>
-      <div class="rank-user-avatar">田</div>
-      <div style="flex:1">
-        <div class="rank-user-name">田中ソムリエール</div>
-        <div class="rank-user-title">🏅 認定ソムリエ &nbsp;·&nbsp; 東京</div>
-        <div class="rank-user-stat"><strong>1,249</strong> レビュー &nbsp;·&nbsp; <strong>87</strong> 店舗訪問</div>
-      </div>
-    </div>
-    <div class="ranking-user-card">
-      <div class="rank-badge r2" style="margin-right:-4px">2</div>
-      <div class="rank-user-avatar" style="background:#6B3FA0">山</div>
-      <div style="flex:1">
-        <div class="rank-user-name">yamaguchi_wine</div>
-        <div class="rank-user-title">🍷 ワイン愛好家 &nbsp;·&nbsp; 大阪</div>
-        <div class="rank-user-stat"><strong>892</strong> レビュー &nbsp;·&nbsp; <strong>63</strong> 店舗訪問</div>
-      </div>
-    </div>
-    <div class="ranking-user-card">
-      <div class="rank-badge r3" style="margin-right:-4px">3</div>
-      <div class="rank-user-avatar" style="background:#2563eb">S</div>
-      <div style="flex:1">
-        <div class="rank-user-name">Sophia Laurent</div>
-        <div class="rank-user-title">🌟 Top Reviewer &nbsp;·&nbsp; Paris</div>
-        <div class="rank-user-stat"><strong>731</strong> レビュー &nbsp;·&nbsp; <strong>54</strong> 店舗訪問</div>
-      </div>
-    </div>
-    <div class="ranking-user-card">
-      <div class="rank-badge rn" style="margin-right:-4px">4</div>
-      <div class="rank-user-avatar" style="background:#059669">鈴</div>
-      <div style="flex:1">
-        <div class="rank-user-name">鈴木ワイン日記</div>
-        <div class="rank-user-title">🍷 ワイン愛好家 &nbsp;·&nbsp; 名古屋</div>
-        <div class="rank-user-stat"><strong>614</strong> レビュー &nbsp;·&nbsp; <strong>41</strong> 店舗訪問</div>
-      </div>
-    </div>
-    <div class="ranking-user-card">
-      <div class="rank-badge rn" style="margin-right:-4px">5</div>
-      <div class="rank-user-avatar" style="background:#dc6803">浦</div>
-      <div style="flex:1">
-        <div class="rank-user-name">浦川哲矢</div>
-        <div class="rank-user-title">🏅 認定ソムリエ &nbsp;·&nbsp; 東京</div>
-        <div class="rank-user-stat"><strong>47</strong> レビュー &nbsp;·&nbsp; <strong>12</strong> 店舗訪問</div>
-      </div>
-    </div>
+  <!-- コスパ（実データ: winesマスターのコスパ順。loadRealRankingが描画） -->
+  <div id="rankingWines" class="ranking-list" style="display:none;">
+    <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>
+  </div>
+
+  <!-- お店（実データ: /api/top-places＝リストのワインの質で店を採点。loadTopPlacesが描画） -->
+  <div id="rankingStores" class="ranking-list" style="display:none;">
+    <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>
+  </div>
+
+  <!-- 年間ベスト（実データ: /api/best-wines。評価が無い年は正直に「集計中」） -->
+  <div id="rankingBest" class="ranking-list" style="display:none;">
+    <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>
   </div>
 </div>
 
@@ -2997,10 +2966,172 @@ function closeScan() {
 
 // ===== RANKING TABS =====
 function switchRankingTab(tab) {
-  document.getElementById('rankingWines').style.display = tab === 'wine' ? 'block' : 'none';
-  document.getElementById('rankingUsers').style.display = tab === 'user'  ? 'block' : 'none';
-  document.getElementById('rtab-wine').classList.toggle('active', tab === 'wine');
-  document.getElementById('rtab-user').classList.toggle('active', tab === 'user');
+  if (window.sommLog) sommLog('ranking_view', { seg: tab });
+  document.getElementById('rankingPop').style.display    = tab === 'pop'   ? 'block' : 'none';
+  document.getElementById('rankingWines').style.display  = tab === 'cospa' ? 'block' : 'none';
+  document.getElementById('rankingStores').style.display = tab === 'store' ? 'block' : 'none';
+  document.getElementById('rankingBest').style.display   = tab === 'best'  ? 'block' : 'none';
+  document.getElementById('rtab-pop').classList.toggle('active', tab === 'pop');
+  document.getElementById('rtab-cospa').classList.toggle('active', tab === 'cospa');
+  document.getElementById('rtab-store').classList.toggle('active', tab === 'store');
+  document.getElementById('rtab-best').classList.toggle('active', tab === 'best');
+  if (tab === 'store' && !topPlacesLoaded) loadTopPlaces();
+  if (tab === 'best' && !bestWinesLoaded) loadBestWines();
+}
+
+// ===== お店ランキング（実データ: /api/top-places＝リストのワインの質で店を採点） =====
+let topPlacesLoaded = false;
+function openStore(type, id, name, lat, lng) {
+  if (window.sommLog) sommLog('store_click', { type, name: String(name || '').slice(0, 50) });
+  if (type === 'official') {
+    location.href = 'prototype.html?r=' + encodeURIComponent(id);
+  } else {
+    const q = (lat && lng) ? (lat + ',' + lng) : name;
+    window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q), '_blank');
+  }
+}
+
+async function loadTopPlaces() {
+  topPlacesLoaded = true;
+  const box = document.getElementById('rankingStores');
+  try {
+    const r = await fetch(CHAT_API_BASE + '/api/top-places?limit=20');
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    const escR = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    if (!d.items || !d.items.length) {
+      box.innerHTML = `
+        <div style="text-align:center;padding:36px 20px;">
+          <div style="font-size:40px;">🏪</div>
+          <div style="font-weight:700;color:var(--text);margin-top:8px;">お店ランキングは準備中</div>
+          <div style="color:var(--text-sub);font-size:12px;margin-top:8px;line-height:1.7;">
+            お店がワインリストを公開したり、<br>スカウターでみんながお店を記録すると、<br>いいワインを出すお店がここに並びます。
+          </div>
+        </div>`;
+      return;
+    }
+    box.innerHTML = d.items.map((it, i) => {
+      const badge = i===0 ? 'r1' : i===1 ? 'r2' : i===2 ? 'r3' : 'rn';
+      const srcLabel = it.type === 'official'
+        ? '<span style="color:var(--gold);font-weight:700;">📖 公式リスト</span>'
+        : '<span style="color:var(--text-sub);">📍 街で発見</span>';
+      const sub = it.type === 'official' ? (it.address || '') : '';
+      const args = it.type === 'official'
+        ? `'official','${escR(it.ownerId)}','${escR(it.name).replace(/'/g,"\\'")}'`
+        : `'crowd','${escR(it.placeId)}','${escR(it.name).replace(/'/g,"\\'")}',${it.lat||'null'},${it.lng||'null'}`;
+      return `
+      <div class="ranking-wine-card" onclick="openStore(${args})" style="cursor:pointer;">
+        <div class="rank-badge ${badge}">${i+1}</div>
+        <div class="rank-wine-info">
+          <div class="rank-wine-name">${escR(it.name)}</div>
+          <div class="rank-wine-region">${escR(sub)}</div>
+          <div class="rank-wine-stats">
+            <span class="rank-stat">${starsHtml(it.score)}</span>
+            <span class="rank-stat">⭐ 良いワイン <strong>${it.goodCount}</strong>本</span>
+          </div>
+          <div class="rank-wine-stats" style="margin-top:2px;">
+            <span class="rank-stat">${srcLabel}</span>
+            <span class="rank-stat">🍷 リスト ${it.listCount}本</span>
+          </div>
+        </div>
+        <div class="rank-score">${Number(it.score).toFixed(1)}<small>点</small></div>
+      </div>`;
+    }).join('')
+    + '<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;">ワインリストの質（ソムリン実評価SPの信頼度加重平均）順。タップでお店のリスト・地図へ</div>';
+  } catch (e) {
+    box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">お店ランキングを読み込めませんでした（通信環境をご確認ください）</div>';
+  }
+}
+
+// ===== 総合人気（実データ: /api/top-wines＝店舗★＋SP＋外部評価の信頼度加重ベイズ平均） =====
+const starsHtml = t => {
+  const full = Math.round(Number(t) || 0);
+  return '<span style="color:var(--gold);letter-spacing:1px;">' + '★'.repeat(Math.max(0, Math.min(5, full))) + '</span>'
+       + '<span style="color:var(--border);letter-spacing:1px;">' + '★'.repeat(Math.max(0, 5 - full)) + '</span>';
+};
+
+async function loadTopWines() {
+  const box = document.getElementById('rankingPop');
+  try {
+    const r = await fetch(CHAT_API_BASE + '/api/top-wines?limit=20');
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    if (!d.items || !d.items.length) throw 0;
+    const escR = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    box.innerHTML = d.items.map((it, i) => {
+      const w = it.wine || {};
+      const badge = i===0 ? 'r1' : i===1 ? 'r2' : i===2 ? 'r3' : 'rn';
+      const region = [w.kuni, w.chiiki].filter(Boolean).join(' ');
+      const price = w.price != null ? '¥' + Math.round(w.price).toLocaleString('ja-JP') : '—';
+      const revTxt = it.communityCount > 0
+        ? `🗣 みんなの評価 <strong>${it.communityAvg ?? '—'}</strong>（${it.communityCount}件）`
+        : 'ソムリン実評価ベース';
+      return `
+      <div class="ranking-wine-card">
+        <div class="rank-badge ${badge}">${i+1}</div>
+        <div class="rank-wine-info">
+          <div class="rank-wine-name">${escR(w.name)}${w.vintage && w.vintage!=='NV' ? ' ' + escR(w.vintage) : ''}</div>
+          <div class="rank-wine-region">${escR(region)}${w.producer ? ' / ' + escR(w.producer) : ''}</div>
+          <div class="rank-wine-stats">
+            <span class="rank-stat">${starsHtml(it.total)}</span>
+            <span class="rank-stat">参考価格 <strong>${price}</strong></span>
+          </div>
+          <div class="rank-wine-stats" style="margin-top:2px;"><span class="rank-stat">${revTxt}</span></div>
+        </div>
+        <div class="rank-score">${Number(it.total).toFixed(1)}<small>点</small></div>
+      </div>`;
+    }).join('')
+    + '<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;">お店の評価★・ソムリン実評価（SP）・外部評価を信頼度で重み付けした総合スコア順</div>';
+  } catch (e) {
+    box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">ランキングを読み込めませんでした（通信環境をご確認ください）</div>';
+  }
+}
+
+// ===== 年間ベスト（実データ: /api/best-wines。件数が足りない年は正直に「集計中」） =====
+let bestWinesLoaded = false;
+async function loadBestWines() {
+  bestWinesLoaded = true;
+  const box = document.getElementById('rankingBest');
+  const year = new Date().getFullYear();
+  try {
+    const r = await fetch(CHAT_API_BASE + '/api/best-wines?year=' + year + '&min=2&limit=10');
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    const escR = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    if (!d.items || !d.items.length) {
+      box.innerHTML = `
+        <div style="text-align:center;padding:36px 20px;">
+          <div style="font-size:40px;">👑</div>
+          <div style="font-weight:700;color:var(--text);margin-top:8px;">${year}年 年間ベストは集計中</div>
+          <div style="color:var(--text-sub);font-size:12px;margin-top:8px;line-height:1.7;">
+            お店のみなさんの評価★が集まり次第、<br>その年のベストワインをここで発表します。<br>それまでは「🏆 総合人気」をチェック！
+          </div>
+        </div>`;
+      return;
+    }
+    box.innerHTML = `<div style="text-align:center;padding:14px 16px 6px;font-weight:700;color:var(--burgundy);">👑 ${year}年 年間ベスト</div>`
+    + d.items.map((it, i) => {
+      const w = it.wine || {};
+      const badge = i===0 ? 'r1' : i===1 ? 'r2' : i===2 ? 'r3' : 'rn';
+      const region = [w.kuni, w.chiiki].filter(Boolean).join(' ');
+      return `
+      <div class="ranking-wine-card">
+        <div class="rank-badge ${badge}">${i+1}</div>
+        <div class="rank-wine-info">
+          <div class="rank-wine-name">${escR(w.name)}${w.vintage && w.vintage!=='NV' ? ' ' + escR(w.vintage) : ''}</div>
+          <div class="rank-wine-region">${escR(region)}${w.producer ? ' / ' + escR(w.producer) : ''}</div>
+          <div class="rank-wine-stats">
+            <span class="rank-stat">${starsHtml(it.total)}</span>
+            <span class="rank-stat">🗣 評価 <strong>${it.communityCount}</strong>件</span>
+          </div>
+        </div>
+        <div class="rank-score">${Number(it.total).toFixed(1)}<small>点</small></div>
+      </div>`;
+    }).join('')
+    + `<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;">${year}年に評価2件以上を集めたワインの総合スコア順</div>`;
+  } catch (e) {
+    box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">年間ベストを読み込めませんでした（通信環境をご確認ください）</div>';
+  }
 }
 
 // ===== TASTING EVENT DATA（実データ: Supabase events テーブル。LINE bot経由で蓄積） =====
@@ -3772,6 +3903,7 @@ function handleEnter(e) {
   document.getElementById('chatBtn').style.display = 'flex';
   // 実データ読込（試飲会イベント・ランキング・来店履歴）
   loadRealEvents();
+  loadTopWines();
   loadRealRanking();
   renderRealVisits();
   // QRから開いた場合は実店舗のワインリストを表示
