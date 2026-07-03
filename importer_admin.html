@@ -1220,8 +1220,16 @@
     <div style="margin-bottom:14px;">
       <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">開催日（複数日OK） <span style="color:#e53e3e;">✳︎</span></label>
       <div id="nevDateChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"></div>
-      <input id="nev-date" type="date" onchange="addEvDate()" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;">
-      <div style="font-size:10px;color:var(--text-sub);margin-top:4px;">日付を選ぶと上に自動で追加されます。2日目・3日目も同じ欄で続けて選んでください</div>
+      <div style="border:1.5px solid var(--border);border-radius:10px;padding:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <button type="button" onclick="nevCalNav(-1)" style="background:none;border:none;font-size:18px;color:var(--burgundy);cursor:pointer;padding:4px 10px;">‹</button>
+          <div id="nevCalLabel" style="font-weight:800;font-size:13px;color:var(--text);"></div>
+          <button type="button" onclick="nevCalNav(1)" style="background:none;border:none;font-size:18px;color:var(--burgundy);cursor:pointer;padding:4px 10px;">›</button>
+        </div>
+        <div id="nevCalDow" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;"></div>
+        <div id="nevCalGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;"></div>
+      </div>
+      <div style="font-size:10px;color:var(--text-sub);margin-top:4px;">タップした日が開催日になります（複数選択OK・もう一度タップで解除）</div>
     </div>
 
     <div style="display:flex;gap:10px;margin-bottom:14px;">
@@ -1244,15 +1252,18 @@
           <option value="3">3部制</option>
           <option value="4">4部制</option>
           <option value="5">5部制</option>
+          <option value="6">6部制</option>
+          <option value="7">7部制</option>
+          <option value="8">8部制</option>
+          <option value="9">9部制</option>
+          <option value="10">10部制</option>
         </select>
-        <select id="nev-break" onchange="recalcSessions()" style="flex:1;min-width:0;border:1.5px solid var(--border);border-radius:10px;padding:10px 8px;font-size:14px;font-family:inherit;outline:none;background:white;box-sizing:border-box;">
-          <option value="0">休憩なし</option>
-          <option value="15">休憩15分</option>
-          <option value="30">休憩30分</option>
-          <option value="45">休憩45分</option>
-          <option value="60">休憩60分</option>
-        </select>
+        <div style="flex:1;min-width:0;position:relative;">
+          <input id="nev-break" type="number" step="5" min="0" value="0" oninput="recalcSessions()" style="width:100%;min-width:0;border:1.5px solid var(--border);border-radius:10px;padding:10px 34px 10px 8px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;">
+          <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text-sub);pointer-events:none;">分</span>
+        </div>
       </div>
+      <div style="font-size:10px;color:var(--text-sub);margin-top:4px;">休憩は5分刻みで入力できます（数時間の休憩は分に換算して入力。例: 3時間→180）</div>
       <input id="nev-sessions" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:13px;font-family:inherit;outline:none;margin-top:8px;box-sizing:border-box;" placeholder="部制を選ぶと開始・終了時間から自動計算されます（手直しOK）">
     </div>
 
@@ -1813,29 +1824,60 @@ let ctxTargetId = null;
 // ============================================================
 let selectedEvType = 'tasting';
 
-function localDateStr(d) {
-  // toISOString()はUTC変換されるため、日本時間の深夜〜早朝で前日になるバグを避ける
-  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
-  return `${y}-${m}-${day}`;
-}
-
-// ── 複数日開催の日付チップ ──
+// ── 複数日開催の日付選択（自作カレンダー：タップした日をハイライト） ──
 let nevDates = [];
-function addEvDate() {
-  const inp = document.getElementById('nev-date');
-  const v = inp.value;
-  if (!v) { showToast('日付を選んでください'); return; }
-  if (!nevDates.includes(v)) nevDates.push(v);
-  inp.value = '';
+let nevCalYear = new Date().getFullYear();
+let nevCalMonth = new Date().getMonth();
+
+function toggleNevDate(dstr) {
+  if (nevDates.includes(dstr)) nevDates = nevDates.filter(x => x !== dstr);
+  else nevDates.push(dstr);
   renderEvDateChips();
+  renderNevCal();
 }
-function removeEvDate(d) { nevDates = nevDates.filter(x => x !== d); renderEvDateChips(); }
+function removeEvDate(d) { nevDates = nevDates.filter(x => x !== d); renderEvDateChips(); renderNevCal(); }
 function renderEvDateChips() {
   const box = document.getElementById('nevDateChips');
   box.innerHTML = [...nevDates].sort().map(d => {
     const [y, m, dd] = d.split('-');
     return `<span style="display:inline-flex;align-items:center;gap:6px;background:var(--burgundy-pale);color:var(--burgundy);border-radius:16px;padding:5px 12px;font-size:12px;font-weight:800;">📅 ${Number(m)}/${Number(dd)}<span onclick="removeEvDate('${d}')" style="cursor:pointer;font-weight:800;opacity:.7;">✕</span></span>`;
   }).join('');
+}
+
+function nevCalNav(delta) {
+  nevCalMonth += delta;
+  if (nevCalMonth > 11) { nevCalMonth = 0; nevCalYear++; }
+  if (nevCalMonth < 0)  { nevCalMonth = 11; nevCalYear--; }
+  renderNevCal();
+}
+function renderNevCal() {
+  const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  document.getElementById('nevCalLabel').textContent = `${nevCalYear}年 ${months[nevCalMonth]}`;
+
+  const dowBox = document.getElementById('nevCalDow');
+  const dows = ['日','月','火','水','木','金','土'];
+  dowBox.innerHTML = dows.map((d, i) =>
+    `<div style="text-align:center;font-size:10px;font-weight:700;color:${i===0?'#e53e3e':i===6?'#2563eb':'var(--text-sub)'};padding:2px 0;">${d}</div>`).join('');
+
+  const grid = document.getElementById('nevCalGrid');
+  const today = new Date();
+  const firstDay = new Date(nevCalYear, nevCalMonth, 1).getDay();
+  const daysInMonth = new Date(nevCalYear, nevCalMonth + 1, 0).getDate();
+  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+
+  let html = '';
+  for (let i = 0; i < totalCells; i++) {
+    const dayNum = i - firstDay + 1;
+    if (dayNum < 1 || dayNum > daysInMonth) { html += '<div></div>'; continue; }
+    const dstr = `${nevCalYear}-${String(nevCalMonth+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+    const selected = nevDates.includes(dstr);
+    const isToday = dayNum === today.getDate() && nevCalMonth === today.getMonth() && nevCalYear === today.getFullYear();
+    const bg = selected ? 'var(--burgundy)' : (isToday ? 'var(--burgundy-pale)' : 'transparent');
+    const color = selected ? '#fff' : 'var(--text)';
+    const border = isToday && !selected ? 'border:1.5px solid var(--burgundy);' : '';
+    html += `<div onclick="toggleNevDate('${dstr}')" style="text-align:center;padding:8px 0;border-radius:8px;font-size:13px;font-weight:${selected?800:600};cursor:pointer;background:${bg};color:${color};${border}">${dayNum}</div>`;
+  }
+  grid.innerHTML = html;
 }
 
 // ── 部制・休憩の自動計算（開始・終了時間から各部の時間を逆算。手直し可） ──
@@ -1898,10 +1940,12 @@ function pickVenue(i) {
 
 function openNewEventForm() {
   document.getElementById('newEvBg').style.display = 'flex';
-  // 今日の日付をデフォルトに（端末のローカル日付）
-  document.getElementById('nev-date').value = localDateStr(new Date());
+  // カレンダーを今月・未選択状態にリセット
+  const today = new Date();
+  nevCalYear = today.getFullYear(); nevCalMonth = today.getMonth();
   nevDates = [];
   renderEvDateChips();
+  renderNevCal();
   document.getElementById('nev-parts').value = '1';
   document.getElementById('nev-break').value = '0';
   document.getElementById('nev-venue-addr').value = '';
@@ -1927,11 +1971,8 @@ async function saveNewEvent() {
   if (!title) { showToast('イベント名を入力してください'); return; }
   if (!venue) { showToast('会場を入力してください'); return; }
 
-  // 開催日: チップ＋入力欄に残っている日付をまとめる（複数日OK）
-  const dates = [...nevDates];
-  const dv = document.getElementById('nev-date').value;
-  if (dv && !dates.includes(dv)) dates.push(dv);
-  dates.sort();
+  // 開催日: カレンダーでタップ選択した日付（複数日OK）
+  const dates = [...nevDates].sort();
   if (!dates.length) { showToast('開催日を選んでください'); return; }
 
   const typeDots = { tasting:'#9B1B4B', seminar:'#9B1B4B', fair:'#C9973A', online:'#2563eb' };
