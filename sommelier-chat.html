@@ -614,7 +614,7 @@ function addBotMessage({ text, wines, chips }) {
   msgEl.innerHTML = `
     <div class="msg-bot-avatar">🍷</div>
     <div class="msg-bot-body">
-      <div class="bot-bubble">${text.replace(/\n/g,'<br>')}${limitNote}</div>
+      <div class="bot-bubble">${mdBold(text).replace(/\n/g,'<br>')}${limitNote}</div>
       ${cardsHtml}${chipsHtml}
       <div class="msg-time">${nowTime()}</div>
     </div>`;
@@ -795,6 +795,11 @@ function shortRegion(region) {
 function escHtml(s) {
   if (!s) return '';
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// AIの返答中の **強調** をエスケープ後に<strong>へ変換（XSS対策済みテキストにのみ適用）
+function mdBold(s) {
+  return escHtml(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 }
 
 function scrollBottom() {

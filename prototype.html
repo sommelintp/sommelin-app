@@ -2911,6 +2911,8 @@ function renderRealVisits() {
 }
 
 function escH(s) { return (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+// AIの返答中の **強調** をエスケープ後に<strong>へ変換（XSS対策済みテキストにのみ適用）
+function mdBold(s) { return escH(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); }
 
 // ── ワインタブ（実データ: cellar.html と共通の端末内セラー somm_cellar_v1） ──
 const HIST_EMOJI = { sparkling:'🥂', white:'🤍', red:'🍷', rose:'🌸', orange:'🍊' };
@@ -3692,7 +3694,7 @@ async function askSomurin(text, photo) {
     if (!r.ok) throw 0;
     const d = await r.json();
     protoChatHist.push({ role: 'assistant', content: d.reply });
-    let replyHtml = escH(d.reply).replace(/\n/g, '<br>');
+    let replyHtml = mdBold(d.reply).replace(/\n/g, '<br>');
     if (d.quota && !d.quota.premium && d.quota.remaining !== null && d.quota.remaining <= 2) {
       replyHtml += `<br><span style="font-size:11px;color:var(--gold);font-weight:600;">📊 今月あと${d.quota.remaining}回</span>`;
     }
