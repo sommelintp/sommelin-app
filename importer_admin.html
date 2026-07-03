@@ -1217,15 +1217,30 @@
       <input id="nev-title" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;font-family:inherit;outline:none;" placeholder="例: ブルゴーニュ新着ワイン試飲会">
     </div>
 
+    <div style="margin-bottom:14px;">
+      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">開催日（複数日OK） <span style="color:#e53e3e;">✳︎</span></label>
+      <div style="display:flex;gap:8px;">
+        <input id="nev-date" type="date" style="flex:1;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;min-width:0;">
+        <button type="button" onclick="addEvDate()" style="background:var(--burgundy-pale);color:var(--burgundy);border:1.5px solid var(--burgundy);border-radius:10px;padding:0 16px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">＋ 日付追加</button>
+      </div>
+      <div id="nevDateChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"></div>
+      <div style="font-size:10px;color:var(--text-sub);margin-top:4px;">2日間開催などは「＋日付追加」で日付を足してください（1日だけならそのままでOK）</div>
+    </div>
+
     <div style="display:flex;gap:10px;margin-bottom:14px;">
       <div style="flex:1;">
-        <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">開催日 <span style="color:#e53e3e;">✳︎</span></label>
-        <input id="nev-date" type="date" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;">
+        <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">開始時間</label>
+        <input id="nev-start" type="time" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;">
       </div>
       <div style="flex:1;">
-        <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">時間帯</label>
-        <input id="nev-time" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;" placeholder="14:00〜18:00">
+        <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">終了時間</label>
+        <input id="nev-end" type="time" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;">
       </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">部制・休憩など（任意）</label>
+      <input id="nev-sessions" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;font-family:inherit;outline:none;" placeholder="例: ①10:00〜12:30 ②13:30〜16:00（昼休憩あり）">
     </div>
 
     <div style="margin-bottom:14px;">
@@ -1782,10 +1797,37 @@ let ctxTargetId = null;
 // ============================================================
 let selectedEvType = 'tasting';
 
+function localDateStr(d) {
+  // toISOString()はUTC変換されるため、日本時間の深夜〜早朝で前日になるバグを避ける
+  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+// ── 複数日開催の日付チップ ──
+let nevDates = [];
+function addEvDate() {
+  const inp = document.getElementById('nev-date');
+  const v = inp.value;
+  if (!v) { showToast('日付を選んでください'); return; }
+  if (!nevDates.includes(v)) nevDates.push(v);
+  inp.value = '';
+  renderEvDateChips();
+}
+function removeEvDate(d) { nevDates = nevDates.filter(x => x !== d); renderEvDateChips(); }
+function renderEvDateChips() {
+  const box = document.getElementById('nevDateChips');
+  box.innerHTML = [...nevDates].sort().map(d => {
+    const [y, m, dd] = d.split('-');
+    return `<span style="display:inline-flex;align-items:center;gap:6px;background:var(--burgundy-pale);color:var(--burgundy);border-radius:16px;padding:5px 12px;font-size:12px;font-weight:800;">📅 ${Number(m)}/${Number(dd)}<span onclick="removeEvDate('${d}')" style="cursor:pointer;font-weight:800;opacity:.7;">✕</span></span>`;
+  }).join('');
+}
+
 function openNewEventForm() {
   document.getElementById('newEvBg').style.display = 'flex';
-  // 今日の日付をデフォルトに
-  document.getElementById('nev-date').value = new Date().toISOString().slice(0,10);
+  // 今日の日付をデフォルトに（端末のローカル日付）
+  document.getElementById('nev-date').value = localDateStr(new Date());
+  nevDates = [];
+  renderEvDateChips();
 }
 function closeNewEvModal() {
   document.getElementById('newEvBg').style.display = 'none';
@@ -1802,63 +1844,79 @@ function selectEvType(el, type, label) {
 }
 async function saveNewEvent() {
   const title = document.getElementById('nev-title').value.trim();
-  const dateV = document.getElementById('nev-date').value;
   const venue = document.getElementById('nev-venue').value.trim();
   if (!title) { showToast('イベント名を入力してください'); return; }
-  if (!dateV) { showToast('開催日を入力してください'); return; }
   if (!venue) { showToast('会場を入力してください'); return; }
+
+  // 開催日: チップ＋入力欄に残っている日付をまとめる（複数日OK）
+  const dates = [...nevDates];
+  const dv = document.getElementById('nev-date').value;
+  if (dv && !dates.includes(dv)) dates.push(dv);
+  dates.sort();
+  if (!dates.length) { showToast('開催日を選んでください'); return; }
 
   const typeDots = { tasting:'#9B1B4B', seminar:'#9B1B4B', fair:'#C9973A', online:'#2563eb' };
   const typeLabels = { tasting:'試飲会', seminar:'セミナー', fair:'フェア', online:'オンライン' };
   const vis = document.querySelector('input[name="nev-vis"]:checked')?.value || 'all_importers';
-  const timeV = document.getElementById('nev-time').value || '';
+  const startV = document.getElementById('nev-start').value;   // 'HH:MM' or ''
+  const endV = document.getElementById('nev-end').value;
+  const sessionsV = document.getElementById('nev-sessions').value.trim();
   const descV = document.getElementById('nev-desc') ? document.getElementById('nev-desc').value.trim() : '';
-  const [y,m,d] = dateV.split('-').map(Number);
+  const timeLabel = startV ? (endV ? `${startV}〜${endV}` : startV) : '—';
 
-  // ① 正本を backend 経由で events テーブルへ保存（LINE bot と同じテーブル）
-  let savedId = null;
+  // ① 正本を backend 経由で events テーブルへ保存（複数日は1日=1行。LINE botと同じ方式）
+  let created = [];
   try {
     const r = await fetch(EV_API_BASE + '/api/importer-events', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (evAuthToken() || '') },
       body: JSON.stringify({
-        title, eventDate: dateV, time: timeV, venueName: venue,
-        description: [typeLabels[selectedEvType], descV].filter(Boolean).join(' / '),
+        title, eventDates: dates, startTime: startV, endTime: endV, venueName: venue,
+        description: [typeLabels[selectedEvType], descV].filter(Boolean).join(' / ')
+          + (sessionsV ? '\n【時間・部制】' + sessionsV : ''),
         targetType: vis === 'selected' ? 'importer' : 'all',
       })
     });
     const dres = await r.json().catch(() => ({}));
     if (r.status === 401) { showToast('⚠️ ログインの有効期限が切れています。再ログインしてください'); return; }
     if (!r.ok) { showToast('⚠️ 保存に失敗しました：' + (dres.message || '通信エラー')); return; }
-    savedId = dres.event && dres.event.id;
-    showToast('✓ イベントを公開しました（店舗・顧客のカレンダーに表示されます）');
+    created = dres.events || [];
+    if (dres.failedDates && dres.failedDates.length) {
+      showToast(`⚠️ ${created.length}日分を公開（${dres.failedDates.join(', ')} は失敗）`);
+    } else {
+      showToast(`✓ ${created.length}日分のイベントを公開しました（店舗・顧客のカレンダーに表示されます）`);
+    }
   } catch (e) { showToast('⚠️ 保存に失敗しました（通信環境をご確認ください）'); return; }
 
-  // ② ローカル表示にも即反映
-  const newEv = {
-    id: savedId || ('ie' + Date.now()), mine: true, type: selectedEvType,
-    typeLabel: typeLabels[selectedEvType], dotColor: typeDots[selectedEvType],
-    date: new Date(y, m-1, d),
-    time: timeV || '—',
-    name: title, organizer: '', venue,
-    visibility: vis, wines: [], survey: null, rsvps: []
-  };
-  industryEvents.push(newEv);
-  persistEvent({
-    id: newEv.id, type: newEv.type, typeLabel: newEv.typeLabel, dotColor: newEv.dotColor,
-    dateY: y, dateM: m - 1, dateD: d, time: newEv.time,
-    name: title, organizer: '', venue, visibility: vis, wines: [], survey: null, rsvps: []
+  // ② ローカル表示にも即反映（1日=1エントリ）
+  created.forEach(ev => {
+    const [y, m, d] = String(ev.event_date).split('-').map(Number);
+    const newEv = {
+      id: String(ev.id), mine: true, type: selectedEvType,
+      typeLabel: typeLabels[selectedEvType], dotColor: typeDots[selectedEvType],
+      date: new Date(y, m - 1, d),
+      time: timeLabel,
+      name: title, organizer: '', venue,
+      visibility: vis, wines: [], survey: null, rsvps: []
+    };
+    industryEvents.push(newEv);
+    persistEvent({
+      id: newEv.id, type: newEv.type, typeLabel: newEv.typeLabel, dotColor: newEv.dotColor,
+      dateY: y, dateM: m - 1, dateD: d, time: newEv.time,
+      name: title, organizer: '', venue, visibility: vis, wines: [], survey: null, rsvps: []
+    });
   });
+  const [y, m] = String((created[0] || {}).event_date || dates[0]).split('-').map(Number);
 
   closeNewEvModal();
   // フォームリセット
-  ['nev-title','nev-time','nev-venue','nev-desc'].forEach(id => document.getElementById(id).value = '');
+  ['nev-title','nev-start','nev-end','nev-sessions','nev-venue','nev-desc'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  nevDates = []; renderEvDateChips();
   // 登録した月に移動
   impCalYear = y; impCalMonth = m - 1;
   renderImporterCalendar();
   // 配信カードの候補も更新
   if (typeof ensureSelectedBroadcastEvent === 'function') { ensureSelectedBroadcastEvent(); renderBroadcastEventCard(); }
-  showToast(`「${title}」を登録しました ✓`);
 }
 
 // ============================================================
