@@ -33,13 +33,18 @@
     }
     throw 0;
   }).then(function(user){
-    return fetch(SB_URL+'/rest/v1/profiles?id=eq.'+user.id+'&select=role,roles,verification_status',{headers:{apikey:SB_KEY,Authorization:'Bearer '+s.access_token}})
+    return fetch(SB_URL+'/rest/v1/profiles?id=eq.'+user.id+'&select=role,roles,display_name,avatar_url,verification_status',{headers:{apikey:SB_KEY,Authorization:'Bearer '+s.access_token}})
       .then(function(r){ return r.ok?r.json():[]; })
       .then(function(rows){
         var role=(rows&&rows[0]&&rows[0].role)||(user.user_metadata&&user.user_metadata.role)||'individual';
         var roles=(rows&&rows[0]&&rows[0].roles)||[role];
         if(roles.indexOf(role)===-1) roles.push(role);
-        try{ localStorage.setItem('sommelin_role',role); localStorage.setItem('sommelin_roles',JSON.stringify(roles)); }catch(e){}
+        try{
+          localStorage.setItem('sommelin_role',role);
+          localStorage.setItem('sommelin_roles',JSON.stringify(roles));
+          localStorage.setItem('sommelin_profile',JSON.stringify({display_name:(rows&&rows[0]&&rows[0].display_name)||null, avatar_url:(rows&&rows[0]&&rows[0].avatar_url)||null}));
+        }catch(e){}
+        if(typeof initHeaderIdentity==='function') setTimeout(initHeaderIdentity,0);
         var ok=false; for(var i=0;i<roles.length;i++){ if(ALLOWED.indexOf(roles[i])!==-1){ ok=true; break; } }
         if(!ok){ go(HOME[role]||LOGIN); return; }
         show();
@@ -91,8 +96,8 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 18px;
   }
-  .top-header-info { flex: 1; }
-  .top-header-rest { color: white; font-size: 15px; font-weight: 700; }
+  .top-header-info { flex: 1; min-width: 0; }
+  .top-header-rest { color: white; font-size: 15px; font-weight: 700; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .top-header-sub { color: rgba(255,255,255,0.65); font-size: 11px; margin-top: 1px; }
   .top-header-badge {
     background: rgba(255,255,255,0.2);
@@ -3669,20 +3674,102 @@ function sommelinLogout() {
   location.href = 'login.html';
 }
 
-// ── 複数業態: インポーター業態も持っていればバッジが切替ボタンになる ──
+// ── ヘッダーの身元（店名・ロゴ）とロゴ変更 ──
+function initHeaderIdentity(){
+  let p={}; try{ p=JSON.parse(localStorage.getItem('sommelin_profile')||'{}'); }catch(e){}
+  const nameEl=document.querySelector('.top-header-rest');
+  if(nameEl && p.display_name) nameEl.textContent=p.display_name;
+  const ic=document.querySelector('.top-header-icon');
+  if(ic){
+    if(p.avatar_url) ic.innerHTML='<img src="'+p.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" alt="logo">';
+    ic.style.cursor='pointer'; ic.title='タップでロゴを変更'; ic.style.overflow='hidden';
+    ic.onclick=pickHeaderLogo;
+  }
+}
+
+function pickHeaderLogo(){
+  let inp=document.getElementById('hdrLogoInput');
+  if(!inp){
+    inp=document.createElement('input');
+    inp.type='file'; inp.accept='image/*'; inp.id='hdrLogoInput'; inp.style.display='none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change', e=>{ const f=e.target.files[0]; e.target.value=''; if(f) uploadHeaderLogo(f); });
+  }
+  inp.click();
+}
+
+async function uploadHeaderLogo(file){
+  const uid=await rwUid();
+  if(!uid){ showToast('ログイン情報を確認できません'); return; }
+  showToast('ロゴをアップロード中…');
+  const img=new Image();
+  img.onload=()=>{
+    const c=document.createElement('canvas');
+    const size=256; c.width=size; c.height=size;
+    const ctx=c.getContext('2d');
+    const s=Math.min(img.naturalWidth,img.naturalHeight);   // 正方形に中央トリミング
+    ctx.drawImage(img,(img.naturalWidth-s)/2,(img.naturalHeight-s)/2,s,s,0,0,size,size);
+    URL.revokeObjectURL(img.src);
+    c.toBlob(async blob=>{
+      try{
+        const r=await fetch(RW_SB_URL+'/storage/v1/object/avatars/'+uid+'/logo.jpg',{
+          method:'POST',
+          headers:{ apikey:RW_SB_KEY, Authorization:'Bearer '+(rwToken()||''), 'Content-Type':'image/jpeg', 'x-upsert':'true' },
+          body: blob
+        });
+        if(!r.ok) throw 0;
+        const url=RW_SB_URL+'/storage/v1/object/public/avatars/'+uid+'/logo.jpg?v='+Date.now();
+        await fetch(RW_SB_URL+'/rest/v1/profiles?id=eq.'+uid,{
+          method:'PATCH',
+          headers:{ apikey:RW_SB_KEY, Authorization:'Bearer '+(rwToken()||''), 'Content-Type':'application/json' },
+          body: JSON.stringify({ avatar_url:url })
+        });
+        let p={}; try{ p=JSON.parse(localStorage.getItem('sommelin_profile')||'{}'); }catch(e){}
+        p.avatar_url=url;
+        localStorage.setItem('sommelin_profile',JSON.stringify(p));
+        initHeaderIdentity();
+        showToast('✓ ロゴを変更しました');
+      }catch(e){ showToast('⚠️ アップロードに失敗しました'); }
+    },'image/jpeg',0.85);
+  };
+  img.onerror=()=>showToast('画像を読み込めませんでした');
+  img.src=URL.createObjectURL(file);
+}
+
+// ── 複数業態: 今の業態を大きく明示し、インポーター業態があれば「⇄」切替ボタンを出す ──
 function initRoleSwitcher() {
   let roles = [];
   try { roles = JSON.parse(localStorage.getItem('sommelin_roles') || '[]'); } catch (e) {}
   const el = document.getElementById('roleBadge');
   if (!el) return;
-  if (roles.includes('importer')) {
-    el.textContent = '店舗 ⇄ インポーター';
-    el.style.cursor = 'pointer';
-    el.title = 'インポーター管理に切り替え';
-    el.onclick = () => { location.href = 'importer_admin.html'; };
+  // 今の画面の業態（酒販店/レストランを明示・強調表示）
+  const hasStore = roles.includes('store'), hasRetail = roles.includes('retailer');
+  // 業態バッジ＋切替ボタンは店名の下の段に移動（狭い画面でヘッダーが崩れないように）
+  const info = document.querySelector('.top-header-info');
+  let row = document.getElementById('roleRow');
+  if (!row && info) {
+    row = document.createElement('div');
+    row.id = 'roleRow';
+    row.style.cssText = 'display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap;';
+    info.appendChild(row);
+  }
+  el.textContent = (hasStore && hasRetail) ? '🛒🍽 酒販店・レストラン'
+                 : hasRetail ? '🛒 酒販店'
+                 : hasStore ? '🍽 レストラン'
+                 : '🍽 店舗';
+  el.style.cssText += ';font-size:12px;font-weight:800;background:#C9973A;color:#fff;white-space:nowrap;padding:5px 12px;flex-shrink:0;';
+  if (row && el.parentNode !== row) row.appendChild(el);
+  if (roles.includes('importer') && !document.getElementById('roleSwitchBtn')) {
+    const btn = document.createElement('button');
+    btn.id = 'roleSwitchBtn';
+    btn.textContent = '⇄ 🚢 インポーターに切替';
+    btn.style.cssText = 'background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:14px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;';
+    btn.onclick = () => { location.href = 'importer_admin.html'; };
+    (row || el.parentNode).appendChild(btn);
   }
 }
 initRoleSwitcher();
+initHeaderIdentity();
 setTimeout(initRoleSwitcher, 1500);   // 入口ガードがrolesを更新した後にもう一度
 
 // ── 起動時: ログイン店舗のワインリスト・公開設定・QRを実データで読込 ──

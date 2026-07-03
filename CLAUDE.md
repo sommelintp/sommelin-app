@@ -29,6 +29,7 @@
 
 ## 認証・複数業態（2026-07-03）
 - **複数業態アカウント**: `profiles.roles text[]`（例 `{importer,store}`）を追加。既存 `role` は「メイン業態」（ログイン後の初期画面決定用）として残す。入口ガード3枚（importer_admin/restaurant_admin/onboarding）とbackend `verifyRole` は**配列の交差判定**に変更。ガードが `localStorage.sommelin_roles`（JSON配列）を保存。両業態持ちはヘッダーのバッジが**切替ボタン**になる（「インポーター ⇄ 店舗」タップで相互移動。単一業態では通常表示のまま）。業態の追加はv1では運営がSQLで実施（`migrations/2026-07-03_multi_roles.sql` 末尾に例。**SQL Editorで要実行**）。サインアップトリガー `handle_new_user` も roles 初期化に更新済み。
+- **業態の可視化＋ログアウト＋ロゴ（2026-07-03 実機FB）**: 絵文字統一＝🚢インポーター/🛒酒販店/🍽レストラン。管理画面ヘッダーは店名の下段に**金色の業態バッジ**（現在の業態を明示）＋他業態持ちには「⇄ ○○に切替」ボタン（roleRow）。ヘッダー右上に⏻ログアウト（Supabaseセッション無効化＋localStorage消去→login.html）。**ヘッダーの店名・アイコンは実データ**（ガードが `profiles.display_name/avatar_url` を `localStorage.sommelin_profile` に保存→`initHeaderIdentity()` が反映）。アイコンタップ→ロゴ変更（256px正方形にトリミング→Storage `avatars/<uid>/logo.jpg` にupsert→`profiles.avatar_url` 更新。バケット/RLS: `migrations/2026-07-03_avatars.sql` **SQL Editorで要実行**）。login.htmlの業種選択に「複数業態はまず主な業態で登録→後から追加」の案内追加・酒販店絵文字🛒に統一。
 
 ## スカウター & データ（2026-07-02 現在）
 - **スカウター＝アプリの中核入口**。本番は `scouter.html`。`wine_ar.html` は旧ARデモ。
