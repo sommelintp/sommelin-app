@@ -36,6 +36,11 @@
 - **著作権ルール（2026-07-04 オーナー指示）**: 他媒体（雑誌・批評家・他サイト）の**文章は絶対にそのまま使わない**。事実（銘柄名・産地・価格・点数）はOK、表現はNG。①`external_ratings`は数値スコア＋出典名＋URLのみ（批評文のテキスト欄を作らない・追加しない）②AIチャットのsystemプロンプトに引用・転載禁止を明記済み③ワイン説明文は常にAI生成 or 自社作成のオリジナルのみ④外部データの大量一括取り込みをする際は出典元の利用規約を確認してから。
 - **共通利用ログ基盤（2026-07-04実装）**: `app_events`テーブル（uid/auth_uid/role/page/event/meta。書き込み専用・anonから読み取り不可。定義: `migrations/2026-07-04_app_events.sql` **SQL Editorで要実行**）。全11ページに共通スニペット（`sommLog(event, meta)`＋自動page_view）を挿入済み。主要アクション: scan(shelf/list)・chat_send(photo有無)・search・cellar_add・taste_upload・report_place・tab_view・wine_add・tasting_save・event_create。**新機能には必ずsommLogを仕込むこと**。分析はSQL Editorで（migrationファイル末尾にクエリ例）。
 
+## iCloud側9画面の移植方針（2026-07-04 オーナー決定）
+- 調査結果: 9画面とも**API接続ゼロの静的モック**（ハードコード配列）。`wine_scouter.html`/`wine_scouter_mvp.html`は本番scouter.htmlの前身＝**用済み（作らない）**。
+- 残り7画面は「ゆくゆく必要になるから作る」（オーナー決定）。**ビジネス価値の高い順**に実データ版を新規実装する: ①store_analytics（済・下記）②reviewer_hub（rater_profiles活用）③producer/producer_register ④filter_creator/filter_market ⑤wine_social。iCloud側のモックはUI参考としてのみ使い、コードはコピーしない。
+- **店舗分析タブ（2026-07-04実装・7画面の1つ目）**: `restaurant_admin.html`に第6タブ「📈分析」。backend `GET /api/store-analytics`（要store/restaurant/adminログイン）＝実データのみ（no-lie。旧モックの売上分析・客層ティアは売上データが存在しないため作らない）: ①ソムリンスコアと全体順位（/api/top-placesと同一計算。買い足し動機づけの文言つき）②QR経由リスト閲覧数（`app_events.store_list_view`。prototype.htmlの`loadRestaurantList`に記録を追加済み）③リスト構成（タイプ別/価格帯/コスパ上位）④試飲メモ集計（インポーター別）。top-placesのキャッシュは全件保持にリファクタ（順位計算用。`computeTopPlacesFull()`共通化）。
+
 ## 認証・複数業態（2026-07-03）
 - **複数業態アカウント**: `profiles.roles text[]`（例 `{importer,store}`）を追加。既存 `role` は「メイン業態」（ログイン後の初期画面決定用）として残す。入口ガード3枚（importer_admin/restaurant_admin/onboarding）とbackend `verifyRole` は**配列の交差判定**に変更。ガードが `localStorage.sommelin_roles`（JSON配列）を保存。両業態持ちはヘッダーのバッジが**切替ボタン**になる（「インポーター ⇄ 店舗」タップで相互移動。単一業態では通常表示のまま）。業態の追加はv1では運営がSQLで実施（`migrations/2026-07-03_multi_roles.sql` 末尾に例。**SQL Editorで要実行**）。サインアップトリガー `handle_new_user` も roles 初期化に更新済み。
 - **業態の可視化＋ログアウト＋ロゴ（2026-07-03 実機FB）**: 絵文字統一＝🚢インポーター/🛒酒販店/🍽レストラン。管理画面ヘッダーは店名の下段に**金色の業態バッジ**（現在の業態を明示）＋他業態持ちには「⇄ ○○に切替」ボタン（roleRow）。ヘッダー右上に⏻ログアウト（Supabaseセッション無効化＋localStorage消去→login.html）。**ヘッダーの店名・アイコンは実データ**（ガードが `profiles.display_name/avatar_url` を `localStorage.sommelin_profile` に保存→`initHeaderIdentity()` が反映）。アイコンタップ→ロゴ変更（256px正方形にトリミング→Storage `avatars/<uid>/logo.jpg` にupsert→`profiles.avatar_url` 更新。バケット/RLS: `migrations/2026-07-03_avatars.sql` **SQL Editorで要実行**）。login.htmlの業種選択に「複数業態はまず主な業態で登録→後から追加」の案内追加・酒販店絵文字🛒に統一。
@@ -49,7 +54,7 @@
 - **要設定**: `scouter.html` 冒頭の `API_BASE` に Cloud Run のURLを入れる（暫定は `?api=https://…run.app` パラメータでも設定可＝localStorageに保存）。
 - 設計書: `Documents/Claude/Projects/ソムリンアプリ/スカウター_ビジョンAI_エンドポイント設計.md`（no-lie原則・レスポンス契約・フライホイール）。
 - フロントは Supabase を **publishable キーで直接 read/rpc**（既存の管理画面と同方式）。秘密鍵は backend のみ。publishableキーは `gkhdpzfmqraliwaiubwl.supabase.co` / `sb_publishable_...`。
-- **wines マスター**: `cospa_clean_scored.csv` 由来（列= name/producer/iro/kuni/chiiki/vintage/price/sp/osu_gbm 等）。あいまい一致は RPC `match_wines(q,lim)`。現在 **15,563件**投入済（フル 62,566 は投入途中＝要再投入）。横文字名 `name_romanized` は未投入（英字ラベル照合用に要充填）。
+- **wines マスター**: 現在 `cospa_clean_scored.csv` 由来（列= name/producer/iro/kuni/chiiki/vintage/price/sp/osu_gbm 等）で**15,563件**投入済。あいまい一致は RPC `match_wines(q,lim)`。**2026-07-04時点でフル投入は保留**——別プロジェクト `~/Documents/Claude/Projects/ソムリンワイン評価効率化/` で試飲会PDFの手書きSPを検証した「確定データ（ゴールデンデータ）」が完成次第、そちらを正データとして投入する方針（cospaのフル62,566件は使わない）。確定データには最初から横文字名（`ワイン名/ワイナリー名（横文字）`）が入っているため、`name_romanized`のAI生成は不要見込み。4分割CSV・投入SQLは`migrations/2026-07-04_wines_full_reload.sql`に準備済み（cospa版を使う場合の保険。実行は保留中）。
 - **コスパ**＝おすすめ度 `osu_gbm`/`osu_lin` = SP − 価格から期待されるSP（プラスほど割安）。
 - DB定義SQL: `~/dev/sommelin-trade-platform/migrations/2026-06-25_scouter_wines.sql`（テーブル＋RPC＋RLS）と `..._scouter_load_master.sql`（ステージング→wines）。
 - 今回更新済の画面: `wine_search.html`（結果トップに実SP・コスパ表示）/ `cellar.html`（端末保存=localStorage）/ `prototype.html`（マイページから scouter・cellar・検索・AIソムリエへ導線追加）/ PWA: `manifest.webmanifest`・`sw.js`。

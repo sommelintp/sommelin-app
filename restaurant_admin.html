@@ -1413,6 +1413,9 @@
   <div class="tab-nav-item" id="tnav-nt" onclick="switchPanel('notes')">
     <span class="nav-icon">📸</span>試飲メモ
   </div>
+  <div class="tab-nav-item" id="tnav-an" onclick="switchPanel('analytics')">
+    <span class="nav-icon">📈</span>分析
+  </div>
 </div>
 
 <!-- ==================== PANEL: 試飲会 ==================== -->
@@ -1697,6 +1700,13 @@
   <!-- 保存済みリスト -->
   <div style="margin:18px 16px 6px;font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:.07em;">良かったワインリスト</div>
   <div id="tnList" style="padding:0 16px 80px;"></div>
+</div>
+
+<!-- ==================== PANEL: 分析（実データのみ・/api/store-analytics） ==================== -->
+<div id="panelAnalytics" class="panel">
+  <div id="anBody" style="padding:14px 16px 80px;">
+    <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>
+  </div>
 </div>
 
 <!-- ==================== ワインリスト一括インポート オーバーレイ ==================== -->
@@ -2282,11 +2292,113 @@ async function loadRealEvents() {
 loadRealEvents();
 
 // ============================================================
+// 📈 分析パネル（実データのみ: /api/store-analytics）
+// ============================================================
+let anLoaded = false;
+async function loadAnalytics() {
+  if (window.sommLog) sommLog('panel_view', { p: 'analytics' });
+  const box = document.getElementById('anBody');
+  if (anLoaded) return; // セッション中は再取得しない（backend側も10分キャッシュ）
+  const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  try {
+    const r = await fetch(RW_API + '/api/store-analytics', {
+      headers: { Authorization: 'Bearer ' + (rwToken() || '') }
+    });
+    if (r.status === 401) {
+      box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">分析を見るには店舗アカウントでログインし直してください</div>';
+      return;
+    }
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    anLoaded = true;
+
+    const stars = t => { const f = Math.round(Number(t)||0);
+      return '<span style="color:var(--gold);letter-spacing:2px;">'+'★'.repeat(Math.max(0,Math.min(5,f)))+'</span>'
+           + '<span style="color:var(--border);letter-spacing:2px;">'+'★'.repeat(Math.max(0,5-f))+'</span>'; };
+    const bar = (label, count, max, color) => `
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+        <div style="width:88px;font-size:11px;color:var(--text-sub);flex-shrink:0;">${esc(label)}</div>
+        <div style="flex:1;background:var(--bg);border-radius:6px;height:18px;overflow:hidden;">
+          <div style="width:${max>0?Math.round(count/max*100):0}%;min-width:${count>0?'18px':'0'};height:100%;background:${color};border-radius:6px;"></div>
+        </div>
+        <div style="width:34px;text-align:right;font-size:12px;font-weight:700;color:var(--text);">${count}</div>
+      </div>`;
+
+    let html = '';
+
+    // ① ソムリンスコア（お店ランキングと同一計算）
+    if (d.score != null) {
+      html += `
+      <div style="background:linear-gradient(135deg,var(--wine-dark),var(--burgundy));border-radius:16px;padding:18px;color:#fff;">
+        <div style="font-size:11px;opacity:.85;font-weight:700;letter-spacing:.06em;">🏆 あなたのお店のソムリンスコア</div>
+        <div style="display:flex;align-items:baseline;gap:10px;margin-top:6px;">
+          <div style="font-size:40px;font-weight:800;line-height:1;">${d.score}</div>
+          <div>${stars(d.score)}</div>
+        </div>
+        <div style="font-size:12px;margin-top:8px;opacity:.95;">お店ランキング <strong>${d.rank}位</strong> / ${d.totalStores}店中 ・ ⭐良いワイン <strong>${d.list.good}</strong>本</div>
+        <div style="font-size:11px;margin-top:6px;opacity:.8;">SPの高いワインをリストに増やすとスコアが上がり、ランキングで見つけてもらいやすくなります</div>
+      </div>`;
+    } else {
+      html += `
+      <div style="background:var(--bg);border:1.5px dashed var(--border);border-radius:16px;padding:18px;text-align:center;">
+        <div style="font-size:28px;">🏆</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-top:6px;">ソムリンスコアはまだありません</div>
+        <div style="font-size:11px;color:var(--text-sub);margin-top:6px;line-height:1.7;">「🌐公開する」をオンにして、ワインリストにマスター一致（⭐付き）のワインを追加するとスコアが付きます</div>
+      </div>`;
+    }
+
+    // ② リスト閲覧（QR経由）
+    const days = [...Array(14)].map((_, i) => {
+      const dt = new Date(Date.now() + 9*3600e3 - (13-i)*24*3600e3).toISOString().slice(0,10);
+      return { d: dt, c: (d.views.byDay && d.views.byDay[dt]) || 0 };
+    });
+    const vmax = Math.max(1, ...days.map(x => x.c));
+    html += `
+    <div style="background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;margin-top:14px;">
+      <div style="font-size:12px;font-weight:800;color:var(--text);">📱 ワインリストの閲覧（QR経由・直近30日: <span style="color:var(--burgundy);">${d.views.total30d}回</span>）</div>
+      <div style="display:flex;align-items:flex-end;gap:3px;height:56px;margin-top:10px;">
+        ${days.map(x => `<div title="${x.d}: ${x.c}回" style="flex:1;background:${x.c>0?'var(--burgundy)':'var(--bg)'};height:${Math.max(6, Math.round(x.c/vmax*100))}%;border-radius:3px 3px 0 0;"></div>`).join('')}
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-sub);margin-top:4px;"><span>2週間前</span><span>今日</span></div>
+      ${d.views.total30d===0?'<div style="font-size:11px;color:var(--text-sub);margin-top:8px;">QRコードタブのQRをお店に置くと、お客様の閲覧がここに出ます</div>':''}
+    </div>`;
+
+    // ③ リスト構成
+    const CAT_JA = { sparkling:'🍾 泡', white:'🥂 白', red:'🍷 赤', rose:'🌸 ロゼ', orange:'🟠 オレンジ', other:'その他' };
+    const cats = Object.entries(d.list.byCat || {});
+    const cmax = Math.max(1, ...cats.map(([,v]) => v));
+    const bandEntries = Object.entries(d.list.bands || {}).filter(([k,v]) => !(k==='価格未設定' && v===0));
+    const bmax = Math.max(1, ...bandEntries.map(([,v]) => v));
+    html += `
+    <div style="background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;margin-top:14px;">
+      <div style="font-size:12px;font-weight:800;color:var(--text);">🍷 リスト構成（提供中 ${d.list.total}本 ・ ソムリンデータ一致 ${d.list.matched}本）</div>
+      ${cats.length ? cats.map(([k,v]) => bar(CAT_JA[k]||k, v, cmax, 'var(--burgundy)')).join('') : '<div style="font-size:11px;color:var(--text-sub);margin-top:8px;">ワインリストにワインを追加するとここに出ます</div>'}
+      ${bandEntries.length ? '<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-top:14px;">ボトル価格帯</div>' + bandEntries.map(([k,v]) => bar(k, v, bmax, 'var(--gold)')).join('') : ''}
+      ${(d.list.cospaTop||[]).length ? '<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-top:14px;">💫 リスト内のコスパ上位</div>' + d.list.cospaTop.map(w => `<div style="font-size:12px;color:var(--text);margin-top:5px;">・${esc(w.name)} <span style="color:var(--gold);font-weight:700;">SP ${w.sp}</span></div>`).join('') : ''}
+    </div>`;
+
+    // ④ 試飲メモ
+    html += `
+    <div style="background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;margin-top:14px;">
+      <div style="font-size:12px;font-weight:800;color:var(--text);">📸 試飲メモ（${d.notes.count}件${d.notes.avgRating!=null?` ・ お店の評価平均 ★${d.notes.avgRating}`:''}）</div>
+      ${(d.notes.topImporters||[]).length
+        ? '<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-top:10px;">よく記録しているインポーター</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">'
+          + d.notes.topImporters.map(t => `<span style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text);">${esc(t.name)} <strong>${t.count}</strong></span>`).join('') + '</div>'
+        : '<div style="font-size:11px;color:var(--text-sub);margin-top:8px;">試飲メモタブで写真を取り込むと、インポーター別の集計が出ます</div>'}
+    </div>`;
+
+    box.innerHTML = html;
+  } catch (e) {
+    box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">分析を読み込めませんでした（通信環境をご確認ください）</div>';
+  }
+}
+
+// ============================================================
 // PANEL SWITCHING
 // ============================================================
 function switchPanel(panel) {
-  const ID_MAP = {calendar:'cal',winelist:'wine',qr:'qr',stock:'stk',notes:'nt'};
-  ['calendar','winelist','qr','stock','notes'].forEach(p => {
+  const ID_MAP = {calendar:'cal',winelist:'wine',qr:'qr',stock:'stk',notes:'nt',analytics:'an'};
+  ['calendar','winelist','qr','stock','notes','analytics'].forEach(p => {
     document.getElementById('panel' + p.charAt(0).toUpperCase() + p.slice(1))?.classList.remove('active');
     document.getElementById('tnav-' + ID_MAP[p])?.classList.remove('active');
   });
@@ -2298,6 +2410,7 @@ function switchPanel(panel) {
   if (panel === 'qr') renderQr();
   if (panel === 'stock') renderStock();
   if (panel === 'notes') renderTastingNotes();
+  if (panel === 'analytics') loadAnalytics();
   // 在庫パネルの公開フッターは在庫タブ以外では隠す
   const pubBar = document.getElementById('stkPublishBar');
   if (pubBar && panel !== 'stock') pubBar.classList.remove('show');

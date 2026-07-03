@@ -3233,6 +3233,7 @@ async function loadRestaurantList(rid) {
     const st = rs.ok ? (await rs.json())[0] : null;
     const shopName = (st && st.display_name) || 'ワインリスト';
     document.querySelectorAll('.restaurant-name').forEach(el => el.textContent = shopName);
+    if (window.sommLog) sommLog('store_list_view', { r: rid });
 
     // 来店記録（端末内のみ・履歴画面用。履歴からの再訪問 nv=1 は記録しない）
     if (!new URLSearchParams(location.search).get('nv')) {
