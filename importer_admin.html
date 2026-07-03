@@ -544,7 +544,9 @@
     padding: 12px 20px; border-radius: 12px;
     font-size: 13px; font-weight: 600;
     z-index: 500; transition: transform 0.3s ease;
-    white-space: nowrap;
+    white-space: normal; word-break: break-word;
+    max-width: calc(100vw - 40px); width: max-content;
+    box-sizing: border-box; text-align: center; line-height: 1.5;
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
