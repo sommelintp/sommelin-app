@@ -1232,15 +1232,13 @@
       <div style="font-size:10px;color:var(--text-sub);margin-top:4px;">タップした日が開催日になります（複数選択OK・もう一度タップで解除）</div>
     </div>
 
-    <div style="display:flex;gap:10px;margin-bottom:14px;">
-      <div style="flex:1;min-width:0;">
-        <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">開始時間</label>
-        <input id="nev-start" type="time" onchange="recalcSessions()" style="width:100%;min-width:0;border:1.5px solid var(--border);border-radius:10px;padding:10px 8px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;">
-      </div>
-      <div style="flex:1;min-width:0;">
-        <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">終了時間</label>
-        <input id="nev-end" type="time" onchange="recalcSessions()" style="width:100%;min-width:0;border:1.5px solid var(--border);border-radius:10px;padding:10px 8px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;">
-      </div>
+    <div style="margin-bottom:14px;">
+      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">開始時間</label>
+      <input id="nev-start" type="time" onchange="recalcSessions()" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;">
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">終了時間</label>
+      <input id="nev-end" type="time" onchange="recalcSessions()" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;">
     </div>
 
     <div style="margin-bottom:14px;">
@@ -1280,18 +1278,8 @@
       <textarea id="nev-desc" rows="3" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;font-family:inherit;outline:none;resize:none;" placeholder="試飲できるワイン、参加費など..."></textarea>
     </div>
 
-    <div style="margin-bottom:20px;">
-      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:8px;">公開設定</label>
-      <div style="display:flex;flex-direction:column;gap:6px;">
-        <label style="display:flex;align-items:center;gap:10px;background:#f5f5f5;border-radius:10px;padding:10px 14px;cursor:pointer;">
-          <input type="radio" name="nev-vis" value="all_importers" checked style="accent-color:var(--burgundy);">
-          <div><div style="font-size:13px;font-weight:700;">インポーター全員に公開</div><div style="font-size:11px;color:var(--text-sub);">業界共有カレンダーに表示</div></div>
-        </label>
-        <label style="display:flex;align-items:center;gap:10px;background:#f5f5f5;border-radius:10px;padding:10px 14px;cursor:pointer;">
-          <input type="radio" name="nev-vis" value="selected" style="accent-color:var(--burgundy);">
-          <div><div style="font-size:13px;font-weight:700;">配信先の店舗のみ</div><div style="font-size:11px;color:var(--text-sub);">自分が選んだ店舗にのみ通知</div></div>
-        </label>
-      </div>
+    <div style="margin-bottom:20px;background:#f5f5f5;border-radius:10px;padding:12px 14px;font-size:12px;color:var(--text-sub);line-height:1.7;">
+      💡 登録すると業界共有カレンダーに公開されます。特定の店舗にLINEで直接届けたい場合は、登録後「発信」タブの配信機能から店舗を選んで送れます。
     </div>
 
     <div style="display:flex;gap:10px;">
@@ -1915,10 +1903,15 @@ function venueSuggest() {
   const q = document.getElementById('nev-venue').value.trim();
   const box = document.getElementById('venueSug');
   if (q.length < 2) { box.style.display = 'none'; return; }
+  // すぐに「検索中…」を出して体感速度を上げる（実際の検索は少し遅れて開始）
+  box.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:var(--text-sub);">検索中…</div>';
+  box.style.display = 'block';
+  const myQ = q;
   venueTimer = setTimeout(async () => {
     try {
-      const r = await fetch(EV_API_BASE + '/api/places/search?q=' + encodeURIComponent(q));
+      const r = await fetch(EV_API_BASE + '/api/places/search?q=' + encodeURIComponent(myQ));
       const d = await r.json();
+      if (document.getElementById('nev-venue').value.trim() !== myQ) return; // 入力が進んでいたら破棄
       venueSugItems = d.items || [];
       if (!venueSugItems.length) { box.style.display = 'none'; return; }
       box.innerHTML = venueSugItems.map((p, i) =>
@@ -1928,7 +1921,7 @@ function venueSuggest() {
         </div>`).join('');
       box.style.display = 'block';
     } catch (e) { box.style.display = 'none'; }
-  }, 600);
+  }, 250);
 }
 function pickVenue(i) {
   const p = venueSugItems[i]; if (!p) return;
@@ -1977,7 +1970,6 @@ async function saveNewEvent() {
 
   const typeDots = { tasting:'#9B1B4B', seminar:'#9B1B4B', fair:'#C9973A', online:'#2563eb' };
   const typeLabels = { tasting:'試飲会', seminar:'セミナー', fair:'フェア', online:'オンライン' };
-  const vis = document.querySelector('input[name="nev-vis"]:checked')?.value || 'all_importers';
   const startV = document.getElementById('nev-start').value;   // 'HH:MM' or ''
   const endV = document.getElementById('nev-end').value;
   const sessionsV = document.getElementById('nev-sessions').value.trim();
@@ -1995,7 +1987,6 @@ async function saveNewEvent() {
         venueAddress: document.getElementById('nev-venue-addr').value || undefined,
         description: [typeLabels[selectedEvType], descV].filter(Boolean).join(' / ')
           + (sessionsV ? '\n【時間・部制】' + sessionsV : ''),
-        targetType: vis === 'selected' ? 'importer' : 'all',
       })
     });
     const dres = await r.json().catch(() => ({}));
@@ -2018,13 +2009,13 @@ async function saveNewEvent() {
       date: new Date(y, m - 1, d),
       time: timeLabel,
       name: title, organizer: '', venue,
-      visibility: vis, wines: [], survey: null, rsvps: []
+      wines: [], survey: null, rsvps: []
     };
     industryEvents.push(newEv);
     persistEvent({
       id: newEv.id, type: newEv.type, typeLabel: newEv.typeLabel, dotColor: newEv.dotColor,
       dateY: y, dateM: m - 1, dateD: d, time: newEv.time,
-      name: title, organizer: '', venue, visibility: vis, wines: [], survey: null, rsvps: []
+      name: title, organizer: '', venue, wines: [], survey: null, rsvps: []
     });
   });
   const [y, m] = String((created[0] || {}).event_date || dates[0]).split('-').map(Number);
