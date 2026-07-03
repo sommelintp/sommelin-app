@@ -261,6 +261,21 @@
   .send-btn:hover { transform: scale(1.05); }
   .send-btn:active { transform: scale(0.95); }
   .send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .attach-btn {
+    width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+    border: 1.5px solid var(--border); background: var(--bg); color: var(--text-sub);
+    font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.2s;
+  }
+  .attach-btn:hover { border-color: var(--burgundy); color: var(--burgundy); }
+  .photo-preview-row { display: none; align-items: center; gap: 8px; padding: 0 0 8px; }
+  .photo-preview-row.on { display: flex; }
+  .photo-preview-row img { width: 48px; height: 48px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); }
+  .photo-preview-remove {
+    width: 22px; height: 22px; border-radius: 50%; border: none; background: rgba(0,0,0,0.5);
+    color: #fff; font-size: 13px; cursor: pointer; line-height: 1;
+  }
+  .msg-user-photo { max-width: 160px; border-radius: 12px; margin-bottom: 6px; display: block; }
 
   /* ===== UPGRADE MODAL ===== */
   .modal-overlay {
@@ -364,7 +379,14 @@
     <div class="suggestion-pill" onclick="sendChip('ドイツのリースリングを教えて')">🇩🇪 リースリング</div>
     <div class="suggestion-pill" onclick="sendChip('ロゼワインを教えて')">🌸 ロゼ</div>
   </div>
+  <div class="photo-preview-row" id="photoPreviewRow">
+    <img id="photoPreviewImg" src="" alt="">
+    <button class="photo-preview-remove" onclick="removePendingPhoto()">✕</button>
+    <span style="font-size:11px;color:var(--text-sub);">この写真について聞けます</span>
+  </div>
   <div class="input-row">
+    <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoSelect(event)">
+    <button class="attach-btn" onclick="document.getElementById('photoInput').click()" title="写真を送る">📷</button>
     <textarea class="msg-input" id="msgInput" placeholder="ワインについて何でも聞いてください…" rows="1"
       oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
     <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
@@ -413,6 +435,43 @@ const CHAT_UID = (() => { try {
   return u;
 } catch(e){ return ''; } })();
 let chatHistory = [];   // {role:'user'|'assistant', content}
+let pendingPhoto = null; // 送信待ちの写真dataURL（長辺1024 JPEG）
+
+// 選択写真を長辺1024pxのJPEGに縮小（スカウターのgrabFrameと同じ考え方）
+function resizeImageFile(file, maxEdge) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxEdge / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * scale);
+      c.height = Math.round(img.naturalHeight * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src);
+      resolve(c.toDataURL('image/jpeg', 0.8));
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+async function handlePhotoSelect(e) {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  try {
+    pendingPhoto = await resizeImageFile(file, 1024);
+    document.getElementById('photoPreviewImg').src = pendingPhoto;
+    document.getElementById('photoPreviewRow').classList.add('on');
+  } catch (err) {
+    pendingPhoto = null;
+  }
+}
+
+function removePendingPhoto() {
+  pendingPhoto = null;
+  document.getElementById('photoPreviewRow').classList.remove('on');
+}
 
 /* ===== INIT ===== */
 window.addEventListener('load', () => {
@@ -473,24 +532,29 @@ function sendChip(text) {
 
 async function sendMessage() {
   const input = document.getElementById('msgInput');
-  const text = input.value.trim();
-  if (!text || isBotTyping) return;
+  let text = input.value.trim();
+  const photo = pendingPhoto;
+  if ((!text && !photo) || isBotTyping) return;
+  if (!text && photo) text = 'この写真のワインについて教えて';
 
   if (!quota.premium && quota.remaining === 0) { addUpgradeBanner(); return; }
 
   input.value = '';
   input.style.height = 'auto';
+  removePendingPhoto();
 
-  addUserMessage(text);
+  addUserMessage(text, photo);
   chatHistory.push({ role: 'user', content: text });
   showTyping();
   isBotTyping = true;
 
   try {
+    const body = { messages: chatHistory.slice(-8), userId: CHAT_UID };
+    if (photo) body.image = photo;
     const r = await fetch(CHAT_API + '/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: chatHistory.slice(-8), userId: CHAT_UID })
+      body: JSON.stringify(body)
     });
     hideTyping();
     if (r.status === 429) { addBotMessage({ text: '少し混み合っています。しばらくしてからもう一度どうぞ 🙏' }); return; }
@@ -500,6 +564,10 @@ async function sendMessage() {
       if (quota.remaining !== 0) { quota.remaining = 0; }
       updateUsageDisplay();
       addUpgradeBanner();
+      return;
+    }
+    if (r.status === 400 || r.status === 413) {
+      addBotMessage({ text: '写真がうまく読み込めませんでした。別の写真でもう一度お試しください 🙏' });
       return;
     }
     if (!r.ok) throw 0;
@@ -516,11 +584,12 @@ async function sendMessage() {
 }
 
 /* ===== MESSAGE BUILDERS ===== */
-function addUserMessage(text) {
+function addUserMessage(text, photo) {
   const wrap = document.getElementById('msgWrap');
   const el = document.createElement('div');
   el.className = 'msg-user';
-  el.innerHTML = `<div class="user-bubble">${escHtml(text)}</div>`;
+  const photoHtml = photo ? `<img class="msg-user-photo" src="${photo}" alt="">` : '';
+  el.innerHTML = `<div class="user-bubble">${photoHtml}${escHtml(text)}</div>`;
   wrap.appendChild(el);
   scrollBottom();
 }
