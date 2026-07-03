@@ -1,5 +1,5 @@
 # ソムリンアプリ フロント — 作業ルール
-<!-- deploy-retrigger: 2026-07-03 18:53 GitHub Pages詰まり対策の再push用 -->
+<!-- deploy-retrigger: 2026-07-04 GitHub Pages詰まり対策の再push用（#27 Queued詰まり） -->
 
 このリポジトリ（`~/dev/sommelin-app`）はソムリンアプリのフロントエンド本番です。各チャットはまずこのルールに従ってください。人間向けの詳しい運用手順は同じフォルダの `作業手順.md` を参照。
 
