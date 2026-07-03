@@ -1414,6 +1414,17 @@
 <!-- ==================== PANEL: 顧客 ==================== -->
 <div id="panelMembers" class="panel">
 
+  <!-- 反響: 店舗があなたのワインを気に入っています（実データ: tasting_notes） -->
+  <div style="margin:14px 16px 4px;background:linear-gradient(135deg,#fff,#fbeef3);border:1.5px solid var(--burgundy);border-radius:14px;padding:14px 16px;">
+    <div style="font-size:14px;font-weight:800;color:var(--text);">💬 あなたのワインへの反響</div>
+    <div style="font-size:11px;color:var(--text-sub);line-height:1.7;margin-top:4px;">店舗が試飲会で「良かった」と記録したワインのうち、貴社名が書き添えられたものが届きます。</div>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <input id="fbImporterName" placeholder="会社名（例: テラヴェール）" style="flex:1;min-width:0;border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;">
+      <button onclick="loadTastingFeedback()" style="background:var(--burgundy);color:#fff;border:none;border-radius:10px;padding:0 16px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">確認</button>
+    </div>
+    <div id="fbList" style="margin-top:10px;"></div>
+  </div>
+
   <!-- サブタブ: 店舗 / 個人 -->
   <div class="sub-tabs">
     <button class="sub-tab active" id="ctab-store" onclick="switchCustomerTab('store')">🏪 店舗</button>
@@ -1792,6 +1803,36 @@ function persistEvent(evObj) {
 const EV_API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
 function evAuthToken(){ try{ const s=JSON.parse(localStorage.getItem('sommelin_session')||'null'); return s&&s.access_token; }catch(e){ return null; } }
 
+// ── 反響（店舗の試飲メモに書かれた自社名を検索。実データ: tasting_notes） ──
+async function loadTastingFeedback() {
+  const q = document.getElementById('fbImporterName').value.trim();
+  const box = document.getElementById('fbList');
+  if (q.length < 2) { showToast('会社名を2文字以上入れてください'); return; }
+  box.innerHTML = '<div style="font-size:12px;color:var(--text-sub);padding:6px 0;">確認中…</div>';
+  try {
+    const r = await fetch(EV_API_BASE + '/api/tasting-feedback?importer=' + encodeURIComponent(q), {
+      headers: { 'Authorization': 'Bearer ' + (evAuthToken() || '') }
+    });
+    if (r.status === 401) { box.innerHTML = ''; showToast('⚠️ ログインの有効期限が切れています。再ログインしてください'); return; }
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    if (!d.items || !d.items.length) {
+      box.innerHTML = `<div style="font-size:12px;color:var(--text-sub);padding:6px 0;">「${q}」宛の反響はまだありません。店舗が試飲メモに貴社名を書くとここに届きます。</div>`;
+      return;
+    }
+    const esc = s => String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    box.innerHTML = d.items.map(it => `
+      <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:800;color:var(--text);">🍷 ${esc(it.wine)}</div>
+        <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">🏪 ${esc(it.store)} が気に入っています　${new Date(it.ts).toLocaleDateString('ja-JP')}</div>
+        ${it.memo ? `<div style="font-size:12px;color:#555;margin-top:4px;">💬 ${esc(it.memo)}</div>` : ''}
+      </div>`).join('');
+  } catch (e) {
+    box.innerHTML = '';
+    showToast('⚠️ 取得に失敗しました（通信環境をご確認ください）');
+  }
+}
+
 // ── 起動時ブートストラップ：永続化された編集をシードに反映 ──
 applyStoreEdits();                                  // 除外/メモ/削除を復元
 prevList    = stores.filter(s => s.lastSent === '2026-05-01').map(s => s.id);
@@ -1895,9 +1936,12 @@ function recalcSessions() {
   out.value = seg.join(' ') + (brk ? `（休憩${brk}分）` : '');
 }
 
-// ── 会場サジェスト（backend /api/places/search = OSM Nominatim・無料） ──
-let venueTimer = null, venueSugItems = [];
+// ── 会場サジェスト（backend /api/places/suggest = Google Places。キー未設定時はPhotonに自動切替） ──
+let venueTimer = null, venueSugItems = [], venueSession = null;
 function escSug(s) { return String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function newVenueSession() {
+  venueSession = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+}
 function venueSuggest() {
   clearTimeout(venueTimer);
   document.getElementById('nev-venue-addr').value = '';
@@ -1905,13 +1949,14 @@ function venueSuggest() {
   const q = document.getElementById('nev-venue').value.trim();
   const box = document.getElementById('venueSug');
   if (q.length < 2) { box.style.display = 'none'; return; }
+  if (!venueSession) newVenueSession();
   // すぐに「検索中…」を出して体感速度を上げる（実際の検索は少し遅れて開始）
   box.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:var(--text-sub);">検索中…</div>';
   box.style.display = 'block';
   const myQ = q;
   venueTimer = setTimeout(async () => {
     try {
-      const r = await fetch(EV_API_BASE + '/api/places/search?q=' + encodeURIComponent(myQ));
+      const r = await fetch(EV_API_BASE + '/api/places/suggest?q=' + encodeURIComponent(myQ) + '&session=' + encodeURIComponent(venueSession));
       const d = await r.json();
       if (document.getElementById('nev-venue').value.trim() !== myQ) return; // 入力が進んでいたら破棄
       venueSugItems = d.items || [];
@@ -1925,12 +1970,24 @@ function venueSuggest() {
     } catch (e) { box.style.display = 'none'; }
   }, 250);
 }
-function pickVenue(i) {
+async function pickVenue(i) {
   const p = venueSugItems[i]; if (!p) return;
   document.getElementById('nev-venue').value = p.name;
   document.getElementById('nev-venue-addr').value = p.address || '';
   document.getElementById('venueAddrNote').textContent = p.address ? ('📍 ' + p.address) : '';
   document.getElementById('venueSug').style.display = 'none';
+  // Google候補は detail でセッションを終端（＝入力中のリクエスト群が$0枠になる）＋正式な住所を取得
+  if (p.placeId) {
+    try {
+      const r = await fetch(EV_API_BASE + '/api/places/detail?placeId=' + encodeURIComponent(p.placeId) + '&session=' + encodeURIComponent(venueSession || ''));
+      const d = await r.json();
+      if (d.ok && d.address) {
+        document.getElementById('nev-venue-addr').value = d.address;
+        document.getElementById('venueAddrNote').textContent = '📍 ' + d.address;
+      }
+    } catch (e) {}
+  }
+  newVenueSession();   // 次の入力は新しいセッションで
 }
 
 function openNewEventForm() {

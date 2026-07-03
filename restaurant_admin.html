@@ -1401,6 +1401,9 @@
   <div class="tab-nav-item" id="tnav-stk" onclick="switchPanel('stock')">
     <span class="nav-icon">📦</span>在庫
   </div>
+  <div class="tab-nav-item" id="tnav-nt" onclick="switchPanel('notes')">
+    <span class="nav-icon">📸</span>試飲メモ
+  </div>
 </div>
 
 <!-- ==================== PANEL: 試飲会 ==================== -->
@@ -1659,6 +1662,32 @@
   <input class="stk-input" id="stkStoreName" placeholder="店舗名（検索結果に表示されます）" style="margin-bottom:8px;">
   <input class="stk-input" id="stkStoreAddr" placeholder="住所（例: 渋谷区神宮前3-5-6）" style="margin-bottom:8px;">
   <button class="stk-pub-btn" onclick="publishStock()">🌐 在庫情報をソムリンに公開する</button>
+</div>
+
+<!-- ==================== PANEL: 試飲メモ（良かったワインリスト） ==================== -->
+<div id="panelNotes" class="panel">
+  <div style="margin:14px 16px 0;background:linear-gradient(135deg,#fff,#fbeef3);border:1.5px solid var(--burgundy);border-radius:14px;padding:14px 16px;">
+    <div style="font-size:14px;font-weight:800;color:var(--text);">📸 試飲会で撮った写真を、良かったワインリストに</div>
+    <div style="font-size:12px;color:var(--text-sub);line-height:1.7;margin-top:6px;">
+      カメラアプリで撮ったワインの写真を取り込むと、AIが銘柄を読み取ります。
+      インポーター名を書き添えると、そのインポーターに「お店が気に入っています」と伝わります。
+    </div>
+    <button onclick="tnPickPhotos()" style="width:100%;margin-top:12px;background:var(--burgundy);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">
+      📁 写真を取り込む（複数OK）
+    </button>
+    <div id="tnProgress" style="font-size:12px;color:var(--text-sub);margin-top:8px;text-align:center;"></div>
+  </div>
+
+  <!-- 認識結果（保存前の確認・インポーター名/メモ入力） -->
+  <div id="tnStagingWrap" style="display:none;margin:14px 16px 0;">
+    <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:.07em;margin-bottom:8px;">認識したワイン — インポーター名を書き添えて保存</div>
+    <div id="tnStaging"></div>
+    <button onclick="tnSaveStaged()" style="width:100%;background:#16a34a;color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">✓ まとめて保存</button>
+  </div>
+
+  <!-- 保存済みリスト -->
+  <div style="margin:18px 16px 6px;font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:.07em;">良かったワインリスト</div>
+  <div id="tnList" style="padding:0 16px 80px;"></div>
 </div>
 
 <!-- ==================== ワインリスト一括インポート オーバーレイ ==================== -->
@@ -2247,8 +2276,8 @@ loadRealEvents();
 // PANEL SWITCHING
 // ============================================================
 function switchPanel(panel) {
-  const ID_MAP = {calendar:'cal',winelist:'wine',qr:'qr',stock:'stk'};
-  ['calendar','winelist','qr','stock'].forEach(p => {
+  const ID_MAP = {calendar:'cal',winelist:'wine',qr:'qr',stock:'stk',notes:'nt'};
+  ['calendar','winelist','qr','stock','notes'].forEach(p => {
     document.getElementById('panel' + p.charAt(0).toUpperCase() + p.slice(1))?.classList.remove('active');
     document.getElementById('tnav-' + ID_MAP[p])?.classList.remove('active');
   });
@@ -2259,6 +2288,10 @@ function switchPanel(panel) {
   if (panel === 'winelist') renderWineTable('all', '');
   if (panel === 'qr') renderQr();
   if (panel === 'stock') renderStock();
+  if (panel === 'notes') renderTastingNotes();
+  // 在庫パネルの公開フッターは在庫タブ以外では隠す
+  const pubBar = document.getElementById('stkPublishBar');
+  if (pubBar && panel !== 'stock') pubBar.classList.remove('show');
 }
 
 // ============================================================
@@ -3332,6 +3365,208 @@ async function publishStock() {
   document.getElementById('privacyIcon').textContent = '🔓';
   document.getElementById('privacyStatus').textContent = '公開中';
   showToast(`🌐 公開しました。ワイン検索に「${name}」として表示されます ✓`);
+}
+
+// ============================================================
+// 📸 試飲メモ（良かったワインリスト）
+//   写真 → /api/identify-shelf でAI認識 → tasting_notes に保存（RLS: 本人のみ）
+//   価格は実データ（ソムリン参考小売）＋一般的な掛け率による「目安」を明示表示（捏造なし）
+// ============================================================
+let tnStaged = [];   // 保存前の認識結果
+let tnNotes = [];    // 保存済み
+
+function tnEsc(s) { return String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function tnPickPhotos() {
+  let inp = document.getElementById('tnPhotoInput');
+  if (!inp) {
+    inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true;
+    inp.id = 'tnPhotoInput'; inp.style.display = 'none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change', e => { tnProcessFiles(Array.from(e.target.files)); e.target.value = ''; });
+  }
+  inp.click();
+}
+
+function tnToDataUrl(file) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      const sc = Math.min(1, 1568 / Math.max(img.naturalWidth, img.naturalHeight));
+      c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      resolve(c.toDataURL('image/jpeg', 0.8));
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror = () => resolve(null);
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+async function tnProcessFiles(files) {
+  if (!files.length) return;
+  const prog = document.getElementById('tnProgress');
+  const uid = await rwUid();
+  for (let i = 0; i < files.length; i++) {
+    prog.textContent = `AIが読み取り中… ${i + 1}/${files.length}枚目（10秒ほど）`;
+    const dataUrl = await tnToDataUrl(files[i]);
+    if (!dataUrl) continue;
+    try {
+      const r = await fetch(RW_API + '/api/identify-shelf', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: dataUrl, userId: 'store-' + (uid || 'unknown'), locale: 'ja-JP' })
+      });
+      if (r.status === 429) { showToast('⚠️ 回数上限です。少し待ってからお試しください'); break; }
+      if (!r.ok) throw 0;
+      const res = await r.json();
+      (res.bottles || []).filter(b => b.readable !== false && b.identification).forEach(b => {
+        const w = b.match && b.match.wine;
+        const id = b.identification;
+        tnStaged.push({
+          wine_id: w ? w.id : null,
+          name: (w && w.name) || [id.producer, id.wine].filter(Boolean).join(' ') || '（銘柄不明）',
+          producer: (w && w.producer) || id.producer || null,
+          vintage: (w && w.vintage) || (id.vintage != null ? String(id.vintage) : null),
+          region: w ? [w.kuni, w.chiiki].filter(Boolean).join(' ') : [id.country, id.region].filter(Boolean).join(' '),
+          color: id.color || null,
+          sp: w ? w.sp : null,
+          ref_price: w ? w.price : null,
+          importer_name: '', memo: '',
+        });
+      });
+    } catch (e) { showToast('⚠️ 読み取りに失敗した写真があります'); }
+  }
+  prog.textContent = tnStaged.length ? `✅ ${tnStaged.length}本を認識しました。下で確認してください` : '写真からワインを読み取れませんでした';
+  renderTnStaging();
+}
+
+function renderTnStaging() {
+  const wrap = document.getElementById('tnStagingWrap');
+  const box = document.getElementById('tnStaging');
+  wrap.style.display = tnStaged.length ? 'block' : 'none';
+  box.innerHTML = tnStaged.map((s, i) => `
+    <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
+        <div style="min-width:0;">
+          <div style="font-size:14px;font-weight:800;color:var(--text);">${tnEsc(s.name)}${s.vintage ? ' ' + tnEsc(s.vintage) : ''}</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">${tnEsc(s.region || '')}${s.sp != null ? `　⭐SP ${Number(s.sp).toFixed(1)}` : '　（ソムリンDB未登録）'}</div>
+        </div>
+        <button onclick="tnStaged.splice(${i},1);renderTnStaging()" style="background:none;border:none;color:#bbb;font-size:16px;cursor:pointer;flex-shrink:0;">✕</button>
+      </div>
+      <input placeholder="インポーター名（例: テラヴェール）" value="${tnEsc(s.importer_name)}" oninput="tnStaged[${i}].importer_name=this.value"
+        style="width:100%;margin-top:8px;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;">
+      <input placeholder="メモ（例: 果実味しっかり。グラス向き）" value="${tnEsc(s.memo)}" oninput="tnStaged[${i}].memo=this.value"
+        style="width:100%;margin-top:6px;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;">
+    </div>`).join('');
+}
+
+async function tnSaveStaged() {
+  if (!tnStaged.length) return;
+  const uid = await rwUid();
+  if (!uid) { alert('ログイン情報を確認できません。再ログインしてください。'); return; }
+  const payload = tnStaged.map(s => ({
+    owner_id: uid, wine_id: s.wine_id, name: s.name, producer: s.producer,
+    vintage: s.vintage, region: s.region, color: s.color,
+    importer_name: s.importer_name.trim() || null, memo: s.memo.trim() || null,
+    sp: s.sp, ref_price: s.ref_price,
+  }));
+  try {
+    const r = await rwFetch('tasting_notes', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify(payload) });
+    if (!r.ok) throw 0;
+    const rows = await r.json();
+    tnNotes = rows.concat(tnNotes);
+    tnStaged = [];
+    renderTnStaging();
+    renderTnList();
+    document.getElementById('tnProgress').textContent = '';
+    showToast(`✓ ${rows.length}本を保存しました`);
+  } catch (e) { showToast('⚠️ 保存に失敗しました（通信環境をご確認ください）'); }
+}
+
+// 価格の目安（実データ=参考小売価格に、業界の一般的な掛け率を当てた概算。すべて「目安」表記）
+function tnPriceHint(ref) {
+  if (!ref) return '<div style="font-size:11px;color:var(--text-sub);margin-top:6px;">ソムリンDB未登録のため価格の実データがありません</div>';
+  const r10 = x => Math.round(x / 10) * 10, r100 = x => Math.round(x / 100) * 100, r50 = x => Math.round(x / 50) * 50;
+  const buyLo = r10(ref * 0.7), buyHi = r10(ref * 0.8);
+  const btlLo = r100(buyLo * 2.5), btlHi = r100(buyHi * 3);
+  const glLo = r50(btlLo / 4), glHi = r50(btlHi / 4);
+  const f = n => '¥' + n.toLocaleString('ja-JP');
+  return `
+    <div style="background:#faf7f4;border-radius:10px;padding:10px 12px;margin-top:8px;font-size:12px;line-height:1.9;">
+      <div>参考小売価格 <b>${f(Math.round(ref))}</b> <span style="font-size:10px;color:var(--text-sub);">（ソムリン実データ）</span></div>
+      <div>仕入れの目安 <b>${f(buyLo)}〜${f(buyHi)}</b> ／ ボトル提供 <b>${f(btlLo)}〜${f(btlHi)}</b> ／ グラス <b>${f(glLo)}〜${f(glHi)}</b></div>
+      <div style="font-size:10px;color:var(--text-sub);">※ 一般的な掛け率（仕入=小売の7〜8割、提供=仕入の2.5〜3倍、グラス=ボトル1/4）による目安です</div>
+    </div>`;
+}
+
+async function renderTastingNotes() {
+  renderTnStaging();
+  const uid = await rwUid();
+  if (!uid) return;
+  try {
+    const r = await rwFetch('tasting_notes?owner_id=eq.' + uid + '&order=ts.desc&limit=200');
+    if (r.ok) tnNotes = await r.json();
+  } catch (e) {}
+  renderTnList();
+}
+
+function renderTnList() {
+  const box = document.getElementById('tnList');
+  if (!tnNotes.length) {
+    box.innerHTML = `<div style="text-align:center;padding:32px 16px;color:var(--text-sub);">
+      <div style="font-size:36px;margin-bottom:12px;">🍷</div>
+      まだ記録がありません。<br>試飲会で撮った写真を取り込んでみてください。</div>`;
+    return;
+  }
+  box.innerHTML = tnNotes.map(n => `
+    <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
+        <div style="min-width:0;">
+          <div style="font-size:14px;font-weight:800;color:var(--text);">${tnEsc(n.name)}${n.vintage ? ' ' + tnEsc(n.vintage) : ''}</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">
+            ${tnEsc(n.region || '')}${n.sp != null ? `　⭐SP ${Number(n.sp).toFixed(1)}` : ''}
+            ${n.importer_name ? `　🏢 ${tnEsc(n.importer_name)}` : ''}
+          </div>
+        </div>
+        <button onclick="tnDelete('${n.id}')" style="background:none;border:none;color:#bbb;font-size:16px;cursor:pointer;flex-shrink:0;">✕</button>
+      </div>
+      ${n.memo ? `<div style="font-size:12px;color:#555;margin-top:6px;">💬 ${tnEsc(n.memo)}</div>` : ''}
+      ${tnPriceHint(n.ref_price)}
+      <button onclick="tnPairing('${n.id}', this)" style="margin-top:8px;background:#f5f3f0;color:var(--burgundy);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🍽 合う料理をAIに聞く</button>
+      <div id="tnPair-${n.id}" style="display:none;background:#fbeef3;border-radius:10px;padding:10px 12px;margin-top:8px;font-size:12px;color:#5a2a3a;line-height:1.8;white-space:pre-line;"></div>
+    </div>`).join('');
+}
+
+async function tnDelete(id) {
+  if (!confirm('この記録を削除しますか？')) return;
+  try {
+    const r = await rwFetch('tasting_notes?id=eq.' + id, { method: 'DELETE' });
+    if (!r.ok) throw 0;
+    tnNotes = tnNotes.filter(n => n.id !== id);
+    renderTnList();
+    showToast('削除しました');
+  } catch (e) { showToast('⚠️ 削除に失敗しました'); }
+}
+
+async function tnPairing(id, btn) {
+  const n = tnNotes.find(x => x.id === id);
+  if (!n) return;
+  const box = document.getElementById('tnPair-' + id);
+  btn.disabled = true; btn.textContent = '🍽 ソムリン君が考え中…';
+  try {
+    const r = await fetch(RW_API + '/api/chat', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [{ role: 'user', content:
+        `「${n.name}」（${n.region || '産地不明'}${n.color ? '・' + n.color : ''}のワイン）を飲食店で提供します。合わせやすいおすすめ料理を3つ、それぞれ一言の理由つきで簡潔に提案してください。` }] })
+    });
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    box.textContent = d.reply;
+    box.style.display = 'block';
+  } catch (e) { showToast('⚠️ 提案の取得に失敗しました'); }
+  btn.disabled = false; btn.textContent = '🍽 合う料理をAIに聞く';
 }
 
 // ── 起動時: ログイン店舗のワインリスト・公開設定・QRを実データで読込 ──
