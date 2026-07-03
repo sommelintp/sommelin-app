@@ -3377,6 +3377,32 @@ let tnNotes = [];    // 保存済み
 
 function tnEsc(s) { return String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
+// ソムリンおすすめ度（コスパ=osu）→ 星5表示。SPより受け取りやすいポジティブ指標を前面に
+function tnOsuStars(osu) {
+  if (osu == null || isNaN(osu)) return null;
+  if (osu >= 0.5)  return '★★★★★';
+  if (osu >= 0.3)  return '★★★★';
+  if (osu >= 0.1)  return '★★★';
+  if (osu >= -0.1) return '★★';
+  return '★';
+}
+function tnMyStars(rating, editableIdx) {
+  // editableIdx を渡すとタップで編集できる★列（保存前の入力用）
+  let html = '';
+  for (let s = 1; s <= 5; s++) {
+    const on = rating >= s;
+    html += editableIdx != null
+      ? `<span onclick="tnSetRating(${editableIdx},${s})" style="cursor:pointer;font-size:22px;color:${on ? '#C9973A' : '#ddd'};">★</span>`
+      : `<span style="font-size:14px;color:${on ? '#C9973A' : '#ddd'};">★</span>`;
+  }
+  return html;
+}
+function tnSetRating(i, s) {
+  if (!tnStaged[i]) return;
+  tnStaged[i].rating = (tnStaged[i].rating === s) ? null : s;  // 同じ星をもう一度タップで解除
+  renderTnStaging();
+}
+
 function tnPickPhotos() {
   let inp = document.getElementById('tnPhotoInput');
   if (!inp) {
@@ -3433,6 +3459,8 @@ async function tnProcessFiles(files) {
           color: id.color || null,
           sp: w ? w.sp : null,
           ref_price: w ? w.price : null,
+          osu: w ? (w.osu_gbm != null ? w.osu_gbm : w.osu_lin) : null,
+          rating: null,
           importer_name: '', memo: '',
         });
       });
@@ -3446,20 +3474,31 @@ function renderTnStaging() {
   const wrap = document.getElementById('tnStagingWrap');
   const box = document.getElementById('tnStaging');
   wrap.style.display = tnStaged.length ? 'block' : 'none';
-  box.innerHTML = tnStaged.map((s, i) => `
+  box.innerHTML = tnStaged.map((s, i) => {
+    const osuStars = tnOsuStars(s.osu);
+    return `
     <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;">
       <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
         <div style="min-width:0;">
           <div style="font-size:14px;font-weight:800;color:var(--text);">${tnEsc(s.name)}${s.vintage ? ' ' + tnEsc(s.vintage) : ''}</div>
-          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">${tnEsc(s.region || '')}${s.sp != null ? `　⭐SP ${Number(s.sp).toFixed(1)}` : '　（ソムリンDB未登録）'}</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">${tnEsc(s.region || '')}${osuStars ? `　<span style="color:#C9973A;">ソムリンおすすめ度 ${osuStars}</span>` : ''}</div>
         </div>
         <button onclick="tnStaged.splice(${i},1);renderTnStaging()" style="background:none;border:none;color:#bbb;font-size:16px;cursor:pointer;flex-shrink:0;">✕</button>
+      </div>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;color:var(--text-sub);font-weight:700;">お店の評価</span>
+        <span>${tnMyStars(s.rating || 0, i)}</span>
       </div>
       <input placeholder="インポーター名（例: テラヴェール）" value="${tnEsc(s.importer_name)}" oninput="tnStaged[${i}].importer_name=this.value"
         style="width:100%;margin-top:8px;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;">
       <input placeholder="メモ（例: 果実味しっかり。グラス向き）" value="${tnEsc(s.memo)}" oninput="tnStaged[${i}].memo=this.value"
         style="width:100%;margin-top:6px;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;">
-    </div>`).join('');
+      <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;color:var(--text-sub);cursor:pointer;">
+        <input type="checkbox" ${s.condition_issue ? 'checked' : ''} onchange="tnStaged[${i}].condition_issue=this.checked" style="accent-color:var(--burgundy);">
+        ボトルの状態が悪かったかも（ブショネ等）— チェックすると評価の集計から除外されます
+      </label>
+    </div>`;
+  }).join('');
 }
 
 async function tnSaveStaged() {
@@ -3470,7 +3509,8 @@ async function tnSaveStaged() {
     owner_id: uid, wine_id: s.wine_id, name: s.name, producer: s.producer,
     vintage: s.vintage, region: s.region, color: s.color,
     importer_name: s.importer_name.trim() || null, memo: s.memo.trim() || null,
-    sp: s.sp, ref_price: s.ref_price,
+    sp: s.sp, ref_price: s.ref_price, osu: s.osu, rating: s.rating || null,
+    condition_issue: s.condition_issue === true,
   }));
   try {
     const r = await rwFetch('tasting_notes', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify(payload) });
@@ -3520,23 +3560,59 @@ function renderTnList() {
       まだ記録がありません。<br>試飲会で撮った写真を取り込んでみてください。</div>`;
     return;
   }
-  box.innerHTML = tnNotes.map(n => `
+  box.innerHTML = tnNotes.map(n => {
+    const osuStars = tnOsuStars(n.osu);
+    return `
     <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;">
       <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
         <div style="min-width:0;">
           <div style="font-size:14px;font-weight:800;color:var(--text);">${tnEsc(n.name)}${n.vintage ? ' ' + tnEsc(n.vintage) : ''}</div>
           <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">
-            ${tnEsc(n.region || '')}${n.sp != null ? `　⭐SP ${Number(n.sp).toFixed(1)}` : ''}
-            ${n.importer_name ? `　🏢 ${tnEsc(n.importer_name)}` : ''}
+            ${tnEsc(n.region || '')}${n.importer_name ? `　🏢 ${tnEsc(n.importer_name)}` : ''}
           </div>
         </div>
         <button onclick="tnDelete('${n.id}')" style="background:none;border:none;color:#bbb;font-size:16px;cursor:pointer;flex-shrink:0;">✕</button>
       </div>
+      <div style="margin-top:6px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        ${n.rating ? `<span style="font-size:12px;color:var(--text-sub);">お店の評価 <span style="font-size:15px;">${tnMyStars(n.rating)}</span></span>` : ''}
+        ${osuStars ? `<span style="font-size:11px;color:#C9973A;font-weight:700;">ソムリンおすすめ度 ${osuStars}</span>` : ''}
+      </div>
       ${n.memo ? `<div style="font-size:12px;color:#555;margin-top:6px;">💬 ${tnEsc(n.memo)}</div>` : ''}
       ${tnPriceHint(n.ref_price)}
+      <details style="margin-top:8px;" ${n.wine_id ? `ontoggle="if(this.open)tnLoadBuzz('${n.id}',${n.wine_id})"` : ''}>
+        <summary style="font-size:11px;color:var(--text-sub);cursor:pointer;font-weight:700;">詳細（SP・みんなの評価）</summary>
+        <div style="background:#faf7f4;border-radius:10px;padding:10px 12px;margin-top:6px;font-size:12px;line-height:1.9;">
+          <div>SP <b>${n.sp != null ? Number(n.sp).toFixed(1) : '—'}</b> <span style="font-size:10px;color:var(--text-sub);">（ソムリン評価。プロ向けの辛口基準のため低めに出やすい指標です）</span></div>
+          <div id="tnBuzz-${n.id}">${n.wine_id ? 'みんなの評価 読み込み中…' : 'みんなの評価 —（ソムリンDB未登録のため集計できません）'}</div>
+        </div>
+      </details>
       <button onclick="tnPairing('${n.id}', this)" style="margin-top:8px;background:#f5f3f0;color:var(--burgundy);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🍽 合う料理をAIに聞く</button>
       <div id="tnPair-${n.id}" style="display:none;background:#fbeef3;border-radius:10px;padding:10px 12px;margin-top:8px;font-size:12px;color:#5a2a3a;line-height:1.8;white-space:pre-line;"></div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
+}
+
+// トータル評価（ソムリン＋店舗＋外部評価の信頼度加重）とみんなの評価を遅延取得
+const tnBuzzLoaded = {};
+async function tnLoadBuzz(noteId, wineId) {
+  if (tnBuzzLoaded[noteId]) return;
+  tnBuzzLoaded[noteId] = true;
+  const el = document.getElementById('tnBuzz-' + noteId);
+  try {
+    const r = await fetch(RW_API + '/api/wine-score?wineId=' + wineId);
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    if (!el) return;
+    const lines = [];
+    if (d.total != null) lines.push(`トータル評価 <b style="color:#C9973A;font-size:14px;">★${Number(d.total).toFixed(1)}</b> <span style="font-size:10px;color:var(--text-sub);">（ソムリン＋店舗の評価を信頼度で重み付け）</span>`);
+    lines.push(d.communityCount
+      ? `みんなの評価 <b style="color:#C9973A;">★${Number(d.communityAvg).toFixed(1)}</b> <span style="font-size:10px;color:var(--text-sub);">（${d.communityCount}店舗の平均・匿名）</span>`
+      : 'みんなの評価 —（まだ他の店舗の評価がありません）');
+    el.innerHTML = lines.join('<br>');
+  } catch (e) {
+    if (el) el.textContent = 'みんなの評価 —（取得できませんでした）';
+    tnBuzzLoaded[noteId] = false;
+  }
 }
 
 async function tnDelete(id) {
