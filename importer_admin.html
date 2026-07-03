@@ -1133,6 +1133,7 @@
     <div class="th-sub">Sommelin インポーター管理</div>
   </div>
   <div class="th-badge" id="roleBadge">インポーター</div>
+  <button onclick="sommelinLogout()" title="ログアウト" style="background:none;border:none;color:rgba(255,255,255,.7);font-size:18px;cursor:pointer;padding:4px 8px;margin-left:2px;">⏻</button>
 </div>
 
 <!-- TAB NAV -->
@@ -1800,6 +1801,26 @@ function persistEvent(evObj) {
   const arr = lsGet(LS.events, []);
   arr.push(evObj);
   lsSet(LS.events, arr);
+}
+
+// ── ログアウト ──
+function sommelinLogout() {
+  if (!confirm('ログアウトしますか？')) return;
+  try {
+    const s = JSON.parse(localStorage.getItem('sommelin_session') || 'null');
+    if (s && s.access_token) {
+      fetch('https://gkhdpzfmqraliwaiubwl.supabase.co/auth/v1/logout', {
+        method: 'POST',
+        headers: { apikey: 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV', Authorization: 'Bearer ' + s.access_token }
+      }).catch(() => {});   // 失敗しても端末側のセッションは消すので無視
+    }
+  } catch (e) {}
+  try {
+    localStorage.removeItem('sommelin_session');
+    localStorage.removeItem('sommelin_role');
+    localStorage.removeItem('sommelin_roles');
+  } catch (e) {}
+  location.href = 'login.html';
 }
 
 // ── 複数業態: 店舗系の業態も持っていればバッジが切替ボタンになる ──
