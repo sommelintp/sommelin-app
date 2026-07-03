@@ -1219,33 +1219,49 @@
 
     <div style="margin-bottom:14px;">
       <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">開催日（複数日OK） <span style="color:#e53e3e;">✳︎</span></label>
-      <div style="display:flex;gap:8px;">
-        <input id="nev-date" type="date" style="flex:1;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;min-width:0;">
-        <button type="button" onclick="addEvDate()" style="background:var(--burgundy-pale);color:var(--burgundy);border:1.5px solid var(--burgundy);border-radius:10px;padding:0 16px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">＋ 日付追加</button>
-      </div>
-      <div id="nevDateChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"></div>
-      <div style="font-size:10px;color:var(--text-sub);margin-top:4px;">2日間開催などは「＋日付追加」で日付を足してください（1日だけならそのままでOK）</div>
+      <div id="nevDateChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"></div>
+      <input id="nev-date" type="date" onchange="addEvDate()" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;">
+      <div style="font-size:10px;color:var(--text-sub);margin-top:4px;">日付を選ぶと上に自動で追加されます。2日目・3日目も同じ欄で続けて選んでください</div>
     </div>
 
     <div style="display:flex;gap:10px;margin-bottom:14px;">
-      <div style="flex:1;">
+      <div style="flex:1;min-width:0;">
         <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">開始時間</label>
-        <input id="nev-start" type="time" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;">
+        <input id="nev-start" type="time" onchange="recalcSessions()" style="width:100%;min-width:0;border:1.5px solid var(--border);border-radius:10px;padding:10px 8px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;">
       </div>
-      <div style="flex:1;">
+      <div style="flex:1;min-width:0;">
         <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">終了時間</label>
-        <input id="nev-end" type="time" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;">
+        <input id="nev-end" type="time" onchange="recalcSessions()" style="width:100%;min-width:0;border:1.5px solid var(--border);border-radius:10px;padding:10px 8px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;">
       </div>
     </div>
 
     <div style="margin-bottom:14px;">
-      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">部制・休憩など（任意）</label>
-      <input id="nev-sessions" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;font-family:inherit;outline:none;" placeholder="例: ①10:00〜12:30 ②13:30〜16:00（昼休憩あり）">
+      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">部制・休憩</label>
+      <div style="display:flex;gap:10px;">
+        <select id="nev-parts" onchange="recalcSessions()" style="flex:1;min-width:0;border:1.5px solid var(--border);border-radius:10px;padding:10px 8px;font-size:14px;font-family:inherit;outline:none;background:white;box-sizing:border-box;">
+          <option value="1">一斉（部制なし）</option>
+          <option value="2">2部制</option>
+          <option value="3">3部制</option>
+          <option value="4">4部制</option>
+          <option value="5">5部制</option>
+        </select>
+        <select id="nev-break" onchange="recalcSessions()" style="flex:1;min-width:0;border:1.5px solid var(--border);border-radius:10px;padding:10px 8px;font-size:14px;font-family:inherit;outline:none;background:white;box-sizing:border-box;">
+          <option value="0">休憩なし</option>
+          <option value="15">休憩15分</option>
+          <option value="30">休憩30分</option>
+          <option value="45">休憩45分</option>
+          <option value="60">休憩60分</option>
+        </select>
+      </div>
+      <input id="nev-sessions" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:13px;font-family:inherit;outline:none;margin-top:8px;box-sizing:border-box;" placeholder="部制を選ぶと開始・終了時間から自動計算されます（手直しOK）">
     </div>
 
-    <div style="margin-bottom:14px;">
+    <div style="margin-bottom:14px;position:relative;">
       <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">会場 <span style="color:#e53e3e;">✳︎</span></label>
-      <input id="nev-venue" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;font-family:inherit;outline:none;" placeholder="例: ザ・ウエスティン東京 3F">
+      <input id="nev-venue" oninput="venueSuggest()" autocomplete="off" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;" placeholder="会場名を入力すると候補が出ます">
+      <div id="venueSug" style="display:none;position:absolute;left:0;right:0;top:100%;background:white;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:20;max-height:220px;overflow-y:auto;"></div>
+      <input type="hidden" id="nev-venue-addr">
+      <div id="venueAddrNote" style="font-size:10px;color:var(--text-sub);margin-top:4px;"></div>
     </div>
 
     <div style="margin-bottom:14px;">
@@ -1822,12 +1838,75 @@ function renderEvDateChips() {
   }).join('');
 }
 
+// ── 部制・休憩の自動計算（開始・終了時間から各部の時間を逆算。手直し可） ──
+function recalcSessions() {
+  const n   = parseInt(document.getElementById('nev-parts').value) || 1;
+  const brk = parseInt(document.getElementById('nev-break').value) || 0;
+  const st  = document.getElementById('nev-start').value;
+  const en  = document.getElementById('nev-end').value;
+  const out = document.getElementById('nev-sessions');
+  if (n <= 1) { out.value = brk ? `途中休憩${brk}分あり` : ''; return; }
+  if (!st || !en) { out.value = ''; return; }
+  const toMin = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+  const toHM  = x => `${Math.floor(x / 60)}:${String(x % 60).padStart(2, '0')}`;
+  const s = toMin(st), e = toMin(en);
+  const total = e - s - brk * (n - 1);
+  if (total < n * 10) { out.value = ''; showToast('時間が短すぎて部割りできません（開始・終了時間を確認）'); return; }
+  const dur = Math.floor(total / n / 5) * 5;   // 5分刻み
+  const marks = ['①', '②', '③', '④', '⑤'];
+  let cur = s; const seg = [];
+  for (let i = 0; i < n; i++) {
+    const end = (i === n - 1) ? e : cur + dur;
+    seg.push(`${marks[i]}${toHM(cur)}〜${toHM(end)}`);
+    cur = end + brk;
+  }
+  out.value = seg.join(' ') + (brk ? `（休憩${brk}分）` : '');
+}
+
+// ── 会場サジェスト（backend /api/places/search = OSM Nominatim・無料） ──
+let venueTimer = null, venueSugItems = [];
+function escSug(s) { return String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function venueSuggest() {
+  clearTimeout(venueTimer);
+  document.getElementById('nev-venue-addr').value = '';
+  document.getElementById('venueAddrNote').textContent = '';
+  const q = document.getElementById('nev-venue').value.trim();
+  const box = document.getElementById('venueSug');
+  if (q.length < 2) { box.style.display = 'none'; return; }
+  venueTimer = setTimeout(async () => {
+    try {
+      const r = await fetch(EV_API_BASE + '/api/places/search?q=' + encodeURIComponent(q));
+      const d = await r.json();
+      venueSugItems = d.items || [];
+      if (!venueSugItems.length) { box.style.display = 'none'; return; }
+      box.innerHTML = venueSugItems.map((p, i) =>
+        `<div onclick="pickVenue(${i})" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f2f2f2;">
+          <div style="font-size:13px;font-weight:700;color:var(--text);">📍 ${escSug(p.name)}</div>
+          <div style="font-size:11px;color:var(--text-sub);">${escSug(p.address)}</div>
+        </div>`).join('');
+      box.style.display = 'block';
+    } catch (e) { box.style.display = 'none'; }
+  }, 600);
+}
+function pickVenue(i) {
+  const p = venueSugItems[i]; if (!p) return;
+  document.getElementById('nev-venue').value = p.name;
+  document.getElementById('nev-venue-addr').value = p.address || '';
+  document.getElementById('venueAddrNote').textContent = p.address ? ('📍 ' + p.address) : '';
+  document.getElementById('venueSug').style.display = 'none';
+}
+
 function openNewEventForm() {
   document.getElementById('newEvBg').style.display = 'flex';
   // 今日の日付をデフォルトに（端末のローカル日付）
   document.getElementById('nev-date').value = localDateStr(new Date());
   nevDates = [];
   renderEvDateChips();
+  document.getElementById('nev-parts').value = '1';
+  document.getElementById('nev-break').value = '0';
+  document.getElementById('nev-venue-addr').value = '';
+  document.getElementById('venueAddrNote').textContent = '';
+  document.getElementById('venueSug').style.display = 'none';
 }
 function closeNewEvModal() {
   document.getElementById('newEvBg').style.display = 'none';
@@ -1872,6 +1951,7 @@ async function saveNewEvent() {
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (evAuthToken() || '') },
       body: JSON.stringify({
         title, eventDates: dates, startTime: startV, endTime: endV, venueName: venue,
+        venueAddress: document.getElementById('nev-venue-addr').value || undefined,
         description: [typeLabels[selectedEvType], descV].filter(Boolean).join(' / ')
           + (sessionsV ? '\n【時間・部制】' + sessionsV : ''),
         targetType: vis === 'selected' ? 'importer' : 'all',
