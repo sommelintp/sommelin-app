@@ -2217,7 +2217,6 @@
     <div class="lock-icon">🔒</div>
     <h3>このお店のリストは非公開です</h3>
     <p>お店でQRコードをスキャンすると<br>最新のワインリストが確認できます</p>
-    <a href="winelist.html" style="display:inline-block;margin-top:12px;background:var(--burgundy);color:#fff;text-decoration:none;padding:9px 20px;border-radius:22px;font-size:13px;font-weight:600;">📷 QRをスキャン（デモ）</a>
   </div>
 
   <!-- 飲んだワインリスト -->
@@ -2271,34 +2270,6 @@
       <span class="camera-mode-arrow">›</span>
     </div>
 
-    <a class="camera-mode-card" href="wine_ar.html" style="text-decoration:none;color:inherit;">
-      <div class="camera-mode-icon" style="background:#2C1A1D;color:#fff;">🔍</div>
-      <div style="flex:1">
-        <div class="camera-mode-title">ARカメラで探す（実機）</div>
-        <div class="camera-mode-desc">カメラをかざしてワインを認識し、購入できるお店を検索します</div>
-      </div>
-      <span class="camera-mode-arrow">›</span>
-    </a>
-  </div>
-
-  <div style="margin:0 12px;background:white;border:1px solid var(--border);border-radius:14px;padding:14px 18px;">
-    <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:1px;margin-bottom:8px;">最近スキャンしたワイン</div>
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f5ecef;">
-      <span style="font-size:18px;">🍾</span>
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:600;">Barolo Cannubi 2017</div>
-        <div style="font-size:11px;color:var(--text-sub);">Borgogno &nbsp;·&nbsp; 3日前</div>
-      </div>
-      <span style="font-size:11px;color:var(--burgundy);font-weight:600;">Journal済</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;">
-      <span style="font-size:18px;">🤍</span>
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:600;">Chablis Grand Cru Valmur 2020</div>
-        <div style="font-size:11px;color:var(--text-sub);">Billaud-Simon &nbsp;·&nbsp; 1週間前</div>
-      </div>
-      <span style="font-size:11px;color:var(--burgundy);font-weight:600;">Journal済</span>
-    </div>
   </div>
 </div>
 
@@ -3626,9 +3597,13 @@ function toggleChat() {
   document.getElementById('chatBadge').style.display = 'none';
 }
 
-// ── 実AIチャット（backend /api/chat = Claude Haiku。定型返信は廃止） ──
+// ── 実AIチャット（backend /api/chat = Claude Haiku。定型返信は廃止。月5回制限はサーバー側=usage_counters） ──
 const CHAT_API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
-const CHAT_UID2 = (() => { try { return localStorage.getItem('somm_uid') || ''; } catch (e) { return ''; } })();
+const CHAT_UID2 = (() => { try {
+  let u = localStorage.getItem('somm_uid');
+  if (!u) { u = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid', u); }
+  return u;
+} catch (e) { return ''; } })();
 let protoChatHist = [];
 let protoChatBusy = false;
 
@@ -3647,10 +3622,18 @@ async function askSomurin(text) {
     });
     thinkingEl.remove();
     if (r.status === 429) { addChatMsg('somurin', '少し混み合っています。しばらくしてからどうぞ 🙏'); return; }
+    if (r.status === 403) {
+      addChatMsg('somurin', '今月の無料チャット枠（5回）を使い切りました🙏 毎月1日にリセットされます。ワイン探しは回数制限のないスカウター📷をどうぞ！');
+      return;
+    }
     if (!r.ok) throw 0;
     const d = await r.json();
     protoChatHist.push({ role: 'assistant', content: d.reply });
-    addChatMsg('somurin', escH(d.reply).replace(/\n/g, '<br>'));
+    let replyHtml = escH(d.reply).replace(/\n/g, '<br>');
+    if (d.quota && !d.quota.premium && d.quota.remaining !== null && d.quota.remaining <= 2) {
+      replyHtml += `<br><span style="font-size:11px;color:var(--gold);font-weight:600;">📊 今月あと${d.quota.remaining}回</span>`;
+    }
+    addChatMsg('somurin', replyHtml);
   } catch (e) {
     thinkingEl.remove();
     addChatMsg('somurin', 'ごめんなさい、うまく応答できませんでした。通信環境をご確認ください 🙏');

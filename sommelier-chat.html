@@ -375,53 +375,55 @@
 <div class="modal-overlay" id="upgradeModal" onclick="closeModalOutside(event)">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <div class="modal-title">プランをアップグレード</div>
-    <div class="modal-sub">より多くのワイン提案をAIから受け取れます</div>
+    <div class="modal-title">料金プラン</div>
+    <div class="modal-sub">AIソムリエの利用プランについて</div>
     <div class="modal-plan-list">
       <div class="modal-plan">
         <div class="modal-plan-icon">🆓</div>
         <div class="modal-plan-info">
           <div class="modal-plan-name">フリープラン</div>
-          <div class="modal-plan-desc">月5回まで利用可能</div>
+          <div class="modal-plan-desc">AIチャット 月5回まで（毎月1日リセット）</div>
         </div>
         <div class="modal-plan-price">¥0<span>/ 月</span></div>
-      </div>
-      <div class="modal-plan popular-plan">
-        <div class="modal-plan-icon">⭐</div>
-        <div class="modal-plan-info">
-          <div class="modal-plan-name">スタンダード <span class="popular-tag">人気</span></div>
-          <div class="modal-plan-desc">月30回まで・詳細提案・ペアリングアドバイス</div>
-        </div>
-        <div class="modal-plan-price">¥3,000<span>/ 月</span></div>
       </div>
       <div class="modal-plan">
         <div class="modal-plan-icon">👑</div>
         <div class="modal-plan-info">
-          <div class="modal-plan-name">プロプラン</div>
-          <div class="modal-plan-desc">無制限・仕入れ提案・コスト分析機能</div>
+          <div class="modal-plan-name">プレミアム <span class="popular-tag">準備中</span></div>
+          <div class="modal-plan-desc">AIチャット無制限。価格・開始時期は決まり次第お知らせします</div>
         </div>
-        <div class="modal-plan-price">¥9,800<span>/ 月</span></div>
+        <div class="modal-plan-price">近日<span>公開</span></div>
       </div>
     </div>
-    <button class="btn-modal-close" onclick="closeModal()">あとで</button>
+    <button class="btn-modal-close" onclick="closeModal()">閉じる</button>
   </div>
 </div>
 
 <script>
 /* ===== STATE ===== */
-const FREE_LIMIT = 5;
-let usageCount = 0;
+const FREE_LIMIT = 5; // 表示初期値。正はbackend（/api/chat-quota）がサーバー側で管理
+let quota = { premium: false, limit: FREE_LIMIT, used: null, remaining: null }; // remaining=null は未取得
 let isBotTyping = false;
 
 // ── 実AIチャット（backend /api/chat = Claude Haiku。キーはbackendのみ） ──
 const CHAT_API = (localStorage.getItem('somm_api_base') || 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app');
-const CHAT_UID = (() => { try { return localStorage.getItem('somm_uid') || ''; } catch(e){ return ''; } })();
+const CHAT_UID = (() => { try {
+  let u = localStorage.getItem('somm_uid');
+  if (!u) { u = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid', u); }
+  return u;
+} catch(e){ return ''; } })();
 let chatHistory = [];   // {role:'user'|'assistant', content}
 
 /* ===== INIT ===== */
 window.addEventListener('load', () => {
   document.getElementById('initTime').textContent = nowTime();
   updateUsageDisplay();
+
+  // サーバーから実残数を取得（月次・端末をまたいでもuid単位で共通）
+  fetch(CHAT_API + '/api/chat-quota?userId=' + encodeURIComponent(CHAT_UID))
+    .then(r => r.ok ? r.json() : null)
+    .then(q => { if (q && !q.error) { quota = q; updateUsageDisplay(); } })
+    .catch(() => {});
 
   // wines_data.js の読み込み確認 & DB情報バー更新
   if (typeof wineDB !== 'undefined' && wineDB.length > 0) {
@@ -447,10 +449,11 @@ function nowTime() {
 }
 
 function updateUsageDisplay() {
-  const remaining = Math.max(0, FREE_LIMIT - usageCount);
-  document.getElementById('usageDisplay').textContent = remaining;
-  if (remaining === 0) document.getElementById('usageDisplay').style.color = '#FF5A5F';
-  else document.getElementById('usageDisplay').style.color = '';
+  const el = document.getElementById('usageDisplay');
+  if (quota.premium) { el.textContent = '∞'; el.style.color = 'var(--gold)'; return; }
+  if (quota.remaining === null) { el.textContent = '…'; el.style.color = ''; return; } // サーバー取得前
+  el.textContent = quota.remaining;
+  el.style.color = quota.remaining === 0 ? '#FF5A5F' : '';
 }
 
 /* ===== SEND MESSAGE ===== */
@@ -473,12 +476,10 @@ async function sendMessage() {
   const text = input.value.trim();
   if (!text || isBotTyping) return;
 
-  if (usageCount >= FREE_LIMIT) { addUpgradeBanner(); return; }
+  if (!quota.premium && quota.remaining === 0) { addUpgradeBanner(); return; }
 
   input.value = '';
   input.style.height = 'auto';
-  usageCount++;
-  updateUsageDisplay();
 
   addUserMessage(text);
   chatHistory.push({ role: 'user', content: text });
@@ -493,8 +494,17 @@ async function sendMessage() {
     });
     hideTyping();
     if (r.status === 429) { addBotMessage({ text: '少し混み合っています。しばらくしてからもう一度どうぞ 🙏' }); return; }
+    if (r.status === 403) {
+      // サーバー側の月次上限（正）に到達
+      try { const d = await r.json(); if (d.quota) quota = d.quota; } catch (e) {}
+      if (quota.remaining !== 0) { quota.remaining = 0; }
+      updateUsageDisplay();
+      addUpgradeBanner();
+      return;
+    }
     if (!r.ok) throw 0;
     const d = await r.json();
+    if (d.quota) { quota = d.quota; updateUsageDisplay(); }
     chatHistory.push({ role: 'assistant', content: d.reply });
     addBotMessage({ text: d.reply });
   } catch (e) {
@@ -526,10 +536,11 @@ function addBotMessage({ text, wines, chips }) {
   let chipsHtml = chips && chips.length > 0
     ? `<div class="quick-chips">${chips.map(c => `<div class="chip" onclick="sendChip('${c.replace(/'/g,"\\'")}')">  ${c}</div>`).join('')}</div>` : '';
 
-  const remaining = Math.max(0, FREE_LIMIT - usageCount);
-  const limitNote = usageCount >= FREE_LIMIT
-    ? `<div style="margin-top:8px;font-size:11px;color:#FF5A5F;font-weight:600;">⚠️ 今月の残り回数が0になりました</div>`
-    : (remaining <= 2 ? `<div style="margin-top:8px;font-size:11px;color:var(--gold);font-weight:600;">📊 今月あと${remaining}回利用できます</div>` : '');
+  let limitNote = '';
+  if (!quota.premium && quota.remaining !== null) {
+    if (quota.remaining === 0) limitNote = `<div style="margin-top:8px;font-size:11px;color:#FF5A5F;font-weight:600;">⚠️ 今月の残り回数が0になりました</div>`;
+    else if (quota.remaining <= 2) limitNote = `<div style="margin-top:8px;font-size:11px;color:var(--gold);font-weight:600;">📊 今月あと${quota.remaining}回利用できます</div>`;
+  }
 
   msgEl.innerHTML = `
     <div class="msg-bot-avatar">🍷</div>
@@ -575,21 +586,9 @@ function addUpgradeBanner() {
     <div class="msg-bot-avatar">🍷</div>
     <div class="msg-bot-body">
       <div class="upgrade-banner">
-        <h3>✨ 今月の無料枠を使い切りました</h3>
-        <p>プランをアップグレードすると、もっと多くのワイン提案を受け取れます。</p>
-        <div class="plan-row">
-          <div class="plan-card popular">
-            <div class="plan-name">スタンダード</div>
-            <div class="plan-price">¥3,000</div>
-            <div class="plan-limit">月30回</div>
-          </div>
-          <div class="plan-card">
-            <div class="plan-name">プロ</div>
-            <div class="plan-price">¥9,800</div>
-            <div class="plan-limit">無制限</div>
-          </div>
-        </div>
-        <button class="btn-upgrade" onclick="openModal()">プランを確認する →</button>
+        <h3>✨ 今月の無料枠（${FREE_LIMIT}回）を使い切りました</h3>
+        <p>無料枠は毎月1日にリセットされます。回数無制限の有料プランは現在準備中です。<br>それまでの間、ワイン探しには「スカウター」（回数制限なし）をぜひどうぞ 🍷</p>
+        <button class="btn-upgrade" onclick="location.href='scouter.html'">📷 スカウターでワインを探す →</button>
       </div>
       <div class="msg-time">${nowTime()}</div>
     </div>`;
