@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>ソムリン — 生産者ページ</title>
+<meta name="theme-color" content="#5C0E2A">
+<style>
+:root{ --burgundy:#9B1B4B; --wine-dark:#5C0E2A; --gold:#C9973A; --bg:#F8F4EF; --text:#2C1810; --text-sub:#7A6055; --border:#E8DDD5; }
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg); color:var(--text);
+  max-width:430px; margin:0 auto; min-height:100dvh; padding:0 0 60px; }
+.top{ background:linear-gradient(135deg,var(--wine-dark),var(--burgundy)); padding:52px 16px 20px; color:#fff; }
+.top .nav{ display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+.top .nav a{ width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;
+  font-size:18px;display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0; }
+.pname{ font-size:20px; font-weight:800; line-height:1.4; }
+.pregion{ font-size:12px; color:rgba(255,255,255,.75); margin-top:4px; }
+.iglink{ display:none; align-items:center; gap:6px; margin-top:10px; background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.3); border-radius:20px; padding:7px 14px; color:#fff;
+  font-size:12px; font-weight:700; text-decoration:none; width:fit-content; }
+.iglink.show{ display:inline-flex; }
+.igbadge{ font-size:10px; background:var(--gold); color:#3d2a05; border-radius:10px; padding:1px 6px; font-weight:800; }
+.stats{ display:flex; gap:8px; padding:0 16px; margin-top:-14px; }
+.stat{ flex:1; background:#fff; border:1px solid var(--border); border-radius:14px; padding:12px 6px; text-align:center; }
+.stat .sv{ font-size:18px; font-weight:800; color:var(--burgundy); }
+.stat .sl{ font-size:10px; color:var(--text-sub); margin-top:2px; }
+.wrap{ padding:16px; }
+.sec{ font-size:11px; font-weight:700; color:var(--text-sub); letter-spacing:.07em; margin:14px 0 8px; }
+.wcard{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:12px 14px; margin-bottom:8px; }
+.wname{ font-size:13px; font-weight:800; line-height:1.4; }
+.wmeta{ font-size:11px; color:var(--text-sub); margin-top:3px; }
+.wrow{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:6px; }
+.wprice{ font-size:13px; font-weight:700; color:var(--burgundy); }
+.wbadge{ font-size:10px; font-weight:700; background:#FFF3D6; color:#8a6d1f; padding:2px 8px; border-radius:12px; }
+.wherebtn{ border:1px solid var(--border); background:var(--bg); border-radius:20px; padding:5px 10px;
+  font-size:11px; font-weight:700; color:var(--burgundy); cursor:pointer; font-family:inherit; }
+.wherebox{ display:none; border-top:1px solid var(--border); margin-top:10px; padding-top:8px; }
+.wherebox.show{ display:block; }
+.whererow{ font-size:12px; padding:5px 0; color:var(--text); }
+.whererow .ws{ font-size:10px; color:var(--text-sub); }
+.empty{ text-align:center; padding:40px 20px; color:var(--text-sub); }
+.claim{ display:block; text-align:center; margin:22px 16px 0; padding:14px; background:#fff;
+  border:1.5px dashed var(--border); border-radius:14px; color:var(--text-sub); font-size:12px;
+  text-decoration:none; line-height:1.7; }
+.claim b{ color:var(--burgundy); }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="nav"><a href="javascript:history.length>1?history.back():location.assign('prototype.html')">‹</a></div>
+  <div class="pname" id="pname">生産者</div>
+  <div class="pregion" id="pregion"></div>
+  <a class="iglink" id="iglink" target="_blank" rel="noopener"></a>
+</div>
+
+<div class="stats" id="stats" style="display:none;">
+  <div class="stat"><div class="sv" id="stCount">—</div><div class="sl">掲載ワイン</div></div>
+  <div class="stat"><div class="sv" id="stAvg">—</div><div class="sl">平均評価（10点満点）</div></div>
+  <div class="stat"><div class="sv" id="stGood">—</div><div class="sl">💰 コスパ良好</div></div>
+</div>
+
+<div class="wrap">
+  <div id="list"><div class="empty">読み込み中…</div></div>
+</div>
+
+<a class="claim" href="producer_register.html">
+  この生産者のご本人・関係者ですか？<br><b>公式アカウントを申請する →</b>
+</a>
+
+<script>
+const SB_URL = 'https://gkhdpzfmqraliwaiubwl.supabase.co';
+const SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+const API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const producerName = new URLSearchParams(location.search).get('p') || '';
+
+async function loadIg() {
+  try {
+    const r = await fetch(SB_URL + '/rest/v1/producer_profiles?producer_name=eq.' + encodeURIComponent(producerName)
+      + '&select=instagram,website,verified', { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
+    if (!r.ok) return;
+    const rows = await r.json();
+    const p = rows[0];
+    if (!p || !p.instagram) return;
+    const a = document.getElementById('iglink');
+    const handle = String(p.instagram).replace(/^@/, '');
+    a.href = 'https://www.instagram.com/' + encodeURIComponent(handle) + '/';
+    a.innerHTML = '📸 @' + esc(handle) + (p.verified ? ' <span class="igbadge">公式</span>' : '');
+    a.classList.add('show');
+    a.onclick = () => { if (window.sommLog) sommLog('producer_ig_click', { p: producerName.slice(0, 60) }); };
+  } catch (e) {}
+}
+
+async function load() {
+  const listEl = document.getElementById('list');
+  document.getElementById('pname').textContent = producerName || '生産者が指定されていません';
+  if (!producerName) { listEl.innerHTML = '<div class="empty">URLに ?p=生産者名 を付けて開いてください</div>'; return; }
+  loadIg();
+  try {
+    const r = await fetch(SB_URL + '/rest/v1/wines?producer=eq.' + encodeURIComponent(producerName)
+      + '&select=id,name,iro,kuni,chiiki,vintage,price,sp,osu_gbm&order=sp.desc.nullslast&limit=200',
+      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
+    if (!r.ok) throw 0;
+    const rows = await r.json();
+    if (!rows.length) {
+      listEl.innerHTML = '<div class="empty">🔍 この生産者のワインはまだ掲載されていません</div>';
+      return;
+    }
+    // ヘッダー・統計（表記はブランド控えめ: SPという言葉は出さない）
+    const regions = {};
+    rows.forEach(w => { const k = [w.kuni, w.chiiki].filter(Boolean).join(' '); if (k) regions[k] = (regions[k]||0)+1; });
+    const topRegion = Object.entries(regions).sort((a,b)=>b[1]-a[1])[0];
+    document.getElementById('pregion').textContent = topRegion ? topRegion[0] : '';
+    const sps = rows.map(w => Number(w.sp)).filter(x => isFinite(x) && x > 0);
+    document.getElementById('stCount').textContent = rows.length;
+    document.getElementById('stAvg').textContent = sps.length ? (sps.reduce((a,b)=>a+b,0)/sps.length).toFixed(1) : '—';
+    document.getElementById('stGood').textContent = rows.filter(w => Number(w.osu_gbm) >= 0.1).length + '本';
+    document.getElementById('stats').style.display = 'flex';
+
+    listEl.innerHTML = '<div class="sec">掲載ワイン（評価順）</div>' + rows.map(w => {
+      const price = w.price != null ? '¥' + Math.round(w.price).toLocaleString('ja-JP') : '';
+      const badge = Number(w.osu_gbm) >= 0.1 ? '<span class="wbadge">💰 コスパ良好</span>' : '';
+      return `<div class="wcard">
+        <div class="wname">${esc(w.name)}${w.vintage && w.vintage!=='NV' ? ' ' + esc(w.vintage) : ''}</div>
+        <div class="wmeta">${esc([w.iro, w.kuni, w.chiiki].filter(Boolean).join(' ・ '))}</div>
+        <div class="wrow">
+          <span class="wprice">${price}</span>
+          ${badge}
+          <button class="wherebtn" onclick="toggleWhere(${w.id}, this)">📍 どこで飲める？</button>
+        </div>
+        <div class="wherebox" id="where-${w.id}"></div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    listEl.innerHTML = '<div class="empty">読み込めませんでした（通信環境をご確認ください）</div>';
+  }
+}
+
+async function toggleWhere(wineId, btn) {
+  const box = document.getElementById('where-' + wineId);
+  if (box.classList.contains('show')) { box.classList.remove('show'); return; }
+  box.classList.add('show');
+  box.innerHTML = '<div class="whererow" style="color:var(--text-sub);">探しています…</div>';
+  if (window.sommLog) sommLog('wine_where_view', { wineId, from: 'producer' });
+  try {
+    const r = await fetch(API_BASE + '/api/wine-places?wineId=' + wineId);
+    const d = await r.json();
+    const items = d.items || [];
+    if (!items.length) {
+      box.innerHTML = '<div class="whererow" style="color:var(--text-sub);">まだ目撃情報がありません。お店で見かけたらスカウターで記録を！</div>';
+      return;
+    }
+    box.innerHTML = items.map(it => {
+      const cat = it.category === 'shop' ? '🍷 買える' : '🍽️ 飲める';
+      const price = it.priceBottle ? ` ・ ボトル ¥${Number(it.priceBottle).toLocaleString('ja-JP')}`
+                  : it.listPrice ? ` ・ ${it.byGlass ? 'グラス' : 'ボトル'} ¥${Number(it.listPrice).toLocaleString('ja-JP')}` : '';
+      return `<div class="whererow">${esc(it.name)} <span class="ws">${cat}${price}</span></div>`;
+    }).join('');
+  } catch (e) {
+    box.innerHTML = '<div class="whererow" style="color:var(--text-sub);">読み込めませんでした</div>';
+  }
+}
+
+load();
+</script>
+<script>
+/* ===== 利用ログ（app_events・書き込み専用。読み取り不可） ===== */
+(function(){
+  var PAGE='producer';
+  var U='https://gkhdpzfmqraliwaiubwl.supabase.co/rest/v1/app_events';
+  var K='sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+  var uid='na';
+  try{
+    uid=localStorage.getItem('somm_uid');
+    if(!uid){ uid=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid',uid); }
+  }catch(e){}
+  window.sommLog=function(event,meta){
+    try{
+      var role=null,auth=null;
+      try{ role=localStorage.getItem('sommelin_role')||null; }catch(e){}
+      try{ var t=JSON.parse(localStorage.getItem('sb-gkhdpzfmqraliwaiubwl-auth-token')||'null'); auth=(t&&t.user&&t.user.id)||null; }catch(e){}
+      fetch(U,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','apikey':K,'Authorization':'Bearer '+K,'Prefer':'return=minimal'},
+        body:JSON.stringify({uid:uid,auth_uid:auth,role:role,page:PAGE,event:event,meta:meta||null})}).catch(function(){});
+    }catch(e){}
+  };
+  sommLog('page_view', { p: (new URLSearchParams(location.search).get('p')||'').slice(0,60) });
+})();
+</script>
+</body>
+</html>

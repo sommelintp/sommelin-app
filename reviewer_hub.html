@@ -77,13 +77,7 @@ body{
     <div id="followPicks"></div>
   </div>
 
-  <div class="tabs" id="tierTabs">
-    <div class="tab on" data-tier="all">全員</div>
-    <div class="tab" data-tier="founder">👑 創業者</div>
-    <div class="tab" data-tier="critic">📰 評価誌・批評家</div>
-    <div class="tab" data-tier="verified">🎖️ 認定ソムリエ</div>
-    <div class="tab" data-tier="experienced">🍷 経験豊富</div>
-  </div>
+  <input id="searchBox" type="search" placeholder="🔍 レビュアーを検索…" style="width:100%;border:1.5px solid var(--border);border-radius:14px;padding:12px 16px;font-size:14px;font-family:inherit;background:#fff;color:var(--text);outline:none;margin-bottom:14px;">
 
   <div id="list">
     <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>
@@ -100,27 +94,22 @@ const UID = (() => { try {
 
 let allReviewers = [];
 let followedIds = new Set();
-let currentTier = 'all';
+let searchQuery = '';
 const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-
-function tierKey(tier) {
-  if (tier.label === '創業者') return 'founder';
-  if (tier.label === '評価誌・批評家') return 'critic';
-  if (tier.label === '認定ソムリエ') return 'verified';
-  if (tier.label === '経験豊富なレビュアー') return 'experienced';
-  return 'other';
-}
 
 function renderList() {
   const box = document.getElementById('list');
-  const items = currentTier === 'all' ? allReviewers : allReviewers.filter(r => tierKey(r.tier) === currentTier);
+  const q = searchQuery.trim().toLowerCase();
+  const items = q ? allReviewers.filter(r => (r.name || '').toLowerCase().includes(q)) : allReviewers;
   if (!items.length) {
-    box.innerHTML = `<div class="empty"><div class="ei">🔍</div><div class="et">まだレビュアーがいません</div>
+    box.innerHTML = q
+      ? `<div class="empty"><div class="ei">🔍</div><div class="et">「${esc(searchQuery)}」は見つかりませんでした</div></div>`
+      : `<div class="empty"><div class="ei">🔍</div><div class="et">まだレビュアーがいません</div>
       <div class="es">お店が試飲メモで★評価を投稿すると、ここに並びます</div></div>`;
     return;
   }
   box.innerHTML = items.map(r => {
-    const isHi = ['founder','critic','verified'].includes(tierKey(r.tier));
+    const isHi = ['創業者', '評価誌・批評家', '認定ソムリエ'].includes(r.tier.label);
     const avatar = r.avatarUrl ? `<img class="ravatar" src="${esc(r.avatarUrl)}" alt="">` : `<div class="ravatar">${r.tier.icon}</div>`;
     const following = followedIds.has(r.reviewerId);
     return `
@@ -129,6 +118,7 @@ function renderList() {
       <div class="rinfo">
         <div class="rname">${esc(r.name)} <span class="rtier ${isHi?'hi':'lo'}">${r.tier.icon} ${esc(r.tier.label)}</span></div>
         <div class="rstats">評価 ${r.reviewCount}件 ・ 平均★${r.avgRating} ・ フォロワー${r.followerCount}人</div>
+        ${r.instagram ? `<a href="https://www.instagram.com/${encodeURIComponent(r.instagram)}/" target="_blank" rel="noopener" style="font-size:11px;color:var(--burgundy);font-weight:700;text-decoration:none;">📸 @${esc(r.instagram)}</a>` : ''}
       </div>
       <button class="rfollowbtn ${following?'on':''}" onclick="toggleFollow('${r.reviewerId}', this)">${following ? 'フォロー中' : '＋ フォロー'}</button>
     </div>`;
@@ -187,13 +177,14 @@ async function loadFollowingPicks() {
   } catch (e) { box.classList.remove('show'); }
 }
 
-document.getElementById('tierTabs').addEventListener('click', e => {
-  const t = e.target.closest('.tab'); if (!t) return;
-  document.querySelectorAll('#tierTabs .tab').forEach(x => x.classList.remove('on'));
-  t.classList.add('on');
-  currentTier = t.dataset.tier;
-  if (window.sommLog) sommLog('reviewer_tier_view', { tier: currentTier });
+let searchLogTimer = null;
+document.getElementById('searchBox').addEventListener('input', e => {
+  searchQuery = e.target.value || '';
   renderList();
+  clearTimeout(searchLogTimer);
+  if (searchQuery.trim()) {
+    searchLogTimer = setTimeout(() => { if (window.sommLog) sommLog('reviewer_search', { q: searchQuery.trim().slice(0, 30) }); }, 800);
+  }
 });
 
 loadReviewers();

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>ソムリン — 生産者の公式アカウント申請</title>
+<meta name="theme-color" content="#5C0E2A">
+<style>
+:root{ --burgundy:#9B1B4B; --wine-dark:#5C0E2A; --gold:#C9973A; --bg:#F8F4EF; --text:#2C1810; --text-sub:#7A6055; --border:#E8DDD5; }
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg); color:var(--text);
+  max-width:430px; margin:0 auto; min-height:100dvh; padding:0 0 60px; }
+.top{ background:linear-gradient(135deg,var(--wine-dark),var(--burgundy)); padding:52px 16px 20px; color:#fff;
+  display:flex; align-items:center; gap:12px; }
+.top a{ width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;
+  font-size:18px;display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0; }
+.top .t1{ font-size:17px; font-weight:800; }
+.top .t2{ font-size:11px; color:rgba(255,255,255,.75); margin-top:1px; }
+.wrap{ padding:16px; }
+.desc{ font-size:12px; color:var(--text-sub); line-height:1.8; margin-bottom:16px; }
+.fl{ font-size:11px; font-weight:700; color:var(--text-sub); margin:14px 0 6px; }
+input, textarea{ width:100%; border:1.5px solid var(--border); border-radius:12px; padding:12px 14px;
+  font-size:14px; font-family:inherit; background:#fff; color:var(--text); outline:none; }
+input:focus, textarea:focus{ border-color:var(--burgundy); }
+textarea{ min-height:90px; resize:vertical; }
+.preview{ display:none; background:#fff; border:1.5px solid var(--gold); border-radius:12px;
+  padding:10px 14px; margin-top:8px; font-size:12px; line-height:1.7; }
+.preview.show{ display:block; }
+.preview b{ color:var(--burgundy); }
+.submit{ width:100%; margin-top:20px; background:var(--burgundy); color:#fff; border:none; border-radius:14px;
+  padding:15px; font-size:15px; font-weight:800; cursor:pointer; font-family:inherit; }
+.submit:disabled{ opacity:.5; }
+.done{ display:none; text-align:center; padding:40px 20px; }
+.done.show{ display:block; }
+.done .di{ font-size:44px; }
+.done .dt{ font-size:15px; font-weight:800; margin-top:10px; }
+.done .ds{ font-size:12px; color:var(--text-sub); margin-top:8px; line-height:1.8; }
+#toast{ position:fixed; bottom:40px; left:50%; transform:translateX(-50%); background:rgba(15,15,15,.92); color:#fff;
+  padding:10px 20px; border-radius:20px; font-size:13px; font-weight:700; opacity:0; transition:all .3s; z-index:400; white-space:nowrap; }
+#toast.on{ opacity:1; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <a href="javascript:history.length>1?history.back():location.assign('index.html')">‹</a>
+  <div>
+    <div class="t1">🍇 生産者の公式アカウント申請</div>
+    <div class="t2">あなたのワインのページを公式にしませんか</div>
+  </div>
+</div>
+
+<div class="wrap" id="formWrap">
+  <div class="desc">ソムリンには世界中のワインの評価データが掲載されており、生産者ごとのページが自動で作られています。ご本人・関係者であることを確認できた方には、公式マークやプロフィール編集などの機能を順次ご案内します（申請は無料です）。</div>
+
+  <div class="fl">ワイナリー名（生産者名）*</div>
+  <input id="fName" placeholder="例: シャトー・マルゴー" oninput="previewWines()">
+  <div class="preview" id="preview"></div>
+
+  <div class="fl">ご担当者名</div>
+  <input id="fContact" placeholder="例: 山田 太郎">
+
+  <div class="fl">Instagram（任意）</div>
+  <input id="fIg" placeholder="例: @winery_official">
+  <div style="font-size:10px;color:var(--text-sub);margin-top:5px;line-height:1.6;">承認後、あなたの生産者ページに公式Instagramとして表示されます</div>
+
+  <div class="fl">連絡先メールアドレス *</div>
+  <input id="fEmail" type="email" placeholder="例: info@winery.com">
+
+  <div class="fl">メッセージ（任意）</div>
+  <textarea id="fMsg" placeholder="ご要望・確認したいことなどがあればご記入ください"></textarea>
+
+  <button class="submit" id="submitBtn" onclick="submitClaim()">申請する</button>
+</div>
+
+<div class="done" id="done">
+  <div class="di">🍇</div>
+  <div class="dt">申請を受け付けました</div>
+  <div class="ds">内容を確認のうえ、ご記入いただいたメールアドレスへ<br>運営からご連絡します。しばらくお待ちください。</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const SB_URL = 'https://gkhdpzfmqraliwaiubwl.supabase.co';
+const SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2600); }
+
+// 入力された生産者名がマスターに何本あるかをライブ表示（「既に載っている」ことが申請の動機になる）
+let pvTimer = null;
+function previewWines() {
+  clearTimeout(pvTimer);
+  const name = document.getElementById('fName').value.trim();
+  const pv = document.getElementById('preview');
+  if (name.length < 2) { pv.classList.remove('show'); return; }
+  pvTimer = setTimeout(async () => {
+    try {
+      const r = await fetch(SB_URL + '/rest/v1/wines?producer=ilike.' + encodeURIComponent('*' + name + '*')
+        + '&select=id&limit=100', { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
+      const rows = await r.json();
+      if (rows.length) {
+        pv.innerHTML = `🍷 「${esc(name)}」に一致するワインが <b>${rows.length}${rows.length >= 100 ? '本以上' : '本'}</b> 掲載されています`;
+        pv.classList.add('show');
+      } else {
+        pv.innerHTML = `掲載中のワインは見つかりませんでした（表記ゆれの可能性もあります。そのまま申請いただけます）`;
+        pv.classList.add('show');
+      }
+    } catch (e) { pv.classList.remove('show'); }
+  }, 400);
+}
+
+async function submitClaim() {
+  const name = document.getElementById('fName').value.trim();
+  const email = document.getElementById('fEmail').value.trim();
+  if (!name) return toast('ワイナリー名を入力してください');
+  if (!email || !email.includes('@')) return toast('メールアドレスを確認してください');
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  try {
+    const r = await fetch(SB_URL + '/rest/v1/producer_claims', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        producer_name: name.slice(0, 120),
+        contact_name: document.getElementById('fContact').value.trim().slice(0, 80) || null,
+        contact_email: email.slice(0, 200),
+        instagram: document.getElementById('fIg').value.trim().replace(/^@/, '').slice(0, 60) || null,
+        message: document.getElementById('fMsg').value.trim().slice(0, 2000) || null,
+      }),
+    });
+    if (!r.ok) throw 0;
+    if (window.sommLog) sommLog('producer_claim', { p: name.slice(0, 60) });
+    document.getElementById('formWrap').style.display = 'none';
+    document.getElementById('done').classList.add('show');
+  } catch (e) {
+    btn.disabled = false;
+    toast('送信に失敗しました。通信環境をご確認ください');
+  }
+}
+</script>
+<script>
+/* ===== 利用ログ（app_events・書き込み専用。読み取り不可） ===== */
+(function(){
+  var PAGE='producer_register';
+  var U='https://gkhdpzfmqraliwaiubwl.supabase.co/rest/v1/app_events';
+  var K='sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+  var uid='na';
+  try{
+    uid=localStorage.getItem('somm_uid');
+    if(!uid){ uid=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid',uid); }
+  }catch(e){}
+  window.sommLog=function(event,meta){
+    try{
+      var role=null,auth=null;
+      try{ role=localStorage.getItem('sommelin_role')||null; }catch(e){}
+      try{ var t=JSON.parse(localStorage.getItem('sb-gkhdpzfmqraliwaiubwl-auth-token')||'null'); auth=(t&&t.user&&t.user.id)||null; }catch(e){}
+      fetch(U,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','apikey':K,'Authorization':'Bearer '+K,'Prefer':'return=minimal'},
+        body:JSON.stringify({uid:uid,auth_uid:auth,role:role,page:PAGE,event:event,meta:meta||null})}).catch(function(){});
+    }catch(e){}
+  };
+  sommLog('page_view');
+})();
+</script>
+</body>
+</html>

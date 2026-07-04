@@ -1673,6 +1673,7 @@
 <div class="stk-publish-bar" id="stkPublishBar">
   <input class="stk-input" id="stkStoreName" placeholder="店舗名（検索結果に表示されます）" style="margin-bottom:8px;">
   <input class="stk-input" id="stkStoreAddr" placeholder="住所（例: 渋谷区神宮前3-5-6）" style="margin-bottom:8px;">
+  <input class="stk-input" id="stkStoreIg" placeholder="Instagram（任意・例: @yourshop）" style="margin-bottom:8px;">
   <button class="stk-pub-btn" onclick="publishStock()">🌐 在庫情報をソムリンに公開する</button>
 </div>
 
@@ -3482,6 +3483,9 @@ async function publishStock() {
       body: JSON.stringify({ owner_id: uid, display_name: name, address: addr || null, is_public: true })
     });
     if (!r.ok) throw 0;
+    // Instagram（任意）はprofilesへ＝レビュアー一覧にリンク表示される
+    const ig = (document.getElementById('stkStoreIg').value || '').trim().replace(/^@/, '').slice(0, 60);
+    try { await rwFetch('profiles?id=eq.' + uid, { method:'PATCH', body: JSON.stringify({ instagram: ig || null }) }); } catch (e2) {}
   } catch (e) { showToast('⚠️ 公開に失敗しました（通信環境をご確認ください）'); return; }
   restaurant.isPrivate = false;
   const t = document.getElementById('privacyToggle'); if (t) t.checked = true;

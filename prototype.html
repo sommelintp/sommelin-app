@@ -3314,12 +3314,15 @@ async function loadTopWines() {
         ? `🗣 みんなの評価 <strong>${it.communityAvg ?? '—'}</strong>（${it.communityCount}件）`
         : '総合評価ベース';
       const cospaBadge = it.goodValue ? '<span class="rank-stat">💰 コスパ良好</span>' : '';
+      const producerLink = w.producer
+        ? ` / <a href="producer.html?p=${encodeURIComponent(w.producer)}" style="color:inherit;text-decoration:underline;text-decoration-color:var(--border);">${escR(w.producer)}</a>`
+        : '';
       return `
       <div class="ranking-wine-card">
         <div class="rank-badge ${badge}">${i+1}</div>
         <div class="rank-wine-info">
           <div class="rank-wine-name">${escR(w.name)}${w.vintage && w.vintage!=='NV' ? ' ' + escR(w.vintage) : ''}</div>
-          <div class="rank-wine-region">${escR(region)}${w.producer ? ' / ' + escR(w.producer) : ''}</div>
+          <div class="rank-wine-region">${escR(region)}${producerLink}</div>
           <div class="rank-wine-stats">
             <span class="rank-stat">${starsHtml(it.total)}</span>
             <span class="rank-stat">参考価格 <strong>${price}</strong></span>
