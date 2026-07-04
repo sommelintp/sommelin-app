@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>ソムリン — 信頼できるレビュアーを探す</title>
+<meta name="theme-color" content="#5C0E2A">
+<style>
+:root{ --burgundy:#9B1B4B; --wine-dark:#5C0E2A; --gold:#C9973A; --bg:#F8F4EF; --text:#2C1810; --text-sub:#7A6055; --border:#E8DDD5; }
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{
+  font-family:-apple-system,'Hiragino Sans',sans-serif;
+  background:var(--bg); color:var(--text);
+  max-width:430px; margin:0 auto; min-height:100dvh; padding:0 0 40px;
+}
+.top{
+  background:linear-gradient(135deg,var(--wine-dark),var(--burgundy));
+  padding:52px 16px 16px;display:flex;align-items:center;gap:12px;color:#fff;
+}
+.top a{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;
+  font-size:18px;display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0;}
+.top .t1{font-size:17px;font-weight:800;}
+.top .t2{font-size:11px;color:rgba(255,255,255,.75);margin-top:1px;}
+
+.wrap{padding:14px 16px;}
+.desc{font-size:12px;color:var(--text-sub);line-height:1.7;margin-bottom:14px;}
+
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;}
+.tab{flex-shrink:0;background:#fff;border:1.5px solid var(--border);border-radius:20px;padding:7px 14px;
+  font-size:12px;font-weight:700;color:var(--text-sub);cursor:pointer;white-space:nowrap;}
+.tab.on{background:var(--burgundy);border-color:var(--burgundy);color:#fff;}
+
+.followBox{background:#fff;border:1.5px solid var(--gold);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:none;}
+.followBox.show{display:block;}
+.followBox .ft{font-size:12px;font-weight:800;color:var(--text);margin-bottom:8px;}
+.pickRow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--border);}
+.pickRow:first-of-type{border-top:none;}
+.pickRow .pn{font-size:12px;font-weight:700;color:var(--text);}
+.pickRow .ps{font-size:10px;color:var(--text-sub);margin-top:2px;}
+.pickRow .pr{font-size:11px;color:var(--gold);font-weight:800;white-space:nowrap;}
+
+.rcard{background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:10px;
+  display:flex;align-items:center;gap:12px;}
+.ravatar{width:44px;height:44px;border-radius:50%;background:var(--bg);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;object-fit:cover;}
+.rinfo{flex:1;min-width:0;}
+.rname{font-size:13px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:5px;}
+.rtier{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;white-space:nowrap;}
+.rtier.hi{background:#FFF3D6;color:#8a6d1f;}
+.rtier.lo{background:var(--bg);color:var(--text-sub);}
+.rstats{font-size:11px;color:var(--text-sub);margin-top:3px;}
+.rfollowbtn{flex-shrink:0;border:1.5px solid var(--burgundy);border-radius:20px;padding:7px 14px;
+  font-size:12px;font-weight:800;color:var(--burgundy);background:#fff;cursor:pointer;font-family:inherit;}
+.rfollowbtn.on{background:var(--burgundy);color:#fff;}
+
+.empty{text-align:center;padding:40px 20px;color:var(--text-sub);}
+.empty .ei{font-size:36px;margin-bottom:8px;}
+.empty .et{font-size:13px;font-weight:700;color:var(--text);}
+.empty .es{font-size:11px;margin-top:6px;line-height:1.7;}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <a href="prototype.html">‹</a>
+  <div>
+    <div class="t1">🧑‍🍳 レビュアーを探す</div>
+    <div class="t2">信頼できる評価をフォローしよう</div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="desc">試飲メモで評価を投稿しているみなさんの一覧です。認定ソムリエ・経験豊富なレビュアー・評価誌の意見ほど上位に表示されます。フォローすると、その人が高く評価したワインをまとめてチェックできます。</div>
+
+  <div class="followBox" id="followBox">
+    <div class="ft">👥 フォロー中の人のおすすめ</div>
+    <div id="followPicks"></div>
+  </div>
+
+  <div class="tabs" id="tierTabs">
+    <div class="tab on" data-tier="all">全員</div>
+    <div class="tab" data-tier="founder">👑 創業者</div>
+    <div class="tab" data-tier="critic">📰 評価誌・批評家</div>
+    <div class="tab" data-tier="verified">🎖️ 認定ソムリエ</div>
+    <div class="tab" data-tier="experienced">🍷 経験豊富</div>
+  </div>
+
+  <div id="list">
+    <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+const UID = (() => { try {
+  let u = localStorage.getItem('somm_uid');
+  if (!u) { u = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid', u); }
+  return u;
+} catch(e){ return ''; } })();
+
+let allReviewers = [];
+let followedIds = new Set();
+let currentTier = 'all';
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function tierKey(tier) {
+  if (tier.label === '創業者') return 'founder';
+  if (tier.label === '評価誌・批評家') return 'critic';
+  if (tier.label === '認定ソムリエ') return 'verified';
+  if (tier.label === '経験豊富なレビュアー') return 'experienced';
+  return 'other';
+}
+
+function renderList() {
+  const box = document.getElementById('list');
+  const items = currentTier === 'all' ? allReviewers : allReviewers.filter(r => tierKey(r.tier) === currentTier);
+  if (!items.length) {
+    box.innerHTML = `<div class="empty"><div class="ei">🔍</div><div class="et">まだレビュアーがいません</div>
+      <div class="es">お店が試飲メモで★評価を投稿すると、ここに並びます</div></div>`;
+    return;
+  }
+  box.innerHTML = items.map(r => {
+    const isHi = ['founder','critic','verified'].includes(tierKey(r.tier));
+    const avatar = r.avatarUrl ? `<img class="ravatar" src="${esc(r.avatarUrl)}" alt="">` : `<div class="ravatar">${r.tier.icon}</div>`;
+    const following = followedIds.has(r.reviewerId);
+    return `
+    <div class="rcard">
+      ${avatar}
+      <div class="rinfo">
+        <div class="rname">${esc(r.name)} <span class="rtier ${isHi?'hi':'lo'}">${r.tier.icon} ${esc(r.tier.label)}</span></div>
+        <div class="rstats">評価 ${r.reviewCount}件 ・ 平均★${r.avgRating} ・ フォロワー${r.followerCount}人</div>
+      </div>
+      <button class="rfollowbtn ${following?'on':''}" onclick="toggleFollow('${r.reviewerId}', this)">${following ? 'フォロー中' : '＋ フォロー'}</button>
+    </div>`;
+  }).join('');
+}
+
+async function toggleFollow(reviewerId, btn) {
+  const willFollow = !followedIds.has(reviewerId);
+  btn.disabled = true;
+  try {
+    const r = await fetch(API_BASE + '/api/reviewers/follow', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid: UID, reviewerId, follow: willFollow })
+    });
+    if (!r.ok) throw 0;
+    if (willFollow) followedIds.add(reviewerId); else followedIds.delete(reviewerId);
+    if (window.sommLog) sommLog('reviewer_follow', { follow: willFollow });
+    renderList();
+    loadFollowingPicks();
+  } catch (e) {
+    btn.disabled = false;
+  }
+}
+
+async function loadReviewers() {
+  try {
+    const r = await fetch(API_BASE + '/api/reviewers?limit=50');
+    const d = await r.json();
+    allReviewers = d.items || [];
+  } catch (e) { allReviewers = []; }
+  renderList();
+}
+
+async function loadFollowingPicks() {
+  const box = document.getElementById('followBox');
+  try {
+    const r = await fetch(API_BASE + '/api/reviewers/following?uid=' + encodeURIComponent(UID));
+    const d = await r.json();
+    followedIds = new Set(d.reviewerIds || []);
+    renderList(); // フォロー状態の反映
+    if (!d.reviewerIds || !d.reviewerIds.length) { box.classList.remove('show'); return; }
+    if (!d.picks || !d.picks.length) {
+      box.classList.add('show');
+      document.getElementById('followPicks').innerHTML = '<div style="font-size:11px;color:var(--text-sub);">フォロー中の人の評価が集まり次第、おすすめが出ます</div>';
+      return;
+    }
+    box.classList.add('show');
+    document.getElementById('followPicks').innerHTML = d.picks.slice(0, 5).map(p => `
+      <div class="pickRow">
+        <div>
+          <div class="pn">${esc(p.wine.name)}</div>
+          <div class="ps">${esc(p.reviewerNames.join('・'))}が評価</div>
+        </div>
+        <div class="pr">★${p.avgRating}</div>
+      </div>`).join('');
+  } catch (e) { box.classList.remove('show'); }
+}
+
+document.getElementById('tierTabs').addEventListener('click', e => {
+  const t = e.target.closest('.tab'); if (!t) return;
+  document.querySelectorAll('#tierTabs .tab').forEach(x => x.classList.remove('on'));
+  t.classList.add('on');
+  currentTier = t.dataset.tier;
+  if (window.sommLog) sommLog('reviewer_tier_view', { tier: currentTier });
+  renderList();
+});
+
+loadReviewers();
+loadFollowingPicks();
+</script>
+<script>
+/* ===== 利用ログ（app_events・書き込み専用。読み取り不可） ===== */
+(function(){
+  var PAGE='reviewer_hub';
+  var U='https://gkhdpzfmqraliwaiubwl.supabase.co/rest/v1/app_events';
+  var K='sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+  var uid='na';
+  try{
+    uid=localStorage.getItem('somm_uid');
+    if(!uid){ uid=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid',uid); }
+  }catch(e){}
+  window.sommLog=function(event,meta){
+    try{
+      var role=null,auth=null;
+      try{ role=localStorage.getItem('sommelin_role')||null; }catch(e){}
+      try{ var t=JSON.parse(localStorage.getItem('sb-gkhdpzfmqraliwaiubwl-auth-token')||'null'); auth=(t&&t.user&&t.user.id)||null; }catch(e){}
+      fetch(U,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','apikey':K,'Authorization':'Bearer '+K,'Prefer':'return=minimal'},
+        body:JSON.stringify({uid:uid,auth_uid:auth,role:role,page:PAGE,event:event,meta:meta||null})}).catch(function(){});
+    }catch(e){}
+  };
+  sommLog('page_view');
+})();
+</script>
+</body>
+</html>
