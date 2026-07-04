@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>ソムリン — 好みの近い人</title>
+<meta name="theme-color" content="#5C0E2A">
+<style>
+:root{ --burgundy:#9B1B4B; --wine-dark:#5C0E2A; --gold:#C9973A; --bg:#F8F4EF; --text:#2C1810; --text-sub:#7A6055; --border:#E8DDD5; }
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg); color:var(--text);
+  max-width:430px; margin:0 auto; min-height:100dvh; padding:0 0 60px; }
+.top{ background:linear-gradient(135deg,var(--wine-dark),var(--burgundy)); padding:52px 16px 16px; color:#fff;
+  display:flex; align-items:center; gap:12px; }
+.top a{ width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;
+  font-size:18px;display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0; }
+.top .t1{ font-size:17px; font-weight:800; }
+.top .t2{ font-size:11px; color:rgba(255,255,255,.75); margin-top:1px; }
+.tabs{ display:flex; background:#fff; border-bottom:1px solid var(--border); }
+.tab{ flex:1; text-align:center; padding:13px; font-size:13px; font-weight:700; color:var(--text-sub);
+  cursor:pointer; border-bottom:3px solid transparent; }
+.tab.on{ color:var(--burgundy); border-bottom-color:var(--burgundy); }
+.wrap{ padding:16px; }
+.desc{ font-size:12px; color:var(--text-sub); line-height:1.7; margin-bottom:14px; }
+.pcard{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:12px 14px; margin-bottom:10px;
+  display:flex; align-items:center; gap:12px; cursor:pointer; }
+.pavatar{ width:40px; height:40px; border-radius:50%; background:var(--bg); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.pinfo{ flex:1; min-width:0; }
+.pname{ font-size:13px; font-weight:800; }
+.pstats{ font-size:11px; color:var(--text-sub); margin-top:2px; }
+.simbar{ height:5px; background:var(--bg); border-radius:3px; margin-top:6px; overflow:hidden; }
+.simbar-fill{ height:100%; background:var(--gold); }
+.followbtn{ flex-shrink:0; border:1.5px solid var(--burgundy); border-radius:20px; padding:7px 12px;
+  font-size:11px; font-weight:800; color:var(--burgundy); background:#fff; cursor:pointer; font-family:inherit; }
+.followbtn.on{ background:var(--burgundy); color:#fff; }
+.wcard{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:12px 14px; margin-bottom:8px; }
+.wname{ font-size:13px; font-weight:800; }
+.wmeta{ font-size:11px; color:var(--text-sub); margin-top:3px; }
+.empty{ text-align:center; padding:40px 20px; color:var(--text-sub); }
+.empty .ei{ font-size:36px; margin-bottom:8px; }
+.empty .et{ font-size:13px; font-weight:700; color:var(--text); }
+.empty .es{ font-size:11px; margin-top:6px; line-height:1.7; }
+.empty a{ color:var(--burgundy); font-weight:700; }
+
+/* プロフィールモーダル */
+#profModal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:2000; }
+#profModal.show{ display:block; }
+.profsheet{ position:absolute; left:50%; bottom:0; transform:translateX(-50%); width:100%; max-width:430px;
+  background:var(--bg); border-radius:20px 20px 0 0; padding:16px; max-height:80vh; overflow:auto; }
+.handle{ width:40px; height:4px; border-radius:2px; background:var(--border); margin:0 auto 12px; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <a href="prototype.html">‹</a>
+  <div>
+    <div class="t1">👥 ワイン仲間</div>
+    <div class="t2">好みが近い人・フォロー中の人</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab on" id="tab-similar" onclick="switchTab('similar')">👥 好みが近い人</div>
+  <div class="tab" id="tab-following" onclick="switchTab('following')">⭐ フォロー中</div>
+</div>
+
+<div class="wrap">
+  <div id="similarPane">
+    <div class="desc">あなたが「好きなワイン」に登録した傾向から、好みが近い人を見つけます。名前は匿名のニックネームで表示されます。</div>
+    <div id="similarList"><div class="empty">読み込み中…</div></div>
+  </div>
+  <div id="followingPane" style="display:none;">
+    <div id="followingList"><div class="empty">読み込み中…</div></div>
+  </div>
+</div>
+
+<div id="profModal" onclick="if(event.target===this)closeProfile()">
+  <div class="profsheet">
+    <div class="handle"></div>
+    <div id="profBody"></div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+const UID = (() => { try {
+  let u = localStorage.getItem('somm_uid');
+  if (!u) { u = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid', u); }
+  return u;
+} catch(e){ return ''; } })();
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+let followedIds = new Set();
+
+function switchTab(tab) {
+  if (window.sommLog) sommLog('social_tab_view', { tab });
+  document.getElementById('tab-similar').classList.toggle('on', tab === 'similar');
+  document.getElementById('tab-following').classList.toggle('on', tab === 'following');
+  document.getElementById('similarPane').style.display = tab === 'similar' ? 'block' : 'none';
+  document.getElementById('followingPane').style.display = tab === 'following' ? 'block' : 'none';
+  if (tab === 'following') loadFollowing();
+}
+
+async function loadSimilar() {
+  const box = document.getElementById('similarList');
+  try {
+    const r = await fetch(API_BASE + '/api/social/similar?uid=' + encodeURIComponent(UID));
+    const d = await r.json();
+    if (!d.ready) {
+      box.innerHTML = `<div class="empty"><div class="ei">🍷</div><div class="et">好みの登録がまだ足りません</div>
+        <div class="es">「好きなワイン」を3本以上登録すると、<br>好みが近い人が見つかります。<br><a href="taste.html">好みを登録する →</a></div></div>`;
+      return;
+    }
+    const items = d.items || [];
+    if (!items.length) {
+      box.innerHTML = `<div class="empty"><div class="ei">🔍</div><div class="et">まだ近い人が見つかりません</div>
+        <div class="es">利用者が増えると見つかりやすくなります</div></div>`;
+      return;
+    }
+    box.innerHTML = items.map(p => `
+      <div class="pcard" onclick="openProfile('${p.socialId}')">
+        <div class="pavatar">🙂</div>
+        <div class="pinfo">
+          <div class="pname">${esc(p.nickname)}</div>
+          <div class="pstats">好み一致度 ${p.similarity}% ・ 登録${p.tasteCount}本</div>
+          <div class="simbar"><div class="simbar-fill" style="width:${p.similarity}%;"></div></div>
+        </div>
+      </div>`).join('');
+  } catch (e) {
+    box.innerHTML = '<div class="empty">読み込めませんでした（通信環境をご確認ください）</div>';
+  }
+}
+
+async function loadFollowing() {
+  const box = document.getElementById('followingList');
+  try {
+    const r = await fetch(API_BASE + '/api/social/following?uid=' + encodeURIComponent(UID));
+    const d = await r.json();
+    const items = d.items || [];
+    if (!items.length) {
+      box.innerHTML = `<div class="empty"><div class="ei">⭐</div><div class="et">フォロー中の人がいません</div>
+        <div class="es">「好みが近い人」タブからフォローすると、<br>その人が好きなワインがここに並びます</div></div>`;
+      return;
+    }
+    box.innerHTML = items.map(it => `
+      <div class="wcard">
+        <div class="wname">${esc(it.name || '（銘柄不明）')}</div>
+        <div class="wmeta">${esc([it.iro, it.kuni].filter(Boolean).join(' ・ '))} ・ ${esc(it.nickname)}さんが好き</div>
+      </div>`).join('');
+  } catch (e) {
+    box.innerHTML = '<div class="empty">読み込めませんでした（通信環境をご確認ください）</div>';
+  }
+}
+
+async function openProfile(socialId) {
+  if (window.sommLog) sommLog('social_profile_view', { socialId });
+  const modal = document.getElementById('profModal');
+  const body = document.getElementById('profBody');
+  modal.classList.add('show');
+  body.innerHTML = '<div class="empty">読み込み中…</div>';
+  try {
+    const r = await fetch(API_BASE + '/api/social/profile?socialId=' + encodeURIComponent(socialId));
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    const following = followedIds.has(socialId);
+    body.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="pavatar" style="width:52px;height:52px;font-size:24px;">🙂</div>
+        <div style="flex:1;">
+          <div style="font-size:16px;font-weight:800;">${esc(d.nickname)}</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">フォロワー ${d.followerCount}人</div>
+        </div>
+        <button class="followbtn ${following?'on':''}" id="profFollowBtn" onclick="toggleFollow('${socialId}')">${following ? 'フォロー中' : '＋ フォロー'}</button>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);margin:16px 0 8px;">好きなワイン</div>
+      ${(d.wines||[]).length ? d.wines.map(w => `
+        <div class="wcard">
+          <div class="wname">${esc(w.name || '（銘柄不明）')}</div>
+          <div class="wmeta">${esc([w.iro, w.kuni, w.chiiki].filter(Boolean).join(' ・ '))}</div>
+        </div>`).join('') : '<div style="font-size:12px;color:var(--text-sub);">まだ登録がありません</div>'}
+    `;
+  } catch (e) {
+    body.innerHTML = '<div class="empty">読み込めませんでした</div>';
+  }
+}
+
+function closeProfile() { document.getElementById('profModal').classList.remove('show'); }
+
+async function toggleFollow(socialId) {
+  const willFollow = !followedIds.has(socialId);
+  try {
+    const r = await fetch(API_BASE + '/api/social/follow', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid: UID, targetSocialId: socialId, follow: willFollow })
+    });
+    if (!r.ok) throw 0;
+    if (willFollow) followedIds.add(socialId); else followedIds.delete(socialId);
+    if (window.sommLog) sommLog('social_follow', { follow: willFollow });
+    const btn = document.getElementById('profFollowBtn');
+    if (btn) { btn.textContent = willFollow ? 'フォロー中' : '＋ フォロー'; btn.classList.toggle('on', willFollow); }
+  } catch (e) {}
+}
+
+loadSimilar();
+</script>
+<script>
+/* ===== 利用ログ（app_events・書き込み専用。読み取り不可） ===== */
+(function(){
+  var PAGE='wine_social';
+  var U='https://gkhdpzfmqraliwaiubwl.supabase.co/rest/v1/app_events';
+  var K='sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+  var uid='na';
+  try{
+    uid=localStorage.getItem('somm_uid');
+    if(!uid){ uid=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid',uid); }
+  }catch(e){}
+  window.sommLog=function(event,meta){
+    try{
+      var role=null,auth=null;
+      try{ role=localStorage.getItem('sommelin_role')||null; }catch(e){}
+      try{ var t=JSON.parse(localStorage.getItem('sb-gkhdpzfmqraliwaiubwl-auth-token')||'null'); auth=(t&&t.user&&t.user.id)||null; }catch(e){}
+      fetch(U,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','apikey':K,'Authorization':'Bearer '+K,'Prefer':'return=minimal'},
+        body:JSON.stringify({uid:uid,auth_uid:auth,role:role,page:PAGE,event:event,meta:meta||null})}).catch(function(){});
+    }catch(e){}
+  };
+  sommLog('page_view');
+})();
+</script>
+</body>
+</html>

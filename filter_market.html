@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>ソムリン — フィルターを探す</title>
+<meta name="theme-color" content="#5C0E2A">
+<style>
+:root{ --burgundy:#9B1B4B; --wine-dark:#5C0E2A; --gold:#C9973A; --bg:#F8F4EF; --text:#2C1810; --text-sub:#7A6055; --border:#E8DDD5; }
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg); color:var(--text);
+  max-width:430px; margin:0 auto; min-height:100dvh; padding:0 0 60px; }
+.top{ background:linear-gradient(135deg,var(--wine-dark),var(--burgundy)); padding:52px 16px 20px; color:#fff;
+  display:flex; align-items:center; gap:12px; }
+.top a{ width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;
+  font-size:18px;display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0; }
+.top .t1{ font-size:17px; font-weight:800; }
+.top .t2{ font-size:11px; color:rgba(255,255,255,.75); margin-top:1px; }
+.wrap{ padding:16px; }
+.createbtn{ display:block; text-align:center; background:#fff; border:1.5px dashed var(--burgundy); border-radius:14px;
+  padding:14px; margin-bottom:16px; color:var(--burgundy); font-size:13px; font-weight:800; text-decoration:none; }
+.fcard{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:10px;
+  display:flex; align-items:center; gap:12px; cursor:pointer; }
+.femoji{ font-size:26px; width:44px; height:44px; border-radius:50%; background:var(--bg); display:flex;
+  align-items:center; justify-content:center; flex-shrink:0; }
+.finfo{ flex:1; min-width:0; }
+.ftitle{ font-size:14px; font-weight:800; }
+.fmeta{ font-size:11px; color:var(--text-sub); margin-top:3px; }
+.fconds{ font-size:10px; color:var(--text-sub); margin-top:4px; display:flex; flex-wrap:wrap; gap:4px; }
+.fcond-tag{ background:var(--bg); border-radius:10px; padding:1px 7px; }
+.empty{ text-align:center; padding:40px 20px; color:var(--text-sub); }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <a href="prototype.html">‹</a>
+  <div>
+    <div class="t1">🎨 フィルターを探す</div>
+    <div class="t2">みんなが作った条件でワインを探す</div>
+  </div>
+</div>
+
+<div class="wrap">
+  <a class="createbtn" href="filter_creator.html">＋ 自分のフィルターを作る</a>
+  <div id="list"><div class="empty">読み込み中…</div></div>
+</div>
+
+<script>
+const API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+const UID = (() => { try {
+  let u = localStorage.getItem('somm_uid');
+  if (!u) { u = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid', u); }
+  return u;
+} catch(e){ return ''; } })();
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function condSummary(c) {
+  const tags = [];
+  if (c.iro && c.iro.length) tags.push(c.iro.join('/'));
+  if (c.kuni && c.kuni.length) tags.push(c.kuni.join('/'));
+  if (c.priceMin || c.priceMax) tags.push('¥' + (c.priceMin||0).toLocaleString('ja-JP') + '〜' + (c.priceMax?c.priceMax.toLocaleString('ja-JP'):''));
+  if (c.minSp) tags.push('評価高め');
+  return tags;
+}
+
+async function load() {
+  const box = document.getElementById('list');
+  try {
+    const r = await fetch(API_BASE + '/api/filters?limit=50');
+    const d = await r.json();
+    const items = d.items || [];
+    if (!items.length) {
+      box.innerHTML = '<div class="empty">🎨 まだフィルターがありません<br>最初のフィルターを作ってみませんか？</div>';
+      return;
+    }
+    box.innerHTML = items.map(f => `
+      <div class="fcard" onclick="useFilter('${f.id}')">
+        <div class="femoji">${f.emoji || '🍷'}</div>
+        <div class="finfo">
+          <div class="ftitle">${esc(f.title)}</div>
+          <div class="fmeta">${f.creator_name ? esc(f.creator_name) + ' さん作 ・ ' : ''}利用 ${f.install_count || 0}回</div>
+          <div class="fconds">${condSummary(f.conditions || {}).map(t => `<span class="fcond-tag">${esc(t)}</span>`).join('')}</div>
+        </div>
+      </div>`).join('');
+  } catch (e) {
+    box.innerHTML = '<div class="empty">読み込めませんでした（通信環境をご確認ください）</div>';
+  }
+}
+
+async function useFilter(filterId) {
+  if (window.sommLog) sommLog('filter_use', { filterId });
+  try { await fetch(API_BASE + '/api/filters/' + filterId + '/install', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uid: UID })
+  }); } catch (e) {}
+  location.href = 'wine_search.html?filter=' + encodeURIComponent(filterId);
+}
+
+load();
+</script>
+<script>
+/* ===== 利用ログ（app_events・書き込み専用。読み取り不可） ===== */
+(function(){
+  var PAGE='filter_market';
+  var U='https://gkhdpzfmqraliwaiubwl.supabase.co/rest/v1/app_events';
+  var K='sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+  var uid='na';
+  try{
+    uid=localStorage.getItem('somm_uid');
+    if(!uid){ uid=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid',uid); }
+  }catch(e){}
+  window.sommLog=function(event,meta){
+    try{
+      var role=null,auth=null;
+      try{ role=localStorage.getItem('sommelin_role')||null; }catch(e){}
+      try{ var t=JSON.parse(localStorage.getItem('sb-gkhdpzfmqraliwaiubwl-auth-token')||'null'); auth=(t&&t.user&&t.user.id)||null; }catch(e){}
+      fetch(U,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','apikey':K,'Authorization':'Bearer '+K,'Prefer':'return=minimal'},
+        body:JSON.stringify({uid:uid,auth_uid:auth,role:role,page:PAGE,event:event,meta:meta||null})}).catch(function(){});
+    }catch(e){}
+  };
+  sommLog('page_view');
+})();
+</script>
+</body>
+</html>
