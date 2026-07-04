@@ -110,6 +110,9 @@ body{
 #frozenBar .fs{font-size:12px;color:rgba(255,255,255,.88);text-align:center;margin-bottom:10px;font-weight:700;line-height:1.5;}
 #frozenBar .fb1{width:100%;padding:14px;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;
   background:#fff;color:var(--burgundy);}
+#frozenBar .fb2{width:100%;padding:11px;margin-bottom:8px;border:1.5px solid rgba(255,255,255,.5);border-radius:14px;
+  font-size:13px;font-weight:700;cursor:pointer;background:rgba(255,255,255,.12);color:#fff;}
+#frozenBar .fb2:disabled{opacity:.6;cursor:default;border-color:rgba(255,255,255,.25);}
 .bot-btn{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:16px;
   padding:8px 14px;font-size:12px;color:#fff;cursor:pointer;display:flex;align-items:center;gap:6px;}
 .bot-btn input{display:none;}
@@ -212,6 +215,7 @@ body{
   <div id="marks"></div>
   <div id="frozenBar">
     <div class="fs" id="frozenSum">—</div>
+    <button class="fb2" id="frozenPlaceBtn" style="display:none;" onclick="openPlacePicker()">📍 このお店を記録する</button>
     <button class="fb1" onclick="resumeLive()">↺ 撮り直す</button>
   </div>
 
@@ -298,6 +302,7 @@ let stream=null, busy=false;
 let MODE='bottle';                 // 'bottle' | 'list'
 let listItems=[], listPages=0;     // リストモードの累積（複数ページ）
 let listPlace=null, lastListScanId=null, listHasTaste=false;  // お店記録（みんなのワイン地図）
+let shelfPlace=null;  // 棚モードでのお店記録（同じくみんなのワイン地図に協力）
 
 // 匿名ユーザーID（好みプロファイル用。端末に保存）
 const UID=(()=>{ let u=localStorage.getItem('somm_uid');
@@ -311,6 +316,7 @@ function setMode(m){
   document.getElementById('modeList').classList.toggle('on',m==='list');
   if(m==='list'){
     setSub('リストモード'); document.getElementById('shootHint').textContent='ワインリストを撮影（複数ページOK）';
+    shelfPlace=null;   // リストに切替たら棚モードの記録状態はリセット
   }else{
     setSub('撮るだけで全ボトル評価'); document.getElementById('shootHint').textContent='1本でも棚ごとでもOK。撮るだけ';
     listItems=[]; listPages=0; listPlace=null; lastListScanId=null;   // ボトルに戻したらリスト累積はリセット
@@ -477,6 +483,10 @@ function renderMarks(res){
   document.getElementById('frozenSum').textContent=
     `${s.total||res.bottles.length}本を検出 ・ 評価あり ${s.known||0}本${s.fits?` ・ ❤️好み ${s.fits}本`:''}｜マーカーをタップで詳細`;
   document.getElementById('frozenBar').style.display='block';
+  const placeBtn=document.getElementById('frozenPlaceBtn');
+  if(shelfPlace){ placeBtn.style.display='block'; placeBtn.disabled=true; placeBtn.textContent=`📍 ${shelfPlace.name} として記録済み`; }
+  else if((s.known||0)>0){ placeBtn.style.display='block'; placeBtn.disabled=false; placeBtn.textContent='📍 このお店を記録する'; }
+  else { placeBtn.style.display='none'; }
   setSub('タップで詳細');
 }
 
@@ -652,9 +662,14 @@ function renderListSheet(){
 }
 
 // ── 「このお店を記録」（みんなのワイン地図。GPS→OSM候補 or 店名手入力→backend保存） ──
-let _ppItems=[], _ppLoc=null;
+// list=リストモード（リスト一覧シートから開く）／bottle=棚モード（frozenBarのボタンから開く）
+let _ppItems=[], _ppLoc=null, _ppMode='list';
 
 function openPlacePicker(){
+  _ppMode = MODE==='list' ? 'list' : 'bottle';
+  const backBtn = _ppMode==='list'
+    ? `<button class="sh-sub" style="flex:1" onclick="renderListSheet()">← リストに戻る</button>`
+    : `<button class="sh-sub" style="flex:1" onclick="closeSheet()">閉じる</button>`;
   document.getElementById('sheetBody').innerHTML=`
     <div class="sh-pill" style="background:var(--burgundy)">📍 どこのお店ですか？</div>
     <div class="sh-meta">お店を選ぶと「この店にはこのワインがある」という情報がソムリンに貯まり、みんなの「どこで飲める？」に役立ちます。記録は匿名です。</div>
@@ -664,7 +679,8 @@ function openPlacePicker(){
       <input id="ppManual" placeholder="お店の名前" style="flex:1;padding:12px;border:1px solid #ddd;border-radius:10px;font-size:14px;min-width:0;">
       <button class="sh-sub" onclick="reportPlaceManual()">記録</button>
     </div>
-    <div class="sh-btns"><button class="sh-sub" style="flex:1" onclick="renderListSheet()">← リストに戻る</button></div>`;
+    <div class="sh-btns">${backBtn}</div>`;
+  openSheet();
   if(!navigator.geolocation){
     document.getElementById('ppBody').innerHTML='<div class="cand-h">位置情報が使えない端末です。店名を入力してください。</div>';
     return;
@@ -706,22 +722,41 @@ function listReportItems(){
   }));
 }
 
+// 棚モード（ボトル撮影）の検出結果を、店記録の共通フォーマットに変換
+function shelfReportItems(){
+  if(!shelfRes) return [];
+  return shelfRes.bottles.filter(b=>b.readable).slice(0,60).map(b=>{
+    const w=b.match&&b.match.wine, id=b.identification||{};
+    return {
+      name:(w&&w.name)||[id.producer,id.wine].filter(Boolean).join(' ')||null,
+      producer:id.producer||null,
+      vintage:id.vintage!=null?id.vintage:null,
+      color:id.color||null,
+      listPrice:null, byGlass:false,
+      wineId:w?w.id:null,
+    };
+  }).filter(it=>it.name);
+}
+
 async function sendPlaceReport(place){
-  if(window.sommLog) sommLog('report_place');
+  if(window.sommLog) sommLog('report_place',{mode:_ppMode});
   try{
+    const items = _ppMode==='list' ? listReportItems() : shelfReportItems();
+    const scanId = _ppMode==='list' ? lastListScanId : (shelfRes&&shelfRes.scanId);
     const r=await fetch(API_BASE+'/api/report-place',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ place, items:listReportItems(), scanId:lastListScanId })
+      body: JSON.stringify({ place, items, scanId })
     });
     if(!r.ok) throw 0;
     const d=await r.json();
-    listPlace={ id:d.placeId, name:place.name };
+    if(_ppMode==='list'){ listPlace={ id:d.placeId, name:place.name }; renderListSheet(); }
+    else{ shelfPlace={ id:d.placeId, name:place.name }; closeSheet(); if(shelfRes) renderMarks(shelfRes); }
     toast('記録しました。ありがとうございます！ 🍷');
   }catch(e){
     toast('保存に失敗しました。通信環境をご確認ください');
+    if(_ppMode==='list') renderListSheet();
   }
-  renderListSheet();
 }
 function reportPlacePick(i){ const p=_ppItems[i]; if(p) sendPlaceReport({ id:p.id, name:p.name, lat:p.lat, lng:p.lng, kind:p.kind }); }
 function reportPlaceManual(){
