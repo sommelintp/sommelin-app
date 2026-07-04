@@ -323,20 +323,24 @@
     .ex-name { font-size: 13px; font-weight: 700; }
     .ex-meta { font-size: 11px; color: var(--gray); margin-top: 2px; }
     .ex-arrow { font-size: 14px; color: #ccc; }
+    .lang-toggle { position: absolute; top: 16px; right: 16px; z-index: 2;
+      background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.32);
+      color: #fff; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 20px; cursor: pointer; }
   </style>
 </head>
 <body>
 
 <!-- HERO HEADER -->
 <div class="hero">
-  <div class="hero-label">🔍 ワイン検索</div>
-  <div class="hero-title">飲みたいワインを<br>どこで買う？どこで飲む？</div>
-  <div class="hero-sub">ワイン名・生産者・産地を入力すると<br>購入先・飲めるお店が見つかります</div>
+  <button class="lang-toggle" id="langBtn" onclick="setLang(LANG==='ja'?'en':'ja')"></button>
+  <div class="hero-label" data-i18n="hero_label">🔍 ワイン検索</div>
+  <div class="hero-title" data-i18n-html="hero_title">飲みたいワインを<br>どこで買う？どこで飲む？</div>
+  <div class="hero-sub" data-i18n-html="hero_sub">ワイン名・生産者・産地を入力すると<br>購入先・飲めるお店が見つかります</div>
   <div class="search-box">
     <span class="search-icon">🍷</span>
-    <input class="search-input" id="searchInput" type="search"
+    <input class="search-input" id="searchInput" type="search" data-i18n-ph="search_ph"
       placeholder="例: Sassicaia, シャトー・マルゴー..." autocomplete="off" spellcheck="false">
-    <button class="search-go" id="searchBtn">検索</button>
+    <button class="search-go" id="searchBtn" data-i18n="search_btn">検索</button>
   </div>
 </div>
 
@@ -358,6 +362,69 @@
 <div class="content" id="content">
   <!-- Initial state is rendered by JS -->
 </div>
+
+<script>
+/* ===== 多言語対応（i18n）。将来 fr/it 等も I18N に言語を1つ足すだけで拡張できる構造 ===== */
+const I18N = {
+  ja: {
+    hero_label: '🔍 ワイン検索',
+    hero_title: '飲みたいワインを<br>どこで買う？どこで飲む？',
+    hero_sub: 'ワイン名・生産者・産地を入力すると<br>購入先・飲めるお店が見つかります',
+    search_ph: '例: Sassicaia, シャトー・マルゴー...',
+    search_btn: '検索',
+    intro_title: '🗺️ こんなふうに使えます',
+    flow_step1: '🍷 ワイン名を入力',
+    flow_step2: '🏪 ネットで購入',
+    flow_step3: '📍 お近くのお店へ',
+    uc1_title: 'ネット購入（楽天・Amazon）',
+    uc1_desc: 'ワイン名を検索すると楽天市場・Amazonの商品ページへ直接アクセス。最安値をすぐ比較できます。',
+    uc2_title: '近くのワインショップで買う',
+    uc2_desc: '登録済みのワインショップから在庫情報を検索。今後、店舗が増えるほど充実します。',
+    uc3_title: '飲めるレストランを探す',
+    uc3_desc: '「このワインが飲めるお店」を地図で探せる機能を準備中。レストランが自店のワインリストを登録します。',
+    ex_label: '🍾 このワインを探してみる',
+  },
+  en: {
+    hero_label: '🔍 Wine Search',
+    hero_title: 'Find the wine you want —<br>where to buy, where to drink',
+    hero_sub: 'Enter a wine name, producer, or region<br>to find where to buy or drink it',
+    search_ph: 'e.g. Sassicaia, Château Margaux...',
+    search_btn: 'Search',
+    intro_title: '🗺️ How it works',
+    flow_step1: '🍷 Enter a wine name',
+    flow_step2: '🏪 Buy it online',
+    flow_step3: '📍 Or find it nearby',
+    uc1_title: 'Buy online (Rakuten, Amazon)',
+    uc1_desc: 'Search a wine name to jump straight to Rakuten/Amazon listings and compare prices.',
+    uc2_title: 'Buy from a nearby wine shop',
+    uc2_desc: 'Search inventory from registered wine shops. Coverage grows as more shops join.',
+    uc3_title: 'Find a restaurant that serves it',
+    uc3_desc: 'A map of "where you can drink this" is in the works — restaurants register their own wine lists.',
+    ex_label: '🍾 Try searching for these',
+  },
+};
+let LANG = (() => { try { return localStorage.getItem('somm_lang') || (navigator.language && navigator.language.startsWith('ja') ? 'ja' : 'en'); } catch (e) { return 'ja'; } })();
+function t(key) {
+  const d = I18N[LANG] || I18N.ja;
+  return (d && d[key] != null) ? d[key] : (I18N.ja[key] != null ? I18N.ja[key] : key);
+}
+function applyI18n() {
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  const btn = document.getElementById('langBtn');
+  if (btn) btn.textContent = LANG === 'ja' ? '🌐 EN' : '🌐 日本語';
+  if (typeof renderInitial === 'function' && !currentQuery) renderInitial();
+}
+function setLang(l) {
+  LANG = l;
+  try { localStorage.setItem('somm_lang', l); } catch (e) {}
+  applyI18n();
+  if (window.sommLog) sommLog('lang_switch', { lang: l });
+}
+applyI18n(); // 静的な見出し・ボタン文言を反映（renderInitialの動的部分はDOMContentLoaded側でt()を使って描画）
+</script>
 
 <script>
 // ================================================================
@@ -503,13 +570,13 @@ function renderInitial() {
     <div class="initial-state">
 
       <div class="intro-card">
-        <div class="intro-card-title">🗺️ こんなふうに使えます</div>
+        <div class="intro-card-title">${t('intro_title')}</div>
         <div class="intro-flow">
-          <span class="flow-step">🍷 ワイン名を入力</span>
+          <span class="flow-step">${t('flow_step1')}</span>
           <span class="flow-arrow">→</span>
-          <span class="flow-step">🏪 ネットで購入</span>
+          <span class="flow-step">${t('flow_step2')}</span>
           <span class="flow-arrow">·</span>
-          <span class="flow-step">📍 お近くのお店へ</span>
+          <span class="flow-step">${t('flow_step3')}</span>
         </div>
       </div>
 
@@ -517,27 +584,27 @@ function renderInitial() {
         <div class="use-case">
           <div class="uc-icon">🛒</div>
           <div class="uc-body">
-            <div class="uc-title">ネット購入（楽天・Amazon）</div>
-            <div class="uc-desc">ワイン名を検索すると楽天市場・Amazonの商品ページへ直接アクセス。最安値をすぐ比較できます。</div>
+            <div class="uc-title">${t('uc1_title')}</div>
+            <div class="uc-desc">${t('uc1_desc')}</div>
           </div>
         </div>
         <div class="use-case">
           <div class="uc-icon">🏪</div>
           <div class="uc-body">
-            <div class="uc-title">近くのワインショップで買う</div>
-            <div class="uc-desc">登録済みのワインショップから在庫情報を検索。今後、店舗が増えるほど充実します。</div>
+            <div class="uc-title">${t('uc2_title')}</div>
+            <div class="uc-desc">${t('uc2_desc')}</div>
           </div>
         </div>
         <div class="use-case">
           <div class="uc-icon">🍽️</div>
           <div class="uc-body">
-            <div class="uc-title">飲めるレストランを探す</div>
-            <div class="uc-desc">「このワインが飲めるお店」を地図で探せる機能を準備中。レストランが自店のワインリストを登録します。</div>
+            <div class="uc-title">${t('uc3_title')}</div>
+            <div class="uc-desc">${t('uc3_desc')}</div>
           </div>
         </div>
       </div>
 
-      <div class="ex-label">🍾 このワインを探してみる</div>
+      <div class="ex-label">${t('ex_label')}</div>
       <div class="ex-list">
         ${EXAMPLES.map(e => `
           <div class="ex-item" onclick="doSearch('${e.q.replace(/'/g, "\\'")}')">

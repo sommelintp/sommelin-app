@@ -2451,19 +2451,19 @@
   <div class="mypage-menu">
     <div class="mypage-menu-item">
       <span class="mypage-menu-icon">🔔</span>
-      <span class="mypage-menu-text">通知設定</span>
-      <span class="mypage-menu-badge">LINE連携中</span>
+      <span class="mypage-menu-text" data-i18n="menu_notify">通知設定</span>
+      <span class="mypage-menu-badge jp-only">LINE連携中</span>
       <span class="mypage-menu-arrow">›</span>
     </div>
     <div class="mypage-menu-item">
       <span class="mypage-menu-icon">👤</span>
-      <span class="mypage-menu-text">プロフィール編集</span>
+      <span class="mypage-menu-text" data-i18n="menu_profile">プロフィール編集</span>
       <span class="mypage-menu-arrow">›</span>
     </div>
-    <div class="mypage-menu-item">
+    <div class="mypage-menu-item" onclick="setLang(LANG==='ja'?'en':'ja')" style="cursor:pointer;">
       <span class="mypage-menu-icon">🌏</span>
       <span class="mypage-menu-text">言語 / Language</span>
-      <span style="font-size:12px;color:var(--text-sub);margin-left:auto;margin-right:8px;">日本語</span>
+      <span id="langMenuVal" style="font-size:12px;color:var(--text-sub);margin-left:auto;margin-right:8px;">日本語</span>
       <span class="mypage-menu-arrow">›</span>
     </div>
     <div class="mypage-menu-item">
@@ -2523,19 +2523,19 @@
 <div class="bottom-nav">
   <div class="nav-item active" id="nav-history" onclick="switchTab('history')">
     <span class="nav-icon">📍</span>
-    <span class="nav-label">履歴</span>
+    <span class="nav-label" data-i18n="nav_history">履歴</span>
   </div>
   <div class="nav-item" id="nav-camera" onclick="switchTab('camera')">
     <span class="nav-icon">📷</span>
-    <span class="nav-label">カメラ</span>
+    <span class="nav-label" data-i18n="nav_camera">カメラ</span>
   </div>
   <div class="nav-item" id="nav-ranking" onclick="switchTab('ranking')">
     <span class="nav-icon">🏆</span>
-    <span class="nav-label">ランキング</span>
+    <span class="nav-label" data-i18n="nav_ranking">ランキング</span>
   </div>
   <div class="nav-item" id="nav-mypage" onclick="switchTab('mypage')">
     <span class="nav-icon">👤</span>
-    <span class="nav-label">マイページ</span>
+    <span class="nav-label" data-i18n="nav_mypage">マイページ</span>
   </div>
 </div>
 
@@ -2658,6 +2658,39 @@
 </div>
 
 <script>
+/* ===== 多言語対応（i18n）。将来 fr/it 等も I18N に言語を1つ足すだけで拡張できる構造 =====
+   注: 現時点では主要ナビ・マイページ設定の一部のみ対応（履歴・ランキング等の画面本文は日本語のまま=今後の対応課題）。
+   jp-only クラスの要素（LINE連携など日本固有機能）は言語がja以外だと自動的に隠れる。 */
+const I18N = {
+  ja: {
+    nav_history: '履歴', nav_camera: 'カメラ', nav_ranking: 'ランキング', nav_mypage: 'マイページ',
+    menu_notify: '通知設定', menu_profile: 'プロフィール編集',
+  },
+  en: {
+    nav_history: 'History', nav_camera: 'Camera', nav_ranking: 'Ranking', nav_mypage: 'My Page',
+    menu_notify: 'Notifications', menu_profile: 'Edit Profile',
+  },
+};
+let LANG = (() => { try { return localStorage.getItem('somm_lang') || (navigator.language && navigator.language.startsWith('ja') ? 'ja' : 'en'); } catch (e) { return 'ja'; } })();
+function t(key) {
+  const d = I18N[LANG] || I18N.ja;
+  return (d && d[key] != null) ? d[key] : (I18N.ja[key] != null ? I18N.ja[key] : key);
+}
+function applyI18n() {
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('.jp-only').forEach(el => { el.style.display = LANG === 'ja' ? '' : 'none'; });
+  const v = document.getElementById('langMenuVal');
+  if (v) v.textContent = LANG === 'ja' ? '日本語' : 'English';
+}
+function setLang(l) {
+  LANG = l;
+  try { localStorage.setItem('somm_lang', l); } catch (e) {}
+  applyI18n();
+  if (window.sommLog) sommLog('lang_switch', { lang: l });
+}
+applyI18n();
+
 // ===== TAB SWITCH =====
 function switchTab(tab) {
   if (window.sommLog) sommLog('tab_view', { tab });

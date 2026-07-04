@@ -1672,7 +1672,10 @@
 <!-- 在庫公開フッター（店舗名・住所は restaurant_settings に保存され、ワイン検索に表示される） -->
 <div class="stk-publish-bar" id="stkPublishBar">
   <input class="stk-input" id="stkStoreName" placeholder="店舗名（検索結果に表示されます）" style="margin-bottom:8px;">
-  <input class="stk-input" id="stkStoreAddr" placeholder="住所（例: 渋谷区神宮前3-5-6）" style="margin-bottom:8px;">
+  <div style="position:relative;margin-bottom:8px;">
+    <input class="stk-input" id="stkStoreAddr" placeholder="住所を入力すると候補が出ます" oninput="storeAddrSuggest()" autocomplete="off" style="width:100%;box-sizing:border-box;">
+    <div id="storeAddrSug" style="display:none;position:absolute;left:0;right:0;top:100%;background:#fff;border:1px solid #ddd;border-radius:10px;margin-top:4px;max-height:220px;overflow:auto;z-index:50;box-shadow:0 4px 14px rgba(0,0,0,.12);"></div>
+  </div>
   <input class="stk-input" id="stkStoreIg" placeholder="Instagram（任意・例: @yourshop）" style="margin-bottom:8px;">
   <button class="stk-pub-btn" onclick="publishStock()">🌐 在庫情報をソムリンに公開する</button>
 </div>
@@ -3165,11 +3168,11 @@ async function analyzeList() {
   }
 }
 
-function showBulkResults(rows) {
+function showBulkResults(rows, opts) {
   const count = rows.length;
   bulkChecked = rows.map((_, i) => i); // 全チェック済み
-  document.getElementById('brTitle').textContent = `📖 ${count}本のワインが見つかりました`;
-  document.getElementById('brSub').textContent   = '追加するワインを選択してください（すべてチェック済み）';
+  document.getElementById('brTitle').textContent = (opts && opts.title) || `📖 ${count}本のワインが見つかりました`;
+  document.getElementById('brSub').textContent   = (opts && opts.sub) || '追加するワインを選択してください（すべてチェック済み）';
   document.getElementById('brAddBtn').textContent = `✓ ${count}本を追加する`;
   document.getElementById('bulkWineList').dataset.count = count;
 
@@ -3470,6 +3473,84 @@ async function deleteStock(id) {
   showToast('削除しました');
 }
 
+// ── 住所サジェスト（backend /api/places/suggest = Google Places。会場サジェストと同じ部品） ──
+let storeAddrTimer = null, storeAddrItems = [], storeAddrSession = null, storeAddrPicked = null;
+function newStoreAddrSession() {
+  storeAddrSession = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+}
+function storeAddrSuggest() {
+  clearTimeout(storeAddrTimer);
+  storeAddrPicked = null; // 手打ちで変更したら選択済み情報は無効化
+  const q = document.getElementById('stkStoreAddr').value.trim();
+  const box = document.getElementById('storeAddrSug');
+  if (q.length < 2) { box.style.display = 'none'; return; }
+  if (!storeAddrSession) newStoreAddrSession();
+  box.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:var(--text-sub);">検索中…</div>';
+  box.style.display = 'block';
+  const myQ = q;
+  storeAddrTimer = setTimeout(async () => {
+    try {
+      const r = await fetch(RW_API + '/api/places/suggest?q=' + encodeURIComponent(myQ) + '&session=' + encodeURIComponent(storeAddrSession));
+      const d = await r.json();
+      if (document.getElementById('stkStoreAddr').value.trim() !== myQ) return;
+      storeAddrItems = d.items || [];
+      if (!storeAddrItems.length) { box.style.display = 'none'; return; }
+      box.innerHTML = storeAddrItems.map((p, i) =>
+        `<div onclick="pickStoreAddr(${i})" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f2f2f2;">
+          <div style="font-size:13px;font-weight:700;color:var(--text);">📍 ${tnEsc(p.name)}</div>
+          <div style="font-size:11px;color:var(--text-sub);">${tnEsc(p.address)}</div>
+        </div>`).join('');
+      box.style.display = 'block';
+    } catch (e) { box.style.display = 'none'; }
+  }, 250);
+}
+async function pickStoreAddr(i) {
+  const p = storeAddrItems[i]; if (!p) return;
+  document.getElementById('storeAddrSug').style.display = 'none';
+  if (!document.getElementById('stkStoreName').value.trim()) document.getElementById('stkStoreName').value = p.name;
+  document.getElementById('stkStoreAddr').value = p.address || p.name;
+  let lat = p.lat, lng = p.lng, googlePlaceId = null;
+  if (p.placeId) {
+    try {
+      const r = await fetch(RW_API + '/api/places/detail?placeId=' + encodeURIComponent(p.placeId) + '&session=' + encodeURIComponent(storeAddrSession || ''));
+      const d = await r.json();
+      if (d.ok) {
+        if (d.address) document.getElementById('stkStoreAddr').value = d.address;
+        lat = d.lat; lng = d.lng; googlePlaceId = p.placeId;
+      }
+    } catch (e) {}
+  }
+  storeAddrPicked = { lat, lng, googlePlaceId };
+  newStoreAddrSession();
+  if (googlePlaceId) checkVenueClaim(googlePlaceId);
+}
+
+// ── クラウドで貯まったお客様データの引き継ぎ提案（住所確定の瞬間に自動チェック） ──
+async function checkVenueClaim(googlePlaceId) {
+  try {
+    const r = await fetch(RW_API + '/api/venue-claim?googlePlaceId=' + encodeURIComponent(googlePlaceId));
+    const d = await r.json();
+    if (!d.found || !d.items || !d.items.length) return;
+    if (window.sommLog) sommLog('venue_claim_shown', { n: d.items.length });
+    const rows = d.items.map(it => {
+      const cat = RW_CAT[it.color] || 'red';
+      return {
+        cat, emoji: RW_EMOJI[cat] || '🍷',
+        name: it.name_raw || '（銘柄不明）', producer: it.producer_raw || '',
+        vintage: it.vintage_raw || '', region: '', grapes: '',
+        priceGlass: it.by_glass && it.list_price ? it.list_price : 0,
+        priceBottle: !it.by_glass && it.list_price ? it.list_price : 0,
+        wineId: it.wine_id || null,
+        confidence: it.wine_id ? 95 : 60,
+      };
+    });
+    showBulkResults(rows, {
+      title: `📍 お客様が記録してくれたデータが${rows.length}件あります`,
+      sub: 'このお店に来店したお客様がスカウターで記録した内容です。取り込むワインを選んでください（公開設定は今のあなたの設定に従います）',
+    });
+  } catch (e) {}
+}
+
 async function publishStock() {
   const name = (document.getElementById('stkStoreName').value || '').trim();
   const addr = (document.getElementById('stkStoreAddr').value || '').trim();
@@ -3477,10 +3558,16 @@ async function publishStock() {
   const uid = await rwUid();
   if (!uid) { alert('ログイン情報を確認できません。再ログインしてください。'); return; }
   try {
+    const settingsBody = { owner_id: uid, display_name: name, address: addr || null, is_public: true };
+    if (storeAddrPicked) {
+      if (storeAddrPicked.lat != null) settingsBody.lat = storeAddrPicked.lat;
+      if (storeAddrPicked.lng != null) settingsBody.lng = storeAddrPicked.lng;
+      if (storeAddrPicked.googlePlaceId) settingsBody.google_place_id = storeAddrPicked.googlePlaceId;
+    }
     const r = await rwFetch('restaurant_settings', {
       method:'POST',
       headers:{ Prefer:'resolution=merge-duplicates' },
-      body: JSON.stringify({ owner_id: uid, display_name: name, address: addr || null, is_public: true })
+      body: JSON.stringify(settingsBody)
     });
     if (!r.ok) throw 0;
     // Instagram（任意）はprofilesへ＝レビュアー一覧にリンク表示される
