@@ -2985,45 +2985,122 @@ function switchRankingTab(tab) {
   if (tab === 'store' && !topPlacesLoaded) loadTopPlaces();
 }
 
-// ===== 地図（Leaflet+OSM＝無料・キー不要。使う時だけ遅延ロード） =====
-let leafletPromise = null;
-function loadLeaflet() {
-  if (window.L) return Promise.resolve();
-  if (leafletPromise) return leafletPromise;
-  leafletPromise = new Promise((resolve, reject) => {
-    const css = document.createElement('link');
-    css.rel = 'stylesheet';
-    css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-    document.head.appendChild(css);
-    const js = document.createElement('script');
-    js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    js.onload = resolve; js.onerror = reject;
-    document.head.appendChild(js);
-  });
-  return leafletPromise;
+// ===== 地図（Googleマップ。キー未設定時はOSM=Leafletに自動フォールバック。使う時だけ遅延ロード） =====
+// ブラウザ用APIキー（HTTPリファラ制限=github.ioのみ・Maps JavaScript API限定。backendのサーバーキーとは別物）
+const GMAPS_KEY = 'AIzaSyDNwYtffR3qBHV2-hJApx5y3gWENU_500g';
+const MAP_ENGINE = GMAPS_KEY ? 'google' : 'osm';
+
+let mapLibPromise = null;
+function loadMapLib() {
+  if (mapLibPromise) return mapLibPromise;
+  if (MAP_ENGINE === 'google') {
+    if (window.google && window.google.maps) return mapLibPromise = Promise.resolve();
+    mapLibPromise = new Promise((resolve, reject) => {
+      window.__gmapsReady = resolve;
+      const js = document.createElement('script');
+      js.src = 'https://maps.googleapis.com/maps/api/js?key=' + GMAPS_KEY + '&loading=async&callback=__gmapsReady';
+      js.onerror = reject;
+      document.head.appendChild(js);
+    });
+  } else {
+    if (window.L) return mapLibPromise = Promise.resolve();
+    mapLibPromise = new Promise((resolve, reject) => {
+      const css = document.createElement('link');
+      css.rel = 'stylesheet';
+      css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(css);
+      const js = document.createElement('script');
+      js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      js.onload = resolve; js.onerror = reject;
+      document.head.appendChild(js);
+    });
+  }
+  return mapLibPromise;
 }
 
 const PIN_COLORS = { restaurant: '#9B1B4B', shop: '#C9973A' };
-function pinIcon(color) {
-  return L.divIcon({
-    className: '',
-    html: `<div style="width:26px;height:26px;border-radius:50% 50% 50% 0;background:${color};transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);"></div>`,
-    iconSize: [26, 26], iconAnchor: [13, 24], popupAnchor: [0, -22],
-  });
-}
+const GPIN_ICONS = {
+  restaurant: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+  shop: 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
+};
 
-function addOsmTiles(map) {
+// エンジン差を吸収する小さな共通API（handle = {engine, map, markers, info}）
+function createMapIn(el) {
+  if (MAP_ENGINE === 'google') {
+    const map = new google.maps.Map(el, {
+      center: { lat: 35.68, lng: 139.76 }, zoom: 11,
+      gestureHandling: 'greedy', mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
+    });
+    return { engine: 'google', map, markers: [], info: new google.maps.InfoWindow() };
+  }
+  const map = L.map(el, { zoomControl: true });
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(map);
+  return { engine: 'osm', map, markers: [] };
+}
+
+function clearMapPins(h) {
+  if (!h) return;
+  h.markers.forEach(m => h.engine === 'google' ? m.setMap(null) : m.remove());
+  h.markers = [];
+}
+
+function addMapPin(h, lat, lng, category, popupHtml) {
+  if (h.engine === 'google') {
+    const m = new google.maps.Marker({
+      position: { lat, lng }, map: h.map,
+      icon: GPIN_ICONS[category] || GPIN_ICONS.restaurant,
+    });
+    m.addListener('click', () => { h.info.setContent(popupHtml); h.info.open(h.map, m); });
+    h.markers.push(m);
+  } else {
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="width:26px;height:26px;border-radius:50% 50% 50% 0;background:${PIN_COLORS[category] || PIN_COLORS.restaurant};transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);"></div>`,
+      iconSize: [26, 26], iconAnchor: [13, 24], popupAnchor: [0, -22],
+    });
+    const m = L.marker([lat, lng], { icon }).addTo(h.map);
+    m.bindPopup(popupHtml);
+    h.markers.push(m);
+  }
+}
+
+function fitMapPins(h, pts) {
+  if (!pts.length) {
+    if (h.engine === 'google') { h.map.setCenter({ lat: 35.68, lng: 139.76 }); h.map.setZoom(11); }
+    else h.map.setView([35.68, 139.76], 11);
+    return;
+  }
+  if (h.engine === 'google') {
+    const b = new google.maps.LatLngBounds();
+    pts.forEach(p => b.extend({ lat: p[0], lng: p[1] }));
+    h.map.fitBounds(b, 30);
+    google.maps.event.addListenerOnce(h.map, 'idle', () => { if (h.map.getZoom() > 15) h.map.setZoom(15); });
+  } else {
+    h.map.fitBounds(pts, { padding: [30, 30], maxZoom: 15 });
+  }
+}
+
+function refreshMapSize(h) {
+  if (!h) return;
+  if (h.engine === 'google') google.maps.event.trigger(h.map, 'resize');
+  else h.map.invalidateSize();
+}
+
+function destroyMap(h) {
+  if (!h) return;
+  clearMapPins(h);
+  if (h.engine === 'osm') h.map.remove();
+  // google: DOM削除で破棄される（明示APIなし）
 }
 
 // ===== お店ランキング（実データ: /api/top-places＝リストのワインの質で店を採点） =====
 let topPlacesLoaded = false;
 let topPlacesData = [];
 let storeCategory = 'restaurant';
-let storeMap = null, storeMapMarkers = [];
+let storeMap = null;
 let storeMapVisible = false;
 
 async function toggleStoreMap() {
@@ -3035,37 +3112,31 @@ async function toggleStoreMap() {
   if (!storeMapVisible) return;
   if (window.sommLog) sommLog('store_map_view', { cat: storeCategory });
   try {
-    await loadLeaflet();
-    if (!storeMap) {
-      storeMap = L.map('storeMap', { zoomControl: true });
-      addOsmTiles(storeMap);
-    }
+    await loadMapLib();
+    if (!storeMap) storeMap = createMapIn(document.getElementById('storeMap'));
     renderStoreMapPins();
-    setTimeout(() => storeMap.invalidateSize(), 60);
+    setTimeout(() => refreshMapSize(storeMap), 60);
   } catch (e) {
     wrap.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sub);font-size:12px;">地図を読み込めませんでした（通信環境をご確認ください）</div>';
   }
 }
 
 function renderStoreMapPins() {
-  if (!storeMap || !window.L) return;
-  storeMapMarkers.forEach(m => m.remove());
-  storeMapMarkers = [];
+  if (!storeMap) return;
+  clearMapPins(storeMap);
   const items = (topPlacesData || []).filter(it =>
     (it.category || 'restaurant') === storeCategory && it.lat != null && it.lng != null);
   const pts = [];
   items.forEach((it, i) => {
-    const m = L.marker([it.lat, it.lng], { icon: pinIcon(PIN_COLORS[it.category] || PIN_COLORS.restaurant) }).addTo(storeMap);
     const link = it.type === 'official'
       ? `<a href="prototype.html?r=${encodeURIComponent(it.ownerId)}" style="color:#9B1B4B;font-weight:700;">ワインリストを見る →</a>`
       : '';
-    m.bindPopup(`<div style="font-size:13px;font-weight:700;">${i + 1}位 ${(it.name || '').replace(/</g, '&lt;')}</div>
+    addMapPin(storeMap, it.lat, it.lng, it.category,
+      `<div style="font-size:13px;font-weight:700;">${i + 1}位 ${(it.name || '').replace(/</g, '&lt;')}</div>
       <div style="font-size:12px;margin-top:2px;">評価 ${Number(it.score).toFixed(1)}点 ・ ⭐良いワイン${it.goodCount}本</div>${link}`);
-    storeMapMarkers.push(m);
     pts.push([it.lat, it.lng]);
   });
-  if (pts.length) storeMap.fitBounds(pts, { padding: [30, 30], maxZoom: 15 });
-  else storeMap.setView([35.68, 139.76], 11); // 位置情報つきの店が無い時は東京中心
+  fitMapPins(storeMap, pts);
 }
 
 function switchStoreCategory(cat) {
@@ -3191,19 +3262,18 @@ async function openWineMap(wineId, wineName) {
     }).join('');
     body.innerHTML = html;
     if (mappable.length) {
-      await loadLeaflet();
-      if (wineMap) { wineMap.remove(); wineMap = null; }
-      wineMap = L.map('wineMapCanvas', { zoomControl: true });
-      addOsmTiles(wineMap);
+      await loadMapLib();
+      if (wineMap) { destroyMap(wineMap); wineMap = null; }
+      wineMap = createMapIn(document.getElementById('wineMapCanvas'));
       const pts = [];
       mappable.forEach(it => {
-        const m = L.marker([it.lat, it.lng], { icon: pinIcon(PIN_COLORS[it.category] || PIN_COLORS.restaurant) }).addTo(wineMap);
-        m.bindPopup(`<div style="font-size:13px;font-weight:700;">${(it.name||'').replace(/</g,'&lt;')}</div>
+        addMapPin(wineMap, it.lat, it.lng, it.category,
+          `<div style="font-size:13px;font-weight:700;">${(it.name||'').replace(/</g,'&lt;')}</div>
           <div style="font-size:11px;">${it.category === 'shop' ? '🍷 買える' : '🍽️ 飲める'}</div>`);
         pts.push([it.lat, it.lng]);
       });
-      wineMap.fitBounds(pts, { padding: [30, 30], maxZoom: 15 });
-      setTimeout(() => wineMap.invalidateSize(), 60);
+      fitMapPins(wineMap, pts);
+      setTimeout(() => refreshMapSize(wineMap), 60);
     }
   } catch (e) {
     body.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">読み込めませんでした（通信環境をご確認ください）</div>';
@@ -3212,7 +3282,7 @@ async function openWineMap(wineId, wineName) {
 
 function closeWineMap() {
   document.getElementById('wineMapModal').style.display = 'none';
-  if (wineMap) { wineMap.remove(); wineMap = null; }
+  if (wineMap) { destroyMap(wineMap); wineMap = null; }
 }
 
 // ===== 総合人気（実データ: /api/top-wines＝評価の信頼度加重ベイズ平均。コスパはバッジで併記） =====
