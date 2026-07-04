@@ -20,14 +20,13 @@ body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg)
 .createbtn{ display:block; text-align:center; background:#fff; border:1.5px dashed var(--burgundy); border-radius:14px;
   padding:14px; margin-bottom:16px; color:var(--burgundy); font-size:13px; font-weight:800; text-decoration:none; }
 .fcard{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:10px;
-  display:flex; align-items:center; gap:12px; cursor:pointer; }
+  display:flex; align-items:center; gap:12px; cursor:pointer; text-decoration:none; color:inherit; }
 .femoji{ font-size:26px; width:44px; height:44px; border-radius:50%; background:var(--bg); display:flex;
   align-items:center; justify-content:center; flex-shrink:0; }
 .finfo{ flex:1; min-width:0; }
-.ftitle{ font-size:14px; font-weight:800; }
+.ftitle{ font-size:14px; font-weight:800; display:flex; align-items:center; gap:6px; }
+.igtag{ font-size:9px; background:var(--gold); color:#3d2a05; border-radius:9px; padding:1px 6px; font-weight:800; }
 .fmeta{ font-size:11px; color:var(--text-sub); margin-top:3px; }
-.fconds{ font-size:10px; color:var(--text-sub); margin-top:4px; display:flex; flex-wrap:wrap; gap:4px; }
-.fcond-tag{ background:var(--bg); border-radius:10px; padding:1px 7px; }
 .empty{ text-align:center; padding:40px 20px; color:var(--text-sub); }
 </style>
 </head>
@@ -42,27 +41,16 @@ body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg)
 </div>
 
 <div class="wrap">
-  <a class="createbtn" href="filter_creator.html">＋ 自分のフィルターを作る</a>
+  <div class="desc" style="font-size:12px;color:var(--text-sub);line-height:1.7;margin-bottom:14px;">
+    フィルターは、みんなが実際に飲んで「これは良い」と選んだワインのコレクションです。気になる人のフィルターを装備すると、スカウターでボトルを見た時に「これはあの人のおすすめ」と分かるようになります。
+  </div>
+  <a class="createbtn" href="taste.html">＋ 自分のフィルターを作る（好みのワインを登録）</a>
   <div id="list"><div class="empty">読み込み中…</div></div>
 </div>
 
 <script>
 const API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
-const UID = (() => { try {
-  let u = localStorage.getItem('somm_uid');
-  if (!u) { u = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid', u); }
-  return u;
-} catch(e){ return ''; } })();
 const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-
-function condSummary(c) {
-  const tags = [];
-  if (c.iro && c.iro.length) tags.push(c.iro.join('/'));
-  if (c.kuni && c.kuni.length) tags.push(c.kuni.join('/'));
-  if (c.priceMin || c.priceMax) tags.push('¥' + (c.priceMin||0).toLocaleString('ja-JP') + '〜' + (c.priceMax?c.priceMax.toLocaleString('ja-JP'):''));
-  if (c.minSp) tags.push('評価高め');
-  return tags;
-}
 
 async function load() {
   const box = document.getElementById('list');
@@ -75,25 +63,16 @@ async function load() {
       return;
     }
     box.innerHTML = items.map(f => `
-      <div class="fcard" onclick="useFilter('${f.id}')">
+      <a class="fcard" href="filter_view.html?id=${f.id}" onclick="if(window.sommLog)sommLog('filter_market_click',{filterId:'${f.id}'})">
         <div class="femoji">${f.emoji || '🍷'}</div>
         <div class="finfo">
-          <div class="ftitle">${esc(f.title)}</div>
-          <div class="fmeta">${f.creator_name ? esc(f.creator_name) + ' さん作 ・ ' : ''}利用 ${f.install_count || 0}回</div>
-          <div class="fconds">${condSummary(f.conditions || {}).map(t => `<span class="fcond-tag">${esc(t)}</span>`).join('')}</div>
+          <div class="ftitle">${esc(f.name)}${f.ig_verified ? '<span class="igtag">🎖️公式</span>' : ''}</div>
+          <div class="fmeta">${f.instagram ? '📸 @' + esc(f.instagram) + ' ・ ' : ''}装備 ${f.install_count || 0}人</div>
         </div>
-      </div>`).join('');
+      </a>`).join('');
   } catch (e) {
     box.innerHTML = '<div class="empty">読み込めませんでした（通信環境をご確認ください）</div>';
   }
-}
-
-async function useFilter(filterId) {
-  if (window.sommLog) sommLog('filter_use', { filterId });
-  try { await fetch(API_BASE + '/api/filters/' + filterId + '/install', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uid: UID })
-  }); } catch (e) {}
-  location.href = 'wine_search.html?filter=' + encodeURIComponent(filterId);
 }
 
 load();

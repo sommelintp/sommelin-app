@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>ソムリン — マイフィルター管理</title>
+<meta name="theme-color" content="#5C0E2A">
+<style>
+:root{ --burgundy:#9B1B4B; --wine-dark:#5C0E2A; --gold:#C9973A; --bg:#F8F4EF; --text:#2C1810; --text-sub:#7A6055; --border:#E8DDD5; }
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg); color:var(--text);
+  max-width:430px; margin:0 auto; min-height:100dvh; padding:0 0 60px; }
+.top{ background:linear-gradient(135deg,var(--wine-dark),var(--burgundy)); padding:52px 16px 20px; color:#fff;
+  display:flex; align-items:center; gap:12px; }
+.top a{ width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;
+  font-size:18px;display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0; }
+.top .t1{ font-size:17px; font-weight:800; }
+.top .t2{ font-size:11px; color:rgba(255,255,255,.75); margin-top:1px; }
+.wrap{ padding:16px; }
+.fpicker{ display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:14px; }
+.fpick{ flex-shrink:0; background:#fff; border:1.5px solid var(--border); border-radius:20px; padding:8px 14px;
+  font-size:13px; font-weight:700; color:var(--text-sub); cursor:pointer; white-space:nowrap; }
+.fpick.on{ background:var(--burgundy); border-color:var(--burgundy); color:#fff; }
+.fpick.add{ border-style:dashed; }
+.statusbox{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:14px; }
+.statusrow{ display:flex; justify-content:space-between; align-items:center; font-size:12px; }
+.pubbadge{ font-size:10px; font-weight:800; padding:3px 9px; border-radius:12px; }
+.pubbadge.pub{ background:#e6f4ea; color:#1e7a34; }
+.pubbadge.priv{ background:var(--bg); color:var(--text-sub); }
+.fl{ font-size:11px; font-weight:700; color:var(--text-sub); margin:12px 0 6px; }
+input[type=text]{ width:100%; border:1.5px solid var(--border); border-radius:10px; padding:9px 12px;
+  font-size:13px; font-family:inherit; background:#fff; color:var(--text); outline:none; }
+.publink{ display:none; font-size:11px; margin-top:8px; }
+.publink.show{ display:block; }
+.publink a{ color:var(--burgundy); font-weight:700; }
+.savebar{ display:flex; gap:8px; margin-top:10px; }
+.savebar button{ flex:1; border:none; border-radius:10px; padding:9px; font-size:12px; font-weight:700;
+  cursor:pointer; font-family:inherit; background:var(--burgundy); color:#fff; }
+.icard{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:12px 14px; margin-bottom:8px; }
+.icard.excluded{ opacity:.5; }
+.iname{ font-size:13px; font-weight:800; }
+.imeta{ font-size:11px; color:var(--text-sub); margin-top:2px; }
+.istars{ font-size:13px; color:var(--gold); margin-top:4px; }
+.icomment{ font-size:11px; color:var(--text-sub); margin-top:4px; font-style:italic; }
+.irow{ display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
+.itoggle{ font-size:11px; font-weight:700; color:var(--burgundy); cursor:pointer; }
+.empty{ text-align:center; padding:40px 20px; color:var(--text-sub); }
+.empty .ei{ font-size:36px; margin-bottom:8px; }
+.empty .et{ font-size:13px; font-weight:700; color:var(--text); }
+.empty .es{ font-size:11px; margin-top:6px; line-height:1.7; }
+.empty a{ color:var(--burgundy); font-weight:700; }
+#toast{ position:fixed; bottom:40px; left:50%; transform:translateX(-50%); background:rgba(15,15,15,.92); color:#fff;
+  padding:10px 20px; border-radius:20px; font-size:13px; font-weight:700; opacity:0; transition:all .3s; z-index:400; white-space:nowrap; }
+#toast.on{ opacity:1; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <a href="prototype.html">‹</a>
+  <div>
+    <div class="t1">🎨 マイフィルター管理</div>
+    <div class="t2">あなたが選んだワインのコレクション</div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="fpicker" id="fpicker"></div>
+
+  <div class="statusbox" id="statusBox" style="display:none;">
+    <div class="statusrow">
+      <span id="pubStatus" class="pubbadge priv">非公開</span>
+      <span id="ratedCount" style="color:var(--text-sub);"></span>
+    </div>
+    <div class="fl">フィルター名</div>
+    <input type="text" id="fName" maxlength="40">
+    <div class="fl">Instagram（任意・本人確認用）</div>
+    <input type="text" id="fIg" placeholder="例: @yourname">
+    <div class="savebar"><button onclick="saveSettings()">設定を保存</button></div>
+    <div class="publink" id="publink"></div>
+  </div>
+
+  <div class="fl" id="itemsLabel" style="display:none;">掲載ワイン</div>
+  <div id="itemsList"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+const UID = (() => { try {
+  let u = localStorage.getItem('somm_uid');
+  if (!u) { u = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid', u); }
+  return u;
+} catch(e){ return ''; } })();
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2600); }
+
+let myFilters = [];
+let currentId = null;
+
+function starsHtml(n) {
+  const full = Math.round(Number(n) || 0);
+  return '★'.repeat(full) + '<span style="color:var(--border);">' + '★'.repeat(5-full) + '</span>';
+}
+
+async function load() {
+  try {
+    const r = await fetch(API_BASE + '/api/filters/mine?uid=' + encodeURIComponent(UID));
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    myFilters = d.filters || [];
+    if (!myFilters.length) {
+      document.getElementById('itemsList').innerHTML = `<div class="empty"><div class="ei">🎨</div><div class="et">まだフィルターがありません</div>
+        <div class="es"><a href="taste.html">「好みのワインを登録」</a>で写真を撮ると、<br>自動でフィルターが作られます</div></div>`;
+      return;
+    }
+    currentId = myFilters[0].id;
+    renderPicker();
+    renderCurrent();
+  } catch (e) {
+    document.getElementById('itemsList').innerHTML = '<div class="empty">読み込めませんでした（通信環境をご確認ください）</div>';
+  }
+}
+
+function renderPicker() {
+  const box = document.getElementById('fpicker');
+  box.innerHTML = myFilters.map(f => `<div class="fpick ${f.id===currentId?'on':''}" onclick="selectFilter('${f.id}')">${f.emoji||'🍷'} ${esc(f.name)}</div>`).join('')
+    + `<div class="fpick add" onclick="createNew()">＋ 新規</div>`;
+}
+
+function selectFilter(id) { currentId = id; renderPicker(); renderCurrent(); }
+
+function renderCurrent() {
+  const f = myFilters.find(x => x.id === currentId);
+  if (!f) return;
+  document.getElementById('statusBox').style.display = 'block';
+  document.getElementById('itemsLabel').style.display = 'block';
+  const pub = document.getElementById('pubStatus');
+  pub.textContent = f.is_public ? '🌐 公開中' : '🔒 非公開';
+  pub.className = 'pubbadge ' + (f.is_public ? 'pub' : 'priv');
+  const ratedN = (f.items || []).filter(it => it.included && it.rating != null).length;
+  document.getElementById('ratedCount').textContent = `★付き ${ratedN}本（3本で自動公開）`;
+  document.getElementById('fName').value = f.name || '';
+  document.getElementById('fIg').value = f.instagram || '';
+  const pl = document.getElementById('publink');
+  if (f.is_public) {
+    pl.classList.add('show');
+    pl.innerHTML = `<a href="filter_view.html?id=${f.id}" target="_blank">🔗 公開ページを見る</a>${f.ig_verified ? ' <span style="color:var(--gold);">🎖️公式確認済み</span>' : ''}`;
+  } else {
+    pl.classList.remove('show');
+  }
+
+  const items = f.items || [];
+  const listEl = document.getElementById('itemsList');
+  if (!items.length) {
+    listEl.innerHTML = `<div class="empty"><div class="ei">🍷</div><div class="et">まだワインがありません</div>
+      <div class="es"><a href="taste.html">「好みのワインを登録」</a>で写真を撮って追加しましょう</div></div>`;
+    return;
+  }
+  listEl.innerHTML = items.map(it => `
+    <div class="icard ${it.included?'':'excluded'}" id="item-${it.id}">
+      <div class="iname">${esc(it.name || '（銘柄不明）')}</div>
+      <div class="imeta">${esc([it.iro, it.kuni, it.chiiki, it.vintage].filter(Boolean).join(' ・ '))}</div>
+      ${it.rating ? `<div class="istars">${starsHtml(it.rating)}</div>` : ''}
+      ${it.comment ? `<div class="icomment">"${esc(it.comment)}"</div>` : ''}
+      <div class="irow">
+        <span style="font-size:10px;color:var(--text-sub);">${it.included ? '掲載中' : '非掲載'}</span>
+        <span class="itoggle" onclick="toggleItem('${it.id}', ${!it.included})">${it.included ? '非掲載にする' : '掲載する'}</span>
+      </div>
+    </div>`).join('');
+}
+
+async function toggleItem(itemId, included) {
+  try {
+    const r = await fetch(API_BASE + '/api/filters/items/' + itemId, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid: UID, included })
+    });
+    if (!r.ok) throw 0;
+    const f = myFilters.find(x => x.id === currentId);
+    const it = (f.items || []).find(x => x.id === itemId);
+    if (it) it.included = included;
+    renderCurrent();
+  } catch (e) { toast('変更に失敗しました'); }
+}
+
+async function saveSettings() {
+  const name = document.getElementById('fName').value.trim();
+  const instagram = document.getElementById('fIg').value.trim();
+  if (!name) return toast('フィルター名を入力してください');
+  try {
+    const r = await fetch(API_BASE + '/api/filters/' + currentId, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid: UID, name, instagram })
+    });
+    if (!r.ok) throw 0;
+    const f = myFilters.find(x => x.id === currentId);
+    f.name = name; f.instagram = instagram;
+    renderPicker(); renderCurrent();
+    toast('保存しました');
+  } catch (e) { toast('保存に失敗しました'); }
+}
+
+async function createNew() {
+  const name = prompt('新しいフィルターの名前は？', 'マイフィルター2');
+  if (!name) return;
+  try {
+    const r = await fetch(API_BASE + '/api/filters', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid: UID, name })
+    });
+    if (!r.ok) throw 0;
+    await load();
+  } catch (e) { toast('作成に失敗しました'); }
+}
+
+load();
+</script>
+<script>
+/* ===== 利用ログ（app_events・書き込み専用。読み取り不可） ===== */
+(function(){
+  var PAGE='filter_mine';
+  var U='https://gkhdpzfmqraliwaiubwl.supabase.co/rest/v1/app_events';
+  var K='sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+  var uid='na';
+  try{
+    uid=localStorage.getItem('somm_uid');
+    if(!uid){ uid=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid',uid); }
+  }catch(e){}
+  window.sommLog=function(event,meta){
+    try{
+      var role=null,auth=null;
+      try{ role=localStorage.getItem('sommelin_role')||null; }catch(e){}
+      try{ var t=JSON.parse(localStorage.getItem('sb-gkhdpzfmqraliwaiubwl-auth-token')||'null'); auth=(t&&t.user&&t.user.id)||null; }catch(e){}
+      fetch(U,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','apikey':K,'Authorization':'Bearer '+K,'Prefer':'return=minimal'},
+        body:JSON.stringify({uid:uid,auth_uid:auth,role:role,page:PAGE,event:event,meta:meta||null})}).catch(function(){});
+    }catch(e){}
+  };
+  sommLog('page_view');
+})();
+</script>
+</body>
+</html>

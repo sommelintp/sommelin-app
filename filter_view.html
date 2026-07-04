@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>ソムリン — フィルター</title>
+<meta name="theme-color" content="#5C0E2A">
+<style>
+:root{ --burgundy:#9B1B4B; --wine-dark:#5C0E2A; --gold:#C9973A; --bg:#F8F4EF; --text:#2C1810; --text-sub:#7A6055; --border:#E8DDD5; }
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg); color:var(--text);
+  max-width:430px; margin:0 auto; min-height:100dvh; padding:0 0 90px; }
+.top{ background:linear-gradient(135deg,var(--wine-dark),var(--burgundy)); padding:52px 16px 20px; color:#fff; }
+.top .nav{ display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.top a{ width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;
+  font-size:18px;display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0; }
+.fname{ font-size:20px; font-weight:800; display:flex; align-items:center; gap:8px; }
+.igbadge{ font-size:10px; background:var(--gold); color:#3d2a05; border-radius:10px; padding:2px 8px; font-weight:800; }
+.iglink{ display:none; align-items:center; gap:6px; margin-top:10px; background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.3); border-radius:20px; padding:7px 14px; color:#fff;
+  font-size:12px; font-weight:700; text-decoration:none; width:fit-content; }
+.iglink.show{ display:inline-flex; }
+.wrap{ padding:16px; }
+.installbar{ display:flex; gap:8px; margin-bottom:16px; }
+.installbtn{ flex:1; background:var(--burgundy); color:#fff; border:none; border-radius:14px; padding:13px;
+  font-size:14px; font-weight:800; cursor:pointer; font-family:inherit; }
+.installbtn.on{ background:#fff; color:var(--burgundy); border:1.5px solid var(--burgundy); }
+.wcard{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:12px 14px; margin-bottom:8px; }
+.wname{ font-size:14px; font-weight:800; }
+.wmeta{ font-size:11px; color:var(--text-sub); margin-top:3px; }
+.wstars{ color:var(--gold); font-size:14px; margin-top:6px; }
+.wcomment{ font-size:12px; color:var(--text-sub); margin-top:5px; font-style:italic; line-height:1.6; }
+.wprice{ font-size:12px; font-weight:700; color:var(--burgundy); margin-top:5px; }
+.empty{ text-align:center; padding:40px 20px; color:var(--text-sub); }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="nav"><a href="filter_market.html">‹</a></div>
+  <div class="fname" id="fname">読み込み中…</div>
+  <a class="iglink" id="iglink" target="_blank" rel="noopener"></a>
+</div>
+
+<div class="wrap">
+  <div class="installbar">
+    <button class="installbtn" id="installBtn" onclick="installFilter()">＋ このフィルターを装備する</button>
+  </div>
+  <div id="list"><div class="empty">読み込み中…</div></div>
+</div>
+
+<script>
+const API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+const UID = (() => { try {
+  let u = localStorage.getItem('somm_uid');
+  if (!u) { u = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid', u); }
+  return u;
+} catch(e){ return ''; } })();
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const filterId = new URLSearchParams(location.search).get('id');
+const starsHtml = n => { const f = Math.round(Number(n)||0); return '★'.repeat(f) + '<span style="color:var(--border);">'+'★'.repeat(5-f)+'</span>'; };
+
+async function load() {
+  if (!filterId) { document.getElementById('fname').textContent = 'フィルターが指定されていません'; return; }
+  try {
+    const r = await fetch(API_BASE + '/api/filters/' + filterId + '/wines?limit=100');
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    document.getElementById('fname').innerHTML = (d.emoji || '🍷') + ' ' + esc(d.name || 'フィルター');
+    if (d.instagram) {
+      const a = document.getElementById('iglink');
+      a.href = 'https://www.instagram.com/' + encodeURIComponent(d.instagram) + '/';
+      a.innerHTML = '📸 @' + esc(d.instagram) + (d.igVerified ? ' <span class="igbadge">公式確認済み</span>' : '');
+      a.classList.add('show');
+    }
+    const items = d.items || [];
+    const box = document.getElementById('list');
+    if (!items.length) { box.innerHTML = '<div class="empty">🍷 まだワインが掲載されていません</div>'; return; }
+    box.innerHTML = items.map(w => `
+      <div class="wcard">
+        <div class="wname">${esc(w.name || '（銘柄不明）')}${w.vintage && w.vintage!=='NV' ? ' ' + esc(w.vintage) : ''}</div>
+        <div class="wmeta">${esc([w.iro, w.kuni, w.chiiki].filter(Boolean).join(' ・ '))}${w.producer ? ' / ' + esc(w.producer) : ''}</div>
+        ${w.rating ? `<div class="wstars">${starsHtml(w.rating)}</div>` : ''}
+        ${w.comment ? `<div class="wcomment">"${esc(w.comment)}"</div>` : ''}
+        ${w.price ? `<div class="wprice">参考 ¥${Number(w.price).toLocaleString('ja-JP')}</div>` : ''}
+      </div>`).join('');
+  } catch (e) {
+    document.getElementById('fname').textContent = '読み込めませんでした';
+  }
+}
+
+async function installFilter() {
+  const btn = document.getElementById('installBtn');
+  btn.disabled = true;
+  try {
+    const r = await fetch(API_BASE + '/api/filters/' + filterId + '/install', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uid: UID })
+    });
+    if (!r.ok) throw 0;
+    if (window.sommLog) sommLog('filter_install', { filterId });
+    btn.textContent = '✓ 装備済み';
+    btn.classList.add('on');
+  } catch (e) {
+    btn.disabled = false;
+  }
+}
+
+load();
+</script>
+<script>
+/* ===== 利用ログ（app_events・書き込み専用。読み取り不可） ===== */
+(function(){
+  var PAGE='filter_view';
+  var U='https://gkhdpzfmqraliwaiubwl.supabase.co/rest/v1/app_events';
+  var K='sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+  var uid='na';
+  try{
+    uid=localStorage.getItem('somm_uid');
+    if(!uid){ uid=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid',uid); }
+  }catch(e){}
+  window.sommLog=function(event,meta){
+    try{
+      var role=null,auth=null;
+      try{ role=localStorage.getItem('sommelin_role')||null; }catch(e){}
+      try{ var t=JSON.parse(localStorage.getItem('sb-gkhdpzfmqraliwaiubwl-auth-token')||'null'); auth=(t&&t.user&&t.user.id)||null; }catch(e){}
+      fetch(U,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','apikey':K,'Authorization':'Bearer '+K,'Prefer':'return=minimal'},
+        body:JSON.stringify({uid:uid,auth_uid:auth,role:role,page:PAGE,event:event,meta:meta||null})}).catch(function(){});
+    }catch(e){}
+  };
+  sommLog('page_view', { id: (filterId||'').slice(0,60) });
+})();
+</script>
+</body>
+</html>

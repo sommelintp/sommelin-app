@@ -103,6 +103,8 @@ body{
 .mark.best{background:linear-gradient(90deg,var(--gold),#e0b45c);color:#3d2a05;border-color:#fff;
   padding:7px 13px;font-size:13px;z-index:2;animation:rPulse 1.8s ease-in-out infinite;}
 .mark .bsub{display:block;font-size:9px;font-weight:700;}
+.mark.pinned{border-color:#8b5cf6;}
+.mark .pinsub{display:block;font-size:9px;font-weight:700;color:#c4b5fd;}
 #frozenBar{position:absolute;left:0;right:0;bottom:0;z-index:35;padding:14px 16px 34px;display:none;
   background:linear-gradient(0deg,rgba(0,0,0,.85),rgba(0,0,0,.5) 70%,transparent);}
 #frozenBar .fs{font-size:12px;color:rgba(255,255,255,.88);text-align:center;margin-bottom:10px;font-weight:700;line-height:1.5;}
@@ -320,7 +322,12 @@ async function startScan(){
   document.getElementById('perm').classList.add('gone');
   document.getElementById('scanview').style.display='block';
   try{
-    stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:'environment' } }, audio:false });
+    // 解像度を明示指定（未指定だとブラウザが省電力優先で低解像度を選び、
+    // 棚に多数のボトルが並ぶ写真でラベルが潰れる問題への対策）
+    stream = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode:{ ideal:'environment' }, width:{ ideal:3840 }, height:{ ideal:2160 } },
+      audio:false
+    });
     const v=document.getElementById('cam'); v.srcObject=stream; await v.play().catch(()=>{});
     setSub('ラベルを枠に入れて撮影');
   }catch(e){
@@ -448,11 +455,14 @@ function renderMarks(res){
     const el=document.createElement('button');
     const w=b.match && b.match.wine;
     let cls='mark', html='';
+    const pinned=b.filterMatches && b.filterMatches.length>0;
     if(b.match.status==='known'){
       cls+=' known';
       const fit=b.personalFit && b.personalFit.score>=40;
       if(fit) cls+=' fit';
+      if(pinned) cls+=' pinned';
       html=(fit?'❤️':'')+'★'+fmtSP(w.sp);
+      if(pinned) html='📌 '+html+`<span class="pinsub">${esc(b.filterMatches[0].name||'フィルター')}</span>`;
       if(i===best){ cls+=' best'; html='👑 '+html+'<span class="bsub">この中でおすすめ</span>'; }
     }else if(b.match.status==='unlisted'){ html='未登録'; }
     else { cls+=' unread'; html='?'; }
@@ -489,6 +499,9 @@ function renderShelfCard(b){
     const lowConf=(b.match.matchScore||0)<0.75;
     const pick=b.sommelin && b.sommelin.isPick
       ? `<div class="pick-ribbon">${b.sommelin.level==='top'?'👑 ソムリンのおすすめ':'✨ ソムリンおすすめ'}<span style="font-weight:600">｜${esc(b.sommelin.reason||'')}</span></div>` : '';
+    const filterRibbons=(b.filterMatches||[]).map(fm=>
+      `<div class="pick-ribbon" style="background:#8b5cf6;color:#fff">📌 ${esc(fm.emoji||'🍷')} ${esc(fm.name||'フィルター')}に掲載${fm.rating?`（★${fm.rating}）`:''}</div>`
+    ).join('');
     inner=`
       <div class="sh-pill" style="background:var(--burgundy)">🍷 ソムリン照合${lowConf?' ・ 要確認':'済み'}</div>
       <div class="sh-name">${esc(w.name||'—')}${w.vintage&&w.vintage!=='NV'?'　'+esc(w.vintage):''}</div>
@@ -498,6 +511,7 @@ function renderShelfCard(b){
         <div class="sh-cell"><div class="v">${fmtPrice(w.price)}</div><div class="l">参考価格</div></div>
       </div>
       ${pick}
+      ${filterRibbons}
       ${fitRibbon(b)}
       <div class="cospa-badge" style="background:${cp.bg}">
         <div class="stars">${cp.stars}</div><div class="lbl">${cp.lbl}</div><div class="sub">${cp.sub}</div>

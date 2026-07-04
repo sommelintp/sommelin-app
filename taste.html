@@ -52,6 +52,24 @@ body{
 #toast{position:fixed;bottom:40px;left:50%;transform:translateX(-50%);background:rgba(15,15,15,.92);color:#fff;
   padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;opacity:0;transition:all .3s;z-index:400;white-space:nowrap;}
 #toast.on{opacity:1;}
+
+/* フィルター確認カード */
+.fsection{margin-top:18px;}
+.fsection-head{font-size:12px;font-weight:800;color:rgba(255,255,255,.85);margin-bottom:8px;}
+.fcard{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:12px 14px;margin-bottom:8px;}
+.fcard .fn{font-size:13px;font-weight:700;line-height:1.4;}
+.fcard .fr{font-size:11px;color:rgba(255,255,255,.55);margin-top:2px;}
+.frow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;}
+.fstars{font-size:20px;letter-spacing:2px;cursor:pointer;}
+.fstar{color:rgba(255,255,255,.25);}
+.fstar.on{color:var(--gold);}
+.fcheck{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,.75);cursor:pointer;white-space:nowrap;}
+.fcomment{width:100%;margin-top:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:10px;
+  padding:8px 10px;font-size:12px;color:#fff;font-family:inherit;resize:none;min-height:36px;}
+.fcomment::placeholder{color:rgba(255,255,255,.4);}
+.fsavebtn{width:100%;padding:14px;background:var(--gold);color:#3d2a05;font-size:14px;font-weight:800;
+  border:none;border-radius:14px;cursor:pointer;margin-top:6px;}
+.fsavebtn:disabled{opacity:.5;}
 </style>
 </head>
 <body>
@@ -82,6 +100,13 @@ body{
   <div class="stat" id="stat"></div>
   <div id="results"></div>
 
+  <div class="fsection" id="fsection" style="display:none;">
+    <div class="fsection-head">📌 このワイン、あなたのフィルターに載せて皆さんにおすすめしますか？</div>
+    <div id="fcards"></div>
+    <button class="fsavebtn" id="fsaveBtn" onclick="saveToFilter()">この内容でフィルターに保存する</button>
+  </div>
+
+  <a class="golink" href="filter_mine.html">🎨 マイフィルターを管理する →</a>
   <a class="golink" href="scouter.html">📷 スカウターで使ってみる →</a>
 </div>
 
@@ -149,6 +174,62 @@ function recRow(b){
   </div>`;
 }
 
+// ===== フィルター確認（載せますか？）=====
+let pendingItems = [];
+
+function fstarsHtml(idx, rating){
+  let h='';
+  for(let i=1;i<=5;i++){ h+=`<span class="fstar${i<=(rating||0)?' on':''}" onclick="setRating(${idx},${i})">★</span>`; }
+  return h;
+}
+
+function fcardHtml(item, idx){
+  return `<div class="fcard" id="fcard-${idx}">
+    <div class="fn">${esc(item.name||'（銘柄名なし）')}</div>
+    <div class="fr">${esc([item.iro,item.kuni,item.chiiki,item.vintage].filter(Boolean).join('　'))}</div>
+    <div class="frow">
+      <div class="fstars" id="fstars-${idx}">${fstarsHtml(idx, item.rating)}</div>
+      <label class="fcheck"><input type="checkbox" ${item.included?'checked':''} onchange="pendingItems[${idx}].included=this.checked"> 載せる</label>
+    </div>
+    <textarea class="fcomment" placeholder="一言（任意）" oninput="pendingItems[${idx}].comment=this.value">${esc(item.comment||'')}</textarea>
+  </div>`;
+}
+
+function setRating(idx, val){
+  pendingItems[idx].rating = (pendingItems[idx].rating===val) ? null : val; // 同じ星の再タップで解除
+  document.getElementById('fstars-'+idx).innerHTML = fstarsHtml(idx, pendingItems[idx].rating);
+}
+
+function renderFilterSection(){
+  const sec=document.getElementById('fsection');
+  if(!pendingItems.length){ sec.style.display='none'; return; }
+  sec.style.display='block';
+  document.getElementById('fcards').innerHTML = pendingItems.map((it,i)=>fcardHtml(it,i)).join('');
+}
+
+async function saveToFilter(){
+  const toSave = pendingItems.filter(it=>it.included);
+  if(!toSave.length){ toast('載せるワインを選んでください'); return; }
+  const btn=document.getElementById('fsaveBtn'); btn.disabled=true;
+  let saved=0, limitHit=false;
+  for(const it of toSave){
+    try{
+      const r=await fetch(API_BASE+'/api/filters/items',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ uid:UID, wine:{ name:it.name, producer:it.producer, iro:it.iro, kuni:it.kuni, chiiki:it.chiiki, vintage:it.vintage, price:it.price, wineId:it.wineId }, rating:it.rating, comment:it.comment })
+      });
+      if(r.status===429){ limitHit=true; break; }
+      if(r.ok) saved++;
+    }catch(e){}
+  }
+  pendingItems=[];
+  renderFilterSection();
+  btn.disabled=false;
+  if(limitHit) toast(`${saved}本保存しました（本日の上限に達しました）`);
+  else if(saved) toast(`🎨 ${saved}本をフィルターに保存しました`);
+  else toast('保存に失敗しました');
+}
+
 async function handleFiles(files){
   if(window.sommLog) sommLog('taste_upload',{n:(files&&files.length)||0});
   if(!files || !files.length) return;
@@ -169,7 +250,12 @@ async function handleFiles(files){
       if(!r.ok) throw new Error('http '+r.status);
       const res=await r.json();
       total+=res.saved||0;
-      (res.recognized||[]).forEach(b=>{ resEl.insertAdjacentHTML('afterbegin', recRow(b)); });
+      (res.recognized||[]).forEach(b=>{
+        resEl.insertAdjacentHTML('afterbegin', recRow(b));
+        pendingItems.push({ name:b.name, producer:b.producer, iro:b.iro, kuni:b.kuni, chiiki:b.chiiki,
+          vintage:b.vintage, price:b.price, wineId:b.wineId, rating:null, comment:'', included:true });
+      });
+      renderFilterSection();
       if(res.profile) showProfile(res.profile);
       if(!res.saved) toast('ボトルを読み取れませんでした');
     }catch(e){ toast('解析に失敗しました'); }

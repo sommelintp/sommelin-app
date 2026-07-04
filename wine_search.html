@@ -491,12 +491,8 @@ function doSearch(q) {
 }
 
 function renderInitial() {
-  // フィルター適用（filter_market/filter_creatorから ?filter=ID で遷移）
-  const params = new URLSearchParams(window.location.search);
-  const filterId = params.get('filter');
-  if (filterId) { renderFilterResults(filterId); return; }
-
   // Auto-search if launched with ?q= (e.g. from AR scanner "購入先を探す")
+  const params = new URLSearchParams(window.location.search);
   const qParam = params.get('q');
   if (qParam && qParam.trim()) {
     doSearch(qParam.trim());
@@ -556,43 +552,6 @@ function renderInitial() {
       </div>
     </div>
   `;
-}
-
-async function renderFilterResults(filterId) {
-  if (window.sommLog) sommLog('filter_view', { filterId });
-  const content = document.getElementById('content');
-  content.innerHTML = '<div style="text-align:center;padding:30px 16px;color:#999;font-size:13px;">読み込み中…</div>';
-  try {
-    const r = await fetch('https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app/api/filters/' + filterId + '/wines?limit=50');
-    if (!r.ok) throw 0;
-    const d = await r.json();
-    const items = d.items || [];
-    if (!items.length) {
-      content.innerHTML = '<div style="text-align:center;padding:40px 20px;color:#999;font-size:13px;">🔍 このフィルターに該当するワインはまだありません</div>';
-      return;
-    }
-    content.innerHTML = `
-      <div style="background:#fff;border:1px solid #f0e6ea;border-radius:14px;padding:12px 14px;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:800;color:#2C1810;">${d.emoji || '🍷'} ${escHtml(d.title || 'フィルター')}</div>
-        <div style="font-size:11px;color:#999;margin-top:2px;">${items.length}本が該当</div>
-      </div>
-      ${items.map(w => {
-        const cp = _cospa(w.osu_gbm);
-        const region = [w.kuni, w.chiiki].filter(Boolean).join(' ');
-        const vint = (w.vintage && w.vintage !== 'NV') ? (' ' + w.vintage) : '';
-        return `<div onclick="doSearch('${(w.name||'').replace(/'/g,"\\'")}')" style="background:#fff;border:1px solid #f0e6ea;border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;">
-          <div style="font-size:13px;font-weight:800;color:#2C1810;">${escHtml(w.name||'')}${escHtml(vint)}</div>
-          <div style="font-size:11px;color:#999;margin-top:2px;">${escHtml(region)}${w.producer?(' / '+escHtml(w.producer)):''}</div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
-            <span style="font-size:13px;font-weight:700;color:#9B1B4B;">${_p(w.price)}</span>
-            <span style="font-size:11px;font-weight:800;color:${cp.bg};">${cp.st} ${cp.lbl}</span>
-          </div>
-        </div>`;
-      }).join('')}
-    `;
-  } catch (e) {
-    content.innerHTML = '<div style="text-align:center;padding:30px 16px;color:#999;font-size:13px;">読み込めませんでした（通信環境をご確認ください）</div>';
-  }
 }
 
 function renderResults(q) {
