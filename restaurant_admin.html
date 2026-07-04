@@ -2326,24 +2326,24 @@ async function loadAnalytics() {
 
     let html = '';
 
-    // ① ソムリンスコア（お店ランキングと同一計算）
+    // ① 総合評価（お店ランキングと同一計算。ブランド名を前面に出さない表記）
     if (d.score != null) {
       html += `
       <div style="background:linear-gradient(135deg,var(--wine-dark),var(--burgundy));border-radius:16px;padding:18px;color:#fff;">
-        <div style="font-size:11px;opacity:.85;font-weight:700;letter-spacing:.06em;">🏆 あなたのお店のソムリンスコア</div>
+        <div style="font-size:11px;opacity:.85;font-weight:700;letter-spacing:.06em;">🏆 あなたのお店の総合評価</div>
         <div style="display:flex;align-items:baseline;gap:10px;margin-top:6px;">
           <div style="font-size:40px;font-weight:800;line-height:1;">${d.score}</div>
           <div>${stars(d.score)}</div>
         </div>
         <div style="font-size:12px;margin-top:8px;opacity:.95;">お店ランキング <strong>${d.rank}位</strong> / ${d.totalStores}店中 ・ ⭐良いワイン <strong>${d.list.good}</strong>本</div>
-        <div style="font-size:11px;margin-top:6px;opacity:.8;">SPの高いワインをリストに増やすとスコアが上がり、ランキングで見つけてもらいやすくなります</div>
+        <div style="font-size:11px;margin-top:6px;opacity:.8;">評価の高いワインをリストに増やすと、ランキングで見つけてもらいやすくなります</div>
       </div>`;
     } else {
       html += `
       <div style="background:var(--bg);border:1.5px dashed var(--border);border-radius:16px;padding:18px;text-align:center;">
         <div style="font-size:28px;">🏆</div>
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-top:6px;">ソムリンスコアはまだありません</div>
-        <div style="font-size:11px;color:var(--text-sub);margin-top:6px;line-height:1.7;">「🌐公開する」をオンにして、ワインリストにマスター一致（⭐付き）のワインを追加するとスコアが付きます</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-top:6px;">総合評価はまだありません</div>
+        <div style="font-size:11px;color:var(--text-sub);margin-top:6px;line-height:1.7;">「🌐公開する」をオンにして、ワインリストにワインを追加すると評価が付きます</div>
       </div>`;
     }
 
@@ -2371,10 +2371,10 @@ async function loadAnalytics() {
     const bmax = Math.max(1, ...bandEntries.map(([,v]) => v));
     html += `
     <div style="background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;margin-top:14px;">
-      <div style="font-size:12px;font-weight:800;color:var(--text);">🍷 リスト構成（提供中 ${d.list.total}本 ・ ソムリンデータ一致 ${d.list.matched}本）</div>
+      <div style="font-size:12px;font-weight:800;color:var(--text);">🍷 リスト構成（提供中 ${d.list.total}本）</div>
       ${cats.length ? cats.map(([k,v]) => bar(CAT_JA[k]||k, v, cmax, 'var(--burgundy)')).join('') : '<div style="font-size:11px;color:var(--text-sub);margin-top:8px;">ワインリストにワインを追加するとここに出ます</div>'}
       ${bandEntries.length ? '<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-top:14px;">ボトル価格帯</div>' + bandEntries.map(([k,v]) => bar(k, v, bmax, 'var(--gold)')).join('') : ''}
-      ${(d.list.cospaTop||[]).length ? '<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-top:14px;">💫 リスト内のコスパ上位</div>' + d.list.cospaTop.map(w => `<div style="font-size:12px;color:var(--text);margin-top:5px;">・${esc(w.name)} <span style="color:var(--gold);font-weight:700;">SP ${w.sp}</span></div>`).join('') : ''}
+      ${(d.list.cospaTop||[]).length ? '<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-top:14px;">💫 リスト内のコスパ上位</div>' + d.list.cospaTop.map(w => `<div style="font-size:12px;color:var(--text);margin-top:5px;">・${esc(w.name)} <span style="color:var(--gold);font-weight:700;">評価 ${w.sp}</span></div>`).join('') : ''}
     </div>`;
 
     // ④ 試飲メモ

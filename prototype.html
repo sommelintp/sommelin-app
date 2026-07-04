@@ -2306,33 +2306,44 @@
 <div id="rankingScreen" class="screen">
   <div class="screen-header">
     <h2>🏆 ランキング</h2>
-    <p>みんなの評価 × ソムリン実評価で選ぶ人気ワイン</p>
+    <p>みんなの評価で選ぶ人気ワイン・お店</p>
   </div>
   <div class="ranking-tabs">
     <div class="ranking-tab active" id="rtab-pop" onclick="switchRankingTab('pop')">🏆 総合人気</div>
-    <div class="ranking-tab" id="rtab-cospa" onclick="switchRankingTab('cospa')">💰 コスパ</div>
-    <div class="ranking-tab" id="rtab-store" onclick="switchRankingTab('store')">🏪 お店</div>
-    <div class="ranking-tab" id="rtab-best" onclick="switchRankingTab('best')">👑 年間ベスト</div>
+    <div class="ranking-tab" id="rtab-store" onclick="switchRankingTab('store')">🤵 お店</div>
   </div>
 
-  <!-- 総合人気（実データ: /api/top-wines＝信頼度加重の総合スコア順。loadTopWinesが描画） -->
+  <!-- 総合人気（実データ: /api/top-wines＝信頼度加重の総合スコア順。コスパはバッジで併記。loadTopWinesが描画） -->
   <div id="rankingPop" class="ranking-list">
     <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>
   </div>
 
-  <!-- コスパ（実データ: winesマスターのコスパ順。loadRealRankingが描画） -->
-  <div id="rankingWines" class="ranking-list" style="display:none;">
-    <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>
-  </div>
-
-  <!-- お店（実データ: /api/top-places＝リストのワインの質で店を採点。loadTopPlacesが描画） -->
+  <!-- お店（実データ: /api/top-places＝リストのワインの質で店を採点。レストラン/ワインショップ切替＋地図。loadTopPlacesが描画） -->
   <div id="rankingStores" class="ranking-list" style="display:none;">
-    <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>
+    <div class="ranking-tabs" style="border-bottom:none;margin:-4px 0 8px;">
+      <div class="ranking-tab active" id="rstab-restaurant" onclick="switchStoreCategory('restaurant')" style="font-size:12px;padding:8px;">🍽️ レストラン</div>
+      <div class="ranking-tab" id="rstab-shop" onclick="switchStoreCategory('shop')" style="font-size:12px;padding:8px;">🍷 ワインショップ</div>
+    </div>
+    <button id="storeMapBtn" onclick="toggleStoreMap()" style="display:block;width:calc(100% - 8px);margin:0 4px 10px;background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:10px;font-size:13px;font-weight:700;color:var(--burgundy);cursor:pointer;font-family:inherit;">🗺️ 地図で見る</button>
+    <div id="storeMapWrap" style="display:none;margin:0 4px 12px;border-radius:14px;overflow:hidden;border:1px solid var(--border);">
+      <div id="storeMap" style="height:300px;"></div>
+    </div>
+    <div id="rankingStoresList">
+      <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>
+    </div>
   </div>
 
-  <!-- 年間ベスト（実データ: /api/best-wines。評価が無い年は正直に「集計中」） -->
-  <div id="rankingBest" class="ranking-list" style="display:none;">
-    <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>
+  <!-- ワインの「どこで飲める？買える？」地図モーダル -->
+  <div id="wineMapModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;" onclick="if(event.target===this)closeWineMap()">
+    <div style="position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:430px;background:var(--bg);border-radius:20px 20px 0 0;padding:16px;max-height:82vh;overflow:auto;">
+      <div style="width:40px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 12px;"></div>
+      <div id="wineMapTitle" style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:2px;">📍 どこで飲める？買える？</div>
+      <div style="font-size:11px;color:var(--text-sub);margin-bottom:10px;"><span style="color:#9B1B4B;">●</span> レストラン（飲める）　<span style="color:#C9973A;">●</span> ワインショップ（買える）</div>
+      <div id="wineMapBody">
+        <div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">探しています…</div>
+      </div>
+      <button onclick="closeWineMap()" style="width:100%;margin-top:12px;background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:12px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;">閉じる</button>
+    </div>
   </div>
 </div>
 
@@ -2968,19 +2979,104 @@ function closeScan() {
 function switchRankingTab(tab) {
   if (window.sommLog) sommLog('ranking_view', { seg: tab });
   document.getElementById('rankingPop').style.display    = tab === 'pop'   ? 'block' : 'none';
-  document.getElementById('rankingWines').style.display  = tab === 'cospa' ? 'block' : 'none';
   document.getElementById('rankingStores').style.display = tab === 'store' ? 'block' : 'none';
-  document.getElementById('rankingBest').style.display   = tab === 'best'  ? 'block' : 'none';
   document.getElementById('rtab-pop').classList.toggle('active', tab === 'pop');
-  document.getElementById('rtab-cospa').classList.toggle('active', tab === 'cospa');
   document.getElementById('rtab-store').classList.toggle('active', tab === 'store');
-  document.getElementById('rtab-best').classList.toggle('active', tab === 'best');
   if (tab === 'store' && !topPlacesLoaded) loadTopPlaces();
-  if (tab === 'best' && !bestWinesLoaded) loadBestWines();
+}
+
+// ===== 地図（Leaflet+OSM＝無料・キー不要。使う時だけ遅延ロード） =====
+let leafletPromise = null;
+function loadLeaflet() {
+  if (window.L) return Promise.resolve();
+  if (leafletPromise) return leafletPromise;
+  leafletPromise = new Promise((resolve, reject) => {
+    const css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(css);
+    const js = document.createElement('script');
+    js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    js.onload = resolve; js.onerror = reject;
+    document.head.appendChild(js);
+  });
+  return leafletPromise;
+}
+
+const PIN_COLORS = { restaurant: '#9B1B4B', shop: '#C9973A' };
+function pinIcon(color) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:26px;height:26px;border-radius:50% 50% 50% 0;background:${color};transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);"></div>`,
+    iconSize: [26, 26], iconAnchor: [13, 24], popupAnchor: [0, -22],
+  });
+}
+
+function addOsmTiles(map) {
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  }).addTo(map);
 }
 
 // ===== お店ランキング（実データ: /api/top-places＝リストのワインの質で店を採点） =====
 let topPlacesLoaded = false;
+let topPlacesData = [];
+let storeCategory = 'restaurant';
+let storeMap = null, storeMapMarkers = [];
+let storeMapVisible = false;
+
+async function toggleStoreMap() {
+  storeMapVisible = !storeMapVisible;
+  const wrap = document.getElementById('storeMapWrap');
+  const btn = document.getElementById('storeMapBtn');
+  wrap.style.display = storeMapVisible ? 'block' : 'none';
+  btn.textContent = storeMapVisible ? '📃 リストだけ表示' : '🗺️ 地図で見る';
+  if (!storeMapVisible) return;
+  if (window.sommLog) sommLog('store_map_view', { cat: storeCategory });
+  try {
+    await loadLeaflet();
+    if (!storeMap) {
+      storeMap = L.map('storeMap', { zoomControl: true });
+      addOsmTiles(storeMap);
+    }
+    renderStoreMapPins();
+    setTimeout(() => storeMap.invalidateSize(), 60);
+  } catch (e) {
+    wrap.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sub);font-size:12px;">地図を読み込めませんでした（通信環境をご確認ください）</div>';
+  }
+}
+
+function renderStoreMapPins() {
+  if (!storeMap || !window.L) return;
+  storeMapMarkers.forEach(m => m.remove());
+  storeMapMarkers = [];
+  const items = (topPlacesData || []).filter(it =>
+    (it.category || 'restaurant') === storeCategory && it.lat != null && it.lng != null);
+  const pts = [];
+  items.forEach((it, i) => {
+    const m = L.marker([it.lat, it.lng], { icon: pinIcon(PIN_COLORS[it.category] || PIN_COLORS.restaurant) }).addTo(storeMap);
+    const link = it.type === 'official'
+      ? `<a href="prototype.html?r=${encodeURIComponent(it.ownerId)}" style="color:#9B1B4B;font-weight:700;">ワインリストを見る →</a>`
+      : '';
+    m.bindPopup(`<div style="font-size:13px;font-weight:700;">${i + 1}位 ${(it.name || '').replace(/</g, '&lt;')}</div>
+      <div style="font-size:12px;margin-top:2px;">評価 ${Number(it.score).toFixed(1)}点 ・ ⭐良いワイン${it.goodCount}本</div>${link}`);
+    storeMapMarkers.push(m);
+    pts.push([it.lat, it.lng]);
+  });
+  if (pts.length) storeMap.fitBounds(pts, { padding: [30, 30], maxZoom: 15 });
+  else storeMap.setView([35.68, 139.76], 11); // 位置情報つきの店が無い時は東京中心
+}
+
+function switchStoreCategory(cat) {
+  storeCategory = cat;
+  if (window.sommLog) sommLog('ranking_view', { seg: 'store', cat });
+  document.getElementById('rstab-restaurant').classList.toggle('active', cat === 'restaurant');
+  document.getElementById('rstab-shop').classList.toggle('active', cat === 'shop');
+  renderTopPlaces();
+  if (storeMapVisible) renderStoreMapPins();
+}
+
 function openStore(type, id, name, lat, lng) {
   if (window.sommLog) sommLog('store_click', { type, name: String(name || '').slice(0, 50) });
   if (type === 'official') {
@@ -2993,57 +3089,133 @@ function openStore(type, id, name, lat, lng) {
 
 async function loadTopPlaces() {
   topPlacesLoaded = true;
-  const box = document.getElementById('rankingStores');
   try {
-    const r = await fetch(CHAT_API_BASE + '/api/top-places?limit=20');
+    const r = await fetch(CHAT_API_BASE + '/api/top-places?limit=50');
     if (!r.ok) throw 0;
     const d = await r.json();
-    const escR = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-    if (!d.items || !d.items.length) {
-      box.innerHTML = `
-        <div style="text-align:center;padding:36px 20px;">
-          <div style="font-size:40px;">🏪</div>
-          <div style="font-weight:700;color:var(--text);margin-top:8px;">お店ランキングは準備中</div>
-          <div style="color:var(--text-sub);font-size:12px;margin-top:8px;line-height:1.7;">
-            お店がワインリストを公開したり、<br>スカウターでみんながお店を記録すると、<br>いいワインを出すお店がここに並びます。
-          </div>
+    topPlacesData = d.items || [];
+  } catch (e) {
+    topPlacesData = null; // 通信エラー（データ0件とは区別する）
+  }
+  renderTopPlaces();
+}
+
+function renderTopPlaces() {
+  const box = document.getElementById('rankingStoresList');
+  const escR = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  if (topPlacesData === null) {
+    box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">お店ランキングを読み込めませんでした（通信環境をご確認ください）</div>';
+    return;
+  }
+  const items = topPlacesData.filter(it => (it.category || 'restaurant') === storeCategory);
+  const catLabel = storeCategory === 'shop' ? 'ワインショップ' : 'レストラン';
+  if (!items.length) {
+    box.innerHTML = `
+      <div style="text-align:center;padding:36px 20px;">
+        <div style="font-size:40px;">🍷</div>
+        <div style="font-weight:700;color:var(--text);margin-top:8px;">${catLabel}ランキングは準備中</div>
+        <div style="color:var(--text-sub);font-size:12px;margin-top:8px;line-height:1.7;">
+          お店がワインリストを公開したり、<br>スカウターでみんながお店を記録すると、<br>いいワインを出すお店がここに並びます。
+        </div>
+      </div>`;
+    return;
+  }
+  box.innerHTML = items.map((it, i) => {
+    const badge = i===0 ? 'r1' : i===1 ? 'r2' : i===2 ? 'r3' : 'rn';
+    const srcLabel = it.type === 'official'
+      ? '<span style="color:var(--gold);font-weight:700;">📖 公式リスト</span>'
+      : '<span style="color:var(--text-sub);">📍 街で発見</span>';
+    const sub = it.type === 'official' ? (it.address || '') : '';
+    const args = it.type === 'official'
+      ? `'official','${escR(it.ownerId)}','${escR(it.name).replace(/'/g,"\\'")}'`
+      : `'crowd','${escR(it.placeId)}','${escR(it.name).replace(/'/g,"\\'")}',${it.lat||'null'},${it.lng||'null'}`;
+    return `
+    <div class="ranking-wine-card" onclick="openStore(${args})" style="cursor:pointer;">
+      <div class="rank-badge ${badge}">${i+1}</div>
+      <div class="rank-wine-info">
+        <div class="rank-wine-name">${escR(it.name)}</div>
+        <div class="rank-wine-region">${escR(sub)}</div>
+        <div class="rank-wine-stats">
+          <span class="rank-stat">${starsHtml(it.score)}</span>
+          <span class="rank-stat">⭐ 良いワイン <strong>${it.goodCount}</strong>本</span>
+        </div>
+        <div class="rank-wine-stats" style="margin-top:2px;">
+          <span class="rank-stat">${srcLabel}</span>
+          <span class="rank-stat">🍷 リスト ${it.listCount}本</span>
+        </div>
+      </div>
+      <div class="rank-score">${Number(it.score).toFixed(1)}<small>点</small></div>
+    </div>`;
+  }).join('')
+  + '<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;">ワインリストの質（評価の信頼度加重平均）順。タップでお店のリスト・地図へ</div>';
+}
+
+// ===== ワインの「どこで飲める？買える？」地図モーダル =====
+let wineMap = null, wineMapMarkers = [];
+
+async function openWineMap(wineId, wineName) {
+  if (window.sommLog) sommLog('wine_map_view', { wineId });
+  const modal = document.getElementById('wineMapModal');
+  const body = document.getElementById('wineMapBody');
+  document.getElementById('wineMapTitle').textContent = '📍 ' + (wineName || 'このワイン') + ' はどこで？';
+  modal.style.display = 'block';
+  body.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">探しています…</div>';
+  try {
+    const r = await fetch(CHAT_API_BASE + '/api/wine-places?wineId=' + encodeURIComponent(wineId));
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    const items = (d.items || []);
+    const mappable = items.filter(it => it.lat != null && it.lng != null);
+    if (!items.length) {
+      body.innerHTML = `
+        <div style="text-align:center;padding:24px 12px;">
+          <div style="font-size:34px;">🔍</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-top:6px;">まだ目撃情報がありません</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:6px;line-height:1.7;">お店でワインリストをスカウターで撮って記録すると、<br>「ここで飲める・買える」がみんなに共有されます</div>
         </div>`;
       return;
     }
-    box.innerHTML = d.items.map((it, i) => {
-      const badge = i===0 ? 'r1' : i===1 ? 'r2' : i===2 ? 'r3' : 'rn';
-      const srcLabel = it.type === 'official'
-        ? '<span style="color:var(--gold);font-weight:700;">📖 公式リスト</span>'
-        : '<span style="color:var(--text-sub);">📍 街で発見</span>';
-      const sub = it.type === 'official' ? (it.address || '') : '';
-      const args = it.type === 'official'
-        ? `'official','${escR(it.ownerId)}','${escR(it.name).replace(/'/g,"\\'")}'`
-        : `'crowd','${escR(it.placeId)}','${escR(it.name).replace(/'/g,"\\'")}',${it.lat||'null'},${it.lng||'null'}`;
-      return `
-      <div class="ranking-wine-card" onclick="openStore(${args})" style="cursor:pointer;">
-        <div class="rank-badge ${badge}">${i+1}</div>
-        <div class="rank-wine-info">
-          <div class="rank-wine-name">${escR(it.name)}</div>
-          <div class="rank-wine-region">${escR(sub)}</div>
-          <div class="rank-wine-stats">
-            <span class="rank-stat">${starsHtml(it.score)}</span>
-            <span class="rank-stat">⭐ 良いワイン <strong>${it.goodCount}</strong>本</span>
-          </div>
-          <div class="rank-wine-stats" style="margin-top:2px;">
-            <span class="rank-stat">${srcLabel}</span>
-            <span class="rank-stat">🍷 リスト ${it.listCount}本</span>
-          </div>
-        </div>
-        <div class="rank-score">${Number(it.score).toFixed(1)}<small>点</small></div>
+    const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    let html = '';
+    if (mappable.length) html += '<div style="border-radius:14px;overflow:hidden;border:1px solid var(--border);"><div id="wineMapCanvas" style="height:260px;"></div></div>';
+    html += items.map(it => {
+      const catTxt = it.category === 'shop' ? '🍷 ワインショップ' : '🍽️ レストラン';
+      const price = it.priceBottle ? `ボトル ¥${Number(it.priceBottle).toLocaleString('ja-JP')}`
+                  : it.listPrice ? `${it.byGlass ? 'グラス' : 'ボトル'} ¥${Number(it.listPrice).toLocaleString('ja-JP')}` : '';
+      const src = it.source === 'official' ? '<span style="color:var(--gold);font-weight:700;">📖 公式</span>' : '<span style="color:var(--text-sub);">📍 街で発見</span>';
+      const link = it.source === 'official' ? ` onclick="location.href='prototype.html?r=${encodeURIComponent(it.ownerId)}'" ` : '';
+      return `<div ${link} style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-top:8px;${it.source==='official'?'cursor:pointer;':''}">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">${esc(it.name)}</div>
+        <div style="font-size:11px;color:var(--text-sub);margin-top:3px;">${catTxt} ・ ${src}${price ? ' ・ ' + price : ''}</div>
       </div>`;
-    }).join('')
-    + '<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;">ワインリストの質（ソムリン実評価SPの信頼度加重平均）順。タップでお店のリスト・地図へ</div>';
+    }).join('');
+    body.innerHTML = html;
+    if (mappable.length) {
+      await loadLeaflet();
+      if (wineMap) { wineMap.remove(); wineMap = null; }
+      wineMap = L.map('wineMapCanvas', { zoomControl: true });
+      addOsmTiles(wineMap);
+      const pts = [];
+      mappable.forEach(it => {
+        const m = L.marker([it.lat, it.lng], { icon: pinIcon(PIN_COLORS[it.category] || PIN_COLORS.restaurant) }).addTo(wineMap);
+        m.bindPopup(`<div style="font-size:13px;font-weight:700;">${(it.name||'').replace(/</g,'&lt;')}</div>
+          <div style="font-size:11px;">${it.category === 'shop' ? '🍷 買える' : '🍽️ 飲める'}</div>`);
+        pts.push([it.lat, it.lng]);
+      });
+      wineMap.fitBounds(pts, { padding: [30, 30], maxZoom: 15 });
+      setTimeout(() => wineMap.invalidateSize(), 60);
+    }
   } catch (e) {
-    box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">お店ランキングを読み込めませんでした（通信環境をご確認ください）</div>';
+    body.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">読み込めませんでした（通信環境をご確認ください）</div>';
   }
 }
 
-// ===== 総合人気（実データ: /api/top-wines＝店舗★＋SP＋外部評価の信頼度加重ベイズ平均） =====
+function closeWineMap() {
+  document.getElementById('wineMapModal').style.display = 'none';
+  if (wineMap) { wineMap.remove(); wineMap = null; }
+}
+
+// ===== 総合人気（実データ: /api/top-wines＝評価の信頼度加重ベイズ平均。コスパはバッジで併記） =====
 const starsHtml = t => {
   const full = Math.round(Number(t) || 0);
   return '<span style="color:var(--gold);letter-spacing:1px;">' + '★'.repeat(Math.max(0, Math.min(5, full))) + '</span>'
@@ -3065,7 +3237,8 @@ async function loadTopWines() {
       const price = w.price != null ? '¥' + Math.round(w.price).toLocaleString('ja-JP') : '—';
       const revTxt = it.communityCount > 0
         ? `🗣 みんなの評価 <strong>${it.communityAvg ?? '—'}</strong>（${it.communityCount}件）`
-        : 'ソムリン実評価ベース';
+        : '総合評価ベース';
+      const cospaBadge = it.goodValue ? '<span class="rank-stat">💰 コスパ良好</span>' : '';
       return `
       <div class="ranking-wine-card">
         <div class="rank-badge ${badge}">${i+1}</div>
@@ -3075,62 +3248,17 @@ async function loadTopWines() {
           <div class="rank-wine-stats">
             <span class="rank-stat">${starsHtml(it.total)}</span>
             <span class="rank-stat">参考価格 <strong>${price}</strong></span>
+            ${cospaBadge}
           </div>
           <div class="rank-wine-stats" style="margin-top:2px;"><span class="rank-stat">${revTxt}</span></div>
+          <div style="margin-top:6px;"><button onclick="openWineMap(${it.wineId}, '${escR(w.name).replace(/'/g,"\\'")}')" style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--burgundy);cursor:pointer;font-family:inherit;">📍 どこで飲める？買える？</button></div>
         </div>
         <div class="rank-score">${Number(it.total).toFixed(1)}<small>点</small></div>
       </div>`;
     }).join('')
-    + '<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;">お店の評価★・ソムリン実評価（SP）・外部評価を信頼度で重み付けした総合スコア順</div>';
+    + '<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;">お店の評価・専門評価・外部評価を信頼度で重み付けした総合スコア順</div>';
   } catch (e) {
     box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">ランキングを読み込めませんでした（通信環境をご確認ください）</div>';
-  }
-}
-
-// ===== 年間ベスト（実データ: /api/best-wines。件数が足りない年は正直に「集計中」） =====
-let bestWinesLoaded = false;
-async function loadBestWines() {
-  bestWinesLoaded = true;
-  const box = document.getElementById('rankingBest');
-  const year = new Date().getFullYear();
-  try {
-    const r = await fetch(CHAT_API_BASE + '/api/best-wines?year=' + year + '&min=2&limit=10');
-    if (!r.ok) throw 0;
-    const d = await r.json();
-    const escR = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-    if (!d.items || !d.items.length) {
-      box.innerHTML = `
-        <div style="text-align:center;padding:36px 20px;">
-          <div style="font-size:40px;">👑</div>
-          <div style="font-weight:700;color:var(--text);margin-top:8px;">${year}年 年間ベストは集計中</div>
-          <div style="color:var(--text-sub);font-size:12px;margin-top:8px;line-height:1.7;">
-            お店のみなさんの評価★が集まり次第、<br>その年のベストワインをここで発表します。<br>それまでは「🏆 総合人気」をチェック！
-          </div>
-        </div>`;
-      return;
-    }
-    box.innerHTML = `<div style="text-align:center;padding:14px 16px 6px;font-weight:700;color:var(--burgundy);">👑 ${year}年 年間ベスト</div>`
-    + d.items.map((it, i) => {
-      const w = it.wine || {};
-      const badge = i===0 ? 'r1' : i===1 ? 'r2' : i===2 ? 'r3' : 'rn';
-      const region = [w.kuni, w.chiiki].filter(Boolean).join(' ');
-      return `
-      <div class="ranking-wine-card">
-        <div class="rank-badge ${badge}">${i+1}</div>
-        <div class="rank-wine-info">
-          <div class="rank-wine-name">${escR(w.name)}${w.vintage && w.vintage!=='NV' ? ' ' + escR(w.vintage) : ''}</div>
-          <div class="rank-wine-region">${escR(region)}${w.producer ? ' / ' + escR(w.producer) : ''}</div>
-          <div class="rank-wine-stats">
-            <span class="rank-stat">${starsHtml(it.total)}</span>
-            <span class="rank-stat">🗣 評価 <strong>${it.communityCount}</strong>件</span>
-          </div>
-        </div>
-        <div class="rank-score">${Number(it.total).toFixed(1)}<small>点</small></div>
-      </div>`;
-    }).join('')
-    + `<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;">${year}年に評価2件以上を集めたワインの総合スコア順</div>`;
-  } catch (e) {
-    box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">年間ベストを読み込めませんでした（通信環境をご確認ください）</div>';
   }
 }
 
