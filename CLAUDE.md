@@ -64,6 +64,17 @@
 - **複数業態アカウント**: `profiles.roles text[]`（例 `{importer,store}`）を追加。既存 `role` は「メイン業態」（ログイン後の初期画面決定用）として残す。入口ガード3枚（importer_admin/restaurant_admin/onboarding）とbackend `verifyRole` は**配列の交差判定**に変更。ガードが `localStorage.sommelin_roles`（JSON配列）を保存。両業態持ちはヘッダーのバッジが**切替ボタン**になる（「インポーター ⇄ 店舗」タップで相互移動。単一業態では通常表示のまま）。業態の追加はv1では運営がSQLで実施（`migrations/2026-07-03_multi_roles.sql` 末尾に例。**SQL Editorで要実行**）。サインアップトリガー `handle_new_user` も roles 初期化に更新済み。
 - **業態の可視化＋ログアウト＋ロゴ（2026-07-03 実機FB）**: 絵文字統一＝🚢インポーター/🛒酒販店/🍽レストラン。管理画面ヘッダーは店名の下段に**金色の業態バッジ**（現在の業態を明示）＋他業態持ちには「⇄ ○○に切替」ボタン（roleRow）。ヘッダー右上に⏻ログアウト（Supabaseセッション無効化＋localStorage消去→login.html）。**ヘッダーの店名・アイコンは実データ**（ガードが `profiles.display_name/avatar_url` を `localStorage.sommelin_profile` に保存→`initHeaderIdentity()` が反映）。アイコンタップ→ロゴ変更（256px正方形にトリミング→Storage `avatars/<uid>/logo.jpg` にupsert→`profiles.avatar_url` 更新。バケット/RLS: `migrations/2026-07-03_avatars.sql` **SQL Editorで要実行**）。login.htmlの業種選択に「複数業態はまず主な業態で登録→後から追加」の案内追加・酒販店絵文字🛒に統一。
 
+## 推し活・Instagram連携（2026-07-06実装・オーナービジョン「美味しかったが生産者にちゃんと届く」）
+- **個人ユーザーにはLINEを一切出さない**（2026-07-06オーナー決定）: login.htmlは個人ロール選択時LINEボタン非表示（`lineRegBlock`）・index.htmlのヒーローCTAは「メールで始める」が主役・onboardingのLINE連携ミッション削除。LINEは業務店登録でのみ使う。
+- **推し活フロー（scouter.html）**: 照合カードに「❤️気に入った！（推す）」→ ①評価入力（**10点満点0.1刻み**・スライダー・SPと同スケール）→ ②`POST /api/wine-like`で**wine_likes＋taste_itemsに必ず蓄積**（シェアの有無と無関係＝分離設計。personalFitが賢くなる）→ ③「この美味しかった気持ちを、生産者に伝えますか？」→ ④**推しカード生成**（Canvas 1080×1920・端末内生成・完全無料。Canva等の外部API不使用）→ ⑤プレビュー→Web Share APIでIGへ。キャプション（@生産者ハンドル入り）は自動コピー。
+- **@メンションの届き方（正直設計）**: 画像上の文字では通知されないため、フィード投稿=コピー済みキャプション貼り付けで通知／ストーリーズ=@メンションスティッカーを案内文で促す。自動投稿・自動DMはしない（スパム回避・仕様書15章の原則）。
+- 生産者ハンドルは`producer_profiles`から取得（backend応答`producerInstagram`）。未登録生産者はハンドル無しカード。**`OSHI_OFFICIAL_IG`（scouter.htmlの推し活ブロック冒頭の定数）に公式IGハンドルを設定するとカード・キャプションに載る（現在未設定・要オーナー確認）**。
+- レート制限はbackend `LIKE_RATE`（identify.js内・現在20回/分/IP）で調整可能＝固定の回数制限を設けない方針（オーナー指示）。
+- テーブル: `wine_likes`（rating/shared_ig/catalog_id=名寄せマップ経由。anon全拒否・service roleのみ。`migrations/2026-07-06_wine_likes.sql` **実行済み2026-07-06**）。
+- ログ: `oshi_like`/`oshi_card_open`/`oshi_share`（app_events）。
+- **Meta API申請（審査待ちになるため早めに・オーナー作業）**: 公式IGはビジネス化＋FBページ連携済みとのこと。残り=developers.facebook.comで開発者登録→アプリ作成→ビジネス認証→`instagram_basic`+Mentions APIのアプリレビュー→承認後「@公式をメンションした投稿」の自動検知（生産者からの返信をアプリに繋げる）を実装する。
+- 関連仕様: `Documents/Claude/Projects/ソムリンアプリ/仕様書_ソムリンアプリ.md` 15章（通知トリガー・Claim this producer・公式アカウント紹介などPhase 2以降の全体像）。
+
 ## スカウター & データ（2026-07-02 現在）
 - **カメラ解像度の明示指定（2026-07-04修正・実機FB「棚に多数のボトルがあるとラベルが潰れる」）**: `startScan()`の`getUserMedia`が解像度を一切指定しておらず、ブラウザが省電力優先で低解像度プレビューを選んでしまうことがあった。`width:{ideal:3840},height:{ideal:2160}`を明示指定するよう修正。10本超の棚を1枚で撮る棚モードほど影響が大きい（1本あたりの実質ピクセル数が少ないため）。※実機のカメラが必要な変更のためプレビュー環境では検証不可・実機確認必須。
 - **ボトルの向き対応（2026-07-04追加）**: セラー収納は瓶を横倒しにするのが一般的なため、`VISION_SHELF_SYSTEM`/`VISION_CELLAR_SYSTEM`（棚モード・taste.htmlの好み登録で共用）に「横倒し・逆さま・斜めでも読み取れる限り特定を試みる」旨を明記。それまでは向きへの配慮が一切無く一般的な画像認識任せだった。
@@ -75,7 +86,8 @@
 - **要設定**: `scouter.html` 冒頭の `API_BASE` に Cloud Run のURLを入れる（暫定は `?api=https://…run.app` パラメータでも設定可＝localStorageに保存）。
 - 設計書: `Documents/Claude/Projects/ソムリンアプリ/スカウター_ビジョンAI_エンドポイント設計.md`（no-lie原則・レスポンス契約・フライホイール）。
 - フロントは Supabase を **publishable キーで直接 read/rpc**（既存の管理画面と同方式）。秘密鍵は backend のみ。publishableキーは `gkhdpzfmqraliwaiubwl.supabase.co` / `sb_publishable_...`。
-- **wines マスター**: 現在 `cospa_clean_scored.csv` 由来（列= name/producer/iro/kuni/chiiki/vintage/price/sp/osu_gbm 等）で**15,563件**投入済。あいまい一致は RPC `match_wines(q,lim)`。**2026-07-04時点でフル投入は保留**——別プロジェクト `~/Documents/Claude/Projects/ソムリンワイン評価効率化/` で試飲会PDFの手書きSPを検証した「確定データ（ゴールデンデータ）」が完成次第、そちらを正データとして投入する方針（cospaのフル62,566件は使わない）。確定データには最初から横文字名（`ワイン名/ワイナリー名（横文字）`）が入っているため、`name_romanized`のAI生成は不要見込み。4分割CSV・投入SQLは`migrations/2026-07-04_wines_full_reload.sql`に準備済み（cospa版を使う場合の保険。実行は保留中）。
+- **【最重要・2026-07-05】ワインデータの正本は `wine_catalog` に確定**: 頭脳プロジェクト（ソムリンワイン評価効率化）から67,034銘柄・多言語・SP・年別コスパの完成データが納品された。スキーマ=`Documents/Claude/Projects/ソムリンアプリ/supabase_wine_catalog.sql`（設計思想が冒頭コメントに明記。master行は頭脳のみ・アプリはpending追加のみ・おすすめはrecommendable=true限定・混ぜ禁止等）。**アプリ全機能をこれに接続する移行計画: `wine_catalog移行計画.md`（このリポジトリ直下）を必ず読むこと**。既存winesテーブルはPhase 4で退役予定。catalog_observations定義は頭脳側に確認中。
+- **wines マスター**（→wine_catalogへ移行予定・上記参照）: 現在 `cospa_clean_scored.csv` 由来（列= name/producer/iro/kuni/chiiki/vintage/price/sp/osu_gbm 等）で**15,563件**投入済。あいまい一致は RPC `match_wines(q,lim)`。**2026-07-04時点でフル投入は保留**——別プロジェクト `~/Documents/Claude/Projects/ソムリンワイン評価効率化/` で試飲会PDFの手書きSPを検証した「確定データ（ゴールデンデータ）」が完成次第、そちらを正データとして投入する方針（cospaのフル62,566件は使わない）。確定データには最初から横文字名（`ワイン名/ワイナリー名（横文字）`）が入っているため、`name_romanized`のAI生成は不要見込み。4分割CSV・投入SQLは`migrations/2026-07-04_wines_full_reload.sql`に準備済み（cospa版を使う場合の保険。実行は保留中）。
 - **コスパ**＝おすすめ度 `osu_gbm`/`osu_lin` = SP − 価格から期待されるSP（プラスほど割安）。
 - DB定義SQL: `~/dev/sommelin-trade-platform/migrations/2026-06-25_scouter_wines.sql`（テーブル＋RPC＋RLS）と `..._scouter_load_master.sql`（ステージング→wines）。
 - 今回更新済の画面: `wine_search.html`（結果トップに実SP・コスパ表示）/ `cellar.html`（端末保存=localStorage）/ `prototype.html`（マイページから scouter・cellar・検索・AIソムリエへ導線追加）/ PWA: `manifest.webmanifest`・`sw.js`。

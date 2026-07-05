@@ -525,7 +525,6 @@ const missions = [
   { id:'shop1',   cat:'🏪 お気に入りのお店',  icon:'🏪', title:'初めて飲んだお店を登録',   desc:'どこで飲みましたか？お店の情報を教えて',      pts:10, type:'shop' },
   { id:'shop3',   cat:'🏪 お気に入りのお店',  icon:'🗺️', title:'お気に入りを3軒登録',     desc:'よく行くお店を3軒登録しよう',               pts:10, type:'shop', requires:'shop1' },
   { id:'instagram',cat:'📱 SNS連携',         icon:'📷', title:'Instagram連携',          desc:'インスタのワイン投稿をソムリンと共有',         pts:10, type:'sns_ig' },
-  { id:'line',     cat:'📱 SNS連携',         icon:'💬', title:'LINE連携',               desc:'LINEでワイン情報を受け取る',                 pts:10, type:'sns_line' },
   { id:'invite',   cat:'👥 友達とつながる',   icon:'🎁', title:'友達を1人招待',           desc:'ワイン好きの友達にソムリンを紹介',            pts:10, type:'invite' },
 ];
 
@@ -752,18 +751,6 @@ function buildModalContent(m) {
     <button class="btn-primary" onclick="connectSNS('instagram')">Instagramと連携する</button>
     <button class="btn-secondary" onclick="closeModal()">あとで</button>`;
 
-  if (m.type === 'sns_line') return ptBadge(m.pts) + `
-    <div class="sns-option">
-      <div class="sns-icon li">💬</div>
-      <div class="sns-info"><div class="sns-name">LINE</div><div class="sns-desc">LINEでワインのおすすめを通知</div></div>
-      <div class="sns-pts">+10点</div>
-    </div>
-    <p style="font-size:12px;color:var(--sub);text-align:center;line-height:1.6;padding:8px 0 16px;">
-      新しいワインのおすすめや<br>お気に入りのお店の情報をLINEでお届け🍷
-    </p>
-    <button class="btn-primary" onclick="connectSNS('line')">LINEと連携する</button>
-    <button class="btn-secondary" onclick="closeModal()">あとで</button>`;
-
   if (m.type === 'invite') return ptBadge(m.pts) + `
     <p style="font-size:13px;color:var(--sub);text-align:center;margin-bottom:16px;">
       友達をソムリンに招待すると<br><b style="color:var(--burgundy)">あなたも友達も</b>ポイントが貰えます！
@@ -885,8 +872,8 @@ function saveShop() {
 
 function connectSNS(type) {
   setTimeout(() => {
-    showToast(type==='instagram' ? '📷 Instagram連携完了！' : '💬 LINE連携完了！');
-    setTimeout(() => completeMission(type === 'instagram' ? 'instagram' : 'line'), 600);
+    showToast('📷 Instagram連携完了！');
+    setTimeout(() => completeMission('instagram'), 600);
   }, 500);
 }
 

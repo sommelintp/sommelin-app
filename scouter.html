@@ -161,6 +161,28 @@ body{
 .sh-btns{display:flex;gap:10px;padding:0 16px;}
 .sh-main{flex:1;padding:14px;background:var(--burgundy);color:#fff;font-size:14px;font-weight:800;border:none;border-radius:14px;cursor:pointer;}
 .sh-sub{padding:14px 16px;background:#f5f3f0;color:#555;font-size:13px;border:none;border-radius:14px;cursor:pointer;}
+
+/* ── 推し活（❤️気に入った→評価→生産者へ届ける） ── */
+.sh-like{display:block;width:calc(100% - 32px);margin:0 16px 10px;padding:14px;
+  background:linear-gradient(135deg,#C9973A,#a8781f);color:#fff;font-size:14px;font-weight:800;
+  border:none;border-radius:14px;cursor:pointer;}
+.oshi-step{padding:4px 20px 0;}
+.oshi-title{font-size:17px;font-weight:800;margin:6px 0 2px;}
+.oshi-sub{font-size:12px;color:#888;margin-bottom:10px;line-height:1.5;}
+.oshi-score{text-align:center;font-size:54px;font-weight:800;color:var(--burgundy);line-height:1;margin:10px 0 0;}
+.oshi-score small{font-size:16px;color:#aaa;font-weight:700;}
+.oshi-stars{text-align:center;font-size:19px;letter-spacing:3px;margin:4px 0 2px;color:#C9973A;}
+.oshi-slider{width:100%;margin:10px 0 6px;accent-color:var(--burgundy);height:34px;}
+#oshiOverlay{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.85);display:none;
+  align-items:center;justify-content:center;flex-direction:column;padding:16px;}
+#oshiOverlay.on{display:flex;}
+#oshiOverlay img{max-height:52dvh;max-width:82%;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.6);}
+.oshi-hint{color:rgba(255,255,255,.85);font-size:11px;line-height:1.6;margin:10px 0 4px;max-width:86%;text-align:center;}
+.oshi-actions{display:flex;flex-direction:column;gap:8px;width:86%;max-width:340px;margin-top:8px;}
+.oshi-actions .a1{padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#C9973A,#a8781f);
+  color:#fff;font-weight:800;font-size:14px;cursor:pointer;}
+.oshi-actions .a2{padding:11px;border:1.5px solid rgba(255,255,255,.5);border-radius:14px;
+  background:rgba(255,255,255,.12);color:#fff;font-weight:700;font-size:13px;cursor:pointer;}
 .cand-h{font-size:11px;color:#999;margin:10px 16px 6px;font-weight:700;}
 .cand-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 16px 8px;padding:10px 12px;background:#f7f5f3;border-radius:10px;cursor:pointer;}
 .cand-row .cn{font-size:13px;font-weight:700;color:#2C1810;}
@@ -263,6 +285,17 @@ body{
   <div id="sheetBody"></div>
 </div>
 
+<!-- ④ 推しカード共有プレビュー -->
+<div id="oshiOverlay">
+  <img id="oshiCardImg" alt="推しカード">
+  <div class="oshi-hint" id="oshiHint"></div>
+  <div class="oshi-actions">
+    <button class="a1" id="oshiShareBtn" onclick="oshiDoShare()"></button>
+    <button class="a2" onclick="oshiCopyCaption()"></button>
+    <button class="a2" onclick="oshiCloseOverlay()"></button>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -306,6 +339,25 @@ const I18N = {
     toast_report_saved: '記録しました。ありがとうございます！ 🍷',
     toast_report_failed: '保存に失敗しました。通信環境をご確認ください',
     toast_enter_name: '店名を入力してください',
+    like_btn: '❤️ 気に入った！（推す）',
+    oshi_rate_title: 'このワイン、何点でしたか？',
+    oshi_rate_sub: '10点満点・0.1刻み。あなたの「気に入ったワインリスト」に保存されます',
+    oshi_save: '❤️ この評価で保存',
+    oshi_back: '戻る',
+    oshi_saved: '気に入ったワインに保存しました🍷',
+    oshi_fail: '保存に失敗しました。通信環境をご確認ください',
+    oshi_ask_title: 'この美味しかった気持ちを、生産者に伝えますか？',
+    oshi_ask_sub: '推しカードを作ってInstagramでシェア。あなたの「ごちそうさま」が生産者に届きます',
+    oshi_ask_go: '📸 推しカードを作る',
+    oshi_ask_later: '今はしない',
+    oshi_making: 'カードを作成中…',
+    oshi_share: '📤 Instagramでシェア',
+    oshi_copy: '📋 キャプションをコピー',
+    oshi_close: '閉じる',
+    oshi_hint_mention: 'キャプションはコピー済み。投稿に貼り付けると @メンション で生産者に通知が届きます。ストーリーズの場合は@メンションスティッカーでタグ付けしてください',
+    oshi_hint_nohandle: 'キャプションはコピー済み。投稿に貼り付けてシェアしてください',
+    oshi_cap_copied: 'キャプションをコピーしました',
+    oshi_share_unsupported: 'この端末では直接共有できません。画像を長押しで保存してInstagramに投稿してください',
   },
   en: {
     perm_title: 'Sommelin Scouter',
@@ -345,6 +397,25 @@ const I18N = {
     toast_report_saved: 'Recorded — thank you! 🍷',
     toast_report_failed: 'Failed to save. Please check your connection.',
     toast_enter_name: 'Please enter the venue name',
+    like_btn: '❤️ I love this wine!',
+    oshi_rate_title: 'How would you rate this wine?',
+    oshi_rate_sub: 'Out of 10, in 0.1 steps. Saved to your "wines I loved" list.',
+    oshi_save: '❤️ Save my rating',
+    oshi_back: 'Back',
+    oshi_saved: 'Saved to your favorite wines 🍷',
+    oshi_fail: 'Failed to save. Please check your connection.',
+    oshi_ask_title: 'Tell the producer you loved it?',
+    oshi_ask_sub: 'Create a fan card and share it on Instagram — your "thank you" reaches the producer.',
+    oshi_ask_go: '📸 Create my fan card',
+    oshi_ask_later: 'Not now',
+    oshi_making: 'Creating your card…',
+    oshi_share: '📤 Share on Instagram',
+    oshi_copy: '📋 Copy caption',
+    oshi_close: 'Close',
+    oshi_hint_mention: 'Caption copied. Paste it into your post — the @mention notifies the producer. On Stories, add a mention sticker to tag them.',
+    oshi_hint_nohandle: 'Caption copied. Paste it into your post and share.',
+    oshi_cap_copied: 'Caption copied',
+    oshi_share_unsupported: 'Direct share is not available here. Long-press the image to save it, then post on Instagram.',
   },
 };
 let LANG = (() => { try { return localStorage.getItem('somm_lang') || (navigator.language && navigator.language.startsWith('ja') ? 'ja' : 'en'); } catch (e) { return 'ja'; } })();
@@ -607,6 +678,7 @@ function markTap(i){
 
 // タップ時の詳細カード（既知=実SP・コスパ／未登録=正直表示。近縁おすすめは遅延読込＝無料）
 function renderShelfCard(b){
+  curOshiBottle=b;   // 推し活（❤️気に入った）用に保持
   const w=b.match.wine;
   const id=b.identification||{};
   let inner='';
@@ -633,6 +705,7 @@ function renderShelfCard(b){
         <div class="stars">${cp.stars}</div><div class="lbl">${cp.lbl}</div><div class="sub">${cp.sub}</div>
       </div>
       <div id="simBox"></div>
+      <button class="sh-like" onclick="oshiStart()">${t('like_btn')}</button>
       <div class="sh-btns">
         <button class="sh-main" onclick="buy('${escAttr(w.name||'')}', ${w.id})">🔍 購入先を探す</button>
         <button class="sh-sub" onclick="closeSheet()">閉じる</button>
@@ -646,6 +719,7 @@ function renderShelfCard(b){
       ${fitRibbon(b)}
       <div class="sh-meta">まだソムリンの評価データにありません。<b>推測のスコアは表示しません。</b>スキャンは記録済みです。</div>
       <div id="simBox"></div>
+      <button class="sh-like" onclick="oshiStart()">${t('like_btn')}</button>
       <div class="sh-btns">
         <button class="sh-main" onclick="buy('${escAttr(title)}')">🔍 ネットで探す</button>
         <button class="sh-sub" onclick="closeSheet()">閉じる</button>
@@ -673,6 +747,241 @@ async function loadSimilar(b){
         <div class="cc">${c.stars}<br>SP ${fmtSP(x.sp)}</div></div>`;
     }).join('');
   }catch(e){}
+}
+
+/* ═════════════════════════════════════════════════════════════
+   推し活: ❤️気に入った → 評価(10点満点0.1刻み) → 蓄積 →
+   「この美味しかった気持ちを、生産者に伝えますか？」→ 推しカード生成 → IG共有
+   ・伝えなくても wine_likes / taste_items には必ず蓄積される（分離設計）
+   ・@メンションはユーザー自身の投稿に乗る＝スパムにならない自然な届き方
+   ═════════════════════════════════════════════════════════════ */
+let curOshiBottle=null, oshiLikeId=null, oshiHandle=null, oshiRating=8.0, oshiCardBlob=null, oshiCaption='';
+const OSHI_OFFICIAL_IG='';   // ソムリン公式IGハンドル（@なし）。設定するとカード・キャプションに載る
+const OSHI_APP_URL='https://sommelintp.github.io/sommelin-app/';
+
+function oshiWineInfo(){
+  const b=curOshiBottle||{}; const w=b.match&&b.match.wine; const id=b.identification||{};
+  return {
+    w,
+    name:    w ? w.name    : ([id.producer,id.wine].filter(Boolean).join(' ')||'このワイン'),
+    producer:w ? w.producer: (id.producer||''),
+    vintage: (w ? w.vintage : id.vintage)||'',
+  };
+}
+
+// Step1: 評価をつける
+function oshiStart(){
+  const info=oshiWineInfo();
+  oshiRating=8.0;
+  document.getElementById('sheetBody').innerHTML=`
+    <div class="oshi-step">
+      <div class="oshi-title">${t('oshi_rate_title')}</div>
+      <div class="oshi-sub">${esc(trunc(info.name,30))}${info.vintage&&info.vintage!=='NV'?' '+esc(info.vintage):''}<br>${t('oshi_rate_sub')}</div>
+      <div class="oshi-score"><span id="oshiScoreV">8.0</span><small> /10</small></div>
+      <div class="oshi-stars" id="oshiStars"></div>
+      <input type="range" class="oshi-slider" id="oshiSlider" min="0" max="10" step="0.1" value="8.0"
+        oninput="oshiRating=parseFloat(this.value);oshiPaintScore()">
+      <div class="sh-btns" style="padding:6px 0 10px">
+        <button class="sh-main" onclick="oshiSave()">${t('oshi_save')}</button>
+        <button class="sh-sub" onclick="renderShelfCard(curOshiBottle)">${t('oshi_back')}</button>
+      </div>
+    </div>`;
+  oshiPaintScore();
+}
+function oshiPaintScore(){
+  const v=document.getElementById('oshiScoreV'); if(v) v.textContent=oshiRating.toFixed(1);
+  const st=document.getElementById('oshiStars');
+  if(st){ const n=Math.round(oshiRating/2); st.textContent='★'.repeat(n)+'☆'.repeat(5-n); }
+}
+
+// Step2: 保存（蓄積は伝える/伝えないに関係なく必ず行う）
+async function oshiSave(){
+  const b=curOshiBottle; if(!b) return;
+  const w=b.match&&b.match.wine;
+  try{
+    const r=await fetch(API_BASE+'/api/wine-like',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({userId:UID, wineId:w?w.id:null, identification:b.identification||null, rating:oshiRating})});
+    if(!r.ok) throw new Error('save failed');
+    const d=await r.json();
+    oshiLikeId=d.likeId||null; oshiHandle=d.producerInstagram||null;
+    if(window.sommLog) sommLog('oshi_like',{wineId:w?w.id:null, rating:oshiRating, hasHandle:!!oshiHandle});
+    toast(t('oshi_saved'));
+    oshiAskShare();
+  }catch(e){ toast(t('oshi_fail')); }
+}
+
+// Step3: 「生産者に伝えますか？」
+function oshiAskShare(){
+  document.getElementById('sheetBody').innerHTML=`
+    <div class="oshi-step" style="text-align:center;padding-bottom:8px">
+      <div style="font-size:44px;margin:10px 0 4px">🍷💌</div>
+      <div class="oshi-title">${t('oshi_ask_title')}</div>
+      <div class="oshi-sub">${t('oshi_ask_sub')}</div>
+      <div class="sh-btns" style="flex-direction:column;padding:6px 0 10px">
+        <button class="sh-main" onclick="oshiMakeCard()">${t('oshi_ask_go')}</button>
+        <button class="sh-sub" onclick="closeSheet()">${t('oshi_ask_later')}</button>
+      </div>
+    </div>`;
+}
+
+// Step4: 推しカード生成（Canvas 1080×1920・完全無料/端末内生成）→ プレビュー
+async function oshiMakeCard(){
+  toast(t('oshi_making'));
+  const info=oshiWineInfo();
+  oshiCaption=oshiBuildCaption(info);
+  try{ await navigator.clipboard.writeText(oshiCaption); }catch(e){}
+  try{
+    const blob=await oshiDrawCard(info);
+    oshiCardBlob=blob;
+    const img=document.getElementById('oshiCardImg');
+    img.src=URL.createObjectURL(blob);
+    document.getElementById('oshiHint').textContent=t(oshiHandle?'oshi_hint_mention':'oshi_hint_nohandle');
+    const acts=document.querySelectorAll('#oshiOverlay .oshi-actions button');
+    acts[0].textContent=t('oshi_share'); acts[1].textContent=t('oshi_copy'); acts[2].textContent=t('oshi_close');
+    document.getElementById('oshiOverlay').classList.add('on');
+    closeSheet();
+    if(window.sommLog) sommLog('oshi_card_open',{hasHandle:!!oshiHandle});
+    if(oshiLikeId){ fetch(API_BASE+'/api/wine-like/shared',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({likeId:oshiLikeId,userId:UID})}).catch(()=>{}); }
+  }catch(e){ toast(t('oshi_fail')); }
+}
+
+function oshiBuildCaption(info){
+  const L=[];
+  L.push(`🍷 ${info.name}${info.vintage&&info.vintage!=='NV'?' '+info.vintage:''}`);
+  if(info.producer) L.push(`👨‍🌾 ${info.producer}`);
+  L.push(`私の評価 ${oshiRating.toFixed(1)}/10 ⭐`);
+  if(oshiHandle) L.push(`@${oshiHandle} 美味しかったです。ごちそうさまでした🙏`);
+  L.push('');
+  const tags=['#Sommelin','#ソムリン','#ワイン好きと繋がりたい','#wine'];
+  if(OSHI_OFFICIAL_IG) tags.unshift('@'+OSHI_OFFICIAL_IG);
+  L.push(tags.join(' '));
+  L.push(`📱 ${OSHI_APP_URL}`);
+  return L.join('\n');
+}
+
+function oshiLoadImg(src){ return new Promise(res=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=()=>res(null); im.src=src; }); }
+function oshiWrap(ctx,text,maxW){
+  const out=[]; let line='';
+  for(const ch of String(text)){ if(ctx.measureText(line+ch).width>maxW && line){ out.push(line); line=ch; } else line+=ch; }
+  if(line) out.push(line);
+  return out.slice(0,3);
+}
+
+async function oshiDrawCard(info){
+  const W=1080,H=1920;
+  const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const ctx=cv.getContext('2d');
+  const F='-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif';
+
+  // 背景: バーガンディの深いグラデーション＋装飾円
+  const g=ctx.createLinearGradient(0,0,W*0.6,H);
+  g.addColorStop(0,'#3d0a1d'); g.addColorStop(0.5,'#5C0E2A'); g.addColorStop(1,'#9B1B4B');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(255,255,255,0.045)';
+  ctx.beginPath(); ctx.arc(W*0.92,H*0.10,300,0,7); ctx.fill();
+  ctx.beginPath(); ctx.arc(W*0.05,H*0.85,260,0,7); ctx.fill();
+  ctx.fillStyle='rgba(201,151,58,0.10)';
+  ctx.beginPath(); ctx.arc(W*0.85,H*0.78,200,0,7); ctx.fill();
+
+  const [logo,chara]=await Promise.all([
+    oshiLoadImg('assets/sommelin/sommelin-logo.png'),
+    oshiLoadImg('assets/sommelin/sommelin-delighted.png')]);
+
+  // ヘッダー: ロゴ
+  if(logo){ const lw=170,lh=lw*(logo.naturalHeight/logo.naturalWidth); ctx.drawImage(logo,(W-lw)/2,90,lw,lh); }
+  ctx.fillStyle='#E8C97A'; ctx.textAlign='center';
+  ctx.font=`800 34px ${F}`; ctx.letterSpacing='10px';
+  ctx.fillText('SOMMELIN',W/2,320); ctx.letterSpacing='0px';
+
+  // 「このワイン、美味しかった！」
+  ctx.font=`800 58px ${F}`; ctx.fillStyle='#E8C97A';
+  ctx.fillText('このワイン、美味しかった！',W/2,470);
+
+  // ワイン名（最大3行折返し）
+  ctx.font=`800 82px ${F}`; ctx.fillStyle='#fff';
+  const lines=oshiWrap(ctx,info.name,920);
+  let y=610;
+  for(const ln of lines){ ctx.fillText(ln,W/2,y); y+=100; }
+  // ヴィンテージ・生産者
+  ctx.font=`700 46px ${F}`; ctx.fillStyle='rgba(255,255,255,0.85)';
+  const sub=[info.producer,(info.vintage&&info.vintage!=='NV')?info.vintage:''].filter(Boolean).join('　');
+  if(sub){ ctx.fillText(trunc(sub,26),W/2,y+16); y+=76; }
+
+  // 金の区切り線
+  ctx.strokeStyle='#C9973A'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(W/2-110,y+30); ctx.lineTo(W/2+110,y+30); ctx.stroke();
+
+  // 評価
+  ctx.font=`800 30px ${F}`; ctx.fillStyle='#E8C97A'; ctx.letterSpacing='8px';
+  ctx.fillText('MY RATING',W/2,y+120); ctx.letterSpacing='0px';
+  ctx.font=`800 170px ${F}`; ctx.fillStyle='#fff';
+  ctx.fillText(oshiRating.toFixed(1),W/2,y+300);
+  ctx.font=`700 44px ${F}`; ctx.fillStyle='rgba(255,255,255,0.6)';
+  ctx.fillText('/ 10',W/2,y+360);
+  // 星（半端は★を半分クリップして描く＝全端末で確実に表示）
+  const n5=oshiRating/2, ssize=64, sgap=ssize*1.35, sx0=W/2-sgap*2, sy=y+450;
+  ctx.font=`${ssize}px ${F}`; ctx.fillStyle='#C9973A';
+  for(let i=0;i<5;i++){
+    const sx=sx0+sgap*i, fill=Math.max(0,Math.min(1,n5-i));
+    ctx.fillText('☆',sx,sy);
+    if(fill>=0.75){ ctx.fillText('★',sx,sy); }
+    else if(fill>=0.25){
+      const sw=ctx.measureText('★').width;
+      ctx.save(); ctx.beginPath(); ctx.rect(sx-sw/2,sy-ssize,sw/2,ssize*1.4); ctx.clip();
+      ctx.fillText('★',sx,sy); ctx.restore();
+    }
+  }
+
+  // @生産者ハンドルのピル
+  if(oshiHandle){
+    const txt=`📸 @${oshiHandle}`;
+    ctx.font=`800 46px ${F}`;
+    const tw=ctx.measureText(txt).width, pw=tw+90, ph=92, px=(W-pw)/2, py=y+510;
+    ctx.fillStyle='#C9973A';
+    ctx.beginPath(); ctx.roundRect(px,py,pw,ph,46); ctx.fill();
+    ctx.fillStyle='#3d0a1d'; ctx.fillText(txt,W/2,py+62);
+    ctx.font=`600 32px ${F}`; ctx.fillStyle='rgba(255,255,255,0.75)';
+    ctx.fillText('ごちそうさまでした 🙏',W/2,py+160);
+  }
+
+  // ソムリン君（右下・ピルや文字と重ならないサイズ/位置）
+  if(chara){ const chH=300,chW=chH*(chara.naturalWidth/chara.naturalHeight);
+    ctx.drawImage(chara,W-chW-30,H-chH-90,chW,chH); }
+
+  // フッター
+  ctx.textAlign='left';
+  ctx.font=`700 34px ${F}`; ctx.fillStyle='rgba(255,255,255,0.85)';
+  ctx.fillText('#Sommelin',70,H-190);
+  if(OSHI_OFFICIAL_IG){ ctx.fillText('@'+OSHI_OFFICIAL_IG,70,H-140); }
+  ctx.font=`600 30px ${F}`; ctx.fillStyle='rgba(255,255,255,0.55)';
+  ctx.fillText(OSHI_APP_URL.replace('https://',''),70,H-90);
+
+  return new Promise(res=>cv.toBlob(res,'image/png'));
+}
+
+// Step5: 共有（Web Share API。非対応端末は保存を案内）
+async function oshiDoShare(){
+  try{ await navigator.clipboard.writeText(oshiCaption); }catch(e){}
+  if(window.sommLog) sommLog('oshi_share',{hasHandle:!!oshiHandle});
+  try{
+    const file=new File([oshiCardBlob],'sommelin-oshi.png',{type:'image/png'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file]});
+      return;
+    }
+  }catch(e){ if(e && e.name==='AbortError') return; }
+  toast(t('oshi_share_unsupported'));
+}
+async function oshiCopyCaption(){
+  try{ await navigator.clipboard.writeText(oshiCaption); toast(t('oshi_cap_copied')); }
+  catch(e){ toast(t('oshi_fail')); }
+}
+function oshiCloseOverlay(){
+  document.getElementById('oshiOverlay').classList.remove('on');
+  const img=document.getElementById('oshiCardImg');
+  if(img.src){ URL.revokeObjectURL(img.src); img.removeAttribute('src'); }
 }
 
 function showApiUnset(){
