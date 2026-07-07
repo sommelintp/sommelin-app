@@ -385,7 +385,7 @@ body {
     <button class="header-back" onclick="location.href='prototype.html'">‹</button>
     <div>
       <div class="header-title">マイセラー</div>
-      <div class="header-sub">浦川 哲矢</div>
+      <div class="header-sub" id="cellarHeaderName">ゲスト</div>
     </div>
   </div>
   <div class="header-add" onclick="openAddModal()">＋</div>
@@ -550,22 +550,54 @@ let currentCat = 'all';
 let selectedCatForAdd = 'sparkling';
 let nextId = 100;
 
-let cellar = [
-  { id:1,  cat:'red',       name:'Gevrey-Chambertin',              producer:'Rossignol-Trapet', vintage:'2019', region:'ブルゴーニュ, フランス',     grapes:'ピノ・ノワール',  bottles:2, price:22000, date:'2026-03-15', note:'試飲会で気に入り購入', hasLabel:true },
-  { id:2,  cat:'white',     name:'Chablis Premier Cru "Montée"',   producer:'Raveneau',         vintage:'2020', region:'シャブリ, フランス',         grapes:'シャルドネ',      bottles:3, price:18000, date:'2026-01-20', note:'魚介と合わせたい', hasLabel:true },
-  { id:3,  cat:'sparkling', name:'Champagne Brut NV',              producer:'Louis Roederer',   vintage:'NV',   region:'シャンパーニュ, フランス',   grapes:'PN / CH / PM',   bottles:1, price:14800, date:'2026-05-10', note:'誕生日用に購入', hasLabel:false },
-  { id:4,  cat:'red',       name:'Barolo "Castiglione"',           producer:'Vietti',           vintage:'2018', region:'バローロ, イタリア',         grapes:'ネッビオーロ',   bottles:2, price:16800, date:'2025-12-01', note:'あと2年以上熟成させたい', hasLabel:true },
-  { id:5,  cat:'white',     name:'Sancerre Blanc',                 producer:'Henri Bourgeois',  vintage:'2022', region:'ロワール, フランス',         grapes:'ソーヴィニヨン・ブラン', bottles:4, price:9800, date:'2026-02-14', note:'デイリー用', hasLabel:false },
-  { id:6,  cat:'orange',    name:'Ramato Pinot Grigio',            producer:'Colterenzio',      vintage:'2021', region:'アルト・アディジェ, イタリア', grapes:'ピノ・グリージョ', bottles:1, price:7800, date:'2026-04-05', note:'自然派ショップで発見', hasLabel:true },
-  { id:7,  cat:'rose',      name:'Bandol Rosé',                    producer:'Domaine Tempier',  vintage:'2022', region:'バンドル, フランス',         grapes:'ムールヴェードル', bottles:2, price:8400, date:'2026-05-30', note:'夏の食前酒に', hasLabel:false },
-  { id:8,  cat:'red',       name:'Pinot Noir Reserve',             producer:'Lemelson Vineyards',vintage:'2020',region:'オレゴン, アメリカ',         grapes:'ピノ・ノワール',  bottles:1, price:11000, date:'2026-04-20', note:'オレゴン初挑戦', hasLabel:true },
-];
+// 2026-07-07: 新規ユーザーに架空のサンプル8本が「自分のセラー」として見える不具合を修正。
+// 空で開始し、localStorage（端末キャッシュ）→サーバー（user_cellar）の順に実データを反映する。
+let cellar = [];
 
-// ── 端末に保存（localStorage）。初回は上のサンプルで開始し、以後は保存内容を復元 ──
+// ── 端末に保存（localStorageはオフラインキャッシュ。正本はサーバーのuser_cellar） ──
 const CELLAR_KEY = 'somm_cellar_v1';
+const CELLAR_API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
 try { const _s = localStorage.getItem(CELLAR_KEY); if (_s) { const _a = JSON.parse(_s); if (Array.isArray(_a)) cellar = _a; } } catch (e) {}
 nextId = Math.max(nextId, 101, ...cellar.map(w => (w.id || 0) + 1));
 function saveCellar(){ try { localStorage.setItem(CELLAR_KEY, JSON.stringify(cellar)); } catch (e) {} }
+
+// サーバー同期: 変更時にupsert（アカウント紐付け済みなら他端末にも反映される）
+function syncWineToServer(w){
+  let uid=null; try{ uid=localStorage.getItem('somm_uid'); }catch(e){}
+  if(!uid) return;
+  fetch(CELLAR_API_BASE+'/api/cellar',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ userId:uid, clientRowId:String(w.id), name:w.name, vintage:w.vintage,
+      region:w.region, producer:w.producer, cat:w.cat, bottles:w.bottles, note:w.note })
+  }).catch(()=>{});
+}
+
+// ページロード時: サーバーの内容を取得し、端末キャッシュより新しければ描画に反映
+async function loadCellarFromServer(){
+  let uid=null; try{ uid=localStorage.getItem('somm_uid'); }catch(e){}
+  if(!uid) return;
+  try{
+    const r = await fetch(CELLAR_API_BASE+'/api/cellar?userId='+encodeURIComponent(uid));
+    if(!r.ok) return;
+    const { items } = await r.json();
+    if(!Array.isArray(items) || !items.length) return;
+    const byRowId = {}; cellar.forEach(w => { byRowId[String(w.id)] = w; });
+    items.forEach(it => {
+      const rowId = it.client_row_id || it.id;
+      byRowId[rowId] = {
+        id: isNaN(Number(rowId)) ? rowId : Number(rowId),
+        cat: it.cat || 'red', name: it.name || '（名称未設定）', producer: it.producer || '—',
+        vintage: it.vintage || '—', region: it.region || '—', grapes: '—',
+        bottles: it.bottles != null ? it.bottles : 1, price: 0,
+        date: (it.updated_at||'').split('T')[0] || '', note: it.note || '', hasLabel:false,
+      };
+    });
+    cellar = Object.values(byRowId).filter(w => w.bottles > 0);
+    nextId = Math.max(nextId, 101, ...cellar.map(w => (typeof w.id==='number'?w.id:0) + 1));
+    saveCellar();
+    renderSummary(); renderCellar();
+  }catch(e){}
+}
 
 const journal = [
   { id:1, wineId:1, name:'Gevrey-Chambertin', producer:'Rossignol-Trapet', vintage:'2019', region:'ブルゴーニュ', cat:'red',   rating:5, note:'ベリーの香りとスパイス。余韻がとても長い。デカンタ1時間後が最高だった。', date:'2026-06-08', place:'自宅' },
@@ -768,6 +800,7 @@ function changeStock(id, delta) {
     showToast(delta > 0 ? '＋1本 追加' : '−1本 消費');
   }
   saveCellar();
+  syncWineToServer(w);
   renderSummary();
   renderCellar();
 }
@@ -832,6 +865,7 @@ function saveWine() {
   };
   cellar.unshift(w);
   saveCellar();
+  syncWineToServer(w);
   // reset form
   ['f-name','f-producer','f-vintage','f-region','f-grapes','f-note'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-bottles').value = '1';
@@ -898,6 +932,10 @@ renderSummary();
 renderCellar();
 renderJournal();
 renderStats();
+loadCellarFromServer();
+(function initHeaderName(){
+  try { const n = localStorage.getItem('sommelin_nickname'); const el = document.getElementById('cellarHeaderName'); if (el && n) el.textContent = n; } catch(e){}
+})();
 </script>
 <script>
 /* ===== 利用ログ（app_events・書き込み専用。読み取り不可） ===== */
@@ -920,6 +958,17 @@ renderStats();
     }catch(e){}
   };
   sommLog('page_view');
+
+  // アカウント自動リンク（2026-07-07・ログイン中の端末を自己修復的に紐付け）
+  try{
+    var _sess=JSON.parse(localStorage.getItem('sommelin_session')||'null');
+    if(_sess&&_sess.access_token&&uid&&uid!=='na'){
+      fetch('https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app/api/link-device',{
+        method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({token:_sess.access_token,sommUid:uid})
+      }).catch(function(){});
+    }
+  }catch(e){}
 })();
 </script>
 </body>

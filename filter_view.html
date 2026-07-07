@@ -79,7 +79,7 @@ async function load() {
     box.innerHTML = items.map(w => `
       <div class="wcard">
         <div class="wname">${esc(w.name || '（銘柄不明）')}${w.vintage && w.vintage!=='NV' ? ' ' + esc(w.vintage) : ''}</div>
-        <div class="wmeta">${esc([w.iro, w.kuni, w.chiiki].filter(Boolean).join(' ・ '))}${w.producer ? ' / ' + esc(w.producer) : ''}</div>
+        <div class="wmeta">${esc([w.iro, w.kuni, w.chiiki].filter(v=>v&&v!=='不明').join(' ・ '))}${w.producer ? ' / ' + esc(w.producer) : ''}</div>
         ${w.rating ? `<div class="wstars">${starsHtml(w.rating)}</div>` : ''}
         ${w.comment ? `<div class="wcomment">"${esc(w.comment)}"</div>` : ''}
         ${w.price ? `<div class="wprice">参考 ¥${Number(w.price).toLocaleString('ja-JP')}</div>` : ''}

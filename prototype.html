@@ -2350,11 +2350,21 @@
 <!-- ===== マイページ SCREEN ===== -->
 <div id="mypageScreen" class="screen">
   <div class="mypage-profile">
-    <div class="mypage-avatar">🧑</div>
+    <div class="mypage-avatar" id="mypageAvatarEl">🥚</div>
     <div>
       <div class="mypage-name" id="mypageNameEl">ゲスト</div>
       <div class="mypage-cert" id="mypageCertEl">ソムリン会員</div>
     </div>
+  </div>
+  <div class="mypage-xp-wrap" style="padding:0 16px 14px;">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+      <span id="mypageXpTitle" style="font-size:13px;font-weight:800;color:var(--burgundy);">たまごソムリン</span>
+      <span id="mypageXpNum" style="font-size:11px;color:var(--text-sub);">0 XP</span>
+    </div>
+    <div style="background:var(--burgundy-pale,#f0dde3);border-radius:8px;height:8px;overflow:hidden;">
+      <div id="mypageXpBar" style="background:var(--burgundy);height:100%;width:0%;transition:width .4s;"></div>
+    </div>
+    <div id="mypageXpNext" style="font-size:11px;color:var(--text-sub);margin-top:4px;"></div>
   </div>
   <div class="mypage-stats">
     <div class="mypage-stat">
@@ -2869,6 +2879,28 @@ function fmtAgo(ts) {
   return new Date(ts).toLocaleDateString('ja-JP');
 }
 
+// サーバー同期: 他端末で記録した来店もマージしてから描画する
+async function loadVisitsFromServer(){
+  let uid=null; try{ uid=localStorage.getItem('somm_uid'); }catch(e){}
+  if(!uid) return;
+  try{
+    const r = await fetch(CHAT_API_BASE+'/api/visits?userId='+encodeURIComponent(uid));
+    if(!r.ok) return;
+    const { items } = await r.json();
+    if(!Array.isArray(items) || !items.length) return;
+    let local = []; try{ local = JSON.parse(localStorage.getItem('sommelin_visits')||'[]'); }catch(e){}
+    const merged = local.slice();
+    const seen = new Set(local.map(v => v.rid+'|'+v.ts));
+    items.forEach(it => {
+      const ts = new Date(it.ts).getTime();
+      const key = it.rid+'|'+ts;
+      if(!seen.has(key)){ merged.push({ rid: it.rid, name: it.name, ts }); seen.add(key); }
+    });
+    localStorage.setItem('sommelin_visits', JSON.stringify(merged.slice(0,200)));
+    renderRealVisits();
+  }catch(e){}
+}
+
 function renderRealVisits() {
   const container = document.getElementById('histRestList');
   let visits = [];
@@ -3320,7 +3352,7 @@ async function loadTopWines() {
     box.innerHTML = d.items.map((it, i) => {
       const w = it.wine || {};
       const badge = i===0 ? 'r1' : i===1 ? 'r2' : i===2 ? 'r3' : 'rn';
-      const region = [w.kuni, w.chiiki].filter(Boolean).join(' ');
+      const region = [w.kuni, w.chiiki].filter(v => v && v !== '不明').join(' ');
       const price = w.price != null ? '¥' + Math.round(w.price).toLocaleString('ja-JP') : '—';
       const revTxt = it.communityCount > 0
         ? `🗣 みんなの評価 <strong>${it.communityAvg ?? '—'}</strong>（${it.communityCount}件）`
@@ -3416,7 +3448,7 @@ async function loadRealRanking() {
     const escR = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     box.innerHTML = rows.map((w, i) => {
       const badge = i===0 ? 'r1' : i===1 ? 'r2' : i===2 ? 'r3' : 'rn';
-      const region = [w.kuni, w.chiiki].filter(Boolean).join(' ');
+      const region = [w.kuni, w.chiiki].filter(v => v && v !== '不明').join(' ');
       const price = w.price != null ? '¥' + Math.round(w.price).toLocaleString('ja-JP') : '—';
       return `
       <div class="ranking-wine-card">
@@ -3453,12 +3485,19 @@ async function loadRestaurantList(rid) {
     document.querySelectorAll('.restaurant-name').forEach(el => el.textContent = shopName);
     if (window.sommLog) sommLog('store_list_view', { r: rid });
 
-    // 来店記録（端末内のみ・履歴画面用。履歴からの再訪問 nv=1 は記録しない）
+    // 来店記録（端末キャッシュ＋サーバー同期。履歴からの再訪問 nv=1 は記録しない）
     if (!new URLSearchParams(location.search).get('nv')) {
       try {
         const v = JSON.parse(localStorage.getItem('sommelin_visits') || '[]');
         v.unshift({ rid, name: shopName, ts: Date.now() });
         localStorage.setItem('sommelin_visits', JSON.stringify(v.slice(0, 200)));
+      } catch (e) {}
+      try {
+        const _vuid = localStorage.getItem('somm_uid');
+        if (_vuid) fetch(CHAT_API_BASE + '/api/visits', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: _vuid, rid, name: shopName })
+        }).catch(() => {});
       } catch (e) {}
     }
 
@@ -4061,6 +4100,55 @@ function initMypageIdentity(){
 }
 initMypageIdentity();
 
+// ── 経験値・レベル・国推しバッジ（2026-07-07・backendのXP_RULES/LEVELSと対応） ──
+const XP_LEVELS = [
+  { level:1,  title:'たまごソムリン',     min:0,    avatar:'sommelin-welcome.png' },
+  { level:2,  title:'ひよこソムリン',     min:30,   avatar:'sommelin-welcome.png' },
+  { level:3,  title:'見習いソムリン',     min:80,   avatar:'sommelin-welcome.png' },
+  { level:4,  title:'ソムリン',           min:160,  avatar:'sommelin-recommend.png' },
+  { level:5,  title:'中堅ソムリン',       min:280,  avatar:'sommelin-recommend.png' },
+  { level:6,  title:'匠ソムリン',         min:450,  avatar:'sommelin-recommend.png' },
+  { level:7,  title:'賢者ソムリン',       min:700,  avatar:'sommelin-swirling.png' },
+  { level:8,  title:'マイスターソムリン', min:1000, avatar:'sommelin-swirling.png' },
+  { level:9,  title:'グランソムリン',     min:1400, avatar:'sommelin-swirling.png' },
+  { level:10, title:'レジェンドソムリン', min:2000, avatar:'sommelin-delighted.png' },
+];
+const COUNTRY_FLAGS = {
+  'フランス':['🇫🇷','フランス通'], 'イタリア':['🇮🇹','イタリア通'], 'スペイン':['🇪🇸','スペイン通'],
+  'ドイツ':['🇩🇪','ドイツ通'], 'アメリカ':['🇺🇸','アメリカ通'], '日本':['🇯🇵','日本ワイン通'],
+  'チリ':['🇨🇱','チリ通'], 'オーストラリア':['🇦🇺','オーストラリア通'], 'ポルトガル':['🇵🇹','ポルトガル通'],
+  'アルゼンチン':['🇦🇷','アルゼンチン通'], 'ニュージーランド':['🇳🇿','NZ通'], '南アフリカ':['🇿🇦','南アフリカ通'],
+};
+function initMypageXp(){
+  if (!CHAT_UID2) return;
+  fetch(CHAT_API_BASE + '/api/xp?userId=' + encodeURIComponent(CHAT_UID2))
+    .then(r => r.ok ? r.json() : null)
+    .then(d => {
+      if (!d) return;
+      const cur = XP_LEVELS.find(l => l.level === d.level) || XP_LEVELS[0];
+      const next = XP_LEVELS.find(l => l.level === d.level + 1);
+      const titleEl = document.getElementById('mypageXpTitle');
+      const numEl   = document.getElementById('mypageXpNum');
+      const barEl   = document.getElementById('mypageXpBar');
+      const nextEl  = document.getElementById('mypageXpNext');
+      const avatarEl= document.getElementById('mypageAvatarEl');
+      if (titleEl) titleEl.textContent = d.title || cur.title;
+      if (numEl) numEl.textContent = d.total + ' XP';
+      if (barEl) {
+        const pct = next ? Math.min(100, Math.round((d.total - cur.min) / (next.min - cur.min) * 100)) : 100;
+        barEl.style.width = pct + '%';
+      }
+      if (nextEl) nextEl.textContent = next ? `次のレベルまであと${next.min - d.total}XP` : '最高レベルです🎉';
+      if (avatarEl && cur.avatar) avatarEl.innerHTML = `<img src="assets/sommelin/${cur.avatar}" style="width:100%;height:100%;object-fit:contain;border-radius:50%;">`;
+      const certEl = document.getElementById('mypageCertEl');
+      if (certEl && d.topCountry && COUNTRY_FLAGS[d.topCountry]) {
+        const [flag, label] = COUNTRY_FLAGS[d.topCountry];
+        certEl.textContent = `ソムリン会員 ・ ${flag} ${label}`;
+      }
+    }).catch(() => {});
+}
+initMypageXp();
+
 function protoResizeImageFile(file, maxEdge) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -4204,6 +4292,7 @@ function handleEnter(e) {
   loadTopWines();
   loadRealRanking();
   renderRealVisits();
+  loadVisitsFromServer();
   // QRから開いた場合は実店舗のワインリストを表示
   const _rid = new URLSearchParams(location.search).get('r');
   if (_rid) loadRestaurantList(_rid);
@@ -4230,6 +4319,17 @@ function handleEnter(e) {
     }catch(e){}
   };
   sommLog('page_view');
+
+  // アカウント自動リンク（2026-07-07・ログイン中の端末を自己修復的に紐付け）
+  try{
+    var _sess=JSON.parse(localStorage.getItem('sommelin_session')||'null');
+    if(_sess&&_sess.access_token&&uid&&uid!=='na'){
+      fetch('https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app/api/link-device',{
+        method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({token:_sess.access_token,sommUid:uid})
+      }).catch(function(){});
+    }
+  }catch(e){}
 })();
 </script>
 </body>

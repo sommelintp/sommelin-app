@@ -110,7 +110,7 @@ async function load() {
     }
     // ヘッダー・統計（表記はブランド控えめ: SPという言葉は出さない）
     const regions = {};
-    rows.forEach(w => { const k = [w.kuni, w.chiiki].filter(Boolean).join(' '); if (k) regions[k] = (regions[k]||0)+1; });
+    rows.forEach(w => { const k = [w.kuni, w.chiiki].filter(v => v && v !== '不明').join(' '); if (k) regions[k] = (regions[k]||0)+1; });
     const topRegion = Object.entries(regions).sort((a,b)=>b[1]-a[1])[0];
     document.getElementById('pregion').textContent = topRegion ? topRegion[0] : '';
     const sps = rows.map(w => Number(w.sp)).filter(x => isFinite(x) && x > 0);
@@ -124,7 +124,7 @@ async function load() {
       const badge = Number(w.osu_gbm) >= 0.1 ? '<span class="wbadge">💰 コスパ良好</span>' : '';
       return `<div class="wcard">
         <div class="wname">${esc(w.name)}${w.vintage && w.vintage!=='NV' ? ' ' + esc(w.vintage) : ''}</div>
-        <div class="wmeta">${esc([w.iro, w.kuni, w.chiiki].filter(Boolean).join(' ・ '))}</div>
+        <div class="wmeta">${esc([w.iro, w.kuni, w.chiiki].filter(v => v && v !== '不明').join(' ・ '))}</div>
         <div class="wrow">
           <span class="wprice">${price}</span>
           ${badge}

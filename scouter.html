@@ -726,7 +726,7 @@ function renderShelfCard(b){
       <div class="sh-pill" style="background:var(--burgundy)">🍷 ソムリン照合${lowConf?' ・ 要確認':'済み'}</div>
       <div class="sh-name">${esc(w.name||'—')}${w.vintage&&w.vintage!=='NV'?` <span class="sh-vintage-badge">${esc(w.vintage)}</span>`:''}</div>
       <div class="sh-producer">${esc(w.producer||'')}</div>
-      <div class="sh-region">${esc([w.kuni,w.chiiki].filter(Boolean).join(' '))}</div>
+      <div class="sh-region">${esc([w.kuni,w.chiiki].filter(v=>v&&v!=='不明').join(' '))}</div>
       <div class="cospa-badge" style="background:${cp.bg}">
         <div class="stars">${cp.stars}</div><div class="lbl">${cp.lbl}</div><div class="sub">${cp.sub}</div>
       </div>
@@ -776,7 +776,7 @@ async function loadSimilar(b){
     box.innerHTML='<div class="cand-h">近い系統のおすすめ（ソムリン実データ）</div>'+d.items.map(x=>{
       const c=cospa(osuOf(x));
       return `<div class="cand-row" onclick="buy('${escAttr(x.name||'')}', ${x.id})">
-        <div><div class="cn">${esc(trunc(x.name||'',26))}</div><div class="cr">${esc([x.kuni,x.chiiki].filter(Boolean).join(' '))}　${fmtPrice(x.price)}</div></div>
+        <div><div class="cn">${esc(trunc(x.name||'',26))}</div><div class="cr">${esc([x.kuni,x.chiiki].filter(v=>v&&v!=='不明').join(' '))}　${fmtPrice(x.price)}</div></div>
         <div class="cc">${c.stars}<br><small>${fmtSP(x.sp)}/10</small></div></div>`;
     }).join('');
   }catch(e){}
@@ -1106,7 +1106,7 @@ function liRow(it, hit){
   const name=(w?w.name:null)||inp.name||inp.rawText||'—';
   const meta=[];
   if(inp.listPrice) meta.push('¥'+Number(inp.listPrice).toLocaleString('ja-JP')+(inp.byGlass?'（グラス）':''));
-  if(w) meta.push([w.kuni,w.chiiki].filter(Boolean).join(' '));
+  if(w) meta.push([w.kuni,w.chiiki].filter(v=>v&&v!=='不明').join(' '));
   else if(inp.country) meta.push(inp.country);
   const badges=[];
   if(it.personalFit && it.personalFit.label && it.personalFit.score>=40) badges.push(`<span class="b1">❤️ ${esc(it.personalFit.label)}</span>`);
@@ -1308,6 +1308,17 @@ if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.s
     }catch(e){}
   };
   sommLog('page_view');
+
+  // アカウント自動リンク（2026-07-07・ログイン中の端末を自己修復的に紐付け）
+  try{
+    var _sess=JSON.parse(localStorage.getItem('sommelin_session')||'null');
+    if(_sess&&_sess.access_token&&uid&&uid!=='na'){
+      fetch('https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app/api/link-device',{
+        method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({token:_sess.access_token,sommUid:uid})
+      }).catch(function(){});
+    }
+  }catch(e){}
 })();
 </script>
 </body>

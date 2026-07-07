@@ -288,6 +288,17 @@ loadProfile();
     }catch(e){}
   };
   sommLog('page_view');
+
+  // アカウント自動リンク（2026-07-07・ログイン中の端末を自己修復的に紐付け）
+  try{
+    var _sess=JSON.parse(localStorage.getItem('sommelin_session')||'null');
+    if(_sess&&_sess.access_token&&uid&&uid!=='na'){
+      fetch('https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app/api/link-device',{
+        method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({token:_sess.access_token,sommUid:uid})
+      }).catch(function(){});
+    }
+  }catch(e){}
 })();
 </script>
 </body>
