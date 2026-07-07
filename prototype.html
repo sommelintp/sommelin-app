@@ -2148,6 +2148,18 @@
 
 </div>
 
+<!-- ===== ホーム(発見フィード) SCREEN ===== -->
+<div id="homeScreen" class="screen">
+  <div class="screen-header">
+    <h2>🏠 ホーム</h2>
+    <p>気になる人・似た好みの人のワインをお届け</p>
+  </div>
+  <div id="homeFeedColdMsg" style="display:none;margin:0 20px 12px;padding:12px 14px;background:var(--burgundy-pale);border-radius:10px;font-size:12.5px;color:var(--text-sub);line-height:1.6;">
+    まだフォロー中の人や紹介つながりがいません。まずは<a href="#" onclick="switchTab('mypage');return false;" style="color:var(--burgundy);font-weight:700;">お友達を招待</a>したり、気になる人をフォローすると、その人のおすすめが優先的に届くようになります。
+  </div>
+  <div id="homeFeedList" style="padding:0 20px 24px;"></div>
+</div>
+
 <!-- ===== 履歴 SCREEN ===== -->
 <div id="historyScreen" class="screen">
   <div class="screen-header">
@@ -2500,7 +2512,11 @@
 
 <!-- BOTTOM NAV -->
 <div class="bottom-nav">
-  <div class="nav-item active" id="nav-history" onclick="switchTab('history')">
+  <div class="nav-item" id="nav-home" onclick="switchTab('home')">
+    <span class="nav-icon">🏠</span>
+    <span class="nav-label" data-i18n="nav_home">ホーム</span>
+  </div>
+  <div class="nav-item" id="nav-history" onclick="switchTab('history')">
     <span class="nav-icon">📍</span>
     <span class="nav-label" data-i18n="nav_history">履歴</span>
   </div>
@@ -2642,11 +2658,11 @@
    jp-only クラスの要素（LINE連携など日本固有機能）は言語がja以外だと自動的に隠れる。 */
 const I18N = {
   ja: {
-    nav_history: '履歴', nav_camera: 'カメラ', nav_ranking: 'ランキング', nav_mypage: 'マイページ',
+    nav_home: 'ホーム', nav_history: '履歴', nav_camera: 'カメラ', nav_ranking: 'ランキング', nav_mypage: 'マイページ',
     menu_notify: '通知設定', menu_profile: 'プロフィール編集',
   },
   en: {
-    nav_history: 'History', nav_camera: 'Camera', nav_ranking: 'Ranking', nav_mypage: 'My Page',
+    nav_home: 'Home', nav_history: 'History', nav_camera: 'Camera', nav_ranking: 'Ranking', nav_mypage: 'My Page',
     menu_notify: 'Notifications', menu_profile: 'Edit Profile',
   },
 };
@@ -2676,6 +2692,7 @@ function switchTab(tab) {
   const wineList      = document.getElementById('wineList');
   const classicList   = document.getElementById('classicList');
   const calScreen     = document.getElementById('calendarScreen');
+  const homeScreen    = document.getElementById('homeScreen');
   const historyScreen = document.getElementById('historyScreen');
   const cameraScreen  = document.getElementById('cameraScreen');
   const rankingScreen = document.getElementById('rankingScreen');
@@ -2686,6 +2703,7 @@ function switchTab(tab) {
   wineList.style.display      = 'none';
   classicList.style.display   = 'none';
   calScreen.style.display     = 'none';
+  homeScreen.style.display    = 'none';
   historyScreen.style.display = 'none';
   document.getElementById('historyDetailScreen').style.display = 'none';
   cameraScreen.style.display  = 'none';
@@ -2698,13 +2716,14 @@ function switchTab(tab) {
 
   const navMap = {
     wine: 'nav-history', // default home links to history nav highlight if needed
+    home: 'nav-home',
     history: 'nav-history',
     camera: 'nav-camera',
     ranking: 'nav-ranking',
     mypage: 'nav-mypage',
     calendar: 'nav-ranking' // calendar is a sub of ranking area
   };
-  document.getElementById(navMap[tab] || 'nav-history')?.classList.add('active');
+  document.getElementById(navMap[tab] || 'nav-home')?.classList.add('active');
 
   if (tab === 'wine') {
     // レストランのワインリスト（QRスキャン後の店舗ビュー）
@@ -2714,6 +2733,10 @@ function switchTab(tab) {
     else wineList.style.display = 'block';
     chatBtn.style.display = 'flex';
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  } else if (tab === 'home') {
+    homeScreen.style.display = 'block';
+    chatBtn.style.display = 'flex';
+    loadHomeFeed();
   } else if (tab === 'history') {
     historyScreen.style.display = 'block';
     chatBtn.style.display = 'flex';
@@ -3375,7 +3398,7 @@ async function loadTopWines() {
           <div class="rank-wine-stats" style="margin-top:2px;"><span class="rank-stat">${revTxt}</span></div>
           <div style="margin-top:6px;"><button onclick="openWineMap(${it.wineId}, '${escR(w.name).replace(/'/g,"\\'")}')" style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--burgundy);cursor:pointer;font-family:inherit;">📍 どこで飲める？買える？</button></div>
         </div>
-        <div class="rank-score">${Number(it.total).toFixed(1)}<small>点</small></div>
+        <div class="rank-score">${Number(it.total).toFixed(2)}<small>点</small></div>
       </div>`;
     }).join('')
     + '<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;">お店の評価・専門評価・外部評価を信頼度で重み付けした総合スコア順</div>';
@@ -4149,6 +4172,50 @@ function initMypageXp(){
 }
 initMypageXp();
 
+// ── ホーム(発見フィード) 2026-07-07: フォロー中/紹介ネットワーク/好み類似/人気を統合した/api/feed ──
+const FEED_SOURCE_EMOJI = { follow: '💛', referral: '🌱', similar: '🔍', popular: '🏆', nearby: '📍' };
+let homeFeedLoaded = false;
+function loadHomeFeed() {
+  if (homeFeedLoaded) return;
+  homeFeedLoaded = true;
+  const box = document.getElementById('homeFeedList');
+  const coldMsg = document.getElementById('homeFeedColdMsg');
+  if (!box || !CHAT_UID2) return;
+  fetch(CHAT_API_BASE + '/api/feed?userId=' + encodeURIComponent(CHAT_UID2) + '&limit=30')
+    .then(r => r.ok ? r.json() : null)
+    .then(d => {
+      if (!d || !d.items) { box.innerHTML = ''; return; }
+      if (coldMsg) coldMsg.style.display = d.isColdStart ? 'block' : 'none';
+      if (!d.items.length) {
+        box.innerHTML = '<div style="text-align:center;color:var(--text-sub);font-size:13px;padding:32px 0;">まだ表示できるおすすめがありません</div>';
+        return;
+      }
+      const escR = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      box.innerHTML = d.items.map(it => {
+        const w = it.wine || {};
+        const region = [w.kuni, w.chiiki].filter(v => v && v !== '不明').join(' ');
+        const sub = [escR(w.producer), escR(region)].filter(Boolean).join(' ・ ');
+        const badgeIcon = FEED_SOURCE_EMOJI[it.source] || '🍷';
+        const who = it.filterName ? `${it.filterEmoji || ''} ${escR(it.filterName)}` : '';
+        return `
+        <div class="ranking-wine-card" style="cursor:default;">
+          <div class="rank-badge rn" style="font-size:16px;">${badgeIcon}</div>
+          <div class="rank-wine-info">
+            <div style="font-size:11px;color:var(--burgundy);font-weight:700;margin-bottom:2px;">${escR(it.reason)}${who ? ' ・ ' + who : ''}</div>
+            <div class="rank-wine-name">${escR(w.name)}${w.vintage ? ' ' + escR(w.vintage) : ''}</div>
+            <div class="rank-wine-region">${sub}</div>
+            <div class="rank-wine-stats">
+              ${it.rating != null ? `<span class="rank-stat">${starsHtml(it.rating)}</span>` : ''}
+              ${w.price ? `<span class="rank-stat">¥${Number(w.price).toLocaleString()}</span>` : ''}
+            </div>
+            ${it.comment ? `<div style="font-size:12px;color:var(--text-sub);margin-top:4px;line-height:1.5;">${escR(it.comment)}</div>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+    })
+    .catch(() => { box.innerHTML = ''; });
+}
+
 function protoResizeImageFile(file, maxEdge) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -4275,19 +4342,20 @@ function handleEnter(e) {
 }
 
 // ===== INIT =====
-// デフォルトは履歴画面から開始。ワインリストはレストランのQRスキャン後に表示するイメージ。
+// デフォルトはホーム(発見フィード)画面から開始。ワインリストはレストランのQRスキャン後に表示するイメージ。
 (function init() {
   // hide wine list / banner / header initially
   document.getElementById('wineList').style.display = 'none';
   document.getElementById('classicList').style.display = 'none';
   document.querySelector('.header').style.display = 'none';
   document.querySelector('.sommelier-banner').style.display = 'none';
-  // show history
-  document.getElementById('historyScreen').style.display = 'block';
-  document.getElementById('nav-history').classList.add('active');
+  // show home
+  document.getElementById('homeScreen').style.display = 'block';
+  document.getElementById('nav-home').classList.add('active');
   // show chat button
   document.getElementById('chatBtn').style.display = 'flex';
-  // 実データ読込（試飲会イベント・ランキング・来店履歴）
+  // 実データ読込（フィード・試飲会イベント・ランキング・来店履歴）
+  loadHomeFeed();
   loadRealEvents();
   loadTopWines();
   loadRealRanking();
