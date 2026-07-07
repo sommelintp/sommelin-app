@@ -936,6 +936,32 @@ function authMsgJa(m){
 
 let selectedRole = 'store';
 
+// ── 紹介元の記録（2026-07-06・最小実装。特典・可視化は未実装） ──
+// ?ref=<招待者のprofiles.id> をlocalStorageに保存（最初にクリックされたリンクを優先＝既存値は上書きしない）。
+// サインアップ成功時にprofiles.invited_byへ書き込む（下のsbSignUp成功ハンドラ参照）。
+(function captureReferral(){
+  try {
+    const ref = new URLSearchParams(location.search).get('ref');
+    if (ref && !localStorage.getItem('somm_ref')) {
+      localStorage.setItem('somm_ref', ref);
+      // sommLogはこのファイル後方で定義されるため、次のtickまで送信を遅らせる
+      setTimeout(() => { if (window.sommLog) sommLog('ref_visit', { ref }); }, 0);
+    }
+  } catch(e){}
+})();
+
+// サインアップ成功直後に呼ぶ（同一端末で二重登録されないよう成功後にconsumeする）
+function applyReferralIfAny(){
+  let ref = null;
+  try { ref = localStorage.getItem('somm_ref'); } catch(e){}
+  if (!ref) return;
+  patchProfile({ invited_by: ref, invited_at: new Date().toISOString() })
+    .then(ok => {
+      if (ok) { try { localStorage.removeItem('somm_ref'); } catch(e){} if (window.sommLog) sommLog('ref_applied', { ref }); }
+    })
+    .catch(()=>{});
+}
+
 // ── 本人確認：名刺表裏（表必須）+ URL1つ以上（必須） ──
 let verifyCardFront = false;  // 名刺表面アップロード済み
 let verifyCardBack  = false;  // 名刺裏面アップロード済み
@@ -1018,6 +1044,7 @@ function emailRegister() {
   showLoading('アカウントを作成中…');
   sbSignUp(email, pw, { role: selectedRole }).then(res => {
     try { localStorage.setItem('sommelin_role', selectedRole); } catch(e){}
+    if (res.access_token) applyReferralIfAny();
     hideLoading();
     if (!res.access_token) {
       // メール確認ONの設定の場合（確認メールで認証後にログイン）

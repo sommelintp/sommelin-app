@@ -2352,59 +2352,29 @@
   <div class="mypage-profile">
     <div class="mypage-avatar">🧑</div>
     <div>
-      <div class="mypage-name">浦川 哲矢</div>
-      <div class="mypage-cert">🏅 認定ソムリエ &nbsp;·&nbsp; ソムリン会員</div>
+      <div class="mypage-name" id="mypageNameEl">ゲスト</div>
+      <div class="mypage-cert" id="mypageCertEl">ソムリン会員</div>
     </div>
   </div>
   <div class="mypage-stats">
     <div class="mypage-stat">
-      <div class="mypage-stat-value">47</div>
+      <div class="mypage-stat-value" id="mypageStatWines">—</div>
       <div class="mypage-stat-label">飲んだワイン</div>
     </div>
     <div class="mypage-stat">
-      <div class="mypage-stat-value">12</div>
+      <div class="mypage-stat-value" id="mypageStatShops">—</div>
       <div class="mypage-stat-label">訪問店舗</div>
     </div>
     <div class="mypage-stat">
-      <div class="mypage-stat-value">23</div>
+      <div class="mypage-stat-value" id="mypageStatReviews">—</div>
       <div class="mypage-stat-label">レビュー</div>
     </div>
   </div>
 
   <div class="mypage-section-header">MY TASTE PROFILE</div>
-  <div class="mypage-taste-bar-wrap">
-    <div class="taste-bar-row">
-      <span class="taste-bar-label">ボディ</span>
-      <div class="taste-bar-track"><div class="taste-bar-fill" style="width:85%"></div></div>
-      <span class="taste-bar-val">85</span>
-    </div>
-    <div class="taste-bar-row">
-      <span class="taste-bar-label">タンニン</span>
-      <div class="taste-bar-track"><div class="taste-bar-fill" style="width:70%"></div></div>
-      <span class="taste-bar-val">70</span>
-    </div>
-    <div class="taste-bar-row">
-      <span class="taste-bar-label">酸味</span>
-      <div class="taste-bar-track"><div class="taste-bar-fill" style="width:60%"></div></div>
-      <span class="taste-bar-val">60</span>
-    </div>
-    <div class="taste-bar-row">
-      <span class="taste-bar-label">果実味</span>
-      <div class="taste-bar-track"><div class="taste-bar-fill" style="width:78%"></div></div>
-      <span class="taste-bar-val">78</span>
-    </div>
-    <div class="taste-bar-row">
-      <span class="taste-bar-label">ミネラル</span>
-      <div class="taste-bar-track"><div class="taste-bar-fill" style="width:55%"></div></div>
-      <span class="taste-bar-val">55</span>
-    </div>
-    <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);">
-      <div style="font-size:11px;color:var(--text-sub);margin-bottom:6px;">好きなブドウ品種</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <span style="background:var(--burgundy-pale);color:var(--burgundy);font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;">Pinot Noir</span>
-        <span style="background:var(--burgundy-pale);color:var(--burgundy);font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;">Chardonnay</span>
-        <span style="background:var(--burgundy-pale);color:var(--burgundy);font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;">Nebbiolo</span>
-      </div>
+  <div class="mypage-taste-bar-wrap" id="mypageTasteWrap">
+    <div style="font-size:12.5px;color:var(--text-sub);line-height:1.6;">
+      好みの傾向はまだ計測できていません。スカウターで❤️気に入ったワインを3本以上登録すると、ここに表示されます。
     </div>
   </div>
 
@@ -2452,7 +2422,6 @@
     <div class="mypage-menu-item">
       <span class="mypage-menu-icon">🔔</span>
       <span class="mypage-menu-text" data-i18n="menu_notify">通知設定</span>
-      <span class="mypage-menu-badge jp-only">LINE連携中</span>
       <span class="mypage-menu-arrow">›</span>
     </div>
     <div class="mypage-menu-item">
@@ -2577,7 +2546,7 @@
 </div>
 
 <!-- CHAT BUTTON -->
-<button class="chat-btn" onclick="toggleChat()" id="chatBtn">
+<button class="chat-btn" id="chatBtn">
   <svg viewBox="0 0 40 40" width="36" height="36" fill="none">
     <circle cx="20" cy="24" r="13" fill="#F2C090"/>
     <path d="M9 20 Q8 7 20 6 Q32 7 31 20 Q26 14 20 15 Q14 14 9 20Z" fill="#5C1020"/>
@@ -4002,6 +3971,60 @@ function toggleChat() {
   document.getElementById('chatBadge').style.display = 'none';
 }
 
+// ── AIチャットボタンのドラッグ移動（2026-07-06・「マイページにあって邪魔」FB対応） ──
+// タップ＝チャットを開く／ドラッグ＝好きな位置へ移動（画面端にスナップ・位置はlocalStorageに記憶）
+(function setupChatBtnDrag(){
+  const btn = document.getElementById('chatBtn');
+  if (!btn) return;
+  const POS_KEY = 'sommelin_chatbtn_pos';
+  const MARGIN = 16, SIZE = 60, DRAG_THRESHOLD = 6;
+
+  function applyPos(top){
+    const maxTop = window.innerHeight - SIZE - MARGIN;
+    const clampedTop = Math.max(MARGIN, Math.min(maxTop, top));
+    btn.style.bottom = 'auto';
+    btn.style.top = clampedTop + 'px';
+  }
+  function restorePos(){
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(POS_KEY) || 'null'); } catch(e){}
+    if (!saved) return;
+    btn.style.right = saved.side === 'left' ? 'auto' : '20px';
+    btn.style.left  = saved.side === 'left' ? '20px' : 'auto';
+    applyPos(saved.top);
+  }
+  restorePos();
+
+  let dragging = false, moved = false, startX = 0, startY = 0, startTop = 0;
+
+  function onDown(x, y){
+    dragging = true; moved = false;
+    startX = x; startY = y;
+    startTop = btn.getBoundingClientRect().top;
+  }
+  function onMove(x, y){
+    if (!dragging) return;
+    const dx = x - startX, dy = y - startY;
+    if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) moved = true;
+    if (moved) applyPos(startTop + dy);
+  }
+  function onUp(x){
+    if (!dragging) return;
+    dragging = false;
+    if (!moved) { toggleChat(); return; }
+    const side = x < window.innerWidth / 2 ? 'left' : 'right';
+    btn.style.right = side === 'left' ? 'auto' : '20px';
+    btn.style.left  = side === 'left' ? '20px' : 'auto';
+    const top = btn.getBoundingClientRect().top;
+    try { localStorage.setItem(POS_KEY, JSON.stringify({ side, top })); } catch(e){}
+  }
+
+  btn.addEventListener('pointerdown', e => { onDown(e.clientX, e.clientY); btn.setPointerCapture(e.pointerId); });
+  btn.addEventListener('pointermove', e => onMove(e.clientX, e.clientY));
+  btn.addEventListener('pointerup',   e => onUp(e.clientX));
+  btn.addEventListener('pointercancel', () => { dragging = false; });
+})();
+
 // ── 実AIチャット（backend /api/chat = Claude Haiku。定型返信は廃止。月5回制限はサーバー側=usage_counters） ──
 const CHAT_API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
 const CHAT_UID2 = (() => { try {
@@ -4012,6 +4035,31 @@ const CHAT_UID2 = (() => { try {
 let protoChatHist = [];
 let protoChatBusy = false;
 let protoPendingPhoto = null; // 送信待ちの写真dataURL（長辺1024 JPEG）
+
+// ── マイページの実データ反映（2026-07-06修正: 名前・統計が固定値のハリボテだった不具合） ──
+// ニックネームは端末ローカル（onboarding.htmlで設定）。未設定なら「ゲスト」と正直に表示する。
+function initMypageIdentity(){
+  const nameEl = document.getElementById('mypageNameEl');
+  if (nameEl) {
+    let nick = ''; try { nick = localStorage.getItem('sommelin_nickname') || ''; } catch(e){}
+    nameEl.textContent = nick || 'ゲスト';
+  }
+  const winesEl = document.getElementById('mypageStatWines');
+  const shopsEl = document.getElementById('mypageStatShops');
+  const revEl   = document.getElementById('mypageStatReviews');
+  if (shopsEl) {
+    let visits = []; try { visits = JSON.parse(localStorage.getItem('sommelin_visits') || '[]'); } catch(e){}
+    shopsEl.textContent = String(new Set(visits.map(v => v.rid)).size);
+  }
+  if (revEl) revEl.textContent = '0';
+  if (winesEl && CHAT_UID2) {
+    fetch(CHAT_API_BASE + '/api/taste/summary?userId=' + encodeURIComponent(CHAT_UID2))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { winesEl.textContent = (d && d.count != null) ? String(d.count) : '0'; })
+      .catch(() => { winesEl.textContent = '0'; });
+  } else if (winesEl) { winesEl.textContent = '0'; }
+}
+initMypageIdentity();
 
 function protoResizeImageFile(file, maxEdge) {
   return new Promise((resolve, reject) => {

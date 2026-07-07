@@ -756,12 +756,11 @@ function buildModalContent(m) {
       友達をソムリンに招待すると<br><b style="color:var(--burgundy)">あなたも友達も</b>ポイントが貰えます！
     </p>
     <div class="invite-box">
-      <p style="font-size:12px;color:var(--sub);">あなたの招待コード</p>
-      <div class="invite-code">WN3847</div>
-      <p style="font-size:11px;color:var(--sub);">このコードを友達に教えてください</p>
+      <p style="font-size:12px;color:var(--sub);">あなたの招待リンク</p>
+      <div class="invite-code" id="inviteLinkText" style="font-size:12px;word-break:break-all;">読み込み中…</div>
+      <p style="font-size:11px;color:var(--sub);">このリンクを友達に送ってください</p>
     </div>
-    <button class="btn-primary" onclick="shareInvite()">📤 招待リンクをシェア</button>
-    <button class="btn-secondary" onclick="completeMission('invite')">友達が登録した（デモ）</button>`;
+    <button class="btn-primary" onclick="shareInvite()">📤 招待リンクをシェア</button>`;
 
   return ptBadge(m.pts) + `<button class="btn-primary" onclick="completeMission('${m.id}')">完了する</button>`;
 }
@@ -776,6 +775,10 @@ function initModalLogic(m) {
       inp.addEventListener('input', sync);
       sync();
     }
+  }
+  if (m.type === 'invite') {
+    const el = document.getElementById('inviteLinkText');
+    if (el) { const link = myInviteLink(); el.textContent = link || 'ログイン情報を確認できませんでした'; }
   }
 }
 
@@ -877,8 +880,21 @@ function connectSNS(type) {
   }, 500);
 }
 
-function shareInvite() {
-  showToast('📤 招待リンクをコピーしました！');
+function myInviteLink(){
+  const u = sessionUser();
+  if (!u || !u.id) return null;
+  return 'https://sommelintp.github.io/sommelin-app/login.html?ref=' + encodeURIComponent(u.id);
+}
+
+async function shareInvite() {
+  const link = myInviteLink();
+  if (!link) { showToast('招待リンクの準備中です。少し待ってからお試しください'); return; }
+  const text = 'ソムリンで一緒にワインを楽しもう🍷 ' + link;
+  try {
+    if (navigator.share) { await navigator.share({ text, url: link }); }
+    else { await navigator.clipboard.writeText(link); showToast('📤 招待リンクをコピーしました！'); }
+    completeMission('invite');
+  } catch(e){ /* ユーザーがシェアをキャンセルした場合等は何もしない */ }
 }
 
 function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }

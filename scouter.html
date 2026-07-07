@@ -130,7 +130,12 @@ body{
 .sh-handle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:12px auto;}
 .sh-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:800;color:#fff;margin:0 20px 8px;}
 .sh-name{font-size:21px;font-weight:800;padding:0 20px;line-height:1.25;}
-.sh-region{font-size:12px;color:#888;padding:5px 20px 12px;}
+.sh-vintage-badge{display:inline-block;font-size:12px;font-weight:700;color:var(--burgundy);
+  background:var(--burgundy-pale,#f7e6ee);border-radius:8px;padding:1px 7px;vertical-align:middle;margin-left:2px;}
+.sh-producer{font-size:13px;font-weight:600;color:#555;padding:4px 20px 0;}
+.sh-region{font-size:12px;color:#888;padding:2px 20px 12px;}
+.sh-refscore{font-size:15px !important;color:#999 !important;}
+.sh-refscore small{font-size:10px;color:#bbb;font-weight:600;}
 .sh-grid{display:flex;gap:12px;padding:12px 20px;border-top:1px solid #f2f2f2;border-bottom:1px solid #f2f2f2;}
 .sh-cell{flex:1;text-align:center;}
 .sh-cell .v{font-size:26px;font-weight:900;line-height:1.1;}
@@ -173,6 +178,15 @@ body{
 .oshi-score small{font-size:16px;color:#aaa;font-weight:700;}
 .oshi-stars{text-align:center;font-size:19px;letter-spacing:3px;margin:4px 0 2px;color:#C9973A;}
 .oshi-slider{width:100%;margin:10px 0 6px;accent-color:var(--burgundy);height:34px;}
+.oshi-channel{border:1.5px solid #eee;border-radius:14px;padding:14px;margin-bottom:12px;}
+.oshi-channel-head{font-weight:800;font-size:14px;margin-bottom:2px;}
+.oshi-channel-sub{font-size:11.5px;color:#888;margin-bottom:8px;line-height:1.5;}
+.oshi-comment{width:100%;box-sizing:border-box;border:1.5px solid #eee;border-radius:10px;padding:9px 11px;
+  font-size:13px;font-family:inherit;resize:none;min-height:44px;margin-bottom:8px;}
+.oshi-filter-btn{width:100%;padding:11px;border:none;border-radius:12px;background:var(--burgundy);
+  color:#fff;font-weight:800;font-size:13.5px;cursor:pointer;}
+.oshi-filter-btn:disabled{opacity:.5;}
+.oshi-filter-done{color:var(--burgundy);font-weight:800;font-size:13px;text-align:center;padding:6px 0;}
 #oshiOverlay{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.85);display:none;
   align-items:center;justify-content:center;flex-direction:column;padding:16px;}
 #oshiOverlay.on{display:flex;}
@@ -346,10 +360,19 @@ const I18N = {
     oshi_back: '戻る',
     oshi_saved: '気に入ったワインに保存しました🍷',
     oshi_fail: '保存に失敗しました。通信環境をご確認ください',
-    oshi_ask_title: 'この美味しかった気持ちを、生産者に伝えますか？',
-    oshi_ask_sub: '推しカードを作ってInstagramでシェア。あなたの「ごちそうさま」が生産者に届きます',
-    oshi_ask_go: '📸 推しカードを作る',
+    oshi_ask_title: 'この美味しかった気持ち、みんなに伝えませんか？',
+    oshi_ask_sub: 'アプリ内で他のソムリンユーザーにおすすめしたり、Instagramで生産者・友達に届けたりできます',
+    oshi_ask_go: '📸 推しカードを作ってInstagramでシェア',
     oshi_ask_later: '今はしない',
+    oshi_filter_head: '📌 フィルターに載せる',
+    oshi_filter_sub: 'あなたの「おすすめリスト」として、ソムリンの他のユーザーが見られるようになります',
+    oshi_comment_ph: '一言（任意）',
+    oshi_filter_save: 'フィルターに保存',
+    oshi_filter_saved: '🎨 フィルターに保存しました',
+    oshi_filter_fail: 'フィルターへの保存に失敗しました',
+    oshi_filter_limit: '本日の保存上限に達しました',
+    oshi_ig_head: '📸 Instagramでシェア',
+    oshi_ig_sub: '生産者・友達に届く推しカードを作ります',
     oshi_making: 'カードを作成中…',
     oshi_share: '📤 Instagramでシェア',
     oshi_copy: '📋 キャプションをコピー',
@@ -404,10 +427,19 @@ const I18N = {
     oshi_back: 'Back',
     oshi_saved: 'Saved to your favorite wines 🍷',
     oshi_fail: 'Failed to save. Please check your connection.',
-    oshi_ask_title: 'Tell the producer you loved it?',
-    oshi_ask_sub: 'Create a fan card and share it on Instagram — your "thank you" reaches the producer.',
-    oshi_ask_go: '📸 Create my fan card',
+    oshi_ask_title: 'Want to spread the word?',
+    oshi_ask_sub: 'Recommend it to other Sommelin users, or share a fan card on Instagram with the producer and friends.',
+    oshi_ask_go: '📸 Create a fan card & share on Instagram',
     oshi_ask_later: 'Not now',
+    oshi_filter_head: '📌 Add to your Filter',
+    oshi_filter_sub: 'Other Sommelin users will be able to see this as part of your recommendation list.',
+    oshi_comment_ph: 'A note (optional)',
+    oshi_filter_save: 'Save to Filter',
+    oshi_filter_saved: '🎨 Saved to your Filter',
+    oshi_filter_fail: 'Failed to save to Filter',
+    oshi_filter_limit: "You've reached today's save limit",
+    oshi_ig_head: '📸 Share on Instagram',
+    oshi_ig_sub: 'Create a fan card that reaches the producer and friends.',
     oshi_making: 'Creating your card…',
     oshi_share: '📤 Share on Instagram',
     oshi_copy: '📋 Copy caption',
@@ -692,18 +724,19 @@ function renderShelfCard(b){
     ).join('');
     inner=`
       <div class="sh-pill" style="background:var(--burgundy)">🍷 ソムリン照合${lowConf?' ・ 要確認':'済み'}</div>
-      <div class="sh-name">${esc(w.name||'—')}${w.vintage&&w.vintage!=='NV'?'　'+esc(w.vintage):''}</div>
-      <div class="sh-region">${esc([w.kuni,w.chiiki].filter(Boolean).join(' '))}${w.producer?'　/　'+esc(trunc(w.producer,24)):''}</div>
+      <div class="sh-name">${esc(w.name||'—')}${w.vintage&&w.vintage!=='NV'?` <span class="sh-vintage-badge">${esc(w.vintage)}</span>`:''}</div>
+      <div class="sh-producer">${esc(w.producer||'')}</div>
+      <div class="sh-region">${esc([w.kuni,w.chiiki].filter(Boolean).join(' '))}</div>
+      <div class="cospa-badge" style="background:${cp.bg}">
+        <div class="stars">${cp.stars}</div><div class="lbl">${cp.lbl}</div><div class="sub">${cp.sub}</div>
+      </div>
       <div class="sh-grid">
-        <div class="sh-cell"><div class="v" style="color:var(--burgundy)">${fmtSP(w.sp)}</div><div class="l">SP（ソムリン評価）</div></div>
         <div class="sh-cell"><div class="v">${fmtPrice(w.price)}</div><div class="l">参考価格</div></div>
+        <div class="sh-cell"><div class="v sh-refscore">${fmtSP(w.sp)}<small>/10</small></div><div class="l">参考評価</div></div>
       </div>
       ${pick}
       ${filterRibbons}
       ${fitRibbon(b)}
-      <div class="cospa-badge" style="background:${cp.bg}">
-        <div class="stars">${cp.stars}</div><div class="lbl">${cp.lbl}</div><div class="sub">${cp.sub}</div>
-      </div>
       <div id="simBox"></div>
       <button class="sh-like" onclick="oshiStart()">${t('like_btn')}</button>
       <div class="sh-btns">
@@ -744,7 +777,7 @@ async function loadSimilar(b){
       const c=cospa(osuOf(x));
       return `<div class="cand-row" onclick="buy('${escAttr(x.name||'')}', ${x.id})">
         <div><div class="cn">${esc(trunc(x.name||'',26))}</div><div class="cr">${esc([x.kuni,x.chiiki].filter(Boolean).join(' '))}　${fmtPrice(x.price)}</div></div>
-        <div class="cc">${c.stars}<br>SP ${fmtSP(x.sp)}</div></div>`;
+        <div class="cc">${c.stars}<br><small>${fmtSP(x.sp)}/10</small></div></div>`;
     }).join('');
   }catch(e){}
 }
@@ -778,7 +811,6 @@ function oshiStart(){
       <div class="oshi-title">${t('oshi_rate_title')}</div>
       <div class="oshi-sub">${esc(trunc(info.name,30))}${info.vintage&&info.vintage!=='NV'?' '+esc(info.vintage):''}<br>${t('oshi_rate_sub')}</div>
       <div class="oshi-score"><span id="oshiScoreV">8.0</span><small> /10</small></div>
-      <div class="oshi-stars" id="oshiStars"></div>
       <input type="range" class="oshi-slider" id="oshiSlider" min="0" max="10" step="0.1" value="8.0"
         oninput="oshiRating=parseFloat(this.value);oshiPaintScore()">
       <div class="sh-btns" style="padding:6px 0 10px">
@@ -790,8 +822,6 @@ function oshiStart(){
 }
 function oshiPaintScore(){
   const v=document.getElementById('oshiScoreV'); if(v) v.textContent=oshiRating.toFixed(1);
-  const st=document.getElementById('oshiStars');
-  if(st){ const n=Math.round(oshiRating/2); st.textContent='★'.repeat(n)+'☆'.repeat(5-n); }
 }
 
 // Step2: 保存（蓄積は伝える/伝えないに関係なく必ず行う）
@@ -801,7 +831,7 @@ async function oshiSave(){
   try{
     const r=await fetch(API_BASE+'/api/wine-like',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({userId:UID, wineId:w?w.id:null, identification:b.identification||null, rating:oshiRating})});
+      body:JSON.stringify({userId:UID, wineId:w?w.id:null, catalogId:w?w.catalog_id:null, identification:b.identification||null, rating:oshiRating})});
     if(!r.ok) throw new Error('save failed');
     const d=await r.json();
     oshiLikeId=d.likeId||null; oshiHandle=d.producerInstagram||null;
@@ -811,18 +841,54 @@ async function oshiSave(){
   }catch(e){ toast(t('oshi_fail')); }
 }
 
-// Step3: 「生産者に伝えますか？」
+// Step3: 「みんなに伝えますか？」→ ①アプリ内フィルター ②Instagram、どちらも独立して選べる
 function oshiAskShare(){
   document.getElementById('sheetBody').innerHTML=`
-    <div class="oshi-step" style="text-align:center;padding-bottom:8px">
-      <div style="font-size:44px;margin:10px 0 4px">🍷💌</div>
+    <div class="oshi-step" style="text-align:center;padding-bottom:4px">
+      <div style="font-size:40px;margin:8px 0 2px">🍷💌</div>
       <div class="oshi-title">${t('oshi_ask_title')}</div>
-      <div class="oshi-sub">${t('oshi_ask_sub')}</div>
-      <div class="sh-btns" style="flex-direction:column;padding:6px 0 10px">
-        <button class="sh-main" onclick="oshiMakeCard()">${t('oshi_ask_go')}</button>
+      <div class="oshi-sub" style="margin-bottom:14px">${t('oshi_ask_sub')}</div>
+
+      <div class="oshi-channel" style="text-align:left">
+        <div class="oshi-channel-head">${t('oshi_filter_head')}</div>
+        <div class="oshi-channel-sub">${t('oshi_filter_sub')}</div>
+        <textarea class="oshi-comment" id="oshiFilterComment" placeholder="${t('oshi_comment_ph')}"></textarea>
+        <button class="oshi-filter-btn" id="oshiFilterBtn" onclick="oshiSaveToFilter()">${t('oshi_filter_save')}</button>
+      </div>
+
+      <div class="oshi-channel" style="text-align:left">
+        <div class="oshi-channel-head">${t('oshi_ig_head')}</div>
+        <div class="oshi-channel-sub">${t('oshi_ig_sub')}</div>
+        <button class="oshi-filter-btn" style="background:linear-gradient(135deg,#C9973A,#a8781f)" onclick="oshiMakeCard()">${t('oshi_ask_go')}</button>
+      </div>
+
+      <div class="sh-btns" style="padding:2px 0 10px">
         <button class="sh-sub" onclick="closeSheet()">${t('oshi_ask_later')}</button>
       </div>
     </div>`;
+}
+
+// アプリ内推薦（フィルター）: 既存の filters/items（taste.htmlと同じ仕組み）に保存。
+// 10点満点0.1刻み(oshiRating)を、フィルターの5段階★に変換して渡す（表示側の換算と統一）。
+async function oshiSaveToFilter(){
+  const info=oshiWineInfo();
+  const btn=document.getElementById('oshiFilterBtn'); if(!btn) return;
+  const comment=(document.getElementById('oshiFilterComment')||{}).value||'';
+  btn.disabled=true;
+  try{
+    const r=await fetch(API_BASE+'/api/filters/items',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ uid:UID,
+        wine:{ name:info.name, producer:info.producer, iro:info.w&&info.w.iro, kuni:info.w&&info.w.kuni,
+               chiiki:info.w&&info.w.chiiki, vintage:info.vintage, price:info.w&&info.w.price,
+               wineId:info.w?info.w.id:null },
+        rating: Math.round(oshiRating/2), comment })
+    });
+    if(r.status===429){ toast(t('oshi_filter_limit')); btn.disabled=false; return; }
+    if(!r.ok) throw new Error('filter save failed');
+    if(window.sommLog) sommLog('oshi_filter_add',{wineId:info.w?info.w.id:null, rating:oshiRating});
+    btn.outerHTML=`<div class="oshi-filter-done">${t('oshi_filter_saved')}</div>`;
+  }catch(e){ toast(t('oshi_filter_fail')); btn.disabled=false; }
 }
 
 // Step4: 推しカード生成（Canvas 1080×1920・完全無料/端末内生成）→ プレビュー
@@ -1047,7 +1113,7 @@ function liRow(it, hit){
   if(it.sommelin && it.sommelin.isPick) badges.push(`<span class="b2">${it.sommelin.level==='top'?'👑 ソムリン推し':'✨ おすすめ'}</span>`);
   if(it.priceDelta!=null && Math.abs(it.priceDelta)>=15) badges.push(`<span class="b3">参考価格より${it.priceDelta>0?'+':''}${it.priceDelta}%</span>`);
   const right=w
-    ? `${cospa(osuOf(w)).stars}<br>SP ${fmtSP(w.sp)}`
+    ? `${cospa(osuOf(w)).stars}<br><small>${fmtSP(w.sp)}/10</small>`
     : `<span class="un">未登録</span>`;
   return `<div class="li-row${hit?' hit':''}">
     <div><div class="ln">${esc(trunc(name,34))}</div>
