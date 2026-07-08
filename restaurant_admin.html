@@ -1431,6 +1431,16 @@
     <button class="sync-btn" onclick="simulateSync()">同期する</button>
   </div>
 
+  <!-- 招待リンク（2026-07-08追加: 業務店アカウントはonboarding.htmlの招待ミッションに到達できないため） -->
+  <div class="sync-bar" style="align-items:flex-start;">
+    <span class="sync-icon">🎁</span>
+    <div class="sync-info">
+      <div class="sync-title">お友達を招待</div>
+      <div class="sync-sub">このリンクから登録すると、あなたにも特典が届きます</div>
+    </div>
+    <button class="sync-btn" onclick="shareAdminInvite()">シェア</button>
+  </div>
+
   <!-- LINE 連携カード -->
   <div class="line-card" id="lineCard">
     <!-- ヘッダー（常に表示） -->
@@ -3364,6 +3374,22 @@ function showToast(msg) {
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ============================================================
+// 招待リンク（2026-07-08追加: 業務店アカウントはonboarding.htmlの招待ミッションに
+// 到達できない=role別リダイレクトで弾かれるため、この画面にも同じ機能を用意）
+// ============================================================
+async function shareAdminInvite() {
+  let uid = null;
+  try { const s = JSON.parse(localStorage.getItem('sommelin_session') || 'null'); uid = s && s.user && s.user.id; } catch (e) {}
+  if (!uid) { showToast('ログイン情報を確認できませんでした'); return; }
+  const link = 'https://sommelintp.github.io/sommelin-app/login.html?ref=' + encodeURIComponent(uid);
+  const text = 'ソムリンで一緒にワインを楽しもう🍷 ' + link;
+  try {
+    if (navigator.share) { await navigator.share({ text, url: link }); }
+    else { await navigator.clipboard.writeText(link); showToast('📤 招待リンクをコピーしました！'); }
+  } catch (e) { /* シェアをキャンセルした場合等は何もしない */ }
 }
 
 // ============================================================
