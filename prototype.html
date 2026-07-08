@@ -2526,6 +2526,8 @@
 
 <!-- ハンバーガーメニュー（マイページ・履歴への入口。2026-07-08: 下ナビを4タブに整理したため常時表示のボタンに変更） -->
 <button id="hamburgerBtn" onclick="switchTab('mypage')" aria-label="メニュー" style="position:fixed;top:calc(env(safe-area-inset-top) + 14px);right:16px;z-index:160;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.92);border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.12);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;">☰</button>
+<!-- 業務モード切り替え（2026-07-08追加: 業務店アカウントでも個人機能を使えるようにする導線の逆方向） -->
+<button id="bizModeBtn" aria-label="業務モードに切り替え" title="業務モードに切り替え" style="display:none;position:fixed;top:calc(env(safe-area-inset-top) + 14px);right:64px;z-index:160;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.92);border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.12);font-size:17px;align-items:center;justify-content:center;cursor:pointer;">🏪</button>
 
 <!-- WINE DETAIL MODAL -->
 <!-- 飲んだワイン履歴モーダル（2026-07-08追加: マイページの本数タップに反応がなかった不具合対応） -->
@@ -4164,6 +4166,18 @@ function initMypageIdentity(){
   } else if (winesEl) { winesEl.textContent = '0'; }
 }
 initMypageIdentity();
+
+// 業務モード切り替えボタン（2026-07-08追加: 業務店ロールなら管理画面への導線を出す）
+(function initBizModeBtn(){
+  var role = null; try { role = localStorage.getItem('sommelin_role'); } catch(e){}
+  var BIZ_HOME = { store:'restaurant_admin.html', retailer:'restaurant_admin.html', importer:'importer_admin.html', admin:'importer_admin.html' };
+  var home = role && BIZ_HOME[role];
+  if (!home) return;
+  var btn = document.getElementById('bizModeBtn');
+  if (!btn) return;
+  btn.onclick = function(){ location.href = home; };
+  btn.style.display = 'flex';
+})();
 
 // ── 飲んだワイン履歴モーダル（2026-07-08: マイページの本数タップに反応させる） ──
 function closeWineHistory() {
