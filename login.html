@@ -407,7 +407,7 @@ body {
      ================================================ -->
 <div class="screen" id="screenBizType">
   <div class="pg-header">
-    <button class="pg-back" onclick="showScreen('screenRole')">‹</button>
+    <button class="pg-back" id="bizTypeBackBtn" onclick="showScreen('screenRole')">‹</button>
     <div class="pg-title">業種を選択</div>
     <div style="width:40px;"></div>
   </div>
@@ -422,8 +422,8 @@ body {
   <div class="body-pad" style="padding-top:20px;">
     <div class="pg-lead" style="font-size:18px;">業種を教えてください</div>
     <div class="pg-sub">業種によってご利用いただける機能が変わります。</div>
-    <div style="background:#fef8ec;border:1px solid #f0dfc0;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#8a6d3b;line-height:1.7;">
-      💡 複数の業態（例: インポーター＋酒販店）を営まれている場合は、<b>まず主な業態で登録</b>してください。他の業態はあとから同じアカウントに追加できます（ソムリン運営が対応します）。
+    <div id="bizTypeMultiHint" style="background:#fef8ec;border:1px solid #f0dfc0;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#8a6d3b;line-height:1.7;">
+      💡 複数の業態（例: インポーター＋酒販店）を営まれている場合は、<b>まず主な業態で登録</b>してください。他の業態はマイページの「業務店として登録する」からいつでも追加できます。
     </div>
 
     <div class="role-card" onclick="chooseRole('importer')" style="margin-bottom:10px;">
@@ -478,6 +478,9 @@ body {
      ================================================ -->
 <div class="screen" id="screenRegForm">
   <div class="hero" style="padding:32px 24px 24px;">
+    <!-- 2026-07-08追加: 戻る導線が下部の小さいテキストリンクしかなく見つけにくかったため、
+         他の画面と同じく上部にも戻るボタンを追加 -->
+    <button class="pg-back" style="position:absolute;top:16px;left:16px;z-index:2;" onclick="roleConfig[selectedRole]?.biz ? showScreen('screenBizType') : showScreen('screenRole')">‹</button>
     <div class="hero-logo" style="margin-bottom:8px;">
       <div class="hero-icon" style="width:42px;height:42px;border-radius:12px;">
         <svg viewBox="0 0 40 40" width="30" height="30" fill="none">
@@ -552,7 +555,7 @@ body {
      ================================================ -->
 <div class="screen" id="screenVerify">
   <div class="pg-header">
-    <button class="pg-back" onclick="showScreen('screenRegForm')">‹</button>
+    <button class="pg-back" onclick="addRoleMode ? showScreen('screenBizType') : showScreen('screenRegForm')">‹</button>
     <div class="pg-title" id="verifyTitle">業務の確認</div>
   </div>
 
@@ -791,6 +794,9 @@ body {
      ================================================ -->
 <div class="screen" id="screenLogin">
   <div class="hero">
+    <!-- 2026-07-08追加: 戻るボタンが無く、役割選択画面から間違えてログイン画面に来た場合に
+         戻れなかった不具合対応 -->
+    <button class="pg-back" style="position:absolute;top:16px;left:16px;z-index:2;" onclick="showScreen('screenRole')">‹</button>
     <div class="hero-logo">
       <div class="hero-icon">
         <svg viewBox="0 0 40 40" width="38" height="38" fill="none">
@@ -904,7 +910,10 @@ async function sbSignIn(email, password){
   saveSession(data);
   return data;
 }
-async function sbRecover(email){ return sbAuth('recover', { email }); }
+// 2026-07-08修正: redirect_toを指定しないとSupabase既定のURL（このアプリ外）に飛んでしまい
+// 再設定ページが404になっていた不具合を修正。reset-password.htmlへ誘導する。
+const RESET_REDIRECT_URL = 'https://sommelintp.github.io/sommelin-app/reset-password.html';
+async function sbRecover(email){ return sbAuth('recover?redirect_to=' + encodeURIComponent(RESET_REDIRECT_URL), { email }); }
 
 async function saveBusinessApplication(payload){
   const tok = authToken(); if (!tok) return false;
@@ -935,6 +944,7 @@ function authMsgJa(m){
 }
 
 let selectedRole = 'store';
+let addRoleMode = false; // 2026-07-08追加: 既存の個人アカウントに業務店ロールを後から追加するモード
 
 // ── 紹介元の記録（2026-07-06・最小実装。特典・可視化は未実装） ──
 // ?ref=<招待者のprofiles.id> をlocalStorageに保存（最初にクリックされたリンクを優先＝既存値は上書きしない）。
@@ -1004,8 +1014,18 @@ function choosePath(path) {
 // ── 役割選択（業種決定後に呼ばれる）──
 function chooseRole(role) {
   selectedRole = role;
-  try { localStorage.setItem('sommelin_role', role); } catch (e) {}
   const cfg = roleConfig[role];
+
+  // addRoleMode: 既存アカウントに業務ロールを追加するだけなので、
+  // メール/パスワード作成（screenRegForm）は飛ばして本人確認へ直行
+  if (addRoleMode) {
+    if (!cfg.biz) { showToast('個人としてはすでに登録済みです'); return; }
+    document.getElementById('verifyTitle').textContent = role === 'importer' ? 'インポーターの確認' : '業務店の確認';
+    showScreen('screenVerify');
+    return;
+  }
+
+  try { localStorage.setItem('sommelin_role', role); } catch (e) {}
 
   // バッジ更新
   document.getElementById('regRoleBadge').textContent = `${cfg.emoji} ${cfg.label} ▾`;
@@ -1025,6 +1045,22 @@ function chooseRole(role) {
 
   showScreen('screenRegForm');
 }
+
+// 2026-07-08追加: マイページの「業務店として登録する」からの遷移（?addRole=1）。
+// 既にログイン済みのアカウントに業務ロールを追加するだけなので、メール/パスワード作成は
+// スキップし、業種選択→本人確認（screenVerify）だけを行う。
+(function initAddRoleMode(){
+  const params = new URLSearchParams(location.search);
+  if (params.get('addRole') !== '1') return;
+  const session = getSession();
+  if (!session || !session.access_token) return; // 未ログインなら通常の新規登録フローのまま
+  addRoleMode = true;
+  const hint = document.getElementById('bizTypeMultiHint');
+  if (hint) hint.style.display = 'none';
+  const backBtn = document.getElementById('bizTypeBackBtn');
+  if (backBtn) backBtn.onclick = () => { window.location.href = 'prototype.html'; };
+  showScreen('screenBizType');
+})();
 
 // ── LINE 登録 ──
 function lineRegister() {
@@ -1212,8 +1248,23 @@ function submitFinalVerify() {
   Promise.resolve()
     .then(() => saveBusinessApplication(payload))
     .then(() => patchProfile({ verification_status: 'pending', company: payload.company, phone: payload.phone, contact_email: payload.contact_email, display_name: payload.contact_name }))
+    .then(() => { if (addRoleMode) return addBusinessRole(selectedRole); })
     .catch(() => {})
     .then(() => { hideLoading(); showScreen('screenPending'); });
+}
+
+// 2026-07-08追加: 既存の個人アカウントに業務ロールを追加する（addRoleMode時のみ呼ぶ）
+async function addBusinessRole(role) {
+  const tok = authToken();
+  if (!tok) return;
+  try {
+    await fetch('https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app/api/account/add-role', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+      body: JSON.stringify({ role }),
+    });
+    try { localStorage.setItem('sommelin_role', role); } catch (e) {}
+  } catch (e) { /* 失敗しても申請自体(business_applications)は保存済みなので致命的ではない */ }
 }
 
 // ── ダッシュボードへ遷移 ──

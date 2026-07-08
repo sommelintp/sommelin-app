@@ -1813,6 +1813,7 @@
     font-family: inherit;
   }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -2341,7 +2342,7 @@
     <div class="ranking-tab" id="rtab-store" onclick="switchRankingTab('store')">🤵 お店</div>
   </div>
 
-  <!-- ソート・絞り込み（2026-07-08追加: 高額ワインばかり並ぶ不具合の対策） -->
+  <!-- ソート・絞り込み（2026-07-08追加: 高額ワインばかり並ぶ不具合の対策＋詳細検索を追加） -->
   <div id="rankSortBar" style="display:flex;gap:8px;padding:0 16px 10px;flex-wrap:wrap;align-items:center;">
     <select id="rankSortSelect" onchange="rankSortBy=this.value;loadTopWines();" style="font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-family:inherit;color:var(--text);background:#fff;">
       <option value="total">総合評価順</option>
@@ -2358,6 +2359,41 @@
     <select id="rankKuniSelect" onchange="rankKuni=this.value;loadTopWines();" style="font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-family:inherit;color:var(--text);background:#fff;">
       <option value="">すべての国</option>
     </select>
+    <button onclick="toggleRankAdvanced()" style="font-size:12.5px;padding:6px 10px;border-radius:8px;border:1px solid var(--burgundy);background:#fff;color:var(--burgundy);font-weight:700;font-family:inherit;cursor:pointer;">詳細検索 ▾</button>
+  </div>
+
+  <div id="rankAdvancedFilters" style="display:none;padding:0 16px 12px;">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+      <label style="font-size:11.5px;color:var(--text-sub);width:64px;flex-shrink:0;">価格帯</label>
+      <input type="number" id="rankPriceMin" placeholder="下限" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
+      <span style="font-size:11.5px;color:var(--text-sub);">円 〜</span>
+      <input type="number" id="rankPriceMax" placeholder="上限" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
+      <span style="font-size:11.5px;color:var(--text-sub);">円</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+      <label style="font-size:11.5px;color:var(--text-sub);width:64px;flex-shrink:0;">ヴィンテージ</label>
+      <input type="number" id="rankVintageMin" placeholder="下限" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
+      <span style="font-size:11.5px;color:var(--text-sub);">年 〜</span>
+      <input type="number" id="rankVintageMax" placeholder="上限" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
+      <span style="font-size:11.5px;color:var(--text-sub);">年</span>
+      <button onclick="setRankNV()" style="font-size:11px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text-sub);font-family:inherit;cursor:pointer;flex-shrink:0;">NV</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+      <label style="font-size:11.5px;color:var(--text-sub);width:64px;flex-shrink:0;">産地</label>
+      <input type="text" id="rankChiiki" placeholder="例: ボルドー、ナパ・ヴァレー" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+      <label style="font-size:11.5px;color:var(--text-sub);width:64px;flex-shrink:0;">生産者</label>
+      <input type="text" id="rankProducer" placeholder="生産者名の一部でOK" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+      <label style="font-size:11.5px;color:var(--text-sub);width:64px;flex-shrink:0;">葡萄品種</label>
+      <input type="text" id="rankGrape" placeholder="例: シャルドネ、カベルネ" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="applyRankAdvanced()" style="flex:1;padding:9px;border-radius:8px;border:none;background:var(--burgundy);color:#fff;font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;">絞り込む</button>
+      <button onclick="clearRankAdvanced()" style="flex:1;padding:9px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text-sub);font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;">クリア</button>
+    </div>
   </div>
 
   <!-- 総合人気（実データ: /api/top-wines＝信頼度加重の総合スコア順。コスパはバッジで併記。loadTopWinesが描画） -->
@@ -2438,6 +2474,18 @@
   <!-- 2026-07-08: 「機能」セクションは廃止。スカウター=カメラ(記録)タブ、AIソムリエ=相談タブ、
        ワインを探す/レビュアー/好みが近い人/フィルター=探すタブに統合済み。マイセラーはホームへ移動。 -->
 
+  <!-- お友達を招待（2026-07-08追加: onboarding.html完了後は招待ミッションに到達できなかった不具合対応） -->
+  <div class="mypage-section-header">🎁 お友達を招待</div>
+  <div style="margin:0 16px 20px;padding:16px;background:#fff;border:1px solid var(--border);border-radius:14px;">
+    <p style="font-size:12.5px;color:var(--text-sub);line-height:1.6;margin:0 0 12px;">このリンクから友達が登録すると、あなたにも友達にも特典が届きます。</p>
+    <div id="inviteQrWrap" style="display:flex;justify-content:center;margin-bottom:12px;"></div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;">
+      <input type="text" id="mypageInviteLinkText" readonly style="flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-size:11.5px;color:var(--text-sub);background:var(--bg);font-family:inherit;" value="読み込み中…">
+      <button onclick="copyMypageInviteLink()" style="flex-shrink:0;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">コピー</button>
+    </div>
+    <button onclick="shareMypageInvite()" style="width:100%;padding:11px;border-radius:10px;border:none;background:var(--burgundy);color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">📤 招待リンクをシェア</button>
+  </div>
+
   <div class="mypage-section-header">設定</div>
   <div class="mypage-menu">
     <div class="mypage-menu-item" onclick="openProfileEdit()" style="cursor:pointer;">
@@ -2465,6 +2513,11 @@
     <a class="mypage-menu-item" href="mailto:domaine.bouchon@gmail.com?subject=%E3%82%BD%E3%83%A0%E3%83%AA%E3%83%B3%E3%82%A2%E3%83%97%E3%83%AA%20%E3%81%8A%E5%95%8F%E3%81%84%E5%90%88%E3%82%8F%E3%81%9B" style="text-decoration:none;color:inherit;">
       <span class="mypage-menu-icon">❓</span>
       <span class="mypage-menu-text">ヘルプ・お問い合わせ</span>
+      <span class="mypage-menu-arrow">›</span>
+    </a>
+    <a class="mypage-menu-item" id="addBizRoleLink" href="login.html?addRole=1" style="display:none;text-decoration:none;color:inherit;">
+      <span class="mypage-menu-icon">🏪</span>
+      <span class="mypage-menu-text">業務店として登録する</span>
       <span class="mypage-menu-arrow">›</span>
     </a>
   </div>
@@ -3393,6 +3446,7 @@ const starsHtml = t => {
 };
 
 let rankSortBy = 'total', rankIro = '', rankKuni = '';
+let rankChiiki = '', rankProducer = '', rankGrape = '', rankPriceMin = '', rankPriceMax = '', rankVintageMin = '', rankVintageMax = '';
 function populateRankKuniOptions() {
   const sel = document.getElementById('rankKuniSelect');
   if (!sel || sel.dataset.filled) return;
@@ -3404,6 +3458,32 @@ function populateRankKuniOptions() {
   });
 }
 
+function toggleRankAdvanced() {
+  const el = document.getElementById('rankAdvancedFilters');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+function setRankNV() {
+  document.getElementById('rankVintageMin').value = 'NV';
+  document.getElementById('rankVintageMax').value = 'NV';
+}
+function applyRankAdvanced() {
+  rankPriceMin = document.getElementById('rankPriceMin').value.trim();
+  rankPriceMax = document.getElementById('rankPriceMax').value.trim();
+  rankVintageMin = document.getElementById('rankVintageMin').value.trim();
+  rankVintageMax = document.getElementById('rankVintageMax').value.trim();
+  rankChiiki = document.getElementById('rankChiiki').value.trim();
+  rankProducer = document.getElementById('rankProducer').value.trim();
+  rankGrape = document.getElementById('rankGrape').value.trim();
+  loadTopWines();
+}
+function clearRankAdvanced() {
+  ['rankPriceMin','rankPriceMax','rankVintageMin','rankVintageMax','rankChiiki','rankProducer','rankGrape'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  rankPriceMin = rankPriceMax = rankVintageMin = rankVintageMax = rankChiiki = rankProducer = rankGrape = '';
+  loadTopWines();
+}
+
 async function loadTopWines() {
   populateRankKuniOptions();
   const box = document.getElementById('rankingPop');
@@ -3411,6 +3491,13 @@ async function loadTopWines() {
     const qs = new URLSearchParams({ limit: '20', sortBy: rankSortBy });
     if (rankIro) qs.set('iro', rankIro);
     if (rankKuni) qs.set('kuni', rankKuni);
+    if (rankChiiki) qs.set('chiiki', rankChiiki);
+    if (rankProducer) qs.set('producer', rankProducer);
+    if (rankGrape) qs.set('grape', rankGrape);
+    if (rankPriceMin) qs.set('priceMin', rankPriceMin);
+    if (rankPriceMax) qs.set('priceMax', rankPriceMax);
+    if (rankVintageMin) qs.set('vintageMin', rankVintageMin);
+    if (rankVintageMax) qs.set('vintageMax', rankVintageMax);
     const r = await fetch(CHAT_API_BASE + '/api/top-wines?' + qs.toString());
     if (!r.ok) throw 0;
     const d = await r.json();
@@ -4167,6 +4254,41 @@ function initMypageIdentity(){
 }
 initMypageIdentity();
 
+// ── お友達を招待（2026-07-08追加: onboarding.html完了後は招待ミッションに戻れず
+//    招待リンクが見られなかった不具合対応。マイページに常設し、URL＋QRコードを表示） ──
+function mypageInviteLink() {
+  let uid = null;
+  try { const s = JSON.parse(localStorage.getItem('sommelin_session') || 'null'); uid = s && s.user && s.user.id; } catch (e) {}
+  if (!uid) return null;
+  return 'https://sommelintp.github.io/sommelin-app/login.html?ref=' + encodeURIComponent(uid);
+}
+function initMypageInvite() {
+  const link = mypageInviteLink();
+  const input = document.getElementById('mypageInviteLinkText');
+  const qrWrap = document.getElementById('inviteQrWrap');
+  if (!link) { if (input) input.value = 'ログイン後に表示されます'; return; }
+  if (input) input.value = link;
+  if (qrWrap && window.QRCode && !qrWrap.dataset.rendered) {
+    qrWrap.dataset.rendered = '1';
+    new QRCode(qrWrap, { text: link, width: 160, height: 160, colorDark: '#9B1B4B', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+  }
+}
+function copyMypageInviteLink() {
+  const link = mypageInviteLink();
+  if (!link) return;
+  navigator.clipboard.writeText(link).then(() => showToastLike('リンクをコピーしました')).catch(() => {});
+}
+async function shareMypageInvite() {
+  const link = mypageInviteLink();
+  if (!link) return;
+  const text = 'ソムリンで一緒にワインを楽しもう🍷 ' + link;
+  try {
+    if (navigator.share) { await navigator.share({ text, url: link }); }
+    else { await navigator.clipboard.writeText(link); showToastLike('📤 招待リンクをコピーしました！'); }
+  } catch (e) { /* シェアをキャンセルした場合等は何もしない */ }
+}
+initMypageInvite();
+
 // 業務モード切り替えボタン（2026-07-08追加: 業務店ロールなら管理画面への導線を出す）
 (function initBizModeBtn(){
   var role = null; try { role = localStorage.getItem('sommelin_role'); } catch(e){}
@@ -4177,6 +4299,17 @@ initMypageIdentity();
   if (!btn) return;
   btn.onclick = function(){ location.href = home; };
   btn.style.display = 'flex';
+})();
+
+// 「業務店として登録する」導線（2026-07-08追加: ログイン済み＆業務ロール未登録の時だけ表示）
+(function initAddBizRoleLink(){
+  const link = document.getElementById('addBizRoleLink');
+  if (!link) return;
+  let session = null; try { session = JSON.parse(localStorage.getItem('sommelin_session') || 'null'); } catch(e){}
+  if (!session || !session.access_token) return; // 未ログインなら出さない
+  let roles = []; try { roles = JSON.parse(localStorage.getItem('sommelin_roles') || '[]'); } catch(e){}
+  const hasBiz = roles.some(r => ['store','retailer','importer'].includes(r));
+  if (!hasBiz) link.style.display = 'flex';
 })();
 
 // ── 飲んだワイン履歴モーダル（2026-07-08: マイページの本数タップに反応させる） ──
