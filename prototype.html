@@ -953,7 +953,7 @@
   /* ===== SOMURIN CHAT ===== */
   .chat-btn {
     position: fixed;
-    bottom: 24px;
+    bottom: 100px;
     right: 20px;
     width: 60px;
     height: 60px;
@@ -2325,6 +2325,25 @@
     <div class="ranking-tab" id="rtab-store" onclick="switchRankingTab('store')">🤵 お店</div>
   </div>
 
+  <!-- ソート・絞り込み（2026-07-08追加: 高額ワインばかり並ぶ不具合の対策） -->
+  <div id="rankSortBar" style="display:flex;gap:8px;padding:0 16px 10px;flex-wrap:wrap;align-items:center;">
+    <select id="rankSortSelect" onchange="rankSortBy=this.value;loadTopWines();" style="font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-family:inherit;color:var(--text);background:#fff;">
+      <option value="total">総合評価順</option>
+      <option value="price_asc">価格が安い順</option>
+      <option value="price_desc">価格が高い順</option>
+    </select>
+    <select id="rankIroSelect" onchange="rankIro=this.value;loadTopWines();" style="font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-family:inherit;color:var(--text);background:#fff;">
+      <option value="">すべての種類</option>
+      <option value="赤">🍷 赤</option>
+      <option value="白">🥂 白</option>
+      <option value="ロゼ">🌸 ロゼ</option>
+      <option value="泡">🍾 泡</option>
+    </select>
+    <select id="rankKuniSelect" onchange="rankKuni=this.value;loadTopWines();" style="font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-family:inherit;color:var(--text);background:#fff;">
+      <option value="">すべての国</option>
+    </select>
+  </div>
+
   <!-- 総合人気（実データ: /api/top-wines＝信頼度加重の総合スコア順。コスパはバッジで併記。loadTopWinesが描画） -->
   <div id="rankingPop" class="ranking-list">
     <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>
@@ -2379,7 +2398,7 @@
     <div id="mypageXpNext" style="font-size:11px;color:var(--text-sub);margin-top:4px;"></div>
   </div>
   <div class="mypage-stats">
-    <div class="mypage-stat">
+    <div class="mypage-stat" onclick="openWineHistory()" style="cursor:pointer;">
       <div class="mypage-stat-value" id="mypageStatWines">—</div>
       <div class="mypage-stat-label">飲んだワイン</div>
     </div>
@@ -2476,7 +2495,7 @@
   </div>
 
   <div style="text-align:center;padding:20px;color:var(--text-sub);font-size:12px;">
-    ソムリンアプリ v0.1.0 プレビュー版
+    ソムリン
   </div>
 </div>
 
@@ -2520,7 +2539,7 @@
     <span class="nav-icon">📍</span>
     <span class="nav-label" data-i18n="nav_history">履歴</span>
   </div>
-  <div class="nav-item" id="nav-camera" onclick="switchTab('camera')">
+  <div class="nav-item" id="nav-camera" onclick="location.href='scouter.html'">
     <span class="nav-icon">📷</span>
     <span class="nav-label" data-i18n="nav_camera">カメラ</span>
   </div>
@@ -2535,6 +2554,20 @@
 </div>
 
 <!-- WINE DETAIL MODAL -->
+<!-- 飲んだワイン履歴モーダル（2026-07-08追加: マイページの本数タップに反応がなかった不具合対応） -->
+<div class="modal-overlay" id="wineHistoryModal" onclick="if(event.target===this)closeWineHistory()">
+  <div class="modal" id="wineHistoryContent">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-wine-name">🍷 飲んだワイン</div>
+      <div class="modal-producer" id="wineHistorySubtitle"></div>
+    </div>
+    <div class="modal-section" id="wineHistoryList" style="padding-top:0;">
+      <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="wineModal" onclick="closeModalOnBg(event)">
   <div class="modal" id="modalContent">
     <div class="modal-handle"></div>
@@ -3364,10 +3397,26 @@ const starsHtml = t => {
        + '<span style="color:var(--border);letter-spacing:1px;">' + '★'.repeat(Math.max(0, 5 - full)) + '</span>';
 };
 
+let rankSortBy = 'total', rankIro = '', rankKuni = '';
+function populateRankKuniOptions() {
+  const sel = document.getElementById('rankKuniSelect');
+  if (!sel || sel.dataset.filled) return;
+  sel.dataset.filled = '1';
+  Object.keys(COUNTRY_FLAGS).forEach(k => {
+    const opt = document.createElement('option');
+    opt.value = k; opt.textContent = COUNTRY_FLAGS[k][0] + ' ' + k;
+    sel.appendChild(opt);
+  });
+}
+
 async function loadTopWines() {
+  populateRankKuniOptions();
   const box = document.getElementById('rankingPop');
   try {
-    const r = await fetch(CHAT_API_BASE + '/api/top-wines?limit=20');
+    const qs = new URLSearchParams({ limit: '20', sortBy: rankSortBy });
+    if (rankIro) qs.set('iro', rankIro);
+    if (rankKuni) qs.set('kuni', rankKuni);
+    const r = await fetch(CHAT_API_BASE + '/api/top-wines?' + qs.toString());
     if (!r.ok) throw 0;
     const d = await r.json();
     if (!d.items || !d.items.length) throw 0;
@@ -4122,6 +4171,41 @@ function initMypageIdentity(){
   } else if (winesEl) { winesEl.textContent = '0'; }
 }
 initMypageIdentity();
+
+// ── 飲んだワイン履歴モーダル（2026-07-08: マイページの本数タップに反応させる） ──
+function closeWineHistory() {
+  document.getElementById('wineHistoryModal').classList.remove('open');
+}
+function openWineHistory() {
+  document.getElementById('wineHistoryModal').classList.add('open');
+  const box = document.getElementById('wineHistoryList');
+  const subEl = document.getElementById('wineHistorySubtitle');
+  if (!CHAT_UID2) { box.innerHTML = ''; return; }
+  box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>';
+  fetch(CHAT_API_BASE + '/api/taste/list?userId=' + encodeURIComponent(CHAT_UID2))
+    .then(r => r.ok ? r.json() : null)
+    .then(d => {
+      const items = (d && d.items) || [];
+      if (subEl) subEl.textContent = items.length + '本記録済み';
+      if (!items.length) {
+        box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">まだ記録がありません</div>';
+        return;
+      }
+      const escR = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      box.innerHTML = items.map(it => {
+        const region = [it.kuni, it.chiiki].filter(v => v && v !== '不明').join(' ');
+        const sub = [escR(it.producer), escR(region)].filter(Boolean).join(' ・ ');
+        const date = it.ts ? new Date(it.ts).toLocaleDateString('ja-JP') : '';
+        return `
+        <div style="padding:10px 0;border-bottom:1px solid var(--border);">
+          <div style="font-size:14px;font-weight:700;color:var(--text);">${escR(it.name) || '（名称不明）'}${it.vintage ? ' ' + escR(it.vintage) : ''}</div>
+          <div style="font-size:12px;color:var(--text-sub);margin-top:2px;">${sub}</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">${date}</div>
+        </div>`;
+      }).join('');
+    })
+    .catch(() => { box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込めませんでした</div>'; });
+}
 
 // ── 経験値・レベル・国推しバッジ（2026-07-07・backendのXP_RULES/LEVELSと対応） ──
 const XP_LEVELS = [
