@@ -2154,6 +2154,16 @@
     <h2>🏠 ホーム</h2>
     <p>気になる人・似た好みの人のワインをお届け</p>
   </div>
+  <!-- マイセラー（2026-07-08追加: マイページからホームへ移動） -->
+  <div style="margin:0 20px 16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div style="font-size:14px;font-weight:800;color:var(--text);">🗄️ マイセラー</div>
+      <a href="cellar.html" style="font-size:12px;color:var(--burgundy);font-weight:700;text-decoration:none;">すべて見る ›</a>
+    </div>
+    <div id="homeCellarPreview" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:2px;">
+      <div style="color:var(--text-sub);font-size:12.5px;">読み込み中…</div>
+    </div>
+  </div>
   <div id="homeFeedColdMsg" style="display:none;margin:0 20px 12px;padding:12px 14px;background:var(--burgundy-pale);border-radius:10px;font-size:12.5px;color:var(--text-sub);line-height:1.6;">
     まだフォロー中の人や紹介つながりがいません。まずは<a href="#" onclick="switchTab('mypage');return false;" style="color:var(--burgundy);font-weight:700;">お友達を招待</a>したり、気になる人をフォローすると、その人のおすすめが優先的に届くようになります。
   </div>
@@ -2314,11 +2324,17 @@
   <button class="scan-cancel" onclick="closeScan()">キャンセル</button>
 </div>
 
-<!-- ===== ランキング SCREEN ===== -->
+<!-- ===== 探す SCREEN（2026-07-08: 旧ランキング画面を拡張。マイページの検索系機能をここに集約） ===== -->
 <div id="rankingScreen" class="screen">
   <div class="screen-header">
-    <h2>🏆 ランキング</h2>
-    <p>みんなの評価で選ぶ人気ワイン・お店</p>
+    <h2>🔍 探す</h2>
+    <p>ワイン・お店・人をみつける</p>
+  </div>
+  <div style="display:flex;gap:8px;padding:0 16px 12px;overflow-x:auto;">
+    <a href="wine_search.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;">🔎 ワイン検索</a>
+    <a href="reviewer_hub.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;">🧑‍🍳 レビュアーを探す</a>
+    <a href="wine_social.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;">👥 好みが近い人</a>
+    <a href="filter_market.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;">🎨 みんなのフィルター</a>
   </div>
   <div class="ranking-tabs">
     <div class="ranking-tab active" id="rtab-pop" onclick="switchRankingTab('pop')">🏆 総合人気</div>
@@ -2419,53 +2435,12 @@
     </div>
   </div>
 
-  <div class="mypage-section-header">機能</div>
-  <div class="mypage-menu">
-    <a class="mypage-menu-item" href="scouter.html" style="text-decoration:none;color:inherit;">
-      <span class="mypage-menu-icon">🍷</span>
-      <span class="mypage-menu-text">スカウター（かざしてコスパ）</span>
-      <span class="mypage-menu-arrow">›</span>
-    </a>
-    <a class="mypage-menu-item" href="cellar.html" style="text-decoration:none;color:inherit;">
-      <span class="mypage-menu-icon">🗄️</span>
-      <span class="mypage-menu-text">マイセラー（在庫・飲んだ記録）</span>
-      <span class="mypage-menu-arrow">›</span>
-    </a>
-    <a class="mypage-menu-item" href="wine_search.html" style="text-decoration:none;color:inherit;">
-      <span class="mypage-menu-icon">🔍</span>
-      <span class="mypage-menu-text">ワインを探す（評価・購入先）</span>
-      <span class="mypage-menu-arrow">›</span>
-    </a>
-    <a class="mypage-menu-item" href="sommelier-chat.html" style="text-decoration:none;color:inherit;">
-      <span class="mypage-menu-icon">💬</span>
-      <span class="mypage-menu-text">AIソムリエに相談</span>
-      <span class="mypage-menu-arrow">›</span>
-    </a>
-    <a class="mypage-menu-item" href="reviewer_hub.html" style="text-decoration:none;color:inherit;">
-      <span class="mypage-menu-icon">🧑‍🍳</span>
-      <span class="mypage-menu-text">信頼できるレビュアーを探す</span>
-      <span class="mypage-menu-arrow">›</span>
-    </a>
-    <a class="mypage-menu-item" href="wine_social.html" style="text-decoration:none;color:inherit;">
-      <span class="mypage-menu-icon">👥</span>
-      <span class="mypage-menu-text">好みが近い人・ワイン仲間</span>
-      <span class="mypage-menu-arrow">›</span>
-    </a>
-    <a class="mypage-menu-item" href="filter_market.html" style="text-decoration:none;color:inherit;">
-      <span class="mypage-menu-icon">🎨</span>
-      <span class="mypage-menu-text">みんなのフィルターで探す</span>
-      <span class="mypage-menu-arrow">›</span>
-    </a>
-  </div>
+  <!-- 2026-07-08: 「機能」セクションは廃止。スカウター=カメラ(記録)タブ、AIソムリエ=相談タブ、
+       ワインを探す/レビュアー/好みが近い人/フィルター=探すタブに統合済み。マイセラーはホームへ移動。 -->
 
   <div class="mypage-section-header">設定</div>
   <div class="mypage-menu">
-    <div class="mypage-menu-item">
-      <span class="mypage-menu-icon">🔔</span>
-      <span class="mypage-menu-text" data-i18n="menu_notify">通知設定</span>
-      <span class="mypage-menu-arrow">›</span>
-    </div>
-    <div class="mypage-menu-item">
+    <div class="mypage-menu-item" onclick="openProfileEdit()" style="cursor:pointer;">
       <span class="mypage-menu-icon">👤</span>
       <span class="mypage-menu-text" data-i18n="menu_profile">プロフィール編集</span>
       <span class="mypage-menu-arrow">›</span>
@@ -2476,7 +2451,7 @@
       <span id="langMenuVal" style="font-size:12px;color:var(--text-sub);margin-left:auto;margin-right:8px;">日本語</span>
       <span class="mypage-menu-arrow">›</span>
     </div>
-    <div class="mypage-menu-item">
+    <div class="mypage-menu-item" onclick="openSubscriptionInfo()" style="cursor:pointer;">
       <span class="mypage-menu-icon">💳</span>
       <span class="mypage-menu-text">サブスクリプション</span>
       <span style="font-size:11px;color:#16a34a;font-weight:600;margin-left:auto;margin-right:8px;">無料プラン</span>
@@ -2487,11 +2462,11 @@
       <span class="mypage-menu-text">連携サービス</span>
       <span class="mypage-menu-arrow">›</span>
     </div>
-    <div class="mypage-menu-item">
+    <a class="mypage-menu-item" href="mailto:domaine.bouchon@gmail.com?subject=%E3%82%BD%E3%83%A0%E3%83%AA%E3%83%B3%E3%82%A2%E3%83%97%E3%83%AA%20%E3%81%8A%E5%95%8F%E3%81%84%E5%90%88%E3%82%8F%E3%81%9B" style="text-decoration:none;color:inherit;">
       <span class="mypage-menu-icon">❓</span>
       <span class="mypage-menu-text">ヘルプ・お問い合わせ</span>
       <span class="mypage-menu-arrow">›</span>
-    </div>
+    </a>
   </div>
 
   <div style="text-align:center;padding:20px;color:var(--text-sub);font-size:12px;">
@@ -2535,23 +2510,22 @@
     <span class="nav-icon">🏠</span>
     <span class="nav-label" data-i18n="nav_home">ホーム</span>
   </div>
-  <div class="nav-item" id="nav-history" onclick="switchTab('history')">
-    <span class="nav-icon">📍</span>
-    <span class="nav-label" data-i18n="nav_history">履歴</span>
+  <div class="nav-item" id="nav-ranking" onclick="switchTab('ranking')">
+    <span class="nav-icon">🔍</span>
+    <span class="nav-label" data-i18n="nav_search">探す</span>
   </div>
   <div class="nav-item" id="nav-camera" onclick="location.href='scouter.html'">
     <span class="nav-icon">📷</span>
-    <span class="nav-label" data-i18n="nav_camera">カメラ</span>
+    <span class="nav-label" data-i18n="nav_camera">記録</span>
   </div>
-  <div class="nav-item" id="nav-ranking" onclick="switchTab('ranking')">
-    <span class="nav-icon">🏆</span>
-    <span class="nav-label" data-i18n="nav_ranking">ランキング</span>
-  </div>
-  <div class="nav-item" id="nav-mypage" onclick="switchTab('mypage')">
-    <span class="nav-icon">👤</span>
-    <span class="nav-label" data-i18n="nav_mypage">マイページ</span>
+  <div class="nav-item" id="nav-consult" onclick="location.href='sommelier-chat.html'">
+    <span class="nav-icon">💬</span>
+    <span class="nav-label" data-i18n="nav_consult">相談</span>
   </div>
 </div>
+
+<!-- ハンバーガーメニュー（マイページ・履歴への入口。2026-07-08: 下ナビを4タブに整理したため常時表示のボタンに変更） -->
+<button id="hamburgerBtn" onclick="switchTab('mypage')" aria-label="メニュー" style="position:fixed;top:calc(env(safe-area-inset-top) + 14px);right:16px;z-index:160;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.92);border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.12);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;">☰</button>
 
 <!-- WINE DETAIL MODAL -->
 <!-- 飲んだワイン履歴モーダル（2026-07-08追加: マイページの本数タップに反応がなかった不具合対応） -->
@@ -2564,6 +2538,47 @@
     </div>
     <div class="modal-section" id="wineHistoryList" style="padding-top:0;">
       <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>
+    </div>
+  </div>
+</div>
+
+<!-- プロフィール編集モーダル（2026-07-08追加） -->
+<div class="modal-overlay" id="profileEditModal" onclick="if(event.target===this)closeProfileEdit()">
+  <div class="modal" id="profileEditContent">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-wine-name">👤 プロフィール編集</div>
+    </div>
+    <div class="modal-section" style="padding-top:0;">
+      <label style="display:block;font-size:12.5px;color:var(--text-sub);margin-bottom:6px;">ニックネーム</label>
+      <input type="text" id="profileNickInput" maxlength="20" placeholder="ニックネーム" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1px solid var(--border);font-size:14px;font-family:inherit;margin-bottom:6px;">
+      <button onclick="saveProfileNick()" style="width:100%;padding:10px;border-radius:10px;border:none;background:var(--burgundy);color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:20px;">ニックネームを保存</button>
+
+      <label style="display:block;font-size:12.5px;color:var(--text-sub);margin-bottom:6px;">ID（半角英数字・一度設定すると変更できません）</label>
+      <div id="profileHandleLocked" style="display:none;padding:10px 12px;border-radius:10px;background:var(--bg);font-size:14px;color:var(--text);margin-bottom:6px;"></div>
+      <input type="text" id="profileHandleInput" maxlength="20" placeholder="例: taro_wine" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1px solid var(--border);font-size:14px;font-family:inherit;margin-bottom:6px;">
+      <button id="profileHandleSaveBtn" onclick="saveProfileHandle()" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--burgundy);background:#fff;color:var(--burgundy);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">IDを設定する</button>
+      <div id="profileHandleMsg" style="font-size:12px;color:var(--text-sub);margin-top:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- サブスクリプション情報モーダル（2026-07-08追加） -->
+<div class="modal-overlay" id="subscriptionModal" onclick="if(event.target===this)closeSubscriptionInfo()">
+  <div class="modal" id="subscriptionContent">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-wine-name">💳 サブスクリプション</div>
+      <div class="modal-producer">現在: 無料プラン</div>
+    </div>
+    <div class="modal-section" style="padding-top:0;">
+      <p style="font-size:13px;color:var(--text);line-height:1.7;">ソムリンは現在すべての機能を無料でご利用いただけます。今後、以下のような有料オプションを検討しています（現時点では未提供です）。</p>
+      <ul style="font-size:13px;color:var(--text);line-height:1.9;padding-left:20px;margin:12px 0;">
+        <li>AIソムリエ相談の無制限利用（現在は月5回まで無料）</li>
+        <li>より詳細なテイスト分析・おすすめ精度の向上</li>
+        <li>マイセラーの本数上限の解放</li>
+      </ul>
+      <button onclick="closeSubscriptionInfo()" style="width:100%;padding:10px;border-radius:10px;border:none;background:var(--burgundy);color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">閉じる</button>
     </div>
   </div>
 </div>
@@ -2604,23 +2619,9 @@
   </div>
 </div>
 
-<!-- CHAT BUTTON -->
-<button class="chat-btn" id="chatBtn">
-  <svg viewBox="0 0 40 40" width="36" height="36" fill="none">
-    <circle cx="20" cy="24" r="13" fill="#F2C090"/>
-    <path d="M9 20 Q8 7 20 6 Q32 7 31 20 Q26 14 20 15 Q14 14 9 20Z" fill="#5C1020"/>
-    <path d="M29 8 Q35 2 34 11 Q30 14 27 11 Q26 7 30 6" fill="#5C1020"/>
-    <ellipse cx="11" cy="27" rx="4" ry="2.5" fill="#E8A0A0" opacity="0.6"/>
-    <ellipse cx="29" cy="27" rx="4" ry="2.5" fill="#E8A0A0" opacity="0.6"/>
-    <ellipse cx="16" cy="23" rx="2" ry="1.5" fill="#3A1020"/>
-    <ellipse cx="24" cy="23" rx="2" ry="1.5" fill="#3A1020"/>
-    <path d="M20 29 Q14 24 8 27 Q6 30 9 32 Q13 34 17 31 Q19 28 20 29Z" fill="#5C1020"/>
-    <path d="M20 29 Q26 24 32 27 Q34 30 31 32 Q27 34 23 31 Q21 28 20 29Z" fill="#5C1020"/>
-    <path d="M15 37 L20 34 L25 37 L20 40Z" fill="#CC2233"/>
-    <circle cx="20" cy="37" r="2" fill="#AA1122"/>
-  </svg>
-  <span class="chat-bubble-indicator" id="chatBadge">1</span>
-</button>
+<!-- 2026-07-08: フローティングのチャットボタンは廃止（下ナビ「相談」タブへ統合）。
+     店舗のワインリスト表示中はsommelier-bannerタップでチャット（Bistrot Lumièreソムリエ）を開ける -->
+<span id="chatBadge" style="display:none;"></span>
 
 <!-- CHAT WINDOW -->
 <div class="chat-window" id="chatWindow">
@@ -2691,11 +2692,11 @@
    jp-only クラスの要素（LINE連携など日本固有機能）は言語がja以外だと自動的に隠れる。 */
 const I18N = {
   ja: {
-    nav_home: 'ホーム', nav_history: '履歴', nav_camera: 'カメラ', nav_ranking: 'ランキング', nav_mypage: 'マイページ',
+    nav_home: 'ホーム', nav_history: '履歴', nav_camera: '記録', nav_ranking: '探す', nav_search: '探す', nav_consult: '相談', nav_mypage: 'マイページ',
     menu_notify: '通知設定', menu_profile: 'プロフィール編集',
   },
   en: {
-    nav_home: 'Home', nav_history: 'History', nav_camera: 'Camera', nav_ranking: 'Ranking', nav_mypage: 'My Page',
+    nav_home: 'Home', nav_history: 'History', nav_camera: 'Record', nav_ranking: 'Search', nav_search: 'Search', nav_consult: 'Chat', nav_mypage: 'My Page',
     menu_notify: 'Notifications', menu_profile: 'Edit Profile',
   },
 };
@@ -2730,7 +2731,6 @@ function switchTab(tab) {
   const cameraScreen  = document.getElementById('cameraScreen');
   const rankingScreen = document.getElementById('rankingScreen');
   const mypageScreen  = document.getElementById('mypageScreen');
-  const chatBtn       = document.getElementById('chatBtn');
 
   // hide all
   wineList.style.display      = 'none';
@@ -2764,27 +2764,20 @@ function switchTab(tab) {
     document.querySelector('.sommelier-banner').style.display = 'flex';
     if (isListView) classicList.style.display = 'block';
     else wineList.style.display = 'block';
-    chatBtn.style.display = 'flex';
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   } else if (tab === 'home') {
     homeScreen.style.display = 'block';
-    chatBtn.style.display = 'flex';
     loadHomeFeed();
   } else if (tab === 'history') {
     historyScreen.style.display = 'block';
-    chatBtn.style.display = 'flex';
   } else if (tab === 'camera') {
     cameraScreen.style.display = 'block';
-    chatBtn.style.display = 'none';
   } else if (tab === 'ranking') {
     rankingScreen.style.display = 'block';
-    chatBtn.style.display = 'flex';
   } else if (tab === 'mypage') {
     mypageScreen.style.display = 'block';
-    chatBtn.style.display = 'none';
   } else if (tab === 'calendar') {
     calScreen.style.display = 'block';
-    chatBtn.style.display = 'none';
     renderCalendar();
     renderEventList();
   }
@@ -4207,6 +4200,81 @@ function openWineHistory() {
     .catch(() => { box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込めませんでした</div>'; });
 }
 
+// ── プロフィール編集（2026-07-08追加: ニックネーム＋一度だけ設定できるID） ──
+function closeProfileEdit() {
+  document.getElementById('profileEditModal').classList.remove('open');
+}
+function openProfileEdit() {
+  document.getElementById('profileEditModal').classList.add('open');
+  let nick = ''; try { nick = localStorage.getItem('sommelin_nickname') || ''; } catch (e) {}
+  document.getElementById('profileNickInput').value = nick;
+  document.getElementById('profileHandleMsg').textContent = '';
+  const handleInput = document.getElementById('profileHandleInput');
+  const handleLocked = document.getElementById('profileHandleLocked');
+  const handleBtn = document.getElementById('profileHandleSaveBtn');
+  handleInput.style.display = ''; handleBtn.style.display = ''; handleLocked.style.display = 'none';
+  if (!CHAT_UID2) return;
+  fetch(CHAT_API_BASE + '/api/profile/me?userId=' + encodeURIComponent(CHAT_UID2))
+    .then(r => r.ok ? r.json() : null)
+    .then(d => {
+      if (d && d.handle) {
+        handleInput.style.display = 'none'; handleBtn.style.display = 'none';
+        handleLocked.style.display = 'block';
+        handleLocked.textContent = '@' + d.handle;
+      }
+    }).catch(() => {});
+}
+function saveProfileNick() {
+  const v = document.getElementById('profileNickInput').value.trim().slice(0, 20);
+  if (!v) return;
+  try { localStorage.setItem('sommelin_nickname', v); } catch (e) {}
+  const nameEl = document.getElementById('mypageNameEl');
+  if (nameEl) nameEl.textContent = v;
+  showToastLike('ニックネームを保存しました');
+}
+function saveProfileHandle() {
+  const v = document.getElementById('profileHandleInput').value.trim();
+  const msgEl = document.getElementById('profileHandleMsg');
+  if (!CHAT_UID2) return;
+  if (!/^[a-zA-Z0-9_]{3,20}$/.test(v)) {
+    msgEl.textContent = '半角英数字とアンダースコアで3〜20文字にしてください。';
+    return;
+  }
+  fetch(CHAT_API_BASE + '/api/profile/handle', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId: CHAT_UID2, handle: v }),
+  })
+    .then(r => r.json().then(d => ({ ok: r.ok, d })))
+    .then(({ ok, d }) => {
+      if (ok) {
+        document.getElementById('profileHandleInput').style.display = 'none';
+        document.getElementById('profileHandleSaveBtn').style.display = 'none';
+        const locked = document.getElementById('profileHandleLocked');
+        locked.style.display = 'block';
+        locked.textContent = '@' + d.handle;
+        msgEl.textContent = '';
+      } else {
+        msgEl.textContent = d.message || '設定できませんでした。';
+      }
+    })
+    .catch(() => { msgEl.textContent = '通信エラーが発生しました。'; });
+}
+function showToastLike(text) {
+  const el = document.createElement('div');
+  el.textContent = text;
+  el.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(15,15,15,.9);color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;z-index:300;';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2000);
+}
+
+// ── サブスクリプション案内（2026-07-08追加） ──
+function openSubscriptionInfo() {
+  document.getElementById('subscriptionModal').classList.add('open');
+}
+function closeSubscriptionInfo() {
+  document.getElementById('subscriptionModal').classList.remove('open');
+}
+
 // ── 経験値・レベル・国推しバッジ（2026-07-07・backendのXP_RULES/LEVELSと対応） ──
 const XP_LEVELS = [
   { level:1,  title:'たまごソムリン',     min:0,    avatar:'sommelin-welcome.png' },
@@ -4256,10 +4324,36 @@ function initMypageXp(){
 }
 initMypageXp();
 
+// ── マイセラー プレビュー（2026-07-08追加: マイページからホームへ移動） ──
+let homeCellarLoaded = false;
+function loadHomeCellarPreview() {
+  if (homeCellarLoaded) return;
+  homeCellarLoaded = true;
+  const box = document.getElementById('homeCellarPreview');
+  if (!box || !CHAT_UID2) return;
+  fetch(CHAT_API_BASE + '/api/cellar?userId=' + encodeURIComponent(CHAT_UID2))
+    .then(r => r.ok ? r.json() : null)
+    .then(d => {
+      const items = ((d && d.items) || []).filter(it => it.bottles == null || it.bottles > 0).slice(0, 8);
+      if (!items.length) {
+        box.innerHTML = '<a href="cellar.html" style="text-decoration:none;font-size:12.5px;color:var(--text-sub);">まだ登録がありません。タップして追加しましょう →</a>';
+        return;
+      }
+      const escR = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      box.innerHTML = items.map(it => `
+        <a href="cellar.html" style="flex:none;width:120px;text-decoration:none;color:inherit;background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px;">
+          <div style="font-size:12.5px;font-weight:700;color:var(--text);line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${escR(it.name) || '（名称未設定）'}</div>
+          <div style="font-size:10.5px;color:var(--text-sub);margin-top:4px;">🍾 ${it.bottles != null ? it.bottles : 1}本${it.is_public ? ' ・ 🌐 公開' : ''}</div>
+        </a>`).join('');
+    })
+    .catch(() => { box.innerHTML = ''; });
+}
+
 // ── ホーム(発見フィード) 2026-07-07: フォロー中/紹介ネットワーク/好み類似/人気を統合した/api/feed ──
 const FEED_SOURCE_EMOJI = { follow: '💛', referral: '🌱', similar: '🔍', popular: '🏆', nearby: '📍' };
 let homeFeedLoaded = false;
 function loadHomeFeed() {
+  loadHomeCellarPreview();
   if (homeFeedLoaded) return;
   homeFeedLoaded = true;
   const box = document.getElementById('homeFeedList');
@@ -4436,8 +4530,6 @@ function handleEnter(e) {
   // show home
   document.getElementById('homeScreen').style.display = 'block';
   document.getElementById('nav-home').classList.add('active');
-  // show chat button
-  document.getElementById('chatBtn').style.display = 'flex';
   // 実データ読込（フィード・試飲会イベント・ランキング・来店履歴）
   loadHomeFeed();
   loadRealEvents();

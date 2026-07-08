@@ -568,7 +568,22 @@ function syncWineToServer(w){
   fetch(CELLAR_API_BASE+'/api/cellar',{
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ userId:uid, clientRowId:String(w.id), name:w.name, vintage:w.vintage,
-      region:w.region, producer:w.producer, cat:w.cat, bottles:w.bottles, note:w.note })
+      region:w.region, producer:w.producer, cat:w.cat, bottles:w.bottles, note:w.note, isPublic: !!w.isPublic })
+  }).catch(()=>{});
+}
+
+// 公開/非公開の切り替え（2026-07-08追加: マイセラーをホームからも見られるようにするため）
+function toggleCellarPublic(id){
+  const w = cellar.find(x => x.id === id);
+  if (!w) return;
+  w.isPublic = !w.isPublic;
+  saveCellar();
+  renderCellar();
+  let uid=null; try{ uid=localStorage.getItem('somm_uid'); }catch(e){}
+  if(!uid) return;
+  fetch(CELLAR_API_BASE+'/api/cellar/visibility',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ userId:uid, clientRowId:String(w.id), isPublic: !!w.isPublic })
   }).catch(()=>{});
 }
 
@@ -590,6 +605,7 @@ async function loadCellarFromServer(){
         vintage: it.vintage || '—', region: it.region || '—', grapes: '—',
         bottles: it.bottles != null ? it.bottles : 1, price: 0,
         date: (it.updated_at||'').split('T')[0] || '', note: it.note || '', hasLabel:false,
+        isPublic: !!it.is_public,
       };
     });
     cellar = Object.values(byRowId).filter(w => w.bottles > 0);
@@ -658,6 +674,7 @@ function renderCellar() {
                 <button class="stock-plus"  onclick="event.stopPropagation();changeStock(${w.id},+1)">＋</button>
               </div>
             </div>
+            <button onclick="event.stopPropagation();toggleCellarPublic(${w.id})" style="margin-top:8px;width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);background:${w.isPublic?'#fff4e8':'#fff'};color:${w.isPublic?'#b8730a':'#8a7a7d'};font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">${w.isPublic ? '🌐 公開中（タップで非公開に）' : '🔒 非公開（タップで公開）'}</button>
           </div>
         </div>
       </div>`;

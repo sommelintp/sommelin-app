@@ -28,7 +28,7 @@ body{
   position:fixed;inset:0;max-width:430px;margin:0 auto;
   background:linear-gradient(160deg,var(--wine-dark) 0%,#3d0a1c 100%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:40px 28px;text-align:center;z-index:500;
+  padding:40px 28px 90px;text-align:center;z-index:500;
 }
 #perm.gone{display:none;}
 .perm-em{font-size:58px;margin-bottom:16px;}
@@ -49,18 +49,6 @@ body{
 #flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:18;transition:opacity .25s;}
 #flash.on{opacity:.65;transition:none;}
 
-/* scan frame */
-#scanLine{position:absolute;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,transparent,rgba(0,220,170,0) 5%,rgba(0,220,170,.9) 50%,rgba(0,220,170,0) 95%,transparent);
-  box-shadow:0 0 14px rgba(0,220,170,.7),0 0 28px rgba(0,220,170,.3);
-  animation:scanMove 3s ease-in-out infinite;z-index:15;pointer-events:none;}
-@keyframes scanMove{0%{top:16%}50%{top:74%}100%{top:16%}}
-.fc{position:absolute;width:30px;height:30px;z-index:15;pointer-events:none;}
-.fc.tl{top:16%;left:18px;border-top:2px solid rgba(0,220,170,.7);border-left:2px solid rgba(0,220,170,.7);}
-.fc.tr{top:16%;right:18px;border-top:2px solid rgba(0,220,170,.7);border-right:2px solid rgba(0,220,170,.7);}
-.fc.bl{top:74%;left:18px;border-bottom:2px solid rgba(0,220,170,.7);border-left:2px solid rgba(0,220,170,.7);}
-.fc.br{top:74%;right:18px;border-bottom:2px solid rgba(0,220,170,.7);border-right:2px solid rgba(0,220,170,.7);}
-
 /* status */
 #status{position:absolute;top:46%;left:50%;transform:translate(-50%,-50%);z-index:22;text-align:center;pointer-events:none;}
 #status.gone{display:none;}
@@ -78,10 +66,19 @@ body{
 .aTop-title .t2{font-size:10px;color:rgba(255,255,255,.65);margin-top:1px;}
 .aTop-sp{width:36px;flex-shrink:0;}
 
-/* bottom controls */
-.aBot{position:absolute;bottom:0;left:0;right:0;z-index:30;padding:14px 0 30px;
+/* bottom controls（下ナビ分だけ底上げ。2026-07-08: スカウター使用中に他画面へ移動できなくなる不具合対応） */
+.aBot{position:absolute;bottom:74px;left:0;right:0;z-index:30;padding:14px 0 12px;
   background:linear-gradient(0deg,rgba(0,0,0,.8),rgba(0,0,0,.45) 60%,transparent);
   display:flex;flex-direction:column;align-items:center;gap:12px;}
+
+/* 常時表示の下ナビ（プロトタイプ側と同じ4タブ） */
+.scouter-nav{position:fixed;left:0;right:0;bottom:0;max-width:430px;margin:0 auto;z-index:200;
+  background:#fff;border-top:1px solid rgba(0,0,0,.08);display:flex;
+  padding:8px 0 env(safe-area-inset-bottom);}
+.scouter-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  text-decoration:none;color:#7a5560;font-size:10.5px;padding:4px 0;}
+.scouter-nav a.on{color:var(--burgundy,#9B1B4B);font-weight:700;}
+.scouter-nav .ic{font-size:19px;}
 .shoot{width:74px;height:74px;border-radius:50%;border:4px solid #fff;background:rgba(255,255,255,.18);
   cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:30px;}
 .shoot:active{transform:scale(.94);}
@@ -258,9 +255,6 @@ body{
     <button class="fb1" onclick="resumeLive()">↺ 撮り直す</button>
   </div>
 
-  <div id="scanLine"></div>
-  <div class="fc tl"></div><div class="fc tr"></div><div class="fc bl"></div><div class="fc br"></div>
-
   <div id="status" class="gone"><div class="st-ring"></div><div class="st-txt" id="stTxt">準備中…</div></div>
 
   <div id="err">
@@ -311,6 +305,14 @@ body{
 </div>
 
 <div id="toast"></div>
+
+<!-- 常時表示の下ナビ（2026-07-08追加: スカウター使用中に他画面へ移動できなくなる不具合対応） -->
+<nav class="scouter-nav">
+  <a href="prototype.html"><span class="ic">🏠</span>ホーム</a>
+  <a href="wine_search.html"><span class="ic">🔍</span>探す</a>
+  <a href="scouter.html" class="on"><span class="ic">📷</span>記録</a>
+  <a href="sommelier-chat.html"><span class="ic">💬</span>相談</a>
+</nav>
 
 <script>
 /* ===== 多言語対応（i18n）。将来 fr/it 等も I18N に言語を1つ足すだけで拡張できる構造 ===== */
