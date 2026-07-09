@@ -434,6 +434,34 @@ const CHAT_UID = (() => { try {
   if (!u) { u = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid', u); }
   return u;
 } catch(e){ return ''; } })();
+
+// ── 匿名認証セッション（2026-07-09: チャットの月次クォータのなりすまし対策）──
+// somm_uid(CHAT_UID)は好み等のデータ紐付け用としてそのまま使う。クォータの鍵だけを
+// このSupabase匿名認証トークンに切り替える（自称IDだと無限に回避できたため）。
+const ANON_SB_URL = 'https://gkhdpzfmqraliwaiubwl.supabase.co';
+const ANON_SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+async function getAnonAccessToken() {
+  try {
+    const raw = localStorage.getItem('somm_anon_session');
+    let sess = raw ? JSON.parse(raw) : null;
+    if (sess && sess.expires_at && sess.expires_at * 1000 > Date.now() + 60000) return sess.access_token;
+    if (sess && sess.refresh_token) {
+      const r = await fetch(ANON_SB_URL + '/auth/v1/token?grant_type=refresh_token', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ANON_SB_KEY },
+        body: JSON.stringify({ refresh_token: sess.refresh_token }),
+      });
+      if (r.ok) { sess = await r.json(); localStorage.setItem('somm_anon_session', JSON.stringify(sess)); return sess.access_token; }
+    }
+    const r2 = await fetch(ANON_SB_URL + '/auth/v1/signup', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ANON_SB_KEY }, body: JSON.stringify({}),
+    });
+    if (!r2.ok) return null;
+    sess = await r2.json();
+    localStorage.setItem('somm_anon_session', JSON.stringify(sess));
+    return sess.access_token;
+  } catch (e) { return null; }
+}
+
 let chatHistory = [];   // {role:'user'|'assistant', content}
 let pendingPhoto = null; // 送信待ちの写真dataURL（長辺1024 JPEG）
 
@@ -478,9 +506,12 @@ window.addEventListener('load', () => {
   document.getElementById('initTime').textContent = nowTime();
   updateUsageDisplay();
 
-  // サーバーから実残数を取得（月次・端末をまたいでもuid単位で共通）
-  fetch(CHAT_API + '/api/chat-quota?userId=' + encodeURIComponent(CHAT_UID))
-    .then(r => r.ok ? r.json() : null)
+  // サーバーから実残数を取得（月次・匿名認証トークン単位で共通）
+  getAnonAccessToken().then(token =>
+    fetch(CHAT_API + '/api/chat-quota?userId=' + encodeURIComponent(CHAT_UID), {
+      headers: token ? { Authorization: 'Bearer ' + token } : {},
+    })
+  ).then(r => r.ok ? r.json() : null)
     .then(q => { if (q && !q.error) { quota = q; updateUsageDisplay(); } })
     .catch(() => {});
 
@@ -552,9 +583,10 @@ async function sendMessage() {
   try {
     const body = { messages: chatHistory.slice(-8), userId: CHAT_UID };
     if (photo) body.image = photo;
+    const token = await getAnonAccessToken();
     const r = await fetch(CHAT_API + '/api/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { Authorization: 'Bearer ' + token } : {}),
       body: JSON.stringify(body)
     });
     hideTyping();
