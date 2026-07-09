@@ -6,16 +6,16 @@
 <title>ソムリンAI — ワインソムリエ</title>
 <style>
   :root {
-    --burgundy: #9B1B4B;
+    /* 2026-07-10: --burgundy/--gold/--text/--text-sub/--borderはsommelin-ui.cssの
+       ブランドトークンに一本化。--wine-dark/--bg/--card-bgはsommelin-ui.css未定義
+       （あちらは--wine-deep/--paper系）のためこのまま残す。
+       --lineはsommelin-ui.cssでは「紙のhairline色」の意味で使われるため衝突を避け
+       --status-online（LINEオンライン表示の緑ドット）に改名 */
     --wine-dark: #5C0E2A;
-    --gold: #C9973A;
     --gold-light: #F5E6C8;
-    --line: #06C755;
+    --status-online: #06C755;
     --bg: #F8F4EF;
     --card-bg: #FFFFFF;
-    --text: #2C1810;
-    --text-sub: #7A6055;
-    --border: #E8DDD5;
     --red-wine: #9B1B4B;
     --white-wine: #C9973A;
     --sparkling-wine: #3D7AB5;
@@ -54,11 +54,11 @@
   }
 
   .header-info { flex: 1; }
-  .header-name { color: #fff; font-size: 15px; font-weight: 700; letter-spacing: 0.02em; }
+  .header-name { font-family: var(--font-display); color: #fff; font-size: 16px; font-weight: 700; letter-spacing: 0.02em; }
   .header-status { color: rgba(255,255,255,0.7); font-size: 11px; margin-top: 1px; }
   .header-status .dot {
     display: inline-block; width: 6px; height: 6px;
-    background: var(--line); border-radius: 50%; margin-right: 4px;
+    background: var(--status-online); border-radius: 50%; margin-right: 4px;
     animation: pulse-dot 2s infinite;
   }
 
@@ -155,7 +155,7 @@
   .badge-sparkling { background: var(--sparkling-wine); }
   .badge-rose { background: var(--rose-wine); }
 
-  .wine-name { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.4; margin-bottom: 3px; }
+  .wine-name { font-family: var(--font-display); font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.4; margin-bottom: 3px; }
   .wine-producer { font-size: 11px; color: var(--text-sub); margin-bottom: 3px; }
   .wine-meta { font-size: 11px; color: var(--text-sub); display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
   .wine-meta-chip { background: var(--bg); border-radius: 20px; padding: 1px 6px; font-size: 10px; }
@@ -313,6 +313,10 @@
   .messages-wrap::-webkit-scrollbar-track { background: transparent; }
   .messages-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/sommelin-ui.css">
 <!-- ワインDBは外部ファイルから読み込み（update_wines.py で自動更新可能） -->
 <script src="wines_data.js"></script>
 </head>
@@ -336,7 +340,7 @@
 
 <!-- DB INFO BAR -->
 <div class="db-bar" id="dbBar">
-  🍇 ワインデータ <span class="db-bar-count" id="dbCount">読み込み中…</span>
+  ワインデータ <span class="db-bar-count" id="dbCount">読み込み中…</span>
 </div>
 
 <!-- MESSAGES -->
