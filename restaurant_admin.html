@@ -1382,6 +1382,7 @@
     color: white; font-size: 15px; font-weight: 800;
   }
 </style>
+<script src="assets/oshi-card.js"></script>
 </head>
 <body>
 
@@ -1927,6 +1928,44 @@
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeWineModal()">キャンセル</button>
       <button class="btn-primary" onclick="saveWine()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 推しカード作成モーダル (D-2) ==================== -->
+<div class="modal-bg" id="oshiStoreCardModal" onclick="closeOshiCardModalBg(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">推しカードを作る</div>
+    <div style="font-size:13px;color:var(--text-sub);margin:-8px 0 14px;" id="oshiCardWineName"></div>
+
+    <div id="oshiCardFormWrap">
+      <div class="form-group">
+        <label class="form-label">一言コメント（任意）</label>
+        <textarea class="form-input" id="oshiCardComment" rows="3" maxlength="120" placeholder="例: 当店のグラスで一番人気。魚介と好相性です" style="resize:vertical;"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">価格表示</label>
+        <select class="form-select" id="oshiCardPriceMode">
+          <option value="none">表示しない</option>
+          <option value="glass">グラス価格のみ</option>
+          <option value="bottle">ボトル価格のみ</option>
+          <option value="both" selected>グラス・ボトル両方</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeOshiCardModal()">キャンセル</button>
+        <button class="btn-primary" onclick="generateOshiStoreCard()">カードを作る</button>
+      </div>
+    </div>
+
+    <div id="oshiCardPreviewWrap" style="display:none;text-align:center;">
+      <img id="oshiCardPreviewImg" style="width:100%;max-width:280px;border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.15);margin-bottom:14px;">
+      <div style="font-size:12px;color:var(--text-sub);margin-bottom:14px;">キャプションはコピー済みです</div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeOshiCardModal()">閉じる</button>
+        <button class="btn-primary" onclick="shareOshiStoreCard()">シェア</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2877,6 +2916,7 @@ function renderWineTable(cat, search) {
           <input type="checkbox" ${w.available ? 'checked' : ''} onchange="toggleAvailability('${w.id}', this.checked)">
           <span class="toggle-slider"></span>
         </label>
+        <button class="edit-btn" onclick="openOshiCardModal('${w.id}')" title="推しカードを作る">📣</button>
         <button class="edit-btn" onclick="openWineModal('${w.id}')" title="編集">✏️</button>
         <button class="del-btn" onclick="deleteWine('${w.id}')" title="削除">🗑</button>
       </div>
@@ -3272,6 +3312,90 @@ function closeWineModal() {
 }
 function closeWineModalBg(e) {
   if (e.target === document.getElementById('wineModal')) closeWineModal();
+}
+
+// ============================================================
+// 📣 推しカード（D-2: 店→ワインの推し活。SP/total等の評価数値は載せない）
+// ============================================================
+const OSHI_CARD_APP_URL = 'https://sommelintp.github.io/sommelin-app/';
+let oshiCardWineId = null, oshiCardBlob2 = null, oshiCardCaption2 = '', oshiCardStoreIg = null;
+
+async function openOshiCardModal(id) {
+  const w = wineData.find(x => x.id === id);
+  if (!w) return;
+  oshiCardWineId = id;
+  document.getElementById('oshiCardWineName').textContent = w.name + (w.vintage ? ' ' + w.vintage : '');
+  document.getElementById('oshiCardComment').value = '';
+  document.getElementById('oshiCardPriceMode').value = 'both';
+  document.getElementById('oshiCardFormWrap').style.display = 'block';
+  document.getElementById('oshiCardPreviewWrap').style.display = 'none';
+  document.getElementById('oshiStoreCardModal').classList.add('open');
+
+  oshiCardStoreIg = null;
+  try {
+    const uid = await rwUid();
+    if (uid) {
+      const r = await rwFetch('profiles?id=eq.' + uid + '&select=instagram');
+      if (r.ok) { const rows = await r.json(); oshiCardStoreIg = (rows[0] && rows[0].instagram) || null; }
+    }
+  } catch (e) {}
+}
+function closeOshiCardModal() {
+  document.getElementById('oshiStoreCardModal').classList.remove('open');
+}
+function closeOshiCardModalBg(e) {
+  if (e.target === document.getElementById('oshiStoreCardModal')) closeOshiCardModal();
+}
+
+function buildOshiStoreCaption(w, comment, priceMode) {
+  const L = [];
+  L.push(`🍷 ${w.name}${w.vintage ? ' ' + w.vintage : ''}`);
+  if (comment) L.push(`「${comment}」`);
+  const prices = [];
+  if ((priceMode === 'glass' || priceMode === 'both') && w.priceGlass) prices.push(`グラス¥${w.priceGlass.toLocaleString()}`);
+  if ((priceMode === 'bottle' || priceMode === 'both') && w.priceBottle) prices.push(`ボトル¥${w.priceBottle.toLocaleString()}`);
+  if (prices.length) L.push(prices.join('・'));
+  L.push('');
+  L.push('#Sommelin #ソムリン #ワインのある時間');
+  L.push(`📱 ${OSHI_CARD_APP_URL}`);
+  return L.join('\n');
+}
+
+async function generateOshiStoreCard() {
+  const w = wineData.find(x => x.id === oshiCardWineId);
+  if (!w) return;
+  const storeName = (document.getElementById('stkStoreName').value || '').trim();
+  if (!storeName) { showToast('先に「在庫公開」設定で店舗名を入力してください'); return; }
+  const comment = (document.getElementById('oshiCardComment').value || '').trim().slice(0, 120);
+  const priceMode = document.getElementById('oshiCardPriceMode').value;
+  try {
+    const blob = await OshiCard.draw({
+      template: 'store',
+      name: w.name, producer: w.producer, vintage: w.vintage,
+      storeName, storeHandle: oshiCardStoreIg,
+      comment, priceGlass: w.priceGlass, priceBottle: w.priceBottle, priceMode,
+      appUrl: OSHI_CARD_APP_URL,
+    });
+    oshiCardBlob2 = blob;
+    oshiCardCaption2 = buildOshiStoreCaption(w, comment, priceMode);
+    try { await navigator.clipboard.writeText(oshiCardCaption2); } catch (e) {}
+    document.getElementById('oshiCardPreviewImg').src = URL.createObjectURL(blob);
+    document.getElementById('oshiCardFormWrap').style.display = 'none';
+    document.getElementById('oshiCardPreviewWrap').style.display = 'block';
+    if (window.sommLog) sommLog('store_card_created', { hasComment: !!comment, priceMode });
+  } catch (e) { showToast('カード生成に失敗しました'); }
+}
+
+async function shareOshiStoreCard() {
+  if (window.sommLog) sommLog('store_card_share');
+  try {
+    const file = new File([oshiCardBlob2], 'sommelin-store-oshi.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file] });
+      return;
+    }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  showToast('この端末は画像共有に対応していません。画像を長押しで保存してください');
 }
 
 async function saveWine() {
