@@ -170,7 +170,7 @@ function recRow(b){
   return `<div class="rec">
     <div><div class="rn">${esc(b.name||'（銘柄名なし）')}</div>
          <div class="rr">${esc([b.iro,b.kuni,b.chiiki,b.vintage].filter(Boolean).join('　'))}</div></div>
-    <div class="rm${b.matched?' hit':''}">${b.matched?'⭐ 評価あり SP '+(b.sp!=null?Number(b.sp).toFixed(1):'—'):'記録OK'}</div>
+    <div class="rm${b.matched?' hit':''}">${b.matched?'⭐ 評価あり '+(b.total!=null?Number(b.total).toFixed(1)+'/5':'—'):'記録OK'}</div>
   </div>`;
 }
 

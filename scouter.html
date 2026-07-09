@@ -495,18 +495,17 @@ async function logAction(ev){
   }catch(e){}
 }
 
-// ── コスパ（おすすめ度 osu = SP − 価格から期待されるSP）→ 星・ラベル ──
-function cospa(osu){
-  if(osu==null || isNaN(osu)) return {stars:'—',     lbl:'コスパ算定中', sub:'評価データを補完中です', bg:'#9aa0a6'};
-  if(osu>=0.5)  return {stars:'★★★★★', lbl:'圧倒的コスパ', sub:'価格以上の評価。かなりお得', bg:'#1e8449'};
-  if(osu>=0.3)  return {stars:'★★★★',  lbl:'高コスパ',   sub:'価格に対して評価が高い',   bg:'#27ae60'};
-  if(osu>=0.1)  return {stars:'★★★',   lbl:'良コスパ',   sub:'価格相応より少し得',       bg:'#5C0E2A'};
-  if(osu>=-0.1) return {stars:'★★',    lbl:'価格相応',   sub:'評価と価格がほぼ釣り合う', bg:'#8a6d3b'};
-  return                {stars:'★',     lbl:'やや割高',   sub:'価格のわりに評価は控えめ', bg:'#a5673f'};
+// ── コスパ（おすすめ度）→ 星・ラベル ──
+// 2026-07-09: バックエンドが生の内部指標(sp/osu_gbm/osu_lin)を返さなくなったため、
+// カテゴリ値cospaLevel('top'|'good'|null。chat/wine_lookupと共通の分類)から表示を作る。
+function cospa(level){
+  if(level==='top')  return {stars:'★★★★★', lbl:'圧倒的コスパ', sub:'価格以上の評価。かなりお得', bg:'#1e8449'};
+  if(level==='good') return {stars:'★★★★',  lbl:'高コスパ',   sub:'価格に対して評価が高い',   bg:'#27ae60'};
+  return                    {stars:'★★★',   lbl:'標準的',     sub:'価格相応の評価です',       bg:'#8a6d3b'};
 }
-function osuOf(w){ return w && (w.osu_gbm!=null ? w.osu_gbm : w.osu_lin); }
 function fmtPrice(p){ if(p==null||isNaN(p)) return '—'; return '¥'+Math.round(p).toLocaleString('ja-JP'); }
-function fmtSP(s){ if(s==null||isNaN(s)) return '—'; return Number(s).toFixed(1); }
+// 評価は「探す」タブ・チャットと同じtotal(5点満点)に統一（旧fmtSPはSP=10点満点を表示していた）
+function fmtTotal(t){ if(t==null||isNaN(t)) return '—'; return Number(t).toFixed(1); }
 
 // ── STATE ──
 let stream=null, busy=false;
@@ -648,12 +647,16 @@ function resumeLive(){
   setSub(MODE==='list'?'リストモード':'撮るだけで全ボトル評価');
 }
 
-// ベスト判定: 好み度＋コスパ＋SP（既知＝実データのボトルのみ対象）
+// ベスト判定: 好み度＋コスパ＋総合評価（既知＝実データのボトルのみ対象）
 function bottleRank(b){
   let s=0;
   if(b.personalFit && b.personalFit.score) s+=b.personalFit.score;
   const w=b.match && b.match.wine;
-  if(w){ s+=20; const o=osuOf(w); if(o!=null) s+=Math.max(0,Math.min(60,o*60)); if(w.sp) s+=Number(w.sp); }
+  if(w){
+    s+=20;
+    if(w.cospaLevel==='top') s+=60; else if(w.cospaLevel==='good') s+=25;
+    if(w.total) s+=Number(w.total)*10;
+  }
   return s;
 }
 
@@ -678,7 +681,7 @@ function renderMarks(res){
       const fit=b.personalFit && b.personalFit.score>=40;
       if(fit) cls+=' fit';
       if(pinned) cls+=' pinned';
-      html=(fit?'❤️':'')+'★'+fmtSP(w.sp);
+      html=(fit?'❤️':'')+fmtTotal(w.total)+'<span style="font-size:0.65em;opacity:.85;">/5</span>';
       if(pinned) html='📌 '+html+`<span class="pinsub">${esc(b.filterMatches[0].name||'フィルター')}</span>`;
       if(i===best){ cls+=' best'; html='👑 '+html+'<span class="bsub">この中でおすすめ</span>'; }
     }else if(b.match.status==='unlisted'){ html='未登録'; }
@@ -717,7 +720,7 @@ function renderShelfCard(b){
   const id=b.identification||{};
   let inner='';
   if(w){
-    const cp=cospa(osuOf(w));
+    const cp=cospa(w.cospaLevel);
     const lowConf=(b.match.matchScore||0)<0.75;
     const pick=b.sommelin && b.sommelin.isPick
       ? `<div class="pick-ribbon">${b.sommelin.level==='top'?'👑 ソムリンのおすすめ':'✨ ソムリンおすすめ'}<span style="font-weight:600">｜${esc(b.sommelin.reason||'')}</span></div>` : '';
@@ -734,7 +737,7 @@ function renderShelfCard(b){
       </div>
       <div class="sh-grid">
         <div class="sh-cell"><div class="v">${fmtPrice(w.price)}</div><div class="l">参考価格</div></div>
-        <div class="sh-cell"><div class="v sh-refscore">${fmtSP(w.sp)}<small>/10</small></div><div class="l">参考評価</div></div>
+        <div class="sh-cell"><div class="v sh-refscore">${fmtTotal(w.total)}<small>/5</small></div><div class="l">総合評価</div></div>
       </div>
       ${pick}
       ${filterRibbons}
@@ -776,10 +779,10 @@ async function loadSimilar(b){
     const box=document.getElementById('simBox');
     if(!box || !d.items || !d.items.length) return;
     box.innerHTML='<div class="cand-h">近い系統のおすすめ（ソムリン実データ）</div>'+d.items.map(x=>{
-      const c=cospa(osuOf(x));
+      const c=cospa(x.cospaLevel);
       return `<div class="cand-row" onclick="buy('${escAttr(x.name||'')}', ${x.id})">
         <div><div class="cn">${esc(trunc(x.name||'',26))}</div><div class="cr">${esc([x.kuni,x.chiiki].filter(v=>v&&v!=='不明').join(' '))}　${fmtPrice(x.price)}</div></div>
-        <div class="cc">${c.stars}<br><small>${fmtSP(x.sp)}/10</small></div></div>`;
+        <div class="cc">${c.stars}<br><small>${fmtTotal(x.total)}/5</small></div></div>`;
     }).join('');
   }catch(e){}
 }
@@ -1099,7 +1102,7 @@ function liScore(it){
   let s=0;
   if(it.personalFit && it.personalFit.score) s+=it.personalFit.score;
   const w=it.match && it.match.wine;
-  if(w){ const o=osuOf(w); if(o!=null) s+=Math.max(0,Math.min(60,o*60)); s+=5; }
+  if(w){ if(w.cospaLevel==='top') s+=60; else if(w.cospaLevel==='good') s+=25; s+=5; }
   return s;
 }
 
@@ -1115,7 +1118,7 @@ function liRow(it, hit){
   if(it.sommelin && it.sommelin.isPick) badges.push(`<span class="b2">${it.sommelin.level==='top'?'👑 ソムリン推し':'✨ おすすめ'}</span>`);
   if(it.priceDelta!=null && Math.abs(it.priceDelta)>=15) badges.push(`<span class="b3">参考価格より${it.priceDelta>0?'+':''}${it.priceDelta}%</span>`);
   const right=w
-    ? `${cospa(osuOf(w)).stars}<br><small>${fmtSP(w.sp)}/10</small>`
+    ? `${cospa(w.cospaLevel).stars}<br><small>${fmtTotal(w.total)}/5</small>`
     : `<span class="un">未登録</span>`;
   return `<div class="li-row${hit?' hit':''}">
     <div><div class="ln">${esc(trunc(name,34))}</div>

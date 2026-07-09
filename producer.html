@@ -57,7 +57,6 @@ body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg)
 
 <div class="stats" id="stats" style="display:none;">
   <div class="stat"><div class="sv" id="stCount">—</div><div class="sl">掲載ワイン</div></div>
-  <div class="stat"><div class="sv" id="stAvg">—</div><div class="sl">平均評価（10点満点）</div></div>
   <div class="stat"><div class="sv" id="stGood">—</div><div class="sl">💰 コスパ良好</div></div>
 </div>
 
@@ -99,38 +98,37 @@ async function load() {
   if (!producerName) { listEl.innerHTML = '<div class="empty">URLに ?p=生産者名 を付けて開いてください</div>'; return; }
   loadIg();
   try {
-    const r = await fetch(SB_URL + '/rest/v1/wines?producer=eq.' + encodeURIComponent(producerName)
-      + '&select=id,name,iro,kuni,chiiki,vintage,price,sp,osu_gbm&order=sp.desc.nullslast&limit=200',
-      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
+    // 2026-07-09: Supabase直叩き(anonキーでwines.sp/osu_gbmを生取得)をやめ、
+    // バックエンド経由(sanitize済み・total/cospaLevelのみ)に統一。
+    const r = await fetch(API_BASE + '/api/producer-wines?producer=' + encodeURIComponent(producerName));
     if (!r.ok) throw 0;
-    const rows = await r.json();
+    const d = await r.json();
+    const rows = d.items || [];
     if (!rows.length) {
       listEl.innerHTML = '<div class="empty">🔍 この生産者のワインはまだ掲載されていません</div>';
       return;
     }
-    // ヘッダー・統計（表記はブランド控えめ: SPという言葉は出さない）
+    // ヘッダー・統計（表記はブランド控えめ: SPという言葉は出さない。平均等の内部指標は出さない）
     const regions = {};
     rows.forEach(w => { const k = [w.kuni, w.chiiki].filter(v => v && v !== '不明').join(' '); if (k) regions[k] = (regions[k]||0)+1; });
     const topRegion = Object.entries(regions).sort((a,b)=>b[1]-a[1])[0];
     document.getElementById('pregion').textContent = topRegion ? topRegion[0] : '';
-    const sps = rows.map(w => Number(w.sp)).filter(x => isFinite(x) && x > 0);
-    document.getElementById('stCount').textContent = rows.length;
-    document.getElementById('stAvg').textContent = sps.length ? (sps.reduce((a,b)=>a+b,0)/sps.length).toFixed(1) : '—';
-    document.getElementById('stGood').textContent = rows.filter(w => Number(w.osu_gbm) >= 0.1).length + '本';
+    document.getElementById('stCount').textContent = (d.stats && d.stats.count) || rows.length;
+    document.getElementById('stGood').textContent = ((d.stats && d.stats.goodCount) || 0) + '本';
     document.getElementById('stats').style.display = 'flex';
 
     listEl.innerHTML = '<div class="sec">掲載ワイン（評価順）</div>' + rows.map(w => {
       const price = w.price != null ? '¥' + Math.round(w.price).toLocaleString('ja-JP') : '';
-      const badge = Number(w.osu_gbm) >= 0.1 ? '<span class="wbadge">💰 コスパ良好</span>' : '';
+      const badge = w.cospaLevel ? '<span class="wbadge">💰 コスパ良好</span>' : '';
       return `<div class="wcard">
         <div class="wname">${esc(w.name)}${w.vintage && w.vintage!=='NV' ? ' ' + esc(w.vintage) : ''}</div>
         <div class="wmeta">${esc([w.iro, w.kuni, w.chiiki].filter(v => v && v !== '不明').join(' ・ '))}</div>
         <div class="wrow">
           <span class="wprice">${price}</span>
           ${badge}
-          <button class="wherebtn" onclick="toggleWhere(${w.id}, this)">📍 どこで飲める？</button>
+          ${w.id != null ? `<button class="wherebtn" onclick="toggleWhere(${w.id}, this)">📍 どこで飲める？</button>` : ''}
         </div>
-        <div class="wherebox" id="where-${w.id}"></div>
+        ${w.id != null ? `<div class="wherebox" id="where-${w.id}"></div>` : ''}
       </div>`;
     }).join('');
   } catch (e) {

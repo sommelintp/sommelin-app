@@ -486,16 +486,17 @@ document.getElementById('searchInput').addEventListener('keydown', e => {
   }
 });
 
-// ── ソムリン評価（Supabase master と照合：SP＋コスパ） ──
+// ── ソムリン評価（バックエンドAPIと照合：総合評価＋コスパ） ──
+// 2026-07-09: match_wines RPCの直叩き(anonキー)はバックエンド経由(/api/wine-search。
+// sanitize済み・total/cospaLevelのみ)に統一。SB_URL/SB_KEYは他の用途(店舗情報取得等・
+// sp/osuを含まない)でまだ使うため残す。
 const SB_URL = 'https://gkhdpzfmqraliwaiubwl.supabase.co';
 const SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
-function _cospa(osu){
-  if(osu==null||isNaN(osu)) return {st:'—',lbl:'コスパ算定中',bg:'#9aa0a6'};
-  if(osu>=0.5)  return {st:'★★★★★',lbl:'圧倒的コスパ',bg:'#1e8449'};
-  if(osu>=0.3)  return {st:'★★★★', lbl:'高コスパ',  bg:'#27ae60'};
-  if(osu>=0.1)  return {st:'★★★',  lbl:'良コスパ',  bg:'#9B1B4B'};
-  if(osu>=-0.1) return {st:'★★',   lbl:'価格相応',  bg:'#8a6d3b'};
-  return               {st:'★',    lbl:'やや割高',  bg:'#a5673f'};
+const API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+function _cospa(level){
+  if(level==='top')  return {st:'★★★★★',lbl:'圧倒的コスパ',bg:'#1e8449'};
+  if(level==='good') return {st:'★★★★', lbl:'高コスパ',  bg:'#27ae60'};
+  return                    {st:'★★★',  lbl:'標準的',    bg:'#8a6d3b'};
 }
 function _p(p){ return (p==null||isNaN(p))?'—':('¥'+Math.round(p).toLocaleString('ja-JP')); }
 function _sp(s){ return (s==null||isNaN(s))?'—':Number(s).toFixed(1); }
@@ -504,23 +505,21 @@ async function loadMaster(q){
   el.innerHTML='<div style="padding:10px 4px;color:#999;font-size:12px;">🍷 ソムリン評価を照合中…</div>';
   let rows=[];
   try{
-    const r=await fetch(SB_URL+'/rest/v1/rpc/match_wines',{method:'POST',
-      headers:{'Content-Type':'application/json',apikey:SB_KEY,'Authorization':'Bearer '+SB_KEY},
-      body:JSON.stringify({q:q,lim:5})});
-    if(r.ok) rows=await r.json();
+    const r=await fetch(API_BASE+'/api/wine-search?q='+encodeURIComponent(q)+'&lim=5');
+    if(r.ok){ const d=await r.json(); rows=d.items||[]; }
   }catch(e){}
   if(!rows||!rows.length){ el.innerHTML=''; return; }   // 見つからなければ非表示（外部リンクは残す）
   const top=rows[0];
-  const cp=_cospa(top.osu_gbm!=null?top.osu_gbm:top.osu_lin);
+  const cp=_cospa(top.cospaLevel);
   const region=[top.kuni,top.chiiki].filter(v=>v&&v!=='不明').join(' ');
   const vint=(top.vintage&&top.vintage!=='NV')?(' '+top.vintage):'';
   let alts='';
   if(rows.length>1){
     alts=rows.slice(1,3).map(w=>{
-      const c=_cospa(w.osu_gbm!=null?w.osu_gbm:w.osu_lin);
+      const c=_cospa(w.cospaLevel);
       return `<div onclick="doSearch('${(w.name||'').replace(/'/g,"\\'")}')" style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;background:#faf7f8;border-radius:10px;margin-top:6px;cursor:pointer;">
         <div style="min-width:0;"><div style="font-size:12px;font-weight:700;color:#2C1810;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(w.name||'')}</div><div style="font-size:10px;color:#999;">${escHtml([w.kuni,w.chiiki].filter(v=>v&&v!=='不明').join(' '))}</div></div>
-        <div style="text-align:right;white-space:nowrap;"><div style="font-size:11px;color:${c.bg};font-weight:800;">${c.st}</div><div style="font-size:10px;color:#888;">${_sp(w.sp)}/10</div></div>
+        <div style="text-align:right;white-space:nowrap;"><div style="font-size:11px;color:${c.bg};font-weight:800;">${c.st}</div><div style="font-size:10px;color:#888;">${_sp(w.total)}/5</div></div>
       </div>`;
     }).join('');
   }
@@ -531,8 +530,8 @@ async function loadMaster(q){
       <div style="font-size:12px;color:#888;margin:3px 0 10px;">${escHtml(region)}${top.producer?(' / '+escHtml(top.producer)):''}</div>
       <div style="display:flex;gap:10px;align-items:stretch;">
         <div style="flex:1;text-align:center;background:#faf7f8;border-radius:10px;padding:10px;">
-          <div style="font-size:22px;font-weight:900;color:#9B1B4B;line-height:1;">${_sp(top.sp)}</div>
-          <div style="font-size:10px;color:#999;margin-top:3px;">SP（ソムリン評価）</div>
+          <div style="font-size:22px;font-weight:900;color:#9B1B4B;line-height:1;">${_sp(top.total)}</div>
+          <div style="font-size:10px;color:#999;margin-top:3px;">総合評価（5点満点）</div>
         </div>
         <div style="flex:1;text-align:center;background:#faf7f8;border-radius:10px;padding:10px;">
           <div style="font-size:18px;font-weight:900;color:#2C1810;line-height:1.2;">${_p(top.price)}</div>

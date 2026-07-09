@@ -3588,41 +3588,9 @@ async function loadRealEvents() {
   } catch (err) { /* オフライン時はカレンダーが空のまま（ダミーは出さない） */ }
 }
 
-// ===== RANKING（実データ: winesマスターをコスパ=おすすめ度順に） =====
-async function loadRealRanking() {
-  const box = document.getElementById('rankingWines');
-  try {
-    const url = EV_SB_URL + '/rest/v1/wines'
-      + '?select=id,name,producer,kuni,chiiki,vintage,price,sp,osu_gbm'
-      + '&sp=not.is.null&osu_gbm=not.is.null&order=osu_gbm.desc&limit=10';
-    const r = await fetch(url, { headers: { apikey: EV_SB_KEY, Authorization: 'Bearer ' + EV_SB_KEY } });
-    if (!r.ok) throw 0;
-    const rows = await r.json();
-    if (!rows.length) throw 0;
-    const escR = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-    box.innerHTML = rows.map((w, i) => {
-      const badge = i===0 ? 'r1' : i===1 ? 'r2' : i===2 ? 'r3' : 'rn';
-      const region = [w.kuni, w.chiiki].filter(v => v && v !== '不明').join(' ');
-      const price = w.price != null ? '¥' + Math.round(w.price).toLocaleString('ja-JP') : '—';
-      return `
-      <div class="ranking-wine-card">
-        <div class="rank-badge ${badge}">${i+1}</div>
-        <div class="rank-wine-info">
-          <div class="rank-wine-name">${escR(w.name)}${w.vintage && w.vintage!=='NV' ? ' ' + escR(w.vintage) : ''}</div>
-          <div class="rank-wine-region">${escR(region)}${w.producer ? ' / ' + escR(w.producer) : ''}</div>
-          <div class="rank-wine-stats">
-            <span class="rank-stat">参考価格 <strong>${price}</strong></span>
-            <span class="rank-stat">💫 コスパ最上位</span>
-          </div>
-        </div>
-        <div class="rank-score">${Number(w.sp).toFixed(1)}<small>SP</small></div>
-      </div>`;
-    }).join('')
-    + '<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;">ソムリン実評価データ（SP）×コスパ（おすすめ度）順</div>';
-  } catch (e) {
-    box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">ランキングを読み込めませんでした（通信環境をご確認ください）</div>';
-  }
-}
+// 2026-07-09: loadRealRanking()は削除。#rankingWines要素は既にHTMLに存在せず、
+// Supabaseへ直接(anonキーで)生sp/osuを取得するだけの死んだコード＋漏洩経路だった。
+// 同じ「実データランキング」はloadTopWines()が/api/top-wines経由で正しく提供している。
 
 // ===== 実店舗ワインリスト（QR: prototype.html?r=<店舗ID> → restaurant_wines） =====
 async function loadRestaurantList(rid) {
@@ -3670,16 +3638,8 @@ async function loadRestaurantList(rid) {
     }));
     wines = classicWines.map(w => ({ name: w.name, producer: w.producer, note: '', flavors: [], mariage: [] }));
 
-    // マスター一致分に実SP・コスパを添える（無いものには出さない）
-    const ids = rows.map(r => r.wine_id).filter(Boolean);
-    if (ids.length) {
-      const mr = await fetch(EV_SB_URL + '/rest/v1/wines?id=in.(' + ids.join(',') + ')&select=id,sp,osu_gbm', { headers: hdrs });
-      if (mr.ok) {
-        const byId = {};
-        (await mr.json()).forEach(x => byId[x.id] = x);
-        classicWines.forEach(w => { const m = w.wineId && byId[w.wineId]; if (m && m.sp != null) { w.sp = m.sp; w.osu = m.osu_gbm; } });
-      }
-    }
+    // 2026-07-09: 一覧まとめてSP補完（Supabase直叩き・生sp/osuの漏洩経路）は削除。
+    // このリスト表示では評価バッジを省略する（w.sp未設定のままなら自然に非表示になる）。
 
     // 店舗ビュー（クラシックリスト）で表示
     isListView = true;
@@ -4681,7 +4641,6 @@ function handleEnter(e) {
   loadHomeFeed();
   loadRealEvents();
   loadTopWines();
-  loadRealRanking();
   renderRealVisits();
   loadVisitsFromServer();
   // QRから開いた場合は実店舗のワインリストを表示

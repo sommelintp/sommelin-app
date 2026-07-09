@@ -84,6 +84,9 @@ textarea{ min-height:90px; resize:vertical; }
 <script>
 const SB_URL = 'https://gkhdpzfmqraliwaiubwl.supabase.co';
 const SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+// 2026-07-09: wines直叩き(previewWines)はバックエンド経由(/api/producer-wine-count)に統一。
+// SB_URL/SB_KEYは他の用途(producer_claims/app_events)でまだ使うため残す。
+const API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
 const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2600); }
 
@@ -96,11 +99,11 @@ function previewWines() {
   if (name.length < 2) { pv.classList.remove('show'); return; }
   pvTimer = setTimeout(async () => {
     try {
-      const r = await fetch(SB_URL + '/rest/v1/wines?producer=ilike.' + encodeURIComponent('*' + name + '*')
-        + '&select=id&limit=100', { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } });
-      const rows = await r.json();
-      if (rows.length) {
-        pv.innerHTML = `🍷 「${esc(name)}」に一致するワインが <b>${rows.length}${rows.length >= 100 ? '本以上' : '本'}</b> 掲載されています`;
+      const r = await fetch(API_BASE + '/api/producer-wine-count?producer=' + encodeURIComponent(name));
+      const d = await r.json();
+      const count = d.count || 0;
+      if (count) {
+        pv.innerHTML = `🍷 「${esc(name)}」に一致するワインが <b>${count}本</b> 掲載されています`;
         pv.classList.add('show');
       } else {
         pv.innerHTML = `掲載中のワインは見つかりませんでした（表記ゆれの可能性もあります。そのまま申請いただけます）`;

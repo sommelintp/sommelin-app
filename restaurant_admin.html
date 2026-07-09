@@ -2389,7 +2389,7 @@ async function loadAnalytics() {
       <div style="font-size:12px;font-weight:800;color:var(--text);">🍷 リスト構成（提供中 ${d.list.total}本）</div>
       ${cats.length ? cats.map(([k,v]) => bar(CAT_JA[k]||k, v, cmax, 'var(--burgundy)')).join('') : '<div style="font-size:11px;color:var(--text-sub);margin-top:8px;">ワインリストにワインを追加するとここに出ます</div>'}
       ${bandEntries.length ? '<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-top:14px;">ボトル価格帯</div>' + bandEntries.map(([k,v]) => bar(k, v, bmax, 'var(--gold)')).join('') : ''}
-      ${(d.list.cospaTop||[]).length ? '<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-top:14px;">💫 リスト内のコスパ上位</div>' + d.list.cospaTop.map(w => `<div style="font-size:12px;color:var(--text);margin-top:5px;">・${esc(w.name)} <span style="color:var(--gold);font-weight:700;">評価 ${w.sp}</span></div>`).join('') : ''}
+      ${(d.list.cospaTop||[]).length ? '<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-top:14px;">💫 リスト内のコスパ上位</div>' + d.list.cospaTop.map(w => `<div style="font-size:12px;color:var(--text);margin-top:5px;">・${esc(w.name)} <span style="color:var(--gold);font-weight:700;">${w.cospaLevel==='top'?'圧倒的コスパ':'コスパ良好'}</span></div>`).join('') : ''}
     </div>`;
 
     // ④ 試飲メモ
@@ -3618,14 +3618,21 @@ let tnNotes = [];    // 保存済み
 
 function tnEsc(s) { return String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
-// ソムリンおすすめ度（コスパ=osu）→ 星5表示。SPより受け取りやすいポジティブ指標を前面に
-function tnOsuStars(osu) {
-  if (osu == null || isNaN(osu)) return null;
-  if (osu >= 0.5)  return '★★★★★';
-  if (osu >= 0.3)  return '★★★★';
-  if (osu >= 0.1)  return '★★★';
-  if (osu >= -0.1) return '★★';
-  return '★';
+// ソムリンおすすめ度（コスパ）→ 星5表示。
+// 2026-07-09: バックエンドが生osuを返さなくなったため、以後の新規保存はカテゴリ値
+// cospaLevel('top'/'good')を渡す。既存保存済みレコードのosu(生の数値)も表示できるよう
+// 数値互換を残す。
+function tnOsuStars(v) {
+  if (v === 'top') return '★★★★★';
+  if (v === 'good') return '★★★';
+  if (typeof v === 'number' && !isNaN(v)) {
+    if (v >= 0.5)  return '★★★★★';
+    if (v >= 0.3)  return '★★★★';
+    if (v >= 0.1)  return '★★★';
+    if (v >= -0.1) return '★★';
+    return '★';
+  }
+  return null;
 }
 function tnMyStars(rating, editableIdx) {
   // editableIdx を渡すとタップで編集できる★列（保存前の入力用）
@@ -3698,9 +3705,9 @@ async function tnProcessFiles(files) {
           vintage: (w && w.vintage) || (id.vintage != null ? String(id.vintage) : null),
           region: w ? [w.kuni, w.chiiki].filter(v=>v&&v!=='不明').join(' ') : [id.country, id.region].filter(Boolean).join(' '),
           color: id.color || null,
-          sp: w ? w.sp : null,
+          total: w ? w.total : null,
           ref_price: w ? w.price : null,
-          osu: w ? (w.osu_gbm != null ? w.osu_gbm : w.osu_lin) : null,
+          cospaLevel: w ? w.cospaLevel : null,
           rating: null,
           importer_name: '', memo: '',
         });
@@ -3716,7 +3723,7 @@ function renderTnStaging() {
   const box = document.getElementById('tnStaging');
   wrap.style.display = tnStaged.length ? 'block' : 'none';
   box.innerHTML = tnStaged.map((s, i) => {
-    const osuStars = tnOsuStars(s.osu);
+    const osuStars = tnOsuStars(s.cospaLevel);
     return `
     <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;">
       <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
@@ -3746,11 +3753,13 @@ async function tnSaveStaged() {
   if (!tnStaged.length) return;
   const uid = await rwUid();
   if (!uid) { alert('ログイン情報を確認できません。再ログインしてください。'); return; }
+  // 2026-07-09: sp/osuは内部指標につきAPIから受け取れなくなった。tasting_notesの
+  // sp/osu列の型・要否はDB側の確認が必要なため、ここでは送らない（列自体はnullのまま残る）。
   const payload = tnStaged.map(s => ({
     owner_id: uid, wine_id: s.wine_id, name: s.name, producer: s.producer,
     vintage: s.vintage, region: s.region, color: s.color,
     importer_name: s.importer_name.trim() || null, memo: s.memo.trim() || null,
-    sp: s.sp, ref_price: s.ref_price, osu: s.osu, rating: s.rating || null,
+    ref_price: s.ref_price, rating: s.rating || null,
     condition_issue: s.condition_issue === true,
   }));
   try {
@@ -3822,9 +3831,8 @@ function renderTnList() {
       ${n.memo ? `<div style="font-size:12px;color:#555;margin-top:6px;">💬 ${tnEsc(n.memo)}</div>` : ''}
       ${tnPriceHint(n.ref_price)}
       <details style="margin-top:8px;" ${n.wine_id ? `ontoggle="if(this.open)tnLoadBuzz('${n.id}',${n.wine_id})"` : ''}>
-        <summary style="font-size:11px;color:var(--text-sub);cursor:pointer;font-weight:700;">詳細（SP・みんなの評価）</summary>
+        <summary style="font-size:11px;color:var(--text-sub);cursor:pointer;font-weight:700;">詳細（総合評価・みんなの評価）</summary>
         <div style="background:#faf7f4;border-radius:10px;padding:10px 12px;margin-top:6px;font-size:12px;line-height:1.9;">
-          <div>SP <b>${n.sp != null ? Number(n.sp).toFixed(1) : '—'}</b> <span style="font-size:10px;color:var(--text-sub);">（ソムリン評価。プロ向けの辛口基準のため低めに出やすい指標です）</span></div>
           <div id="tnBuzz-${n.id}">${n.wine_id ? 'みんなの評価 読み込み中…' : 'みんなの評価 —（ソムリンDB未登録のため集計できません）'}</div>
         </div>
       </details>
