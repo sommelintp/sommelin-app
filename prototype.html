@@ -4,19 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Sommelin — ワインリスト</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --burgundy: #9B1B4B;
+    /* 2026-07-09: --burgundy/--burgundy-pale/--text/--text-sub/--border/--goldは
+       sommelin-ui.cssのブランドトークンに一本化（このページでは重複定義しない） */
     --burgundy-light: #C84B6B;
-    --burgundy-pale: #f9f0f3;
     --wine-dark: #5C0E2A;
-    --text: #2C1A1D;
-    --text-sub: #7A5A62;
     --bg: #FAFAF8;
     --white: #ffffff;
-    --border: #ecdde2;
     --gray: #7A8C7E;
-    --gold: #C9973A;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1190,10 +1189,12 @@
     align-items: center;
     gap: 3px;
     cursor: pointer;
-    padding: 4px;
+    padding: 6px 4px 4px;
+    border-top: 2px solid transparent;
+    margin-top: -1px;
   }
 
-  .nav-icon { font-size: 22px; }
+  .nav-icon { width: 22px; height: 22px; stroke: var(--text-sub); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 
   .nav-label {
     font-size: 10px;
@@ -1201,6 +1202,8 @@
     font-weight: 500;
   }
 
+  .nav-item.active { border-top-color: var(--foil); }
+  .nav-item.active .nav-icon { stroke: var(--burgundy); }
   .nav-item.active .nav-label { color: var(--burgundy); font-weight: 700; }
 
   /* ===== SOMURIN SVG ===== */
@@ -1218,18 +1221,21 @@
   .screen.active { display: block; }
 
   .screen-header {
-    background: var(--burgundy);
+    background: linear-gradient(175deg, var(--wine-deep) 0%, var(--burgundy) 90%);
+    border-bottom: 1px solid var(--foil);
     padding: 20px 20px 16px;
     color: white;
   }
   .screen-header h2 {
-    font-size: 20px;
+    font-family: var(--font-display);
+    font-size: 22px;
     font-weight: 700;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.02em;
   }
   .screen-header p {
     font-size: 12px;
-    opacity: 0.75;
+    color: var(--foil-pale);
+    opacity: 0.9;
     margin-top: 4px;
   }
 
@@ -1408,24 +1414,27 @@
     font-weight: 600;
     color: var(--text-sub);
     cursor: pointer;
-    border-bottom: 3px solid transparent;
+    border-bottom: 2px solid transparent;
     transition: all 0.15s;
     white-space: nowrap;
   }
-  .ranking-tab.active { color: var(--burgundy); border-bottom-color: var(--burgundy); }
+  .ranking-tab.active { color: var(--burgundy); border-bottom-color: var(--foil); font-weight: 700; }
 
   .ranking-list { padding: 12px; }
 
   .ranking-wine-card {
+    position: relative;
     background: white;
     border-radius: 14px;
     border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(42, 22, 27, .05);
     margin-bottom: 10px;
     padding: 14px 16px;
     display: flex;
     align-items: center;
     gap: 14px;
   }
+  .ranking-wine-card.is-top { padding-top: 18px; }
   .rank-badge {
     width: 32px;
     height: 32px;
@@ -1443,13 +1452,13 @@
   .rank-badge.rn { background: var(--burgundy-pale); color: var(--burgundy); }
 
   .rank-wine-info { flex: 1; min-width: 0; }
-  .rank-wine-name { font-size: 14px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rank-wine-name { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .rank-wine-region { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
   .rank-wine-stats { display: flex; gap: 10px; margin-top: 5px; }
   .rank-stat { font-size: 11px; color: var(--text-sub); }
   .rank-stat strong { color: var(--burgundy); }
-  .rank-score { font-size: 22px; font-weight: 800; color: var(--burgundy); flex-shrink: 0; }
-  .rank-score small { font-size: 12px; font-weight: 500; }
+  .rank-score { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--burgundy); flex-shrink: 0; }
+  .rank-score small { font-size: 11px; font-weight: 600; color: var(--text-sub); margin-left: 1px; }
 
   .ranking-user-card {
     background: white;
@@ -1813,6 +1822,8 @@
     font-family: inherit;
   }
 </style>
+<!-- sommelin-ui.css: ブランドトークン・共通部品（インライン<style>より後に読み込み、トークンを勝たせる） -->
+<link rel="stylesheet" href="assets/sommelin-ui.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
@@ -2152,13 +2163,13 @@
 <!-- ===== ホーム(発見フィード) SCREEN ===== -->
 <div id="homeScreen" class="screen">
   <div class="screen-header">
-    <h2>🏠 ホーム</h2>
+    <h2>ホーム</h2>
     <p>気になる人・似た好みの人のワインをお届け</p>
   </div>
   <!-- マイセラー（2026-07-08追加: マイページからホームへ移動） -->
   <div style="margin:0 20px 16px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-      <div style="font-size:14px;font-weight:800;color:var(--text);">🗄️ マイセラー</div>
+      <div style="font-size:14px;font-weight:800;color:var(--text);font-family:var(--font-display);">マイセラー</div>
       <a href="cellar.html" style="font-size:12px;color:var(--burgundy);font-weight:700;text-decoration:none;">すべて見る ›</a>
     </div>
     <div id="homeCellarPreview" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:2px;">
@@ -2174,7 +2185,7 @@
 <!-- ===== 履歴 SCREEN ===== -->
 <div id="historyScreen" class="screen">
   <div class="screen-header">
-    <h2>📍 履歴</h2>
+    <h2>履歴</h2>
     <p>訪問したお店とワインの記録</p>
   </div>
 
@@ -2328,18 +2339,18 @@
 <!-- ===== 探す SCREEN（2026-07-08: 旧ランキング画面を拡張。マイページの検索系機能をここに集約） ===== -->
 <div id="rankingScreen" class="screen">
   <div class="screen-header">
-    <h2>🔍 探す</h2>
+    <h2>探す</h2>
     <p>ワイン・お店・人をみつける</p>
   </div>
   <div style="display:flex;gap:8px;padding:0 16px 12px;overflow-x:auto;">
-    <a href="wine_search.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;">🔎 ワイン検索</a>
-    <a href="reviewer_hub.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;">🧑‍🍳 レビュアーを探す</a>
-    <a href="wine_social.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;">👥 好みが近い人</a>
-    <a href="filter_market.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;">🎨 みんなのフィルター</a>
+    <a href="wine_search.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;">ワイン検索</a>
+    <a href="reviewer_hub.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;">レビュアーを探す</a>
+    <a href="wine_social.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;">好みが近い人</a>
+    <a href="filter_market.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;">みんなのフィルター</a>
   </div>
   <div class="ranking-tabs">
-    <div class="ranking-tab active" id="rtab-pop" onclick="switchRankingTab('pop')">🏆 総合人気</div>
-    <div class="ranking-tab" id="rtab-store" onclick="switchRankingTab('store')">🤵 お店</div>
+    <div class="ranking-tab active" id="rtab-pop" onclick="switchRankingTab('pop')">総合人気</div>
+    <div class="ranking-tab" id="rtab-store" onclick="switchRankingTab('store')">お店</div>
   </div>
 
   <!-- ソート・絞り込み（2026-07-08追加: 高額ワインばかり並ぶ不具合の対策＋詳細検索を追加） -->
@@ -2573,25 +2584,25 @@
 <!-- BOTTOM NAV -->
 <div class="bottom-nav">
   <div class="nav-item" id="nav-home" onclick="switchTab('home')">
-    <span class="nav-icon">🏠</span>
+    <svg class="nav-icon"><use href="assets/sommelin-icons.svg#i-home"></use></svg>
     <span class="nav-label" data-i18n="nav_home">ホーム</span>
   </div>
   <div class="nav-item" id="nav-ranking" onclick="switchTab('ranking')">
-    <span class="nav-icon">🔍</span>
+    <svg class="nav-icon"><use href="assets/sommelin-icons.svg#i-search"></use></svg>
     <span class="nav-label" data-i18n="nav_search">探す</span>
   </div>
   <div class="nav-item" id="nav-camera" onclick="location.href='scouter.html'">
-    <span class="nav-icon">📷</span>
+    <svg class="nav-icon"><use href="assets/sommelin-icons.svg#i-camera"></use></svg>
     <span class="nav-label" data-i18n="nav_camera">記録</span>
   </div>
   <div class="nav-item" id="nav-consult" onclick="location.href='sommelier-chat.html'">
-    <span class="nav-icon">💬</span>
+    <svg class="nav-icon"><use href="assets/sommelin-icons.svg#i-chat"></use></svg>
     <span class="nav-label" data-i18n="nav_consult">相談</span>
   </div>
 </div>
 
 <!-- ハンバーガーメニュー（マイページ・履歴への入口。2026-07-08: 下ナビを4タブに整理したため常時表示のボタンに変更） -->
-<button id="hamburgerBtn" onclick="switchTab('mypage')" aria-label="メニュー" style="position:fixed;top:calc(env(safe-area-inset-top) + 14px);right:16px;z-index:160;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.92);border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.12);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;">☰</button>
+<button id="hamburgerBtn" onclick="switchTab('mypage')" aria-label="メニュー" style="position:fixed;top:calc(env(safe-area-inset-top) + 14px);right:16px;z-index:160;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.92);border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg style="width:20px;height:20px;stroke:var(--text);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;"><use href="assets/sommelin-icons.svg#i-menu"></use></svg></button>
 <!-- 業務モード切り替え（2026-07-08追加: 業務店アカウントでも個人機能を使えるようにする導線の逆方向） -->
 <button id="bizModeBtn" aria-label="業務モードに切り替え" title="業務モードに切り替え" style="display:none;position:fixed;top:calc(env(safe-area-inset-top) + 14px);right:64px;z-index:160;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.92);border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.12);font-size:17px;align-items:center;justify-content:center;cursor:pointer;">🏪</button>
 
@@ -3524,14 +3535,15 @@ async function loadTopWines() {
       const region = [w.kuni, w.chiiki].filter(v => v && v !== '不明').join(' ');
       const price = w.price != null ? '¥' + Math.round(w.price).toLocaleString('ja-JP') : '—';
       const revTxt = it.communityCount > 0
-        ? `🗣 みんなの評価 <strong>${it.communityAvg ?? '—'}</strong>（${it.communityCount}件）`
+        ? `みんなの評価 <strong>${it.communityAvg ?? '—'}</strong>（${it.communityCount}件）`
         : '総合評価ベース';
-      const cospaBadge = it.goodValue ? '<span class="rank-stat">💰 コスパ良好</span>' : '';
+      const cospaBadge = it.goodValue ? '<span class="s-badge-cospa">コスパ良好</span>' : '';
       const producerLink = w.producer
         ? ` / <a href="producer.html?p=${encodeURIComponent(w.producer)}" style="color:inherit;text-decoration:underline;text-decoration-color:var(--border);">${escR(w.producer)}</a>`
         : '';
       return `
-      <div class="ranking-wine-card">
+      <div class="ranking-wine-card${i===0 ? ' is-top' : ''}">
+        ${i===0 ? '<div class="label-rule label-rule--on-card" style="position:absolute;left:16px;right:16px;top:4px;"></div>' : ''}
         <div class="rank-badge ${badge}">${i+1}</div>
         <div class="rank-wine-info">
           <div class="rank-wine-name">${escR(w.name)}${w.vintage && w.vintage!=='NV' ? ' ' + escR(w.vintage) : ''}</div>

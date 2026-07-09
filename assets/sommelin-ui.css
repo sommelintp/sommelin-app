@@ -1,0 +1,157 @@
+/* ============================================================
+   Sommelin UI v1 — デザイントークン＋共通部品
+   コンセプト: 「ワインラベルの品格 × スカウターの軽快さ」
+   設計: デザインシステム_ソムリン_2026-07.md（Fable策定）
+   使い方: 各ページの<head>でこのCSSとGoogle Fontsを読み込み、
+   既存のインラインCSSから段階的にこちらのクラス/変数へ寄せる。
+   ============================================================ */
+
+:root {
+  /* 色 — ワインの実世界から */
+  --wine-ink: #2A161B;      /* 墨。ワイン澱色の本文 */
+  --wine-deep: #4A1220;     /* 熟成赤の深部 */
+  --wine: #7A1F3D;          /* ブランド主色 */
+  --wine-bright: #9B1B4B;   /* 既存ブランド色。アクセント */
+  --foil: #B8923D;          /* 箔押しの金 */
+  --foil-pale: #E8C97A;     /* 明るい金（ダーク背景上） */
+  --paper: #FBF7F0;         /* ラベル紙 */
+  --paper-warm: #F4ECE0;    /* 影のある紙 */
+  --text-sub: #8A7A6E;      /* 補足テキスト */
+  --line: #E5D9C9;          /* 紙のhairline */
+
+  /* 旧トークンの橋渡し（既存ページのvar参照を壊さない） */
+  --burgundy: var(--wine);
+  --burgundy-pale: #F3E4E9;
+  --gold: var(--foil);
+  --text: var(--wine-ink);
+  --border: var(--line);
+
+  /* 書体 */
+  --font-display: "Shippori Mincho", "Cormorant Garamond", "Hiragino Mincho ProN", serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+
+/* ── ベース ── */
+.s-page { background: var(--paper); color: var(--wine-ink); font-family: var(--font-body); }
+
+/* ── シグネチャ: ラベル罫（二重hairline＋中央の金ダイヤ）──
+   1画面2〜3箇所まで。ワインカード上辺・主要セクション見出し下に。 */
+.label-rule {
+  position: relative; height: 9px; margin: 2px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.label-rule::after {
+  content: '◆'; position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%) scale(.55);
+  color: var(--foil); font-size: 10px; line-height: 1;
+  background: inherit; padding: 0 8px;
+}
+.label-rule--on-card::after { background: #fff; }
+.label-rule--on-paper::after { background: var(--paper); }
+
+/* ── ヘッダー ── */
+.s-header {
+  background: linear-gradient(175deg, var(--wine-deep) 0%, var(--wine) 90%);
+  border-bottom: 1px solid var(--foil);
+  color: #fff; padding: 18px 20px 14px;
+}
+.s-header .s-title {
+  font-family: var(--font-display); font-weight: 700; font-size: 24px;
+  letter-spacing: .02em; margin: 0;
+}
+.s-header .s-subtitle {
+  font-size: 12.5px; color: var(--foil-pale); margin-top: 4px; font-weight: 500;
+  letter-spacing: .01em;
+}
+
+/* ── 下タブナビ ── */
+.s-nav {
+  display: flex; background: #fff; border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.s-nav .s-nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 9px 0 7px; color: var(--text-sub); font-size: 10.5px; font-weight: 700;
+  text-decoration: none; border: none; background: none; cursor: pointer;
+  border-top: 2px solid transparent; margin-top: -1px; font-family: var(--font-body);
+}
+.s-nav .s-nav-item.active { color: var(--wine); border-top-color: var(--foil); }
+.s-nav .s-icon { width: 22px; height: 22px; }
+
+/* ── SVGアイコン共通（細線・currentColor）── */
+.s-icon { stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── カード ── */
+.s-card {
+  background: #fff; border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: 0 1px 4px rgba(42, 22, 27, .05);
+  padding: 14px 16px;
+}
+.s-card .s-wine-name {
+  font-family: var(--font-display); font-weight: 700; font-size: 16px;
+  line-height: 1.4; color: var(--wine-ink);
+}
+.s-card .s-wine-meta { font-size: 11.5px; color: var(--text-sub); margin-top: 3px; }
+
+/* ── 総合点（唯一の公開数値。セリフの数字で品よく）── */
+.s-score { font-family: var(--font-display); font-weight: 700; color: var(--wine); }
+.s-score .s-score-num { font-size: 24px; letter-spacing: .01em; }
+.s-score .s-score-max { font-size: 11px; color: var(--text-sub); font-weight: 600; margin-left: 1px; }
+
+/* ── チップ・ボタン ── */
+.s-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 13px; border-radius: 18px; font-size: 12.5px; font-weight: 700;
+  background: #fff; color: var(--wine); border: 1px solid var(--line);
+  cursor: pointer; font-family: var(--font-body); text-decoration: none;
+}
+.s-pill.active { background: var(--wine); color: #fff; border-color: var(--wine); }
+.s-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 11px 18px; border-radius: 12px; font-size: 13.5px; font-weight: 800;
+  border: 1px solid var(--line); background: #fff; color: var(--wine);
+  cursor: pointer; font-family: var(--font-body);
+}
+.s-btn-primary { background: var(--wine); color: #fff; border-color: var(--wine); }
+.s-btn-gold { background: linear-gradient(135deg, var(--foil), #A07C2E); color: #fff; border: none; }
+
+/* ── セグメント切替（金の下線式）── */
+.s-segment { display: flex; border-bottom: 1px solid var(--line); background: var(--paper); }
+.s-segment .s-segment-item {
+  flex: 1; text-align: center; padding: 13px 0 11px; font-size: 13.5px; font-weight: 700;
+  color: var(--text-sub); border: none; background: none; cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px; font-family: var(--font-body);
+}
+.s-segment .s-segment-item.active { color: var(--wine); border-bottom-color: var(--foil); }
+
+/* ── セクション見出し（アイブロウ式・ラベルの版面らしく）── */
+.s-section-head {
+  font-size: 11.5px; font-weight: 800; color: var(--text-sub);
+  letter-spacing: .12em; text-transform: uppercase; margin: 18px 16px 8px;
+}
+.s-section-head .ja { letter-spacing: .06em; }
+
+/* ── フォーム部品 ── */
+.s-select, .s-input {
+  padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line);
+  background: #fff; color: var(--wine-ink); font-size: 13px; font-family: var(--font-body);
+}
+.s-select:focus, .s-input:focus, .s-btn:focus-visible, .s-pill:focus-visible,
+.s-nav .s-nav-item:focus-visible {
+  outline: 2px solid var(--foil); outline-offset: 1px;
+}
+
+/* ── バッジ ── */
+.s-badge-cospa {
+  display: inline-block; padding: 3px 9px; border-radius: 10px;
+  font-size: 10.5px; font-weight: 800; color: var(--wine);
+  background: var(--paper-warm); border: 1px solid var(--foil);
+}
+
+/* ── モーション（控えめに・reduced-motion尊重）── */
+.s-card, .s-pill, .s-btn { transition: transform .12s ease, box-shadow .12s ease; }
+.s-btn:active, .s-pill:active { transform: scale(.97); }
+@media (prefers-reduced-motion: reduce) {
+  .s-card, .s-pill, .s-btn { transition: none; }
+}
