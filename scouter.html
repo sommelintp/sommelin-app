@@ -250,6 +250,7 @@ body{
 #err .e2{font-size:12px;color:rgba(255,255,255,.7);line-height:1.7;}
 </style>
 <link rel="stylesheet" href="assets/sommelin-ui.css">
+<script src="assets/oshi-card.js"></script>
 </head>
 <body>
 
@@ -1179,7 +1180,13 @@ async function oshiMakeCard(){
   oshiCaption=oshiBuildCaption(info);
   try{ await navigator.clipboard.writeText(oshiCaption); }catch(e){}
   try{
-    const blob=await oshiDrawCard(info);
+    const blob=await OshiCard.draw({
+      template:'fan',
+      name: info.name, producer: info.producer, vintage: info.vintage,
+      photoDataUrl: oshiPhotoDataUrl, showScore: oshiShowScore, rating: oshiRating,
+      producerHandle: oshiHandle, storeName: oshiStoreResolved?oshiStoreResolved.name:null,
+      officialIg: OSHI_OFFICIAL_IG, appUrl: OSHI_APP_URL,
+    });
     oshiCardBlob=blob;
     const img=document.getElementById('oshiCardImg');
     img.src=URL.createObjectURL(blob);
@@ -1211,191 +1218,6 @@ function oshiBuildCaption(info){
   L.push(tags.join(' '));
   L.push(`📱 ${OSHI_APP_URL}`);
   return L.join('\n');
-}
-
-function oshiLoadImg(src){ return new Promise(res=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=()=>res(null); im.src=src; }); }
-function oshiWrap(ctx,text,maxW){
-  const out=[]; let line='';
-  for(const ch of String(text)){ if(ctx.measureText(line+ch).width>maxW && line){ out.push(line); line=ch; } else line+=ch; }
-  if(line) out.push(line);
-  return out.slice(0,3);
-}
-
-// 2026-07-09 v2: 「数字」ではなく「喜び」を主役に。写真ありは実写全面＋下部スクリム、
-// 写真なしはMY RATINGブロックを撤去。点数は oshiShowScore=true の時だけ、控えめに。
-async function oshiDrawCard(info){
-  const W=1080,H=1920;
-  const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
-  const ctx=cv.getContext('2d');
-  const F='-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif';
-
-  const [logo,chara]=await Promise.all([
-    oshiLoadImg('assets/sommelin/sommelin-logo.png'),
-    oshiLoadImg('assets/sommelin/sommelin-delighted.png')]);
-
-  if(oshiPhotoDataUrl){
-    await oshiDrawPhotoCard(ctx,W,H,F,info,logo);
-  }else{
-    oshiDrawClassicCard(ctx,W,H,F,info,logo,chara);
-  }
-
-  return new Promise(res=>cv.toBlob(res,'image/png'));
-}
-
-// 写真ありカード: ユーザーの実写を全面に、下部スクリムに文言を集約
-async function oshiDrawPhotoCard(ctx,W,H,F,info,logo){
-  const photo=await oshiLoadImg(oshiPhotoDataUrl);
-  if(photo){
-    const scale=Math.max(W/photo.naturalWidth,H/photo.naturalHeight);
-    const dw=photo.naturalWidth*scale, dh=photo.naturalHeight*scale;
-    ctx.drawImage(photo,(W-dw)/2,(H-dh)/2,dw,dh);
-  }else{
-    ctx.fillStyle='#3d0a1d'; ctx.fillRect(0,0,W,H);
-  }
-
-  // 下部スクリム（読みやすさ確保用の暗いグラデーション）
-  const scrimY=H*0.56;
-  const scrim=ctx.createLinearGradient(0,scrimY,0,H);
-  scrim.addColorStop(0,'rgba(20,4,10,0)'); scrim.addColorStop(0.4,'rgba(20,4,10,.78)'); scrim.addColorStop(1,'rgba(20,4,10,.95)');
-  ctx.fillStyle=scrim; ctx.fillRect(0,scrimY,W,H-scrimY);
-
-  // ロゴ（左上・控えめ）
-  if(logo){ const lw=110,lh=lw*(logo.naturalHeight/logo.naturalWidth); ctx.drawImage(logo,50,50,lw,lh); }
-
-  // 点数バッジ（右上・小さな円。ONの時だけ＝主役にはしない）
-  if(oshiShowScore){
-    const br=68, bx=W-56-br*2, by=56;
-    ctx.fillStyle='rgba(20,4,10,.55)';
-    ctx.beginPath(); ctx.arc(bx+br,by+br,br,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle='rgba(232,201,122,.6)'; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.arc(bx+br,by+br,br,0,Math.PI*2); ctx.stroke();
-    ctx.fillStyle='#fff'; ctx.textAlign='center';
-    ctx.font=`800 50px ${F}`; ctx.fillText(oshiRating.toFixed(1),bx+br,by+br+18);
-  }
-
-  // 下部テキスト
-  ctx.textAlign='center';
-  let y=H*0.68;
-  ctx.font=`800 30px ${F}`; ctx.fillStyle='#E8C97A'; ctx.letterSpacing='4px';
-  ctx.fillText('このワイン、美味しかった！',W/2,y); ctx.letterSpacing='0px';
-  y+=78;
-  ctx.font=`800 64px ${F}`; ctx.fillStyle='#fff';
-  const lines=oshiWrap(ctx,info.name,940);
-  for(const ln of lines){ ctx.fillText(ln,W/2,y); y+=78; }
-  if(info.producer){
-    ctx.font=`700 38px ${F}`; ctx.fillStyle='rgba(255,255,255,0.85)';
-    ctx.fillText(trunc(info.producer,26),W/2,y+8); y+=66;
-  }
-  if(oshiStoreResolved){
-    ctx.font=`600 30px ${F}`; ctx.fillStyle='rgba(255,255,255,0.65)';
-    ctx.fillText('at '+trunc(oshiStoreResolved.name,24),W/2,y+4); y+=44;
-  }
-  y+=16;
-  if(oshiHandle){
-    const txt=`📸 @${oshiHandle}`;
-    ctx.font=`800 40px ${F}`;
-    const tw=ctx.measureText(txt).width, pw=tw+70, ph=78, px=(W-pw)/2;
-    ctx.fillStyle='#C9973A';
-    ctx.beginPath(); ctx.roundRect(px,y,pw,ph,39); ctx.fill();
-    ctx.fillStyle='#3d0a1d'; ctx.fillText(txt,W/2,y+53);
-    y+=ph;
-  }else{
-    ctx.font=`700 36px ${F}`; ctx.fillStyle='rgba(255,255,255,0.9)';
-    ctx.fillText('ごちそうさまでした 🙏',W/2,y+16);
-    y+=50;
-  }
-
-  ctx.textAlign='center';
-  ctx.font=`600 28px ${F}`; ctx.fillStyle='rgba(255,255,255,.65)';
-  ctx.fillText('#Sommelin　'+OSHI_APP_URL.replace('https://',''),W/2,H-56);
-}
-
-// 写真なしカード: 従来のバーガンディ基調デザイン。MY RATINGブロックは撤去し、
-// 点数はONの時だけ縮小サイズで区切り線の下に表示。
-function oshiDrawClassicCard(ctx,W,H,F,info,logo,chara){
-  const g=ctx.createLinearGradient(0,0,W*0.6,H);
-  g.addColorStop(0,'#3d0a1d'); g.addColorStop(0.5,'#5C0E2A'); g.addColorStop(1,'#9B1B4B');
-  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-  ctx.fillStyle='rgba(255,255,255,0.045)';
-  ctx.beginPath(); ctx.arc(W*0.92,H*0.10,300,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(W*0.05,H*0.85,260,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle='rgba(201,151,58,0.10)';
-  ctx.beginPath(); ctx.arc(W*0.85,H*0.78,200,0,Math.PI*2); ctx.fill();
-
-  if(logo){ const lw=170,lh=lw*(logo.naturalHeight/logo.naturalWidth); ctx.drawImage(logo,(W-lw)/2,90,lw,lh); }
-  ctx.fillStyle='#E8C97A'; ctx.textAlign='center';
-  ctx.font=`800 34px ${F}`; ctx.letterSpacing='10px';
-  ctx.fillText('SOMMELIN',W/2,320); ctx.letterSpacing='0px';
-
-  ctx.font=`800 58px ${F}`; ctx.fillStyle='#E8C97A';
-  ctx.fillText('このワイン、美味しかった！',W/2,470);
-
-  ctx.font=`800 82px ${F}`; ctx.fillStyle='#fff';
-  const lines=oshiWrap(ctx,info.name,920);
-  let y=610;
-  for(const ln of lines){ ctx.fillText(ln,W/2,y); y+=100; }
-  ctx.font=`700 46px ${F}`; ctx.fillStyle='rgba(255,255,255,0.85)';
-  const sub=[info.producer,(info.vintage&&info.vintage!=='NV')?info.vintage:''].filter(Boolean).join('　');
-  if(sub){ ctx.fillText(trunc(sub,26),W/2,y+16); y+=76; }
-  if(oshiStoreResolved){
-    ctx.font=`600 32px ${F}`; ctx.fillStyle='rgba(255,255,255,0.6)';
-    ctx.fillText('at '+trunc(oshiStoreResolved.name,24),W/2,y+8); y+=48;
-  }
-
-  ctx.strokeStyle='#C9973A'; ctx.lineWidth=3;
-  ctx.beginPath(); ctx.moveTo(W/2-110,y+30); ctx.lineTo(W/2+110,y+30); ctx.stroke();
-  y+=80;
-
-  if(oshiShowScore){
-    ctx.font=`800 26px ${F}`; ctx.fillStyle='#E8C97A'; ctx.letterSpacing='7px';
-    ctx.fillText('MY RATING',W/2,y+40); ctx.letterSpacing='0px';
-    ctx.font=`800 88px ${F}`; ctx.fillStyle='#fff';
-    ctx.fillText(oshiRating.toFixed(1),W/2,y+150);
-    ctx.font=`700 30px ${F}`; ctx.fillStyle='rgba(255,255,255,0.6)';
-    ctx.fillText('/ 10',W/2,y+188);
-    const n5=oshiRating/2, ssize=40, sgap=ssize*1.35, sx0=W/2-sgap*2, sy=y+250;
-    ctx.font=`${ssize}px ${F}`; ctx.fillStyle='#C9973A';
-    for(let i=0;i<5;i++){
-      const sx=sx0+sgap*i, fill=Math.max(0,Math.min(1,n5-i));
-      ctx.fillText('☆',sx,sy);
-      if(fill>=0.75){ ctx.fillText('★',sx,sy); }
-      else if(fill>=0.25){
-        const sw=ctx.measureText('★').width;
-        ctx.save(); ctx.beginPath(); ctx.rect(sx-sw/2,sy-ssize,sw/2,ssize*1.4); ctx.clip();
-        ctx.fillText('★',sx,sy); ctx.restore();
-      }
-    }
-    y+=310;
-  }else{
-    y+=50;
-  }
-
-  // @生産者ハンドルのピル（無ければ「ごちそうさまでした」のみ）
-  if(oshiHandle){
-    const txt=`📸 @${oshiHandle}`;
-    ctx.font=`800 46px ${F}`;
-    const tw=ctx.measureText(txt).width, pw=tw+90, ph=92, px=(W-pw)/2, py=y;
-    ctx.fillStyle='#C9973A';
-    ctx.beginPath(); ctx.roundRect(px,py,pw,ph,46); ctx.fill();
-    ctx.fillStyle='#3d0a1d'; ctx.fillText(txt,W/2,py+62);
-    ctx.font=`600 32px ${F}`; ctx.fillStyle='rgba(255,255,255,0.75)';
-    ctx.fillText('ごちそうさまでした 🙏',W/2,py+160);
-  }else{
-    ctx.font=`700 42px ${F}`; ctx.fillStyle='rgba(255,255,255,0.9)';
-    ctx.fillText('ごちそうさまでした 🙏',W/2,y+50);
-  }
-
-  // ソムリン君（右下・ピルや文字と重ならないサイズ/位置）
-  if(chara){ const chH=300,chW=chH*(chara.naturalWidth/chara.naturalHeight);
-    ctx.drawImage(chara,W-chW-30,H-chH-90,chW,chH); }
-
-  // フッター
-  ctx.textAlign='left';
-  ctx.font=`700 34px ${F}`; ctx.fillStyle='rgba(255,255,255,0.85)';
-  ctx.fillText('#Sommelin',70,H-190);
-  if(OSHI_OFFICIAL_IG){ ctx.fillText('@'+OSHI_OFFICIAL_IG,70,H-140); }
-  ctx.font=`600 30px ${F}`; ctx.fillStyle='rgba(255,255,255,0.55)';
-  ctx.fillText(OSHI_APP_URL.replace('https://',''),70,H-90);
 }
 
 // Step5: 共有（Web Share API。非対応端末は保存を案内）
