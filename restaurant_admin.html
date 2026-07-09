@@ -1944,7 +1944,7 @@
         <label class="form-label">一言コメント（任意）</label>
         <textarea class="form-input" id="oshiCardComment" rows="3" maxlength="120" placeholder="例: 当店のグラスで一番人気。魚介と好相性です" style="resize:vertical;"></textarea>
       </div>
-      <div class="form-group">
+      <div class="form-group" id="oshiCardPriceGroup">
         <label class="form-label">価格表示</label>
         <select class="form-select" id="oshiCardPriceMode">
           <option value="none">表示しない</option>
@@ -1953,9 +1953,15 @@
           <option value="both" selected>グラス・ボトル両方</option>
         </select>
       </div>
+      <div class="form-group" id="oshiCardRatingGroup" style="display:none;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text);cursor:pointer;">
+          <input type="checkbox" id="oshiCardShowRating" checked style="accent-color:var(--burgundy);width:18px;height:18px;">
+          自分の★評価を載せる（<span id="oshiCardRatingLabel"></span>）
+        </label>
+      </div>
       <div class="modal-actions">
         <button class="btn-ghost" onclick="closeOshiCardModal()">キャンセル</button>
-        <button class="btn-primary" onclick="generateOshiStoreCard()">カードを作る</button>
+        <button class="btn-primary" onclick="generateOshiCard()">カードを作る</button>
       </div>
     </div>
 
@@ -3315,18 +3321,24 @@ function closeWineModalBg(e) {
 }
 
 // ============================================================
-// 📣 推しカード（D-2: 店→ワインの推し活。SP/total等の評価数値は載せない）
+// 📣 推しカード（D-2: 店→ワインの推し活／D-3: レビュアー発信カード）
+//   SP/total/参考価格等ソムリンの内部評価数値は一切載せない
 // ============================================================
 const OSHI_CARD_APP_URL = 'https://sommelintp.github.io/sommelin-app/';
-let oshiCardWineId = null, oshiCardBlob2 = null, oshiCardCaption2 = '', oshiCardStoreIg = null;
+let oshiCardMode = 'store';   // 'store' | 'reviewer'
+let oshiCardWineId = null, oshiCardNoteId = null, oshiCardBlob2 = null, oshiCardCaption2 = '';
+let oshiCardStoreIg = null, oshiCardReviewer = null;   // reviewer: {name, tierLabel, tierIcon, ig}
 
 async function openOshiCardModal(id) {
   const w = wineData.find(x => x.id === id);
   if (!w) return;
+  oshiCardMode = 'store';
   oshiCardWineId = id;
   document.getElementById('oshiCardWineName').textContent = w.name + (w.vintage ? ' ' + w.vintage : '');
   document.getElementById('oshiCardComment').value = '';
   document.getElementById('oshiCardPriceMode').value = 'both';
+  document.getElementById('oshiCardPriceGroup').style.display = 'block';
+  document.getElementById('oshiCardRatingGroup').style.display = 'none';
   document.getElementById('oshiCardFormWrap').style.display = 'block';
   document.getElementById('oshiCardPreviewWrap').style.display = 'none';
   document.getElementById('oshiStoreCardModal').classList.add('open');
@@ -3340,6 +3352,56 @@ async function openOshiCardModal(id) {
     }
   } catch (e) {}
 }
+
+// D-3: 試飲メモ（tasting_notes）から「レビュアー発信カード」を開く
+async function openOshiReviewerCardModal(noteId) {
+  const n = tnNotes.find(x => x.id === noteId);
+  if (!n) return;
+  oshiCardMode = 'reviewer';
+  oshiCardNoteId = noteId;
+  document.getElementById('oshiCardWineName').textContent = n.name + (n.vintage ? ' ' + n.vintage : '');
+  document.getElementById('oshiCardComment').value = n.memo || '';
+  document.getElementById('oshiCardPriceGroup').style.display = 'none';
+  document.getElementById('oshiCardFormWrap').style.display = 'block';
+  document.getElementById('oshiCardPreviewWrap').style.display = 'none';
+  document.getElementById('oshiStoreCardModal').classList.add('open');
+
+  if (n.rating) {
+    document.getElementById('oshiCardRatingGroup').style.display = 'block';
+    document.getElementById('oshiCardShowRating').checked = true;
+    document.getElementById('oshiCardRatingLabel').textContent = '★'.repeat(Math.round(n.rating)) + (n.rating % 1 ? '（' + n.rating + '）' : '');
+  } else {
+    document.getElementById('oshiCardRatingGroup').style.display = 'none';
+  }
+
+  // レビュアー情報（表示名・信頼度ティア・IG）を1回だけ取得
+  // フォールバック名は取得成否に関わらず必ず埋める（未ログイン相当でも空表示にしない）
+  oshiCardReviewer = {
+    name: (document.getElementById('stkStoreName').value || '').trim() || 'ソムリンユーザー',
+    tierLabel: tnNotes.length >= 20 ? '経験豊富なレビュアー' : '一般レビュアー',
+    tierIcon: tnNotes.length >= 20 ? '🍷' : '🙂',
+    ig: null,
+  };
+  try {
+    const uid = await rwUid();
+    if (uid) {
+      const [rr, pr] = await Promise.all([
+        rwFetch('rater_profiles?user_id=eq.' + uid + '&select=kind,verified,display_name'),
+        rwFetch('profiles?id=eq.' + uid + '&select=display_name,instagram'),
+      ]);
+      const rater = rr.ok ? (await rr.json())[0] : null;
+      const prof = pr.ok ? (await pr.json())[0] : null;
+      // ティア判定はバックエンドのreviewerTier(identify.js L2867)と同じ考え方。
+      // rater_profilesが引けない場合は投稿数(tnNotes.length)からのフォールバックのまま維持。
+      if (rater && rater.kind === 'founder') { oshiCardReviewer.tierLabel = '創業者'; oshiCardReviewer.tierIcon = '👑'; }
+      else if (rater && rater.kind === 'critic') { oshiCardReviewer.tierLabel = '評価誌・批評家'; oshiCardReviewer.tierIcon = '📰'; }
+      else if (rater && rater.verified) { oshiCardReviewer.tierLabel = '認定ソムリエ'; oshiCardReviewer.tierIcon = '🎖️'; }
+      oshiCardReviewer.name = (rater && rater.display_name) || (prof && prof.display_name) || oshiCardReviewer.name;
+      oshiCardReviewer.ig = (prof && prof.instagram) || null;
+    }
+  } catch (e) {}
+}
+
 function closeOshiCardModal() {
   document.getElementById('oshiStoreCardModal').classList.remove('open');
 }
@@ -3359,6 +3421,22 @@ function buildOshiStoreCaption(w, comment, priceMode) {
   L.push('#Sommelin #ソムリン #ワインのある時間');
   L.push(`📱 ${OSHI_CARD_APP_URL}`);
   return L.join('\n');
+}
+
+function buildOshiReviewerCaption(n, comment, showRating) {
+  const L = [];
+  L.push(`🍷 ${n.name}${n.vintage ? ' ' + n.vintage : ''}`);
+  if (comment) L.push(`「${comment}」`);
+  if (showRating && n.rating) L.push('私の評価 ' + '★'.repeat(Math.round(n.rating)) + '☆'.repeat(5 - Math.round(n.rating)));
+  L.push('');
+  L.push('#Sommelin #ソムリン #試飲メモ #ワイン好きと繋がりたい');
+  L.push(`📱 ${OSHI_CARD_APP_URL}`);
+  return L.join('\n');
+}
+
+async function generateOshiCard() {
+  if (oshiCardMode === 'reviewer') return generateOshiReviewerCard();
+  return generateOshiStoreCard();
 }
 
 async function generateOshiStoreCard() {
@@ -3386,10 +3464,34 @@ async function generateOshiStoreCard() {
   } catch (e) { showToast('カード生成に失敗しました'); }
 }
 
-async function shareOshiStoreCard() {
-  if (window.sommLog) sommLog('store_card_share');
+async function generateOshiReviewerCard() {
+  const n = tnNotes.find(x => x.id === oshiCardNoteId);
+  if (!n) return;
+  const comment = (document.getElementById('oshiCardComment').value || '').trim().slice(0, 120);
+  const showRating = !!n.rating && document.getElementById('oshiCardShowRating').checked;
+  const rv = oshiCardReviewer || {};
   try {
-    const file = new File([oshiCardBlob2], 'sommelin-store-oshi.png', { type: 'image/png' });
+    const blob = await OshiCard.draw({
+      template: 'reviewer',
+      name: n.name, producer: n.producer, vintage: n.vintage,
+      comment, showRating, rating: n.rating,
+      reviewerName: rv.name, tierLabel: rv.tierLabel, tierIcon: rv.tierIcon, reviewerIg: rv.ig,
+      appUrl: OSHI_CARD_APP_URL,
+    });
+    oshiCardBlob2 = blob;
+    oshiCardCaption2 = buildOshiReviewerCaption(n, comment, showRating);
+    try { await navigator.clipboard.writeText(oshiCardCaption2); } catch (e) {}
+    document.getElementById('oshiCardPreviewImg').src = URL.createObjectURL(blob);
+    document.getElementById('oshiCardFormWrap').style.display = 'none';
+    document.getElementById('oshiCardPreviewWrap').style.display = 'block';
+    if (window.sommLog) sommLog('reviewer_card_created', { hasComment: !!comment, showRating, tier: rv.tierLabel });
+  } catch (e) { showToast('カード生成に失敗しました'); }
+}
+
+async function shareOshiStoreCard() {
+  if (window.sommLog) sommLog(oshiCardMode === 'reviewer' ? 'reviewer_card_share' : 'store_card_share');
+  try {
+    const file = new File([oshiCardBlob2], 'sommelin-oshi.png', { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({ files: [file] });
       return;
@@ -3960,7 +4062,10 @@ function renderTnList() {
           <div id="tnBuzz-${n.id}">${n.wine_id ? 'みんなの評価 読み込み中…' : 'みんなの評価 —（ソムリンDB未登録のため集計できません）'}</div>
         </div>
       </details>
-      <button onclick="tnPairing('${n.id}', this)" style="margin-top:8px;background:#f5f3f0;color:var(--burgundy);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🍽 合う料理をAIに聞く</button>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button onclick="tnPairing('${n.id}', this)" style="flex:1;background:#f5f3f0;color:var(--burgundy);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🍽 合う料理をAIに聞く</button>
+        <button onclick="openOshiReviewerCardModal('${n.id}')" style="flex:1;background:#f5f3f0;color:var(--burgundy);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📣 推しカードでシェア</button>
+      </div>
       <div id="tnPair-${n.id}" style="display:none;background:#fbeef3;border-radius:10px;padding:10px 12px;margin-top:8px;font-size:12px;color:#5a2a3a;line-height:1.8;white-space:pre-line;"></div>
     </div>`;
   }).join('');
