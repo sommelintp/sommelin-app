@@ -2390,6 +2390,19 @@
       <label style="font-size:11.5px;color:var(--text-sub);width:64px;flex-shrink:0;">葡萄品種</label>
       <input type="text" id="rankGrape" placeholder="例: シャルドネ、カベルネ" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
     </div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+      <label style="font-size:11.5px;color:var(--text-sub);width:64px;flex-shrink:0;">🍯 甘口</label>
+      <select id="rankSweet" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
+        <option value="">指定なし</option>
+        <option value="any">すべての甘口</option>
+        <option value="貴腐">貴腐</option>
+        <option value="アイスワイン">アイスワイン</option>
+        <option value="レイトハーベスト">レイトハーベスト</option>
+        <option value="陰干し">陰干し</option>
+        <option value="酒精強化">酒精強化</option>
+        <option value="通常醸造">通常醸造</option>
+      </select>
+    </div>
     <div style="display:flex;gap:8px;">
       <button onclick="applyRankAdvanced()" style="flex:1;padding:9px;border-radius:8px;border:none;background:var(--burgundy);color:#fff;font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;">絞り込む</button>
       <button onclick="clearRankAdvanced()" style="flex:1;padding:9px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text-sub);font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;">クリア</button>
@@ -3446,7 +3459,7 @@ const starsHtml = t => {
 };
 
 let rankSortBy = 'total', rankIro = '', rankKuni = '';
-let rankChiiki = '', rankProducer = '', rankGrape = '', rankPriceMin = '', rankPriceMax = '', rankVintageMin = '', rankVintageMax = '';
+let rankChiiki = '', rankProducer = '', rankGrape = '', rankPriceMin = '', rankPriceMax = '', rankVintageMin = '', rankVintageMax = '', rankSweet = '';
 function populateRankKuniOptions() {
   const sel = document.getElementById('rankKuniSelect');
   if (!sel || sel.dataset.filled) return;
@@ -3474,13 +3487,14 @@ function applyRankAdvanced() {
   rankChiiki = document.getElementById('rankChiiki').value.trim();
   rankProducer = document.getElementById('rankProducer').value.trim();
   rankGrape = document.getElementById('rankGrape').value.trim();
+  rankSweet = document.getElementById('rankSweet').value;
   loadTopWines();
 }
 function clearRankAdvanced() {
-  ['rankPriceMin','rankPriceMax','rankVintageMin','rankVintageMax','rankChiiki','rankProducer','rankGrape'].forEach(id => {
+  ['rankPriceMin','rankPriceMax','rankVintageMin','rankVintageMax','rankChiiki','rankProducer','rankGrape','rankSweet'].forEach(id => {
     document.getElementById(id).value = '';
   });
-  rankPriceMin = rankPriceMax = rankVintageMin = rankVintageMax = rankChiiki = rankProducer = rankGrape = '';
+  rankPriceMin = rankPriceMax = rankVintageMin = rankVintageMax = rankChiiki = rankProducer = rankGrape = rankSweet = '';
   loadTopWines();
 }
 
@@ -3498,6 +3512,7 @@ async function loadTopWines() {
     if (rankPriceMax) qs.set('priceMax', rankPriceMax);
     if (rankVintageMin) qs.set('vintageMin', rankVintageMin);
     if (rankVintageMax) qs.set('vintageMax', rankVintageMax);
+    if (rankSweet) qs.set('sweet', rankSweet);
     const r = await fetch(CHAT_API_BASE + '/api/top-wines?' + qs.toString());
     if (!r.ok) throw 0;
     const d = await r.json();
