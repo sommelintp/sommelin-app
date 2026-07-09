@@ -193,6 +193,16 @@ body{
 .oshi-switch-track::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.25);}
 .oshi-switch input:checked ~ .oshi-switch-track{background:var(--burgundy);}
 .oshi-switch input:checked ~ .oshi-switch-track::after{transform:translateX(18px);}
+.oshi-ig-block{background:#faf7f4;border-radius:12px;padding:13px 15px;margin:14px 0;text-align:left;}
+.oshi-ig-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:700;color:#2C1810;}
+.oshi-ig-q{font-size:12.5px;font-weight:700;color:#2C1810;margin-bottom:8px;}
+.oshi-ig-profile{display:inline-block;font-size:12.5px;color:var(--burgundy);font-weight:700;text-decoration:underline;margin-bottom:10px;}
+.oshi-ig-actions{display:flex;gap:8px;}
+.oshi-ig-yes{flex:1;padding:9px;border:none;border-radius:10px;background:var(--burgundy);color:#fff;font-weight:800;font-size:12.5px;cursor:pointer;}
+.oshi-ig-no{padding:9px 14px;border:1.5px solid #ddd;border-radius:10px;background:#fff;color:#888;font-weight:700;font-size:12.5px;cursor:pointer;}
+.oshi-ig-link{background:none;border:none;color:var(--burgundy);font-size:11.5px;font-weight:700;text-decoration:underline;cursor:pointer;padding:6px 0 0;}
+.oshi-ig-manual{display:flex;gap:6px;margin-top:10px;}
+.oshi-ig-manual input{flex:1;border:1.5px solid #eee;border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:inherit;box-sizing:border-box;}
 #oshiOverlay{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.85);display:none;
   align-items:center;justify-content:center;flex-direction:column;padding:16px;}
 #oshiOverlay.on{display:flex;}
@@ -390,6 +400,8 @@ const I18N = {
     oshi_card_retake: '📷 撮り直す',
     oshi_card_showscore: '⭐ 点数を載せる',
     oshi_card_make: '🎨 カードを作る',
+    oshi_ig_confirmed: 'タグ付けを設定しました',
+    oshi_ig_invalid: 'ハンドルの形式が正しくありません',
     oshi_making: 'カードを作成中…',
     oshi_share: '📤 Instagramでシェア',
     oshi_copy: '📋 キャプションをコピー',
@@ -463,6 +475,8 @@ const I18N = {
     oshi_card_retake: '📷 Retake',
     oshi_card_showscore: '⭐ Show my score',
     oshi_card_make: '🎨 Create card',
+    oshi_ig_confirmed: 'Tag saved',
+    oshi_ig_invalid: 'That doesn\'t look like a valid handle',
     oshi_making: 'Creating your card…',
     oshi_share: '📤 Share on Instagram',
     oshi_copy: '📋 Copy caption',
@@ -816,6 +830,7 @@ async function loadSimilar(b){
    ═════════════════════════════════════════════════════════════ */
 let curOshiBottle=null, oshiLikeId=null, oshiHandle=null, oshiRating=8.0, oshiCardBlob=null, oshiCaption='';
 let oshiPhotoDataUrl=null, oshiShowScore=false; // 2026-07-09: 推しカードv2（自分の写真・点数はデフォルト非表示）
+let oshiIgSuggestion=null, oshiIgStatus='none', oshiIgPollTimer=null, oshiIgManualOpen=false; // 生産者IGのオンデマンド解決
 const OSHI_OFFICIAL_IG='sommelin';   // ソムリン公式IGハンドル（@なし）。設定するとカード・キャプションに載る
 const OSHI_APP_URL='https://sommelintp.github.io/sommelin-app/';
 
@@ -834,6 +849,8 @@ function oshiStart(){
   const info=oshiWineInfo();
   oshiRating=8.0;
   oshiPhotoDataUrl=null; oshiShowScore=false;
+  oshiIgSuggestion=null; oshiIgStatus='none'; oshiIgManualOpen=false;
+  if(oshiIgPollTimer){ clearInterval(oshiIgPollTimer); oshiIgPollTimer=null; }
   document.getElementById('sheetBody').innerHTML=`
     <div class="oshi-step">
       <div class="oshi-title">${t('oshi_rate_title')}</div>
@@ -863,6 +880,7 @@ async function oshiSave(){
     if(!r.ok) throw new Error('save failed');
     const d=await r.json();
     oshiLikeId=d.likeId||null; oshiHandle=d.producerInstagram||null;
+    oshiIgSuggestion=d.producerIgSuggestion||null; oshiIgStatus=d.igStatus||'none';
     if(window.sommLog) sommLog('oshi_like',{wineId:w?w.id:null, rating:oshiRating, hasHandle:!!oshiHandle});
     toast(t('oshi_saved'));
     oshiAskShare();
@@ -871,6 +889,7 @@ async function oshiSave(){
 
 // Step3: 「みんなに伝えますか？」→ ①アプリ内フィルター ②Instagram、どちらも独立して選べる
 function oshiAskShare(){
+  if(oshiIgPollTimer){ clearInterval(oshiIgPollTimer); oshiIgPollTimer=null; } // カード作成画面を離れるのでポーリング停止
   document.getElementById('sheetBody').innerHTML=`
     <div class="oshi-step" style="text-align:center;padding-bottom:4px">
       <div style="font-size:40px;margin:8px 0 2px">🍷💌</div>
@@ -921,6 +940,7 @@ async function oshiSaveToFilter(){
 
 // Step3.5: カード作成画面（自分の写真の任意追加・点数を載せるかの選択）
 function oshiCardSetup(){
+  const info=oshiWineInfo();
   document.getElementById('sheetBody').innerHTML=`
     <div class="oshi-step" style="text-align:center;padding-bottom:4px">
       <div class="oshi-title">${t('oshi_card_title')}</div>
@@ -935,6 +955,8 @@ function oshiCardSetup(){
       </div>
       <input type="file" id="oshiPhotoInput" accept="image/*" capture="environment" style="display:none" onchange="oshiOnPhotoSelected(event)">
 
+      ${info.producer ? `<div id="oshiIgBlock">${oshiIgBlockHtml()}</div>` : ''}
+
       <label class="oshi-score-row">
         <span>${t('oshi_card_showscore')}</span>
         <span class="oshi-switch"><input type="checkbox" id="oshiScoreToggle" ${oshiShowScore?'checked':''} onchange="oshiShowScore=this.checked"><span class="oshi-switch-track"></span></span>
@@ -945,6 +967,96 @@ function oshiCardSetup(){
         <button class="sh-sub" onclick="oshiAskShare()">${t('oshi_back')}</button>
       </div>
     </div>`;
+  oshiMaybePollIg();
+}
+
+// ── 生産者IG確認ブロック（信頼度3段階: active=確定済み／pending=AI提案・要確認／searching・none） ──
+function oshiIgBlockHtml(){
+  if(oshiIgStatus==='active' && oshiHandle){
+    return `<div class="oshi-ig-block">
+      <div class="oshi-ig-row"><span>✓ @${esc(oshiHandle)} にお知らせが届きます</span>
+        <button class="oshi-ig-link" style="padding:0" onclick="oshiIgManualOpen=true;oshiRenderIgBlock()">変更</button></div>
+      ${oshiIgManualOpen?oshiIgManualInputHtml():''}
+    </div>`;
+  }
+  if(oshiIgStatus==='pending' && oshiIgSuggestion && oshiIgSuggestion.handle){
+    const h=oshiIgSuggestion.handle;
+    return `<div class="oshi-ig-block">
+      <div class="oshi-ig-q">この生産者のInstagramはこちらですか？</div>
+      <a class="oshi-ig-profile" href="https://instagram.com/${escAttr(h)}" target="_blank" rel="noopener">@${esc(h)} のプロフィールを見る ↗</a>
+      <div class="oshi-ig-actions">
+        <button class="oshi-ig-yes" onclick="oshiConfirmIg('${escAttr(h)}')">はい、合っています</button>
+        <button class="oshi-ig-no" onclick="oshiRejectIg('${escAttr(h)}')">違う</button>
+      </div>
+      ${oshiIgManualOpen?oshiIgManualInputHtml():`<button class="oshi-ig-link" onclick="oshiIgManualOpen=true;oshiRenderIgBlock()">自分で入力する</button>`}
+    </div>`;
+  }
+  if(oshiIgStatus==='searching'){
+    return `<div class="oshi-ig-block"><div class="oshi-ig-q">🔍 生産者のInstagramを探しています…</div>
+      ${oshiIgManualOpen?oshiIgManualInputHtml():`<button class="oshi-ig-link" onclick="oshiIgManualOpen=true;oshiRenderIgBlock()">見つかったら自分で入力する</button>`}
+    </div>`;
+  }
+  return `<div class="oshi-ig-block"><div class="oshi-ig-q">この生産者のInstagramは見つかりませんでした</div>
+    ${oshiIgManualOpen?oshiIgManualInputHtml():`<button class="oshi-ig-link" onclick="oshiIgManualOpen=true;oshiRenderIgBlock()">知っていたら入力する</button>`}
+  </div>`;
+}
+function oshiIgManualInputHtml(){
+  return `<div class="oshi-ig-manual">
+    <input type="text" id="oshiIgManualInput" placeholder="@なし、または instagram.com/... のURL">
+    <button class="oshi-ig-yes" style="flex:none;padding:9px 14px;" onclick="oshiSubmitManualIg()">保存</button>
+  </div>`;
+}
+function oshiRenderIgBlock(){
+  const el=document.getElementById('oshiIgBlock'); if(el) el.innerHTML=oshiIgBlockHtml();
+}
+// AI検索が完了するまで数秒おきにポーリング（最大30秒）。カード作成画面を開いている間だけ。
+function oshiMaybePollIg(){
+  if(oshiIgPollTimer){ clearInterval(oshiIgPollTimer); oshiIgPollTimer=null; }
+  if(oshiIgStatus!=='searching') return;
+  const info=oshiWineInfo();
+  if(!info.producer) return;
+  let tries=0;
+  oshiIgPollTimer=setInterval(async ()=>{
+    tries++;
+    if(tries>10){ clearInterval(oshiIgPollTimer); oshiIgPollTimer=null; return; }
+    try{
+      const r=await fetch(API_BASE+'/api/producer-ig?producer='+encodeURIComponent(info.producer));
+      if(!r.ok) return;
+      const d=await r.json();
+      if(d.igStatus==='searching') return;
+      oshiIgStatus=d.igStatus;
+      if(d.igStatus==='active') oshiHandle=d.handle;
+      else if(d.igStatus==='pending') oshiIgSuggestion=d.suggestion;
+      clearInterval(oshiIgPollTimer); oshiIgPollTimer=null;
+      oshiRenderIgBlock();
+    }catch(e){}
+  },3000);
+}
+async function oshiConfirmIg(handle){
+  const info=oshiWineInfo();
+  try{
+    const r=await fetch(API_BASE+'/api/producer-ig/confirm',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({producer:info.producer,handle,action:'confirm'})});
+    if(r.ok){ oshiHandle=handle; oshiIgStatus='active'; oshiIgSuggestion=null; oshiIgManualOpen=false; oshiRenderIgBlock(); toast(t('oshi_ig_confirmed')); }
+  }catch(e){}
+}
+async function oshiRejectIg(handle){
+  const info=oshiWineInfo();
+  try{ await fetch(API_BASE+'/api/producer-ig/confirm',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({producer:info.producer,handle,action:'reject'})}); }catch(e){}
+  oshiIgSuggestion=null; oshiIgStatus='none'; oshiRenderIgBlock();
+}
+async function oshiSubmitManualIg(){
+  const info=oshiWineInfo();
+  const val=(document.getElementById('oshiIgManualInput')||{}).value||'';
+  if(!val.trim()) return;
+  try{
+    const r=await fetch(API_BASE+'/api/producer-ig/confirm',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({producer:info.producer,handle:val.trim(),action:'replace'})});
+    const d=r.ok?await r.json():null;
+    if(d && d.handle){ oshiHandle=d.handle; oshiIgStatus='active'; oshiIgSuggestion=null; oshiIgManualOpen=false; oshiRenderIgBlock(); toast(t('oshi_ig_confirmed')); }
+    else toast(t('oshi_ig_invalid'));
+  }catch(e){ toast(t('oshi_ig_invalid')); }
 }
 function oshiPickPhoto(){
   const el=document.getElementById('oshiPhotoInput'); if(el) el.click();
@@ -1421,7 +1533,10 @@ function buy(name, wineId){
 
 // ── シート開閉・状態 ──
 function openSheet(){ document.getElementById('backdrop').classList.add('on'); document.getElementById('sheet').classList.add('on'); setSub(t('sub_result')); }
-function closeSheet(){ document.getElementById('backdrop').classList.remove('on'); document.getElementById('sheet').classList.remove('on'); setSub(t('sub_default')); }
+function closeSheet(){
+  if(oshiIgPollTimer){ clearInterval(oshiIgPollTimer); oshiIgPollTimer=null; }
+  document.getElementById('backdrop').classList.remove('on'); document.getElementById('sheet').classList.remove('on'); setSub(t('sub_default'));
+}
 
 function showStatus(on){ document.getElementById('status').classList.toggle('gone', !on); }
 function setStatus(t){ document.getElementById('stTxt').textContent=t; }
