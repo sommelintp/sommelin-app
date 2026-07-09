@@ -248,6 +248,86 @@
     ctx.fillText(String(opts.appUrl||'').replace('https://',''),70,H-90);
   }
 
+  // ── reviewer: レビュアー発信カード（私の推しワイン。本人の言葉と★のみ。SP/total/参考価格は載せない） ──
+  function drawReviewer(ctx,opts){
+    const g=ctx.createLinearGradient(0,0,W*0.6,H);
+    g.addColorStop(0,'#3d0a1d'); g.addColorStop(0.5,'#5C0E2A'); g.addColorStop(1,'#9B1B4B');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='rgba(255,255,255,0.045)';
+    ctx.beginPath(); ctx.arc(W*0.92,H*0.10,300,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(W*0.05,H*0.85,260,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(201,151,58,0.10)';
+    ctx.beginPath(); ctx.arc(W*0.85,H*0.78,200,0,Math.PI*2); ctx.fill();
+
+    ctx.textAlign='center';
+    ctx.fillStyle='#E8C97A';
+    ctx.font=`800 32px ${FONT}`; ctx.letterSpacing='8px';
+    ctx.fillText('私の推しワイン',W/2,300); ctx.letterSpacing='0px';
+
+    ctx.font=`800 78px ${FONT}`; ctx.fillStyle='#fff';
+    const lines=wrap(ctx,opts.name,920,3);
+    let y=430;
+    for(const ln of lines){ ctx.fillText(ln,W/2,y); y+=96; }
+    ctx.font=`700 44px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.85)';
+    const sub=[opts.producer,(opts.vintage&&opts.vintage!=='NV')?opts.vintage:''].filter(Boolean).join('　');
+    if(sub){ ctx.fillText(trunc(sub,26),W/2,y+14); y+=70; }
+
+    ctx.strokeStyle='#C9973A'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(W/2-110,y+30); ctx.lineTo(W/2+110,y+30); ctx.stroke();
+    y+=90;
+
+    if(opts.comment){
+      ctx.font=`700 44px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.92)';
+      const clines=wrap(ctx,`「${opts.comment}」`,900,4);
+      for(const ln of clines){ ctx.fillText(ln,W/2,y); y+=62; }
+      y+=30;
+    }else{
+      y+=20;
+    }
+
+    // 本人の★評価（1〜5・数字は出さない。ソムリンおすすめ度と混同させないため）
+    if(opts.showRating && opts.rating){
+      const n=Math.max(0,Math.min(5,Number(opts.rating)));
+      const ssize=48, sgap=ssize*1.3, sx0=W/2-sgap*2, sy=y+40;
+      ctx.font=`${ssize}px ${FONT}`; ctx.fillStyle='#C9973A';
+      for(let i=0;i<5;i++){
+        const sx=sx0+sgap*i, fill=Math.max(0,Math.min(1,n-i));
+        ctx.fillText('☆',sx,sy);
+        if(fill>=0.75){ ctx.fillText('★',sx,sy); }
+        else if(fill>=0.25){
+          const sw=ctx.measureText('★').width;
+          ctx.save(); ctx.beginPath(); ctx.rect(sx-sw/2,sy-ssize,sw/2,ssize*1.4); ctx.clip();
+          ctx.fillText('★',sx,sy); ctx.restore();
+        }
+      }
+      y+=90;
+    }
+
+    y+=30;
+    ctx.font=`800 46px ${FONT}`; ctx.fillStyle='#fff';
+    ctx.fillText(trunc(opts.reviewerName||'',22),W/2,y);
+    y+=54;
+    if(opts.tierLabel){
+      const txt=`${opts.tierIcon||''} ${opts.tierLabel}`.trim();
+      ctx.font=`700 32px ${FONT}`;
+      const tw=ctx.measureText(txt).width, pw=tw+56, ph=62, px=(W-pw)/2;
+      ctx.fillStyle='rgba(201,151,58,0.18)'; ctx.strokeStyle='#C9973A'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.roundRect(px,y,pw,ph,31); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#E8C97A'; ctx.fillText(txt,W/2,y+42);
+      y+=ph+16;
+    }
+    if(opts.reviewerIg){
+      ctx.font=`600 28px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.65)';
+      ctx.fillText('@'+opts.reviewerIg,W/2,y+18);
+    }
+
+    ctx.textAlign='left';
+    ctx.font=`700 34px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.85)';
+    ctx.fillText('#Sommelin',70,H-140);
+    ctx.font=`600 30px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.55)';
+    ctx.fillText(String(opts.appUrl||'').replace('https://',''),70,H-90);
+  }
+
   async function draw(opts){
     opts=opts||{};
     const assetBase=opts.assetBase||'assets/sommelin/';
@@ -256,6 +336,8 @@
 
     if(opts.template==='store'){
       drawStore(ctx,opts);
+    }else if(opts.template==='reviewer'){
+      drawReviewer(ctx,opts);
     }else{
       const [logo,chara]=await Promise.all([
         loadImg(assetBase+'sommelin-logo.png'),
