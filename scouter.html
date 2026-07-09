@@ -12,9 +12,13 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="スカウター">
 <link rel="apple-touch-icon" href="assets/sommelin/sommelin-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
 
 <style>
-:root{ --burgundy:#9B1B4B; --wine-dark:#5C0E2A; --gold:#C9973A; --ok:#00DCAA; }
+/* 2026-07-10: --burgundy/--goldはsommelin-ui.cssのブランドトークンに一本化 */
+:root{ --wine-dark:#5C0E2A; --ok:#00DCAA; }
 *{ box-sizing:border-box; margin:0; padding:0; }
 body{
   font-family:-apple-system,'Hiragino Sans',sans-serif;
@@ -32,7 +36,7 @@ body{
 }
 #perm.gone{display:none;}
 .perm-em{font-size:58px;margin-bottom:16px;}
-.perm-title{font-size:24px;font-weight:800;margin-bottom:8px;line-height:1.3;}
+.perm-title{font-family:var(--font-display);font-size:26px;font-weight:700;margin-bottom:8px;line-height:1.3;}
 .perm-desc{font-size:13px;color:rgba(255,255,255,.72);line-height:1.8;margin-bottom:22px;}
 .perm-feats{text-align:left;width:100%;background:rgba(255,255,255,.1);border-radius:14px;padding:14px 16px;margin-bottom:24px;}
 .pf{font-size:13px;color:rgba(255,255,255,.85);padding:5px 0;line-height:1.7;}
@@ -78,7 +82,7 @@ body{
 .scouter-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
   text-decoration:none;color:#7a5560;font-size:10.5px;padding:4px 0;}
 .scouter-nav a.on{color:var(--burgundy,#9B1B4B);font-weight:700;}
-.scouter-nav .ic{font-size:19px;}
+.scouter-nav .ic{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
 .shoot{width:74px;height:74px;border-radius:50%;border:4px solid #fff;background:rgba(255,255,255,.18);
   cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:30px;}
 .shoot:active{transform:scale(.94);}
@@ -126,13 +130,13 @@ body{
 #sheet.on{transform:translateX(-50%) translateY(0);}
 .sh-handle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:12px auto;}
 .sh-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:800;color:#fff;margin:0 20px 8px;}
-.sh-name{font-size:21px;font-weight:800;padding:0 20px;line-height:1.25;}
+.sh-name{font-family:var(--font-display);font-size:22px;font-weight:700;padding:0 20px;line-height:1.3;}
 .sh-vintage-badge{display:inline-block;font-size:12px;font-weight:700;color:var(--burgundy);
   background:var(--burgundy-pale,#f7e6ee);border-radius:8px;padding:1px 7px;vertical-align:middle;margin-left:2px;}
 .sh-producer{font-size:13px;font-weight:600;color:#555;padding:4px 20px 0;}
 .sh-region{font-size:12px;color:#888;padding:2px 20px 12px;}
-.sh-refscore{font-size:15px !important;color:#999 !important;}
-.sh-refscore small{font-size:10px;color:#bbb;font-weight:600;}
+.sh-refscore{font-family:var(--font-display) !important;font-size:26px !important;font-weight:700 !important;color:var(--burgundy) !important;}
+.sh-refscore small{font-size:11px;color:#999;font-weight:600;}
 .sh-grid{display:flex;gap:12px;padding:12px 20px;border-top:1px solid #f2f2f2;border-bottom:1px solid #f2f2f2;}
 .sh-cell{flex:1;text-align:center;}
 .sh-cell .v{font-size:26px;font-weight:900;line-height:1.1;}
@@ -238,6 +242,7 @@ body{
 #err .e1{font-size:15px;font-weight:800;margin-bottom:8px;}
 #err .e2{font-size:12px;color:rgba(255,255,255,.7);line-height:1.7;}
 </style>
+<link rel="stylesheet" href="assets/sommelin-ui.css">
 </head>
 <body>
 
@@ -250,13 +255,13 @@ body{
   <div class="perm-feats">
     <div class="pf" data-i18n-html="perm_feat1">📷 撮るだけ → 写っている<b>全ボトル</b>を写真の上でその場評価（1本でも棚ごとでもOK）</div>
     <div class="pf" data-i18n-html="perm_feat2">📋 ワインリストを撮ると<b>全銘柄まとめて評価</b>（複数ページOK）</div>
-    <div class="pf" data-i18n-html="perm_feat3">⭐ ソムリン評価済みなら<b>実SPとコスパ</b>を即表示</div>
+    <div class="pf" data-i18n-html="perm_feat3">⭐ ソムリン評価済みなら<b>総合評価とコスパ</b>を即表示</div>
     <div class="pf" data-i18n-html="perm_feat4">❤️ 好みを登録すると<b>「あなたに合うか」</b>も表示</div>
   </div>
   <button class="perm-main" onclick="startScan()" data-i18n="perm_start">📷 カメラを起動する</button>
   <button class="perm-sub" onclick="document.getElementById('fileInput').click()" data-i18n="perm_from_photo">写真から読み取る</button>
   <button class="perm-sub" style="margin-top:10px" onclick="location.href='taste.html'" data-i18n="perm_taste">❤️ 好みのワインを登録（写真から）</button>
-  <div class="perm-note" data-i18n-html="perm_note">写真は銘柄特定と品質向上のためソムリンのサーバーで解析されます。<br>評価(SP)は実データがある場合のみ表示します（推測のスコアは出しません）。</div>
+  <div class="perm-note" data-i18n-html="perm_note">写真は銘柄特定と品質向上のためソムリンのサーバーで解析されます。<br>評価は実データがある場合のみ表示します（推測のスコアは出しません）。</div>
 </div>
 
 <!-- ② SCAN VIEW -->
@@ -327,10 +332,10 @@ body{
 
 <!-- 常時表示の下ナビ（2026-07-08追加: スカウター使用中に他画面へ移動できなくなる不具合対応） -->
 <nav class="scouter-nav">
-  <a href="prototype.html"><span class="ic">🏠</span>ホーム</a>
-  <a href="wine_search.html"><span class="ic">🔍</span>探す</a>
-  <a href="scouter.html" class="on"><span class="ic">📷</span>記録</a>
-  <a href="sommelier-chat.html"><span class="ic">💬</span>相談</a>
+  <a href="prototype.html"><svg class="ic"><use href="assets/sommelin-icons.svg#i-home"></use></svg>ホーム</a>
+  <a href="wine_search.html"><svg class="ic"><use href="assets/sommelin-icons.svg#i-search"></use></svg>探す</a>
+  <a href="scouter.html" class="on"><svg class="ic"><use href="assets/sommelin-icons.svg#i-camera"></use></svg>記録</a>
+  <a href="sommelier-chat.html"><svg class="ic"><use href="assets/sommelin-icons.svg#i-chat"></use></svg>相談</a>
 </nav>
 
 <script>
@@ -341,13 +346,13 @@ const I18N = {
     perm_desc: 'ラベルを撮るだけ。AIソムリエが銘柄を特定して、<br>「得かどうか」と「あなたへのおすすめ」を返します。',
     perm_feat1: '📷 撮るだけ → 写っている<b>全ボトル</b>を写真の上でその場評価（1本でも棚ごとでもOK）',
     perm_feat2: '📋 ワインリストを撮ると<b>全銘柄まとめて評価</b>（複数ページOK）',
-    perm_feat3: '⭐ ソムリン評価済みなら<b>実SPとコスパ</b>を即表示',
+    perm_feat3: '⭐ ソムリン評価済みなら<b>総合評価とコスパ</b>を即表示',
     perm_feat4: '❤️ 好みを登録すると<b>「あなたに合うか」</b>も表示',
     perm_start: '📷 カメラを起動する',
     perm_from_photo: '写真から読み取る',
     perm_from_photo_short: '📁 写真から読み取る',
     perm_taste: '❤️ 好みのワインを登録（写真から）',
-    perm_note: '写真は銘柄特定と品質向上のためソムリンのサーバーで解析されます。<br>評価(SP)は実データがある場合のみ表示します（推測のスコアは出しません）。',
+    perm_note: '写真は銘柄特定と品質向上のためソムリンのサーバーで解析されます。<br>評価は実データがある場合のみ表示します（推測のスコアは出しません）。',
     err_title: 'カメラを起動できません',
     err_desc: '設定でカメラを許可するか、「写真から読み取る」をお試しください。',
     scouter_title: 'スカウター',
@@ -1405,7 +1410,7 @@ function renderListSheet(){
     ${top.length?`<div class="cand-h">このリストのおすすめ</div>${top.map(it=>liRow(it,true)).join('')}`:''}
     <div class="cand-h">すべての銘柄（読み取り順）</div>
     ${listItems.map(it=>liRow(it, false)).join('')}
-    <div class="sh-meta">評価(SP)はソムリンの実データがある銘柄のみ表示しています。</div>
+    <div class="sh-meta">評価はソムリンの実データがある銘柄のみ表示しています。</div>
     <div class="sh-btns">
       <button class="sh-main" onclick="closeSheet()">📷 次のページを撮る</button>
       <button class="sh-sub" onclick="listItems=[];listPages=0;listPlace=null;lastListScanId=null;closeSheet();toast(t('toast_list_cleared'))">🗑 クリア</button>
