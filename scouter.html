@@ -207,6 +207,13 @@ body{
 .oshi-ig-link{background:none;border:none;color:var(--burgundy);font-size:11.5px;font-weight:700;text-decoration:underline;cursor:pointer;padding:6px 0 0;}
 .oshi-ig-manual{display:flex;gap:6px;margin-top:10px;}
 .oshi-ig-manual input{flex:1;border:1.5px solid #eee;border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:inherit;box-sizing:border-box;}
+.oshi-store-input{width:100%;border:1.5px solid #eee;border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:inherit;box-sizing:border-box;}
+.oshi-store-input+.oshi-store-input{margin-top:8px;}
+.oshi-store-list{margin-top:8px;display:flex;flex-direction:column;gap:6px;}
+.oshi-store-item{padding:8px 10px;border:1.5px solid #eee;border-radius:8px;cursor:pointer;background:#fff;text-align:left;}
+.oshi-store-item:active{background:#faf7f4;}
+.oshi-store-item-name{font-size:12.5px;font-weight:700;color:#2C1810;}
+.oshi-store-item-ig{font-size:11px;color:var(--burgundy);margin-top:1px;}
 #oshiOverlay{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.85);display:none;
   align-items:center;justify-content:center;flex-direction:column;padding:16px;}
 #oshiOverlay.on{display:flex;}
@@ -836,6 +843,7 @@ async function loadSimilar(b){
 let curOshiBottle=null, oshiLikeId=null, oshiHandle=null, oshiRating=8.0, oshiCardBlob=null, oshiCaption='';
 let oshiPhotoDataUrl=null, oshiShowScore=false; // 2026-07-09: 推しカードv2（自分の写真・点数はデフォルト非表示）
 let oshiIgSuggestion=null, oshiIgStatus='none', oshiIgPollTimer=null, oshiIgManualOpen=false; // 生産者IGのオンデマンド解決
+let oshiStoreQuery='', oshiStoreResults=[], oshiStoreSelected=null, oshiStoreManualOpen=false, oshiStoreSearchTimer=null; // 2026-07-10: 推しカードD-1「どこで飲みましたか」
 const OSHI_OFFICIAL_IG='sommelin';   // ソムリン公式IGハンドル（@なし）。設定するとカード・キャプションに載る
 const OSHI_APP_URL='https://sommelintp.github.io/sommelin-app/';
 
@@ -855,6 +863,8 @@ function oshiStart(){
   oshiRating=8.0;
   oshiPhotoDataUrl=null; oshiShowScore=false;
   oshiIgSuggestion=null; oshiIgStatus='none'; oshiIgManualOpen=false;
+  oshiStoreQuery=''; oshiStoreResults=[]; oshiStoreSelected=null; oshiStoreResolved=null;
+  if(oshiStoreSearchTimer){ clearTimeout(oshiStoreSearchTimer); oshiStoreSearchTimer=null; }
   if(oshiIgPollTimer){ clearInterval(oshiIgPollTimer); oshiIgPollTimer=null; }
   document.getElementById('sheetBody').innerHTML=`
     <div class="oshi-step">
@@ -962,6 +972,8 @@ function oshiCardSetup(){
 
       ${info.producer ? `<div id="oshiIgBlock">${oshiIgBlockHtml()}</div>` : ''}
 
+      <div id="oshiStoreBlock">${oshiStoreBlockHtml()}</div>
+
       <label class="oshi-score-row">
         <span>${t('oshi_card_showscore')}</span>
         <span class="oshi-switch"><input type="checkbox" id="oshiScoreToggle" ${oshiShowScore?'checked':''} onchange="oshiShowScore=this.checked"><span class="oshi-switch-track"></span></span>
@@ -1063,6 +1075,78 @@ async function oshiSubmitManualIg(){
     else toast(t('oshi_ig_invalid'));
   }catch(e){ toast(t('oshi_ig_invalid')); }
 }
+
+// ── 店の推し活（D-1）: 「どこで飲みましたか？」任意ブロック。登録店を選ぶとIGメンションが乗る ──
+function oshiStoreBlockHtml(){
+  if(oshiStoreSelected){
+    const s=oshiStoreSelected;
+    return `<div class="oshi-ig-block">
+      <div class="oshi-ig-row"><span>📍 ${esc(s.name)}${s.ig?`・@${esc(s.ig)}にお知らせが届きます`:''}</span>
+        <button class="oshi-ig-link" style="padding:0" onclick="oshiStoreClear()">変更</button></div>
+    </div>`;
+  }
+  return `<div class="oshi-ig-block">
+    <div class="oshi-ig-q">📍 どこで飲みましたか？（任意）</div>
+    <input type="text" id="oshiStoreNameInput" class="oshi-store-input" placeholder="お店の名前で検索" value="${escAttr(oshiStoreQuery)}" oninput="oshiStoreOnInput(this.value)">
+    <div id="oshiStoreResults">${oshiStoreResultsHtml()}</div>
+    <input type="text" id="oshiStoreIgInput" class="oshi-store-input" placeholder="お店のInstagramが分かれば（任意）">
+  </div>`;
+}
+function oshiStoreResultsHtml(){
+  if(!oshiStoreResults.length) return '';
+  return `<div class="oshi-store-list">${oshiStoreResults.map((s,i)=>`
+    <div class="oshi-store-item" onclick="oshiStoreSelect(${i})">
+      <div class="oshi-store-item-name">${esc(s.name)}</div>
+      ${s.ig?`<div class="oshi-store-item-ig">@${esc(s.ig)}</div>`:(s.addr?`<div class="oshi-store-item-ig">${esc(s.addr)}</div>`:'')}
+    </div>`).join('')}</div>`;
+}
+function oshiStoreOnInput(v){
+  oshiStoreQuery=v;
+  if(oshiStoreSearchTimer){ clearTimeout(oshiStoreSearchTimer); oshiStoreSearchTimer=null; }
+  if(v.trim().length<2){ oshiStoreResults=[]; oshiRenderStoreResults(); return; }
+  oshiStoreSearchTimer=setTimeout(()=>oshiStoreSearch(v.trim()),300);
+}
+async function oshiStoreSearch(q){
+  try{
+    const r=await fetch(API_BASE+'/api/stores?q='+encodeURIComponent(q));
+    const d=r.ok?await r.json():{items:[]};
+    oshiStoreResults=d.items||[];
+  }catch(e){ oshiStoreResults=[]; }
+  oshiRenderStoreResults();
+}
+function oshiRenderStoreResults(){
+  const el=document.getElementById('oshiStoreResults'); if(el) el.innerHTML=oshiStoreResultsHtml();
+}
+function oshiStoreSelect(i){
+  const s=oshiStoreResults[i]; if(!s) return;
+  oshiStoreSelected={name:s.name, ig:s.ig||null};
+  oshiStoreQuery=s.name; oshiStoreResults=[];
+  if(window.sommLog) sommLog('oshi_store_attach',{matched:true,hasIg:!!s.ig,manualIg:false});
+  oshiRenderStoreBlock();
+}
+function oshiStoreClear(){
+  oshiStoreSelected=null; oshiStoreQuery=''; oshiStoreResults=[];
+  oshiRenderStoreBlock();
+}
+function oshiRenderStoreBlock(){
+  const el=document.getElementById('oshiStoreBlock'); if(el) el.innerHTML=oshiStoreBlockHtml();
+}
+// カード生成直前に1回だけ呼ぶ（DOM未選択＝自由入力の店名/IGはこの時点で確定してoshiStoreResolvedに保持）
+let oshiStoreResolved=null;
+function oshiResolveStoreInfo(){
+  if(oshiStoreSelected){ oshiStoreResolved=oshiStoreSelected; return oshiStoreResolved; }
+  const nameEl=document.getElementById('oshiStoreNameInput');
+  const igEl=document.getElementById('oshiStoreIgInput');
+  const name=((nameEl?nameEl.value:'')||'').trim();
+  if(!name){ oshiStoreResolved=null; return null; }
+  let ig=((igEl?igEl.value:'')||'').trim()
+    .replace(/^https?:\/\/(www\.)?instagram\.com\//i,'').replace(/\/$/,'').replace(/^@/,'');
+  ig=/^[a-zA-Z0-9._]{1,30}$/.test(ig) ? ig.toLowerCase() : null;
+  if(window.sommLog) sommLog('oshi_store_attach',{matched:false,hasIg:!!ig,manualIg:!!ig});
+  oshiStoreResolved={name, ig};
+  return oshiStoreResolved;
+}
+
 function oshiPickPhoto(){
   const el=document.getElementById('oshiPhotoInput'); if(el) el.click();
 }
@@ -1091,6 +1175,7 @@ function oshiHashtag(producer){
 async function oshiMakeCard(){
   toast(t('oshi_making'));
   const info=oshiWineInfo();
+  oshiResolveStoreInfo();
   oshiCaption=oshiBuildCaption(info);
   try{ await navigator.clipboard.writeText(oshiCaption); }catch(e){}
   try{
@@ -1113,11 +1198,14 @@ function oshiBuildCaption(info){
   const L=[];
   L.push(`🍷 ${info.name}${info.vintage&&info.vintage!=='NV'?' '+info.vintage:''}`);
   if(info.producer) L.push(`👨‍🌾 ${info.producer}`);
+  const store=oshiStoreResolved;
+  if(store) L.push(store.ig ? `📍 @${store.ig} で` : `📍 ${store.name} にて`);
   if(oshiShowScore) L.push(`私の評価 ${oshiRating.toFixed(1)}/10 ⭐`);
   if(oshiHandle) L.push(`@${oshiHandle} 美味しかったです。ごちそうさまでした🙏`);
   else L.push('美味しかったです。ごちそうさまでした🙏');
   L.push('');
   const tags=['#Sommelin','#ソムリン','#ワイン好きと繋がりたい','#wine'];
+  if(store && !store.ig){ const sh=oshiHashtag(store.name); if(sh) tags.unshift(sh); }
   if(!oshiHandle){ const ph=oshiHashtag(info.producer); if(ph) tags.unshift(ph); }
   if(OSHI_OFFICIAL_IG) tags.unshift('@'+OSHI_OFFICIAL_IG);
   L.push(tags.join(' '));
@@ -1198,6 +1286,10 @@ async function oshiDrawPhotoCard(ctx,W,H,F,info,logo){
     ctx.font=`700 38px ${F}`; ctx.fillStyle='rgba(255,255,255,0.85)';
     ctx.fillText(trunc(info.producer,26),W/2,y+8); y+=66;
   }
+  if(oshiStoreResolved){
+    ctx.font=`600 30px ${F}`; ctx.fillStyle='rgba(255,255,255,0.65)';
+    ctx.fillText('at '+trunc(oshiStoreResolved.name,24),W/2,y+4); y+=44;
+  }
   y+=16;
   if(oshiHandle){
     const txt=`📸 @${oshiHandle}`;
@@ -1245,6 +1337,10 @@ function oshiDrawClassicCard(ctx,W,H,F,info,logo,chara){
   ctx.font=`700 46px ${F}`; ctx.fillStyle='rgba(255,255,255,0.85)';
   const sub=[info.producer,(info.vintage&&info.vintage!=='NV')?info.vintage:''].filter(Boolean).join('　');
   if(sub){ ctx.fillText(trunc(sub,26),W/2,y+16); y+=76; }
+  if(oshiStoreResolved){
+    ctx.font=`600 32px ${F}`; ctx.fillStyle='rgba(255,255,255,0.6)';
+    ctx.fillText('at '+trunc(oshiStoreResolved.name,24),W/2,y+8); y+=48;
+  }
 
   ctx.strokeStyle='#C9973A'; ctx.lineWidth=3;
   ctx.beginPath(); ctx.moveTo(W/2-110,y+30); ctx.lineTo(W/2+110,y+30); ctx.stroke();
