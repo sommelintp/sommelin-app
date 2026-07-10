@@ -1558,6 +1558,7 @@
   </div>
   <div class="wl-toolbar2">
     <button class="btn-import" onclick="openListCapture()">📋 リストを写真で一括読み込み</button>
+    <button class="btn-import" onclick="openPrintList()">🖨 印刷用リストを開く</button>
   </div>
 
   <!-- カテゴリタブ -->
@@ -2958,6 +2959,69 @@ async function deleteWine(id) {
   wineData = wineData.filter(w => w.id !== id);
   renderWineTable(currentCat, currentSearch);
   showToast('削除しました');
+}
+
+// ============================================================
+// 🖨 印刷用リスト（D-14）: 提供中のワインをカテゴリ別に整形し、
+//   別ウィンドウにA4向けの印刷用ドキュメントを開く。編集画面のUIは含めない。
+// ============================================================
+function openPrintList() {
+  const storeName = (document.getElementById('stkStoreName').value || '').trim() || 'ワインリスト';
+  const catLabel = { sparkling: '泡・スパークリング', white: '白ワイン', red: '赤ワイン', rose: 'ロゼ', orange: 'オレンジワイン' };
+  const catOrder = ['sparkling', 'white', 'red', 'rose', 'orange'];
+  const available = wineData.filter(w => w.available !== false);
+  if (!available.length) { showToast('印刷できるワインがありません（提供中のワインが0件です）'); return; }
+
+  const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const dateStr = new Date().toLocaleDateString('ja-JP');
+
+  const sections = catOrder.map(cat => {
+    const rows = available.filter(w => w.cat === cat).sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ja'));
+    if (!rows.length) return '';
+    const trs = rows.map(w => `
+      <tr>
+        <td class="pl-name">${esc(w.name)}${w.vintage ? ' <span class="pl-vintage">' + esc(w.vintage) + '</span>' : ''}<div class="pl-sub">${esc(w.producer || '')}${w.region ? '　' + esc(w.region) : ''}</div></td>
+        <td class="pl-price">${w.priceGlass ? '¥' + w.priceGlass.toLocaleString('ja-JP') : '—'}</td>
+        <td class="pl-price">${w.priceBottle ? '¥' + w.priceBottle.toLocaleString('ja-JP') : '—'}</td>
+      </tr>`).join('');
+    return `
+      <h2>${catLabel[cat]}</h2>
+      <table>
+        <thead><tr><th>ワイン</th><th>グラス</th><th>ボトル</th></tr></thead>
+        <tbody>${trs}</tbody>
+      </table>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<title>${esc(storeName)} ワインリスト</title>
+<style>
+  body{font-family:'Hiragino Mincho ProN','Yu Mincho',serif;color:#2C1810;max-width:720px;margin:0 auto;padding:32px 24px;}
+  h1{font-size:22px;text-align:center;margin-bottom:4px;letter-spacing:.05em;}
+  .pl-date{text-align:center;font-size:12px;color:#888;margin-bottom:28px;}
+  h2{font-size:15px;border-bottom:2px solid #9B1B4B;padding-bottom:4px;margin:26px 0 8px;color:#9B1B4B;letter-spacing:.08em;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  td,th{padding:6px 4px;vertical-align:top;}
+  thead th{font-size:10px;color:#888;font-weight:600;text-align:right;border-bottom:1px solid #ddd;}
+  thead th:first-child{text-align:left;}
+  tbody tr{border-bottom:1px solid #eee;}
+  .pl-name{text-align:left;font-weight:700;}
+  .pl-vintage{font-weight:400;color:#666;}
+  .pl-sub{font-size:11px;color:#888;font-weight:400;margin-top:1px;}
+  .pl-price{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .pl-printbtn{display:block;margin:0 auto 24px;padding:10px 24px;font-size:14px;cursor:pointer;}
+  @media print { body{padding:0;} .pl-printbtn{display:none;} }
+</style></head><body>
+<button class="pl-printbtn" onclick="window.print()">🖨 印刷する</button>
+<h1>${esc(storeName)}</h1>
+<div class="pl-date">${dateStr} 現在</div>
+${sections}
+</body></html>`;
+
+  const win = window.open('', '_blank');
+  if (!win) { showToast('ポップアップがブロックされました。ブラウザの設定をご確認ください'); return; }
+  win.document.write(html);
+  win.document.close();
+  if (window.sommLog) sommLog('print_list_open', { count: available.length });
 }
 
 // 「+追加」ボタン → カメラを起動
