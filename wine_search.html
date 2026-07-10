@@ -277,37 +277,20 @@
     /* ── EMPTY / INITIAL STATE ── */
     .initial-state { padding-top: 10px; }
 
-    .intro-card {
-      background: var(--card); border-radius: 16px;
-      padding: 20px; margin-bottom: 14px;
-      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+    .browse-cta {
+      display: flex; align-items: center; gap: 12px;
+      background: linear-gradient(135deg, var(--wine-dark) 0%, #7A1535 100%);
+      border-radius: 16px;
+      padding: 16px 16px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 14px rgba(92,14,42,.25);
+      cursor: pointer;
     }
-    .intro-card-title {
-      font-size: 14px; font-weight: 700; color: var(--wine-dark);
-      margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
-    }
-    .intro-flow {
-      display: flex; align-items: center; gap: 6px;
-      flex-wrap: wrap;
-    }
-    .flow-step {
-      padding: 7px 12px;
-      background: var(--light-gray); border-radius: 10px;
-      font-size: 12px; font-weight: 500; color: var(--text);
-    }
-    .flow-arrow { font-size: 14px; color: var(--gray); flex-shrink: 0; }
-
-    .use-cases { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
-    .use-case {
-      display: flex; align-items: flex-start; gap: 10px;
-      background: var(--card); border-radius: 12px;
-      padding: 12px 14px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.05);
-    }
-    .uc-icon { font-size: 22px; flex-shrink: 0; }
-    .uc-body { }
-    .uc-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
-    .uc-desc { font-size: 12px; color: var(--gray); line-height: 1.5; }
+    .browse-cta-icon { font-size: 26px; flex-shrink: 0; }
+    .browse-cta-body { flex: 1; min-width: 0; }
+    .browse-cta-title { font-size: 14.5px; font-weight: 800; color: #fff; margin-bottom: 3px; }
+    .browse-cta-desc { font-size: 11.5px; color: rgba(255,255,255,.8); line-height: 1.5; }
+    .browse-cta-arrow { font-size: 20px; color: var(--gold); flex-shrink: 0; }
 
     /* EXAMPLE SEARCHES */
     .ex-label {
@@ -401,16 +384,8 @@ const I18N = {
     hero_sub: 'ワイン名・生産者・産地を入力すると<br>購入先・飲めるお店が見つかります',
     search_ph: '例: Sassicaia, シャトー・マルゴー...',
     search_btn: '検索',
-    intro_title: 'こんなふうに使えます',
-    flow_step1: 'ワイン名を入力',
-    flow_step2: 'ネットで購入',
-    flow_step3: 'お近くのお店へ',
-    uc1_title: 'ネット購入（楽天・Amazon）',
-    uc1_desc: 'ワイン名を検索すると楽天市場・Amazonの商品ページへ直接アクセス。最安値をすぐ比較できます。',
-    uc2_title: '近くのワインショップで買う',
-    uc2_desc: '登録済みのワインショップから在庫情報を検索。今後、店舗が増えるほど充実します。',
-    uc3_title: '飲めるレストランを探す',
-    uc3_desc: '「このワインが飲めるお店」を地図で探せる機能を準備中。レストランが自店のワインリストを登録します。',
+    browse_cta_title: '価格・産地・ブドウ品種で探す',
+    browse_cta_desc: '予算やタイプを指定して、コスパの良いワインを一覧で見つけられます',
     ex_label: 'このワインを探してみる',
   },
   en: {
@@ -419,16 +394,8 @@ const I18N = {
     hero_sub: 'Enter a wine name, producer, or region<br>to find where to buy or drink it',
     search_ph: 'e.g. Sassicaia, Château Margaux...',
     search_btn: 'Search',
-    intro_title: 'How it works',
-    flow_step1: 'Enter a wine name',
-    flow_step2: 'Buy it online',
-    flow_step3: 'Or find it nearby',
-    uc1_title: 'Buy online (Rakuten, Amazon)',
-    uc1_desc: 'Search a wine name to jump straight to Rakuten/Amazon listings and compare prices.',
-    uc2_title: 'Buy from a nearby wine shop',
-    uc2_desc: 'Search inventory from registered wine shops. Coverage grows as more shops join.',
-    uc3_title: 'Find a restaurant that serves it',
-    uc3_desc: 'A map of "where you can drink this" is in the works — restaurants register their own wine lists.',
+    browse_cta_title: 'Browse by price, region, or grape',
+    browse_cta_desc: 'Set a budget or style to find good-value wines from a full list',
     ex_label: 'Try searching for these',
   },
 };
@@ -606,39 +573,13 @@ function renderInitial() {
   document.getElementById('content').innerHTML = `
     <div class="initial-state">
 
-      <div class="intro-card">
-        <div class="intro-card-title">${t('intro_title')}</div>
-        <div class="intro-flow">
-          <span class="flow-step">${t('flow_step1')}</span>
-          <span class="flow-arrow">→</span>
-          <span class="flow-step">${t('flow_step2')}</span>
-          <span class="flow-arrow">·</span>
-          <span class="flow-step">${t('flow_step3')}</span>
+      <div class="browse-cta" onclick="if(window.sommLog)sommLog('wine_search_browse_cta',{});location.href='prototype.html?tab=ranking&advanced=1'">
+        <div class="browse-cta-icon">🔍</div>
+        <div class="browse-cta-body">
+          <div class="browse-cta-title">${t('browse_cta_title')}</div>
+          <div class="browse-cta-desc">${t('browse_cta_desc')}</div>
         </div>
-      </div>
-
-      <div class="use-cases">
-        <div class="use-case">
-          <div class="uc-icon">🛒</div>
-          <div class="uc-body">
-            <div class="uc-title">${t('uc1_title')}</div>
-            <div class="uc-desc">${t('uc1_desc')}</div>
-          </div>
-        </div>
-        <div class="use-case">
-          <div class="uc-icon">🏪</div>
-          <div class="uc-body">
-            <div class="uc-title">${t('uc2_title')}</div>
-            <div class="uc-desc">${t('uc2_desc')}</div>
-          </div>
-        </div>
-        <div class="use-case">
-          <div class="uc-icon">🍽️</div>
-          <div class="uc-body">
-            <div class="uc-title">${t('uc3_title')}</div>
-            <div class="uc-desc">${t('uc3_desc')}</div>
-          </div>
-        </div>
+        <div class="browse-cta-arrow">›</div>
       </div>
 
       <div class="ex-label">${t('ex_label')}</div>

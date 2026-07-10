@@ -4719,6 +4719,15 @@ function handleEnter(e) {
   // QRから開いた場合は実店舗のワインリストを表示
   const _rid = new URLSearchParams(location.search).get('r');
   if (_rid) loadRestaurantList(_rid);
+  // wine_search.htmlの「価格・産地で探す」導線から開いた場合はランキング＋詳細検索を前面に
+  const _qs = new URLSearchParams(location.search);
+  if (_qs.get('tab') === 'ranking') {
+    switchTab('ranking');
+    if (_qs.get('advanced') === '1') {
+      toggleRankAdvanced();
+      document.getElementById('rankSortBar')?.scrollIntoView({ block: 'start' });
+    }
+  }
 })();
 </script>
 <script>
