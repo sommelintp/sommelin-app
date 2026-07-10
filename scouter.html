@@ -154,6 +154,10 @@ body{
 .fit-ribbon{margin:0 16px 10px;background:linear-gradient(90deg,#f8e3ec,#fbeef4);color:#7d1240;
   border-radius:12px;padding:10px 14px;font-size:12px;font-weight:800;line-height:1.6;}
 .fit-ribbon .fr2{font-weight:600;color:#a3547a;}
+/* 2026-07-12（#22）: 評価の多軸化バッジ。style-noteは控えめな金縁、vintage-noteはさらに軽い注記 */
+.style-note{margin:0 16px 6px;border:1.5px solid var(--gold,#C9973A);color:#8a6a1a;
+  border-radius:10px;padding:7px 12px;font-size:11.5px;font-weight:700;text-align:center;}
+.vintage-note{margin:0 16px 10px;color:#888;font-size:11px;text-align:center;line-height:1.5;}
 /* list result rows */
 .li-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 16px 8px;padding:10px 12px;background:#f7f5f3;border-radius:10px;}
 .li-row.hit{background:#fdf6ee;border:1px solid #ecd9bd;}
@@ -791,6 +795,8 @@ function renderShelfCard(b){
         <div class="sh-cell"><div class="v">${fmtPrice(w.price)}</div><div class="l">参考価格</div></div>
         <div class="sh-cell"><div class="v sh-refscore">${fmtTotal(w.total)}<small>/5</small></div><div class="l">総合評価</div></div>
       </div>
+      ${w.styleNote?`<div class="style-note">🏅 ${esc(w.styleNote)}</div>`:''}
+      ${w.vintageNote?`<div class="vintage-note">${esc(w.vintageNote)}</div>`:''}
       ${pick}
       ${filterRibbons}
       ${fitRibbon(b)}
