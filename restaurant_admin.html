@@ -1657,6 +1657,12 @@
     <div class="stk-stat"><div class="stk-num stk-red" id="stkOut">0</div><div class="stk-lbl">在庫なし</div></div>
   </div>
 
+  <!-- LINE連携（2026-07-12・R節） -->
+  <div style="margin:14px 16px 0;background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;">
+    <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:8px;">📲 LINE連携</div>
+    <div id="lineLinkBody" style="font-size:12.5px;color:var(--text-sub);">読み込み中…</div>
+  </div>
+
   <!-- Quick add form -->
   <div class="stk-add-card">
     <div class="stk-add-title">＋ ワインを在庫に登録</div>
@@ -2271,6 +2277,91 @@ async function rwFetch(path, opts){
 }
 function dbToUi(r){ return { id:r.id, cat:r.cat||'red', name:r.name, producer:r.producer||'', vintage:r.vintage||'', region:r.region||'', grapes:r.grapes||'', priceGlass:r.price_glass||0, priceBottle:r.price_bottle||0, available:r.available!==false, stock:r.stock||0, wineId:r.wine_id||null, hasLabel:!!r.wine_id }; }
 function uiToDb(w, uid){ return { owner_id:uid, cat:w.cat||null, name:w.name, producer:w.producer||null, vintage:w.vintage||null, region:w.region||null, grapes:w.grapes||null, price_glass:w.priceGlass||null, price_bottle:w.priceBottle||null, available:w.available!==false, stock:w.stock||0, wine_id:w.wineId||null }; }
+
+// ============================================================
+// 📲 LINE連携（2026-07-12・R節）: ワンタイムコード方式。LIFF/OAuth不要
+// ============================================================
+let lineLinkPollTimer = null;
+
+async function lineLinkApiFetch(path, opts) {
+  opts = opts || {};
+  opts.headers = Object.assign({ Authorization: 'Bearer ' + (rwToken() || ''), 'Content-Type': 'application/json' }, opts.headers || {});
+  return fetch(RW_API + '/api/line-link' + path, opts);
+}
+
+function lineLinkRenderLinked(displayName) {
+  document.getElementById('lineLinkBody').innerHTML =
+    `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <span style="color:var(--text);font-weight:700;">✅ 連携済み${displayName ? '（' + escLineLink(displayName) + '）' : ''}</span>
+      <button class="btn-ghost" style="padding:6px 12px;font-size:12px;" onclick="lineLinkUnlink()">解除</button>
+    </div>`;
+}
+function lineLinkRenderUnlinked() {
+  document.getElementById('lineLinkBody').innerHTML =
+    `<div>
+      <div style="margin-bottom:8px;">LINEと連携すると、試飲会情報などの通知をLINEで受け取れます。</div>
+      <button class="btn-primary" style="padding:8px 16px;font-size:13px;" onclick="lineLinkStart()">連携する</button>
+    </div>`;
+}
+function lineLinkRenderCode(code, url) {
+  if (lineLinkPollTimer) { clearInterval(lineLinkPollTimer); lineLinkPollTimer = null; }
+  document.getElementById('lineLinkBody').innerHTML =
+    `<div>
+      <div style="margin-bottom:8px;">① <a href="${escLineLinkAttr(url)}" target="_blank" rel="noopener" style="color:var(--burgundy);font-weight:700;">LINEで友だち追加</a>してください</div>
+      <div style="margin-bottom:8px;">② トーク画面でこのコードを送信してください：</div>
+      <div style="text-align:center;background:var(--bg);border-radius:10px;padding:10px;font-size:22px;font-weight:800;letter-spacing:.15em;color:var(--burgundy);margin-bottom:8px;">${escLineLink(code)}</div>
+      <div style="font-size:11px;color:var(--text-sub);">送信すると自動的に連携が完了します（10分間有効）</div>
+    </div>`;
+  // 数秒おきに連携完了をポーリング
+  lineLinkPollTimer = setInterval(lineLinkCheckStatus, 3000);
+}
+function escLineLink(s) { return (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function escLineLinkAttr(s) { return escLineLink(s).replace(/'/g, '&#39;'); }
+
+async function lineLinkCheckStatus() {
+  try {
+    const r = await lineLinkApiFetch('/status');
+    if (!r.ok) return;
+    const d = await r.json();
+    if (d.linked) {
+      if (lineLinkPollTimer) { clearInterval(lineLinkPollTimer); lineLinkPollTimer = null; }
+      lineLinkRenderLinked(d.displayName);
+    }
+  } catch (e) {}
+}
+
+async function lineLinkStart() {
+  document.getElementById('lineLinkBody').textContent = '発行中…';
+  try {
+    const r = await lineLinkApiFetch('/start', { method: 'POST' });
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    lineLinkRenderCode(d.code, d.officialAccountUrl);
+  } catch (e) {
+    showToast('⚠️ 連携コードの発行に失敗しました');
+    lineLinkRenderUnlinked();
+  }
+}
+
+async function lineLinkUnlink() {
+  try {
+    await lineLinkApiFetch('/unlink', { method: 'POST' });
+  } catch (e) {}
+  lineLinkRenderUnlinked();
+}
+
+async function lineLinkInit() {
+  if (lineLinkPollTimer) { clearInterval(lineLinkPollTimer); lineLinkPollTimer = null; }
+  try {
+    const r = await lineLinkApiFetch('/status');
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    if (d.linked) lineLinkRenderLinked(d.displayName);
+    else lineLinkRenderUnlinked();
+  } catch (e) {
+    lineLinkRenderUnlinked();
+  }
+}
 
 async function loadWineData(){
   const uid = await rwUid(); if(!uid) return;
@@ -3703,6 +3794,7 @@ function stockPriceLabel(w) {
 }
 
 function renderStock() {
+  lineLinkInit();
   const items = wineData;
   const inCount  = items.filter(i => i.available).length;
   document.getElementById('stkTotal').textContent = items.length;
