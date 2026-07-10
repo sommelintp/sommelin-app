@@ -1826,6 +1826,7 @@
 <!-- sommelin-ui.css: ブランドトークン・共通部品（インライン<style>より後に読み込み、トークンを勝たせる） -->
 <link rel="stylesheet" href="assets/sommelin-ui.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="assets/bottle-svg.js"></script>
 </head>
 <body>
 
@@ -3558,6 +3559,7 @@ async function loadTopWines() {
       <div class="ranking-wine-card${i===0 ? ' is-top' : ''}">
         ${i===0 ? '<div class="label-rule label-rule--on-card" style="position:absolute;left:16px;right:16px;top:4px;"></div>' : ''}
         <div class="rank-badge ${badge}">${i+1}</div>
+        ${window.BottleSvg ? `<div style="flex-shrink:0;line-height:0;">${window.BottleSvg.render(w,44)}</div>` : ''}
         <div class="rank-wine-info">
           <div class="rank-wine-name">${escR(w.name)}${w.vintage && w.vintage!=='NV' ? ' ' + escR(w.vintage) : ''}</div>
           <div class="rank-wine-region">${escR(region)}${producerLink}</div>
