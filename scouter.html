@@ -76,8 +76,11 @@ body{
   background:linear-gradient(0deg,rgba(0,0,0,.8),rgba(0,0,0,.45) 60%,transparent);
   display:flex;flex-direction:column;align-items:center;gap:12px;}
 
-/* 常時表示の下ナビ（プロトタイプ側と同じ4タブ） */
-.scouter-nav{position:fixed;left:0;right:0;bottom:0;max-width:430px;margin:0 auto;z-index:200;
+/* 常時表示の下ナビ（プロトタイプ側と同じ4タブ）。2026-07-12: パーミッション画面
+   #perm(z-index:500)やtoast(z-index:400)より下にあり、記録タブに入った直後の
+   画面でnavが隠れて他画面へ移動できなくなる不具合があったため、ページ内の
+   全要素より確実に上に来るよう最上位のz-indexにする。 */
+.scouter-nav{position:fixed;left:0;right:0;bottom:0;max-width:430px;margin:0 auto;z-index:600;
   background:#fff;border-top:1px solid rgba(0,0,0,.08);display:flex;
   padding:8px 0 env(safe-area-inset-bottom);}
 .scouter-nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;

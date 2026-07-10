@@ -331,6 +331,21 @@
     .lang-toggle { position: absolute; top: 16px; right: 16px; z-index: 2;
       background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.32);
       color: #fff; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 20px; cursor: pointer; }
+
+    /* 常時表示の下ナビ（scouter.html等と同じ4タブ。2026-07-12: このページに下ナビが
+       無く、直接遷移すると他画面へ移動できなくなる不具合の修正）。.contentに元々
+       padding-bottom:100pxが確保されているのでnavの高さ分は隠れない。 */
+    .search-nav {
+      position: fixed; left: 0; right: 0; bottom: 0; max-width: 430px; margin: 0 auto; z-index: 600;
+      background: #fff; border-top: 1px solid rgba(0,0,0,.08);
+      display: flex; padding: 8px 0 env(safe-area-inset-bottom);
+    }
+    .search-nav a {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+      text-decoration: none; color: #7a5560; font-size: 10.5px; padding: 4px 0;
+    }
+    .search-nav a.on { color: var(--burgundy, #9B1B4B); font-weight: 700; }
+    .search-nav .ic { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
   </style>
   <link rel="stylesheet" href="assets/sommelin-ui.css">
 </head>
@@ -368,6 +383,14 @@
 <div class="content" id="content">
   <!-- Initial state is rendered by JS -->
 </div>
+
+<!-- 常時表示の下ナビ（scouter.html等と同じ4タブ） -->
+<nav class="search-nav">
+  <a href="prototype.html"><svg class="ic"><use href="assets/sommelin-icons.svg#i-home"></use></svg>ホーム</a>
+  <a href="wine_search.html" class="on"><svg class="ic"><use href="assets/sommelin-icons.svg#i-search"></use></svg>探す</a>
+  <a href="scouter.html"><svg class="ic"><use href="assets/sommelin-icons.svg#i-camera"></use></svg>記録</a>
+  <a href="sommelier-chat.html"><svg class="ic"><use href="assets/sommelin-icons.svg#i-chat"></use></svg>相談</a>
+</nav>
 
 <script>
 /* ===== 多言語対応（i18n）。将来 fr/it 等も I18N に言語を1つ足すだけで拡張できる構造 ===== */
