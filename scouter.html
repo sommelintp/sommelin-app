@@ -792,7 +792,7 @@ function renderShelfCard(b){
         <div class="stars">${cp.stars}</div><div class="lbl">${cp.lbl}</div><div class="sub">${cp.sub}</div>
       </div>
       <div class="sh-grid">
-        <div class="sh-cell"><div class="v">${fmtPrice(w.price)}</div><div class="l">参考価格</div></div>
+        <div class="sh-cell"><div class="v">${fmtPrice(w.price)}</div><div class="l">参考価格${w.sizeNote?`<br>（${esc(w.sizeNote)}）`:''}</div></div>
         <div class="sh-cell"><div class="v sh-refscore">${fmtTotal(w.total)}<small>/5</small></div><div class="l">総合評価</div></div>
       </div>
       ${w.styleNote?`<div class="style-note">🏅 ${esc(w.styleNote)}</div>`:''}
