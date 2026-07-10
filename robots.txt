@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sommelintp.github.io/sommelin-app/sitemap.xml
