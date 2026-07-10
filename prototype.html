@@ -3529,6 +3529,11 @@ async function loadTopWines() {
     const d = await r.json();
     if (!d.items || !d.items.length) throw 0;
     const escR = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    // 2026-07-12: 絞り込み結果内での動的パーセンタイル表示（#15多軸化構想の先行実装）。
+    // 「この条件の中で上位◯%」はd.total（絞り込み後の全件数）とアイテムの並び順から
+    // その場で計算できる（sortBy=totalのスコア順の時だけ意味を持つ。新規APIは不要）。
+    const rankFilterLabel = rankChiiki || rankGrape || rankKuni || rankIro || null;
+    const showPct = rankSortBy === 'total' && d.total >= 10;
     box.innerHTML = d.items.map((it, i) => {
       const w = it.wine || {};
       const badge = i===0 ? 'r1' : i===1 ? 'r2' : i===2 ? 'r3' : 'rn';
@@ -3541,6 +3546,13 @@ async function loadTopWines() {
       const producerLink = w.producer
         ? ` / <a href="producer.html?p=${encodeURIComponent(w.producer)}" style="color:inherit;text-decoration:underline;text-decoration-color:var(--border);">${escR(w.producer)}</a>`
         : '';
+      let pctHtml = '';
+      if (showPct) {
+        const pct = ((i + 1) / d.total) * 100;
+        const pctStr = pct < 1 ? '上位1%未満' : `上位${Math.ceil(pct)}%`;
+        const scope = rankFilterLabel ? `${escR(rankFilterLabel)}の中で` : '全ワイン中';
+        pctHtml = `<div class="rank-wine-stats" style="margin-top:2px;"><span class="rank-stat" style="color:var(--gold);font-weight:700;">${scope}${pctStr}（${d.total.toLocaleString('ja-JP')}件中）</span></div>`;
+      }
       return `
       <div class="ranking-wine-card${i===0 ? ' is-top' : ''}">
         ${i===0 ? '<div class="label-rule label-rule--on-card" style="position:absolute;left:16px;right:16px;top:4px;"></div>' : ''}
@@ -3554,6 +3566,7 @@ async function loadTopWines() {
             ${cospaBadge}
           </div>
           <div class="rank-wine-stats" style="margin-top:2px;"><span class="rank-stat">${revTxt}</span></div>
+          ${pctHtml}
           <div style="margin-top:6px;"><button onclick="openWineMap(${it.wineId}, '${escR(w.name).replace(/'/g,"\\'")}')" style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--burgundy);cursor:pointer;font-family:inherit;">📍 どこで飲める？買える？</button></div>
         </div>
         <div class="rank-score">${Number(it.total).toFixed(2)}<small>点</small></div>
