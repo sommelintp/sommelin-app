@@ -1,5 +1,5 @@
 /* ═════════════════════════════════════════════════════════════
-   Sommelin パラメトリックSVGボトル（2026-07-11 S-1実装）
+   Sommelin パラメトリックSVGボトル（2026-07-11 S-1 / 2026-07-11 T-5改良）
    写真がまだ無いワインにも「らしい」ボトル影を出すための代替表現。
    精度より雰囲気（iro/kuni/chiiki/grapeの手がかりのみで推定。
    type_ja非公開のため泡・酒精強化はシャンパーニュ/著名産地名の代理判定）。
@@ -46,43 +46,54 @@
     return COLOR_MAP[iro] || { glass: '#2d4a2e', wine: '#5a0f1e' };
   }
 
-  // ── 形状ごとの寸法パラメータ（40〜60pxでも判別できるよう肩の変化域を広めに取る） ──
+  // ── 形状ごとの寸法パラメータ（実物の比率に寄せる。bodyBottomWで裾の張り出しを表現） ──
   const SHAPE_PARAMS = {
-    bordeaux:  { neckW: 11, neckH: 40, shoulderH: 12, shoulderStyle: 'high',  bodyW: 30, bodyTop: 52 },
-    burgundy:  { neckW: 11, neckH: 24, shoulderH: 32, shoulderStyle: 'slope', bodyW: 36, bodyTop: 56 },
-    flute:     { neckW: 9,  neckH: 66, shoulderH: 8,  shoulderStyle: 'high',  bodyW: 18, bodyTop: 74 },
-    dumpy:     { neckW: 9,  neckH: 10, shoulderH: 26, shoulderStyle: 'round', bodyW: 34, bodyTop: 36 },
-    champagne: { neckW: 12, neckH: 22, shoulderH: 24, shoulderStyle: 'round', bodyW: 38, bodyTop: 46 },
+    // ボルドー型: いかり肩・長めの首・胴は円筒（裾張り無し）
+    bordeaux:  { neckW: 10, neckH: 44, bodyW: 28, bodyBottomW: 28, bodyTop: 56, foilRatio: 0.36 },
+    // ブルゴーニュ型: 首から胴まで一続きのなで肩カーブ・裾がやや広がる
+    burgundy:  { neckW: 10, neckH: 20, bodyW: 34, bodyBottomW: 38, bodyTop: 62, foilRatio: 0.4 },
+    // シャンパーニュ型: ブルゴーニュに近いが太い胴・首の下半分までフォイル
+    champagne: { neckW: 13, neckH: 16, bodyW: 40, bodyBottomW: 43, bodyTop: 58, foilRatio: 0.82 },
+    // アルザス/フルート型: 肩がほぼ無く首から胴まで一続きの緩いテーパー
+    flute:     { neckW: 9,  neckH: 50, bodyW: 16, bodyBottomW: 17, bodyTop: 58, foilRatio: 0.3 },
+    // ずんぐり型（酒精強化）: 首の付け根が丸く膨らみ、胴は裾に向けてわずかに絞る
+    dumpy:     { neckW: 9,  neckH: 10, bodyW: 34, bodyBottomW: 31, bodyTop: 30, foilRatio: 0.5 },
   };
 
-  function buildPath(p){
+  function buildPath(shape, p){
     const cx = VB_W / 2;
     const neckL = cx - p.neckW / 2, neckR = cx + p.neckW / 2;
     const bodyL = cx - p.bodyW / 2, bodyR = cx + p.bodyW / 2;
+    const botL = cx - p.bodyBottomW / 2, botR = cx + p.bodyBottomW / 2;
     const capY = 4;
     const shoulderY = p.neckH + capY;
     const bodyY = p.bodyTop;
+    const span = bodyY - shoulderY;
     const bottomY = VB_H - 4;
     const puntY = bottomY - 5;
 
-    let shoulderLeft, shoulderRight;
-    if (p.shoulderStyle === 'high') {
-      // 首から垂直に落ちてから水平に張り出す、角の立った肩（ボルドー/フルート型）
-      shoulderLeft = `L ${neckL} ${bodyY} L ${bodyL} ${bodyY}`;
-      shoulderRight = `L ${bodyR} ${bodyY} L ${neckR} ${bodyY}`;
-    } else if (p.shoulderStyle === 'slope') {
-      // 直線的な斜め肩（ブルゴーニュ型のなで肩）
-      shoulderLeft = `L ${bodyL} ${bodyY}`;
-      shoulderRight = `L ${bodyR} ${bodyY} L ${neckR} ${shoulderY}`;
+    let left, right;
+    if (shape === 'bordeaux') {
+      // 首から短く力強いカーブでいかり肩へ
+      left  = `Q ${neckL} ${shoulderY + span * 0.62}, ${bodyL} ${bodyY}`;
+      right = `L ${bodyR} ${bodyY} Q ${neckR} ${shoulderY + span * 0.62}, ${neckR} ${shoulderY}`;
+    } else if (shape === 'burgundy' || shape === 'champagne') {
+      // 首の付け根はすぼまり、胴側でなだらかに開く1本の凹カーブ（なで肩）
+      left  = `C ${neckL} ${shoulderY + span * 0.18}, ${bodyL} ${bodyY - span * 0.78}, ${bodyL} ${bodyY}`;
+      right = `L ${bodyR} ${bodyY} C ${bodyR} ${bodyY - span * 0.78}, ${neckR} ${shoulderY + span * 0.18}, ${neckR} ${shoulderY}`;
+    } else if (shape === 'flute') {
+      // 肩と呼べる区間がほぼ無い緩いテーパー
+      left  = `L ${bodyL} ${bodyY}`;
+      right = `L ${bodyR} ${bodyY} L ${neckR} ${shoulderY}`;
     } else {
-      // 丸みのある肩（酒精強化・シャンパーニュ型）
-      shoulderLeft = `Q ${neckL} ${bodyY}, ${bodyL} ${bodyY}`;
-      shoulderRight = `L ${bodyR} ${bodyY} Q ${neckR} ${bodyY}, ${neckR} ${shoulderY}`;
+      // dumpy: 首の付け根がふっくら丸く張り出す
+      left  = `Q ${bodyL - 3} ${shoulderY + span * 0.45}, ${bodyL} ${bodyY}`;
+      right = `L ${bodyR} ${bodyY} Q ${bodyR + 3} ${shoulderY + span * 0.45}, ${neckR} ${shoulderY}`;
     }
 
-    return `M ${neckL} ${shoulderY} ${shoulderLeft}
-      L ${bodyL} ${puntY} C ${bodyL} ${bottomY}, ${bodyR} ${bottomY}, ${bodyR} ${puntY}
-      ${shoulderRight} Z`;
+    return `M ${neckL} ${shoulderY} ${left}
+      L ${botL} ${puntY} C ${botL} ${bottomY}, ${botR} ${bottomY}, ${botR} ${puntY}
+      ${right} Z`;
   }
 
   function render(wine, heightPx){
@@ -95,16 +106,19 @@
     const foil = isTop ? '#C9973A' : '#5a1626';
     const cx = VB_W / 2;
     const neckL = cx - p.neckW / 2, neckR = cx + p.neckW / 2;
-    const bodyPath = buildPath(p);
+    const bodyPath = buildPath(shape, p);
     const capY = 4;
     const vintage = (wine.vintage && wine.vintage !== 'NV') ? String(wine.vintage) : '';
+    const labelW = Math.max(p.bodyW, p.bodyBottomW) * 0.62;
+    const labelY = p.bodyTop + (VB_H - 4 - p.bodyTop) * 0.22;
 
     return `<svg viewBox="0 0 ${VB_W} ${VB_H}" width="${Math.round(heightPx * VB_W / VB_H)}" height="${heightPx}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ワインボトルのイメージ">
       <path d="${bodyPath}" fill="${col.glass}"/>
-      <rect x="${neckL}" y="${capY}" width="${p.neckW}" height="${p.neckH * 0.42}" rx="1" fill="${foil}"/>
-      ${shape === 'champagne' ? `<ellipse cx="${cx}" cy="${capY + 1}" rx="${p.neckW*0.62}" ry="2.4" fill="${foil}"/>` : ''}
-      <rect x="${cx - p.bodyW*0.32}" y="${p.bodyTop + 10}" width="${p.bodyW*0.64}" height="${vintage ? 16 : 11}" rx="1.5" fill="#faf6ee" opacity="0.94"/>
-      ${vintage ? `<text x="${cx}" y="${p.bodyTop + 22}" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="6" font-weight="700" text-anchor="middle" fill="#5a4a30">${vintage}</text>` : ''}
+      <rect x="${cx - p.bodyW*0.5 + 1.6}" y="${p.bodyTop + 3}" width="${p.bodyW*0.14}" height="${(VB_H-4-p.bodyTop)*0.62}" rx="1.2" fill="#fff" opacity="0.14"/>
+      <rect x="${neckL}" y="${capY}" width="${p.neckW}" height="${p.neckH * p.foilRatio}" rx="1" fill="${foil}"/>
+      ${shape === 'champagne' ? `<ellipse cx="${cx}" cy="${capY + 2}" rx="${p.neckW*0.68}" ry="3" fill="${foil}"/>` : ''}
+      <rect x="${cx - labelW/2}" y="${labelY}" width="${labelW}" height="${vintage ? 16 : 11}" rx="1.5" fill="#faf6ee" opacity="0.94"/>
+      ${vintage ? `<text x="${cx}" y="${labelY + 12}" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="6" font-weight="700" text-anchor="middle" fill="#5a4a30">${vintage}</text>` : ''}
     </svg>`;
   }
 

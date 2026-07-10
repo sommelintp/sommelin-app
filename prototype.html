@@ -1458,8 +1458,10 @@
   .rank-wine-stats { display: flex; gap: 10px; margin-top: 5px; }
   .rank-stat { font-size: 11px; color: var(--text-sub); }
   .rank-stat strong { color: var(--burgundy); }
-  .rank-score { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--burgundy); flex-shrink: 0; }
-  .rank-score small { font-size: 11px; font-weight: 600; color: var(--text-sub); margin-left: 1px; }
+  .rank-score { flex-shrink: 0; text-align: right; }
+  .rank-score-pct { font-family: var(--font-display); font-size: 17px; font-weight: 800; color: var(--gold); line-height: 1.25; }
+  .rank-score-sub { font-size: 10px; color: var(--text-sub); margin-top: 2px; }
+  .rank-left { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
 
   .ranking-user-card {
     background: white;
@@ -2351,14 +2353,15 @@
     <a href="filter_market.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;">みんなのフィルター</a>
   </div>
   <div class="ranking-tabs">
-    <div class="ranking-tab active" id="rtab-pop" onclick="switchRankingTab('pop')">総合人気</div>
+    <div class="ranking-tab active" id="rtab-pop" onclick="switchRankingTab('pop')">おすすめ</div>
     <div class="ranking-tab" id="rtab-store" onclick="switchRankingTab('store')">お店</div>
   </div>
 
   <!-- ソート・絞り込み（2026-07-08追加: 高額ワインばかり並ぶ不具合の対策＋詳細検索を追加） -->
   <div id="rankSortBar" style="display:flex;gap:8px;padding:0 16px 10px;flex-wrap:wrap;align-items:center;">
     <select id="rankSortSelect" onchange="rankSortBy=this.value;loadTopWines();" style="font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-family:inherit;color:var(--text);background:#fff;">
-      <option value="total">総合評価順</option>
+      <option value="cospa">コスパがいい順</option>
+      <option value="total">評価が高い順</option>
       <option value="price_asc">価格が安い順</option>
       <option value="price_desc">価格が高い順</option>
     </select>
@@ -2422,7 +2425,7 @@
     </div>
   </div>
 
-  <!-- 総合人気（実データ: /api/top-wines＝信頼度加重の総合スコア順。コスパはバッジで併記。loadTopWinesが描画） -->
+  <!-- おすすめ（実データ: /api/top-wines＝既定はコスパ順。loadTopWinesが描画） -->
   <div id="rankingPop" class="ranking-list">
     <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>
   </div>
@@ -3464,14 +3467,14 @@ function closeWineMap() {
   if (wineMap) { destroyMap(wineMap); wineMap = null; }
 }
 
-// ===== 総合人気（実データ: /api/top-wines＝評価の信頼度加重ベイズ平均。コスパはバッジで併記） =====
+// ===== おすすめ（実データ: /api/top-wines＝既定はコスパ順、他に総合評価順/価格順を選択可） =====
 const starsHtml = t => {
   const full = Math.round(Number(t) || 0);
   return '<span style="color:var(--gold);letter-spacing:1px;">' + '★'.repeat(Math.max(0, Math.min(5, full))) + '</span>'
        + '<span style="color:var(--border);letter-spacing:1px;">' + '★'.repeat(Math.max(0, 5 - full)) + '</span>';
 };
 
-let rankSortBy = 'total', rankIro = '', rankKuni = '';
+let rankSortBy = 'cospa', rankIro = '', rankKuni = '';
 let rankChiiki = '', rankProducer = '', rankGrape = '', rankPriceMin = '', rankPriceMax = '', rankVintageMin = '', rankVintageMax = '', rankSweet = '';
 function populateRankKuniOptions() {
   const sel = document.getElementById('rankKuniSelect');
@@ -3535,7 +3538,7 @@ async function loadTopWines() {
     // 「この条件の中で上位◯%」はd.total（絞り込み後の全件数）とアイテムの並び順から
     // その場で計算できる（sortBy=totalのスコア順の時だけ意味を持つ。新規APIは不要）。
     const rankFilterLabel = rankChiiki || rankGrape || rankKuni || rankIro || null;
-    const showPct = rankSortBy === 'total' && d.total >= 10;
+    const showPct = (rankSortBy === 'cospa' || rankSortBy === 'total') && d.total >= 10;
     box.innerHTML = d.items.map((it, i) => {
       const w = it.wine || {};
       const badge = i===0 ? 'r1' : i===1 ? 'r2' : i===2 ? 'r3' : 'rn';
@@ -3543,39 +3546,39 @@ async function loadTopWines() {
       const price = w.price != null ? '¥' + Math.round(w.price).toLocaleString('ja-JP') : '—';
       const revTxt = it.communityCount > 0
         ? `みんなの評価 <strong>${it.communityAvg ?? '—'}</strong>（${it.communityCount}件）`
-        : '総合評価ベース';
+        : null;
       const cospaBadge = it.goodValue ? '<span class="s-badge-cospa">コスパ良好</span>' : '';
       const producerLink = w.producer
         ? ` / <a href="producer.html?p=${encodeURIComponent(w.producer)}" style="color:inherit;text-decoration:underline;text-decoration-color:var(--border);">${escR(w.producer)}</a>`
         : '';
-      let pctHtml = '';
+      let scoreHtml = '';
       if (showPct) {
         const pct = ((i + 1) / d.total) * 100;
         const pctStr = pct < 1 ? '上位1%未満' : `上位${Math.ceil(pct)}%`;
-        const scope = rankFilterLabel ? `${escR(rankFilterLabel)}の中で` : '全ワイン中';
-        pctHtml = `<div class="rank-wine-stats" style="margin-top:2px;"><span class="rank-stat" style="color:var(--gold);font-weight:700;">${scope}${pctStr}（${d.total.toLocaleString('ja-JP')}件中）</span></div>`;
+        const scope = rankFilterLabel ? `${escR(rankFilterLabel)}の中で` : '';
+        scoreHtml = `<div class="rank-score-pct">${pctStr}</div><div class="rank-score-sub">${scope}${d.total.toLocaleString('ja-JP')}件中</div>`;
       }
       return `
       <div class="ranking-wine-card${i===0 ? ' is-top' : ''}">
         ${i===0 ? '<div class="label-rule label-rule--on-card" style="position:absolute;left:16px;right:16px;top:4px;"></div>' : ''}
-        <div class="rank-badge ${badge}">${i+1}</div>
-        ${window.BottleSvg ? `<div style="flex-shrink:0;line-height:0;">${window.BottleSvg.render(w,44)}</div>` : ''}
+        <div class="rank-left">
+          <div class="rank-badge ${badge}">${i+1}</div>
+          ${window.BottleSvg ? `<div style="line-height:0;">${window.BottleSvg.render(w,72)}</div>` : ''}
+        </div>
         <div class="rank-wine-info">
           <div class="rank-wine-name">${escR(w.name)}${w.vintage && w.vintage!=='NV' ? ' ' + escR(w.vintage) : ''}</div>
           <div class="rank-wine-region">${escR(region)}${producerLink}</div>
           <div class="rank-wine-stats">
-            <span class="rank-stat">${starsHtml(it.total)}</span>
             <span class="rank-stat">参考価格 <strong>${price}</strong></span>
             ${cospaBadge}
           </div>
-          <div class="rank-wine-stats" style="margin-top:2px;"><span class="rank-stat">${revTxt}</span></div>
-          ${pctHtml}
+          ${revTxt ? `<div class="rank-wine-stats" style="margin-top:2px;"><span class="rank-stat">${revTxt}</span></div>` : ''}
           <div style="margin-top:6px;"><button onclick="openWineMap(${it.wineId}, '${escR(w.name).replace(/'/g,"\\'")}')" style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--burgundy);cursor:pointer;font-family:inherit;">📍 どこで飲める？買える？</button></div>
         </div>
-        <div class="rank-score">${Number(it.total).toFixed(2)}<small>点</small></div>
+        <div class="rank-score">${scoreHtml}</div>
       </div>`;
     }).join('')
-    + '<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;">お店の評価・専門評価・外部評価を信頼度で重み付けした総合スコア順</div>';
+    + `<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;">${rankSortBy === 'cospa' ? '価格帯の中でコスパが良い順。同じコスパなら評価が高い順' : rankSortBy === 'total' ? 'ソムリン独自の総合評価順。同じ評価なら価格の安い順' : '選んだ並び順で表示中'}</div>`;
   } catch (e) {
     box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">ランキングを読み込めませんでした（通信環境をご確認ください）</div>';
   }
