@@ -3632,7 +3632,7 @@ async function loadTopWines() {
         </div>
       </div>`;
     }).join('')
-    + '<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;">価格帯の中でコスパが良い順。同じコスパなら評価が高い順</div>';
+    + '<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;line-height:1.6;">星が付いているワインはすべてソムリンのおすすめです。星の数は同価格帯での稀少度を表します</div>';
   } catch (e) {
     box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">ランキングを読み込めませんでした（通信環境をご確認ください）</div>';
   }
