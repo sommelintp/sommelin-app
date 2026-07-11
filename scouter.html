@@ -278,7 +278,7 @@ body{
   <button class="perm-main" onclick="startScan()" data-i18n="perm_start">📷 カメラを起動する</button>
   <button class="perm-sub" onclick="document.getElementById('fileInput').click()" data-i18n="perm_from_photo">写真から読み取る</button>
   <button class="perm-sub" style="margin-top:10px" onclick="location.href='taste.html'" data-i18n="perm_taste">❤️ 好みのワインを登録（写真から）</button>
-  <div class="perm-note" data-i18n-html="perm_note">写真は銘柄特定と品質向上のためソムリンのサーバーで解析されます。<br>評価は実データがある場合のみ表示します（推測のスコアは出しません）。</div>
+  <div class="perm-note" data-i18n-html="perm_note">写真は銘柄特定と品質向上のためソムリンのサーバーで解析されます。<br>ラベル部分の画像はカタログ整備のため保存されることがあります。<br>評価は実データがある場合のみ表示します（推測のスコアは出しません）。</div>
 </div>
 
 <!-- ② SCAN VIEW -->
@@ -369,7 +369,7 @@ const I18N = {
     perm_from_photo: '写真から読み取る',
     perm_from_photo_short: '📁 写真から読み取る',
     perm_taste: '❤️ 好みのワインを登録（写真から）',
-    perm_note: '写真は銘柄特定と品質向上のためソムリンのサーバーで解析されます。<br>評価は実データがある場合のみ表示します（推測のスコアは出しません）。',
+    perm_note: '写真は銘柄特定と品質向上のためソムリンのサーバーで解析されます。<br>ラベル部分の画像はカタログ整備のため保存されることがあります。<br>評価は実データがある場合のみ表示します（推測のスコアは出しません）。',
     err_title: 'カメラを起動できません',
     err_desc: '設定でカメラを許可するか、「写真から読み取る」をお試しください。',
     scouter_title: 'スカウター',
@@ -444,7 +444,7 @@ const I18N = {
     perm_from_photo: 'Scan from a photo',
     perm_from_photo_short: '📁 Scan from a photo',
     perm_taste: '❤️ Save wines you like (from photos)',
-    perm_note: 'Photos are analyzed on Sommelin\'s server to identify the wine and improve accuracy.<br>Scores are shown only when real data exists (never a guessed score).',
+    perm_note: 'Photos are analyzed on Sommelin\'s server to identify the wine and improve accuracy.<br>Label images may be saved to improve our wine catalog.<br>Scores are shown only when real data exists (never a guessed score).',
     err_title: 'Can\'t start the camera',
     err_desc: 'Please allow camera access in settings, or try "Scan from a photo" instead.',
     scouter_title: 'Scouter',
