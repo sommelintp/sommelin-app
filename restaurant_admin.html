@@ -1384,6 +1384,7 @@
   }
 </style>
 <script src="assets/oshi-card.js"></script>
+<script src="assets/wine-display.js"></script>
 </head>
 <body>
 
@@ -4001,22 +4002,6 @@ let tnNotes = [];    // 保存済み
 
 function tnEsc(s) { return String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
-// ソムリンおすすめ度（コスパ）→ 星5表示。
-// 2026-07-09: バックエンドが生osuを返さなくなったため、以後の新規保存はカテゴリ値
-// cospaLevel('top'/'good')を渡す。既存保存済みレコードのosu(生の数値)も表示できるよう
-// 数値互換を残す。
-function tnOsuStars(v) {
-  if (v === 'top') return '★★★★★';
-  if (v === 'good') return '★★★';
-  if (typeof v === 'number' && !isNaN(v)) {
-    if (v >= 0.5)  return '★★★★★';
-    if (v >= 0.3)  return '★★★★';
-    if (v >= 0.1)  return '★★★';
-    if (v >= -0.1) return '★★';
-    return '★';
-  }
-  return null;
-}
 function tnMyStars(rating, editableIdx) {
   // editableIdx を渡すとタップで編集できる★列（保存前の入力用）
   let html = '';
@@ -4091,6 +4076,7 @@ async function tnProcessFiles(files) {
           total: w ? w.total : null,
           ref_price: w ? w.price : null,
           cospaLevel: w ? w.cospaLevel : null,
+          starRating: w ? w.starRating : null,
           rating: null,
           importer_name: '', memo: '',
         });
@@ -4106,13 +4092,14 @@ function renderTnStaging() {
   const box = document.getElementById('tnStaging');
   wrap.style.display = tnStaged.length ? 'block' : 'none';
   box.innerHTML = tnStaged.map((s, i) => {
-    const osuStars = tnOsuStars(s.cospaLevel);
+    const starsHtml = window.WineDisplay ? window.WineDisplay.starsHtml(s.starRating, {size:12, showLabel:true, source:'sommelin_v1'}) : '';
     return `
     <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;">
       <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
         <div style="min-width:0;">
           <div style="font-size:14px;font-weight:800;color:var(--text);">${tnEsc(s.name)}${s.vintage ? ' ' + tnEsc(s.vintage) : ''}</div>
-          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">${tnEsc(s.region || '')}${osuStars ? `　<span style="color:#C9973A;">ソムリンおすすめ度 ${osuStars}</span>` : ''}</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">${tnEsc(s.region || '')}</div>
+          ${s.starRating != null ? `<div style="margin-top:3px;">${starsHtml}</div>` : ''}
         </div>
         <button onclick="tnStaged.splice(${i},1);renderTnStaging()" style="background:none;border:none;color:#bbb;font-size:16px;cursor:pointer;flex-shrink:0;">✕</button>
       </div>
@@ -4195,7 +4182,6 @@ function renderTnList() {
     return;
   }
   box.innerHTML = tnNotes.map(n => {
-    const osuStars = tnOsuStars(n.osu);
     return `
     <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;">
       <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
@@ -4209,7 +4195,6 @@ function renderTnList() {
       </div>
       <div style="margin-top:6px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         ${n.rating ? `<span style="font-size:12px;color:var(--text-sub);">お店の評価 <span style="font-size:15px;">${tnMyStars(n.rating)}</span></span>` : ''}
-        ${osuStars ? `<span style="font-size:11px;color:#C9973A;font-weight:700;">ソムリンおすすめ度 ${osuStars}</span>` : ''}
       </div>
       ${n.memo ? `<div style="font-size:12px;color:#555;margin-top:6px;">💬 ${tnEsc(n.memo)}</div>` : ''}
       ${tnPriceHint(n.ref_price)}
@@ -4240,9 +4225,9 @@ async function tnLoadBuzz(noteId, wineId) {
     const d = await r.json();
     if (!el) return;
     const lines = [];
-    if (d.total != null) lines.push(`トータル評価 <b style="color:#C9973A;font-size:14px;">★${Number(d.total).toFixed(1)}</b> <span style="font-size:10px;color:var(--text-sub);">（ソムリン＋店舗の評価を信頼度で重み付け）</span>`);
+    if (d.starRating != null && window.WineDisplay) lines.push(`ソムリン評価 ${window.WineDisplay.starsHtml(d.starRating, {size:13})} <span style="font-size:10px;color:var(--text-sub);">（ソムリン＋店舗の評価を信頼度で重み付け）</span>`);
     lines.push(d.communityCount
-      ? `みんなの評価 <b style="color:#C9973A;">★${Number(d.communityAvg).toFixed(1)}</b> <span style="font-size:10px;color:var(--text-sub);">（${d.communityCount}店舗の平均・匿名）</span>`
+      ? `みんなの評価 <b style="color:#C9973A;">${Number(d.communityAvg).toFixed(1)}</b> <span style="font-size:10px;color:var(--text-sub);">（${d.communityCount}店舗の平均・匿名）</span>`
       : 'みんなの評価 —（まだ他の店舗の評価がありません）');
     el.innerHTML = lines.join('<br>');
   } catch (e) {

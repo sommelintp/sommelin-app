@@ -423,6 +423,7 @@ applyI18n(); // 静的な見出し・ボタン文言を反映（renderInitialの
 </script>
 
 <script src="assets/bottle-svg.js"></script>
+<script src="assets/wine-display.js"></script>
 <script>
 // ================================================================
 // ONLINE STORES
@@ -490,13 +491,13 @@ document.getElementById('searchInput').addEventListener('keydown', e => {
 const SB_URL = 'https://gkhdpzfmqraliwaiubwl.supabase.co';
 const SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
 const API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+// 2026-07-11 V-1: コスパ判定は星型でなくアイコン+テキストで表す（星＝5点満点評価はstarRating専用）
 function _cospa(level){
-  if(level==='top')  return {st:'★★★★★',lbl:'圧倒的コスパ',bg:'#1e8449'};
-  if(level==='good') return {st:'★★★★', lbl:'高コスパ',  bg:'#27ae60'};
-  return                    {st:'★★★',  lbl:'標準的',    bg:'#8a6d3b'};
+  if(level==='top')  return {st:'🏆',lbl:'圧倒的コスパ',bg:'#1e8449'};
+  if(level==='good') return {st:'👍', lbl:'高コスパ',  bg:'#27ae60'};
+  return                    {st:'',  lbl:'標準的',    bg:'#8a6d3b'};
 }
 function _p(p){ return (p==null||isNaN(p))?'—':('¥'+Math.round(p).toLocaleString('ja-JP')); }
-function _sp(s){ return (s==null||isNaN(s))?'—':Number(s).toFixed(1); }
 async function loadMaster(q){
   const el=document.getElementById('masterSec'); if(!el) return;
   el.innerHTML='<div style="padding:10px 4px;color:#999;font-size:12px;">ソムリン評価を照合中…</div>';
@@ -516,7 +517,7 @@ async function loadMaster(q){
       const c=_cospa(w.cospaLevel);
       return `<div onclick="doSearch('${(w.name||'').replace(/'/g,"\\'")}')" style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;background:#faf7f8;border-radius:10px;margin-top:6px;cursor:pointer;">
         <div style="min-width:0;"><div style="font-size:12px;font-weight:700;color:#2C1810;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(w.name||'')}</div><div style="font-size:10px;color:#999;">${escHtml([w.kuni,w.chiiki].filter(v=>v&&v!=='不明').join(' '))}</div></div>
-        <div style="text-align:right;white-space:nowrap;"><div style="font-size:11px;color:${c.bg};font-weight:800;">${c.st}</div><div style="font-size:10px;color:#888;">${_sp(w.total)}/5</div></div>
+        <div style="text-align:right;white-space:nowrap;"><div style="font-size:11px;color:${c.bg};font-weight:800;">${c.st}</div><div style="margin-top:2px;">${window.WineDisplay?window.WineDisplay.starsHtml(w.starRating,{size:11}):''}</div></div>
       </div>`;
     }).join('');
   }
@@ -531,11 +532,10 @@ async function loadMaster(q){
           <div style="font-size:12px;color:#888;margin:3px 0 10px;">${escHtml(region)}${top.producer?(' / '+escHtml(top.producer)):''}</div>
         </div>
       </div>
+      <div style="text-align:center;background:#faf7f8;border-radius:10px;padding:10px;margin-bottom:8px;">
+        ${window.WineDisplay ? window.WineDisplay.starsHtml(top.starRating, {size:20, showLabel:true, source:top.ratingSource}) : ''}
+      </div>
       <div style="display:flex;gap:10px;align-items:stretch;">
-        <div style="flex:1;text-align:center;background:#faf7f8;border-radius:10px;padding:10px;">
-          <div style="font-family:var(--font-display);font-size:22px;font-weight:900;color:#9B1B4B;line-height:1;">${_sp(top.total)}</div>
-          <div style="font-size:10px;color:#999;margin-top:3px;">総合評価（5点満点）</div>
-        </div>
         <div style="flex:1;text-align:center;background:#faf7f8;border-radius:10px;padding:10px;">
           <div style="font-size:18px;font-weight:900;color:#2C1810;line-height:1.2;">${_p(top.price)}</div>
           <div style="font-size:10px;color:#999;margin-top:3px;">参考価格${top.sizeNote?`<br>（${escHtml(top.sizeNote)}）`:''}</div>
@@ -546,6 +546,7 @@ async function loadMaster(q){
         </div>
       </div>
       ${top.styleNote?`<div style="margin-top:10px;border:1.5px solid #C9973A;color:#8a6a1a;border-radius:10px;padding:7px 12px;font-size:11.5px;font-weight:700;text-align:center;">🏅 ${escHtml(top.styleNote)}</div>`:''}
+      ${top.cospaNote?`<div style="margin-top:6px;color:#888;font-size:11px;text-align:center;">${escHtml(top.cospaNote)}</div>`:''}
       ${top.vintageNote?`<div style="margin-top:6px;color:#888;font-size:11px;text-align:center;line-height:1.5;">${escHtml(top.vintageNote)}</div>`:''}
       ${alts}
     </div>

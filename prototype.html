@@ -1465,12 +1465,9 @@
   .rank-wine-info { flex: 1; min-width: 0; }
   .rank-wine-name { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .rank-wine-region { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
-  .rank-wine-stats { display: flex; gap: 10px; margin-top: 5px; }
+  .rank-wine-stats { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px; }
   .rank-stat { font-size: 11px; color: var(--text-sub); }
   .rank-stat strong { color: var(--burgundy); }
-  .rank-score { flex-shrink: 0; text-align: right; }
-  .rank-score-pct { font-family: var(--font-display); font-size: 17px; font-weight: 800; color: var(--gold); line-height: 1.25; }
-  .rank-score-sub { font-size: 10px; color: var(--text-sub); margin-top: 2px; }
   .rank-left { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
 
   .ranking-user-card {
@@ -1839,6 +1836,7 @@
 <link rel="stylesheet" href="assets/sommelin-ui.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="assets/bottle-svg.js"></script>
+<script src="assets/wine-display.js"></script>
 </head>
 <body>
 
@@ -2380,6 +2378,7 @@
       <input type="number" id="rankPriceMax" placeholder="上限" oninput="onRankPriceInput()" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
       <span style="font-size:11.5px;color:var(--text-sub);">円</span>
     </div>
+    <div id="rankBandChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
       <label class="rank-iro-chip"><input type="checkbox" value="赤" onchange="toggleRankIro(this)">🍷 赤</label>
       <label class="rank-iro-chip"><input type="checkbox" value="白" onchange="toggleRankIro(this)">🥂 白</label>
@@ -3524,8 +3523,38 @@ function onRankPriceInput() {
   rankPriceTimer = setTimeout(() => {
     rankPriceMin = document.getElementById('rankPriceMin').value.trim();
     rankPriceMax = document.getElementById('rankPriceMax').value.trim();
+    renderRankBandChips();
     loadTopWines();
   }, 350);
+}
+
+// U-6: DBさんの価格帯5バンドをワンタップ選択チップとして提供（手入力とも共存。
+// 状態の真実は入力欄の方で、チップは単なるショートカット）
+const RANK_BANDS = [
+  { label: '〜2千円', min: '', max: '2000' },
+  { label: '2千〜5千円', min: '2000', max: '5000' },
+  { label: '5千〜1万円', min: '5000', max: '10000' },
+  { label: '1万〜3万円', min: '10000', max: '30000' },
+  { label: '3万円〜', min: '30000', max: '' },
+];
+function renderRankBandChips() {
+  const box = document.getElementById('rankBandChips');
+  if (!box) return;
+  box.innerHTML = RANK_BANDS.map((b, i) => {
+    const active = rankPriceMin === b.min && rankPriceMax === b.max;
+    return `<button type="button" onclick="selectRankBand(${i})" class="rank-iro-chip" style="border:1px solid ${active ? 'var(--burgundy)' : 'var(--border)'};background:${active ? 'var(--burgundy-pale, #f0dde3)' : '#fff'};color:${active ? 'var(--burgundy)' : 'var(--text)'};font-weight:${active ? 700 : 400};cursor:pointer;">${b.label}</button>`;
+  }).join('');
+}
+function selectRankBand(i) {
+  const b = RANK_BANDS[i];
+  const already = rankPriceMin === b.min && rankPriceMax === b.max;
+  rankPriceMin = already ? '' : b.min;
+  rankPriceMax = already ? '' : b.max;
+  document.getElementById('rankPriceMin').value = rankPriceMin;
+  document.getElementById('rankPriceMax').value = rankPriceMax;
+  if (window.sommLog) sommLog('rank_band_chip', { label: b.label, on: !already });
+  renderRankBandChips();
+  loadTopWines();
 }
 function applyRankAdvanced() {
   rankVintageMin = document.getElementById('rankVintageMin').value.trim();
@@ -3546,6 +3575,7 @@ function clearRankAdvanced() {
 
 async function loadTopWines() {
   populateRankKuniOptions();
+  renderRankBandChips();
   const box = document.getElementById('rankingPop');
   try {
     const qs = new URLSearchParams({ limit: '20', sortBy: rankSortBy });
@@ -3565,30 +3595,23 @@ async function loadTopWines() {
     const d = await r.json();
     if (!d.items || !d.items.length) throw 0;
     const escR = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-    // 2026-07-12: 絞り込み結果内での動的パーセンタイル表示（#15多軸化構想の先行実装）。
-    // 「この条件の中で上位◯%」はd.total（絞り込み後の全件数）とアイテムの並び順から
-    // その場で計算できる（sortBy=totalのスコア順の時だけ意味を持つ。新規APIは不要）。
-    const rankFilterLabel = rankChiiki || rankGrape || rankKuni || (rankIros.length ? rankIros.join('/') : null) || null;
-    const showPct = d.total >= 10;
     box.innerHTML = d.items.map((it, i) => {
       const w = it.wine || {};
       const badge = i===0 ? 'r1' : i===1 ? 'r2' : i===2 ? 'r3' : 'rn';
+      const flag = (COUNTRY_FLAGS[w.kuni] && COUNTRY_FLAGS[w.kuni][0]) || '';
       const region = [w.kuni, w.chiiki].filter(v => v && v !== '不明').join(' ');
       const price = w.price != null ? '¥' + Math.round(w.price).toLocaleString('ja-JP') : '—';
       const revTxt = it.communityCount > 0
         ? `みんなの評価 <strong>${it.communityAvg ?? '—'}</strong>（${it.communityCount}件）`
         : null;
       const cospaBadge = it.goodValue ? '<span class="s-badge-cospa">コスパ良好</span>' : '';
+      const fiveStarBadge = it.starRating === 5 ? '<span class="s-badge-fivestar">🏅 ソムリン五つ星</span>' : '';
       const producerLink = w.producer
         ? ` / <a href="producer.html?p=${encodeURIComponent(w.producer)}" style="color:inherit;text-decoration:underline;text-decoration-color:var(--border);">${escR(w.producer)}</a>`
         : '';
-      let scoreHtml = '';
-      if (showPct) {
-        const pct = ((i + 1) / d.total) * 100;
-        const pctStr = pct < 1 ? '上位1%未満' : `上位${Math.ceil(pct)}%`;
-        const scope = rankFilterLabel ? `${escR(rankFilterLabel)}の中で` : '';
-        scoreHtml = `<div class="rank-score-pct">${pctStr}</div><div class="rank-score-sub">${scope}${d.total.toLocaleString('ja-JP')}件中</div>`;
-      }
+      const starsHtml = window.WineDisplay
+        ? window.WineDisplay.starsHtml(it.starRating, { size: 16, showLabel: it.starRating !== 5, source: it.ratingSource })
+        : '';
       return `
       <div class="ranking-wine-card${i===0 ? ' is-top' : ''}">
         ${i===0 ? '<div class="label-rule label-rule--on-card" style="position:absolute;left:16px;right:16px;top:4px;"></div>' : ''}
@@ -3598,15 +3621,15 @@ async function loadTopWines() {
         </div>
         <div class="rank-wine-info">
           <div class="rank-wine-name">${escR(w.name)}${w.vintage && w.vintage!=='NV' ? ' ' + escR(w.vintage) : ''}</div>
-          <div class="rank-wine-region">${escR(region)}${producerLink}</div>
-          <div class="rank-wine-stats">
+          <div class="rank-wine-region">${flag} ${escR(region)}${producerLink}</div>
+          <div class="rank-wine-stats" style="margin-top:4px;align-items:center;">${starsHtml}${fiveStarBadge}</div>
+          <div class="rank-wine-stats" style="margin-top:4px;">
             <span class="rank-stat">参考価格 <strong>${price}</strong></span>
             ${cospaBadge}
           </div>
           ${revTxt ? `<div class="rank-wine-stats" style="margin-top:2px;"><span class="rank-stat">${revTxt}</span></div>` : ''}
           <div style="margin-top:6px;"><button onclick="openWineMap(${it.wineId}, '${escR(w.name).replace(/'/g,"\\'")}')" style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--burgundy);cursor:pointer;font-family:inherit;">📍 どこで飲める？買える？</button></div>
         </div>
-        <div class="rank-score">${scoreHtml}</div>
       </div>`;
     }).join('')
     + '<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;">価格帯の中でコスパが良い順。同じコスパなら評価が高い順</div>';

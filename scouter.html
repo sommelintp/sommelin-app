@@ -259,6 +259,7 @@ body{
 </style>
 <link rel="stylesheet" href="assets/sommelin-ui.css">
 <script src="assets/oshi-card.js"></script>
+<script src="assets/wine-display.js"></script>
 </head>
 <body>
 
@@ -554,10 +555,11 @@ async function logAction(ev){
 // ── コスパ（おすすめ度）→ 星・ラベル ──
 // 2026-07-09: バックエンドが生の内部指標(sp/osu_gbm/osu_lin)を返さなくなったため、
 // カテゴリ値cospaLevel('top'|'good'|null。chat/wine_lookupと共通の分類)から表示を作る。
+// 2026-07-11 V-1: 星型はstarRating専用。コスパ判定はアイコン+テキストで表す
 function cospa(level){
-  if(level==='top')  return {stars:'★★★★★', lbl:'圧倒的コスパ', sub:'価格以上の評価。かなりお得', bg:'#1e8449'};
-  if(level==='good') return {stars:'★★★★',  lbl:'高コスパ',   sub:'価格に対して評価が高い',   bg:'#27ae60'};
-  return                    {stars:'★★★',   lbl:'標準的',     sub:'価格相応の評価です',       bg:'#8a6d3b'};
+  if(level==='top')  return {stars:'🏆', lbl:'圧倒的コスパ', sub:'価格以上の評価。かなりお得', bg:'#1e8449'};
+  if(level==='good') return {stars:'👍',  lbl:'高コスパ',   sub:'価格に対して評価が高い',   bg:'#27ae60'};
+  return                    {stars:'',   lbl:'標準的',     sub:'価格相応の評価です',       bg:'#8a6d3b'};
 }
 function fmtPrice(p){ if(p==null||isNaN(p)) return '—'; return '¥'+Math.round(p).toLocaleString('ja-JP'); }
 // 評価は「探す」タブ・チャットと同じtotal(5点満点)に統一（旧fmtSPはSP=10点満点を表示していた）
@@ -793,7 +795,7 @@ function renderShelfCard(b){
       </div>
       <div class="sh-grid">
         <div class="sh-cell"><div class="v">${fmtPrice(w.price)}</div><div class="l">参考価格${w.sizeNote?`<br>（${esc(w.sizeNote)}）`:''}</div></div>
-        <div class="sh-cell"><div class="v sh-refscore">${fmtTotal(w.total)}<small>/5</small></div><div class="l">総合評価</div></div>
+        <div class="sh-cell"><div class="v sh-refscore">${window.WineDisplay?window.WineDisplay.starsHtml(w.starRating,{size:15}):''}</div><div class="l">ソムリン評価</div></div>
       </div>
       ${w.styleNote?`<div class="style-note">🏅 ${esc(w.styleNote)}</div>`:''}
       ${w.vintageNote?`<div class="vintage-note">${esc(w.vintageNote)}</div>`:''}
@@ -837,10 +839,9 @@ async function loadSimilar(b){
     const box=document.getElementById('simBox');
     if(!box || !d.items || !d.items.length) return;
     box.innerHTML='<div class="cand-h">近い系統のおすすめ（ソムリン実データ）</div>'+d.items.map(x=>{
-      const c=cospa(x.cospaLevel);
       return `<div class="cand-row" onclick="buy('${escAttr(x.name||'')}', ${x.id})">
         <div><div class="cn">${esc(trunc(x.name||'',26))}</div><div class="cr">${esc([x.kuni,x.chiiki].filter(v=>v&&v!=='不明').join(' '))}　${fmtPrice(x.price)}</div></div>
-        <div class="cc">${c.stars}<br><small>${fmtTotal(x.total)}/5</small></div></div>`;
+        <div class="cc">${window.WineDisplay?window.WineDisplay.starsHtml(x.starRating,{size:11}):''}</div></div>`;
     }).join('');
   }catch(e){}
 }
@@ -1316,7 +1317,7 @@ function liRow(it, hit){
   if(it.sommelin && it.sommelin.isPick) badges.push(`<span class="b2">${it.sommelin.level==='top'?'👑 ソムリン推し':'✨ おすすめ'}</span>`);
   if(it.priceDelta!=null && Math.abs(it.priceDelta)>=15) badges.push(`<span class="b3">参考価格より${it.priceDelta>0?'+':''}${it.priceDelta}%</span>`);
   const right=w
-    ? `${cospa(w.cospaLevel).stars}<br><small>${fmtTotal(w.total)}/5</small>`
+    ? (window.WineDisplay?window.WineDisplay.starsHtml(w.starRating,{size:11}):'')
     : `<span class="un">未登録</span>`;
   return `<div class="li-row${hit?' hit':''}">
     <div><div class="ln">${esc(trunc(name,34))}</div>
