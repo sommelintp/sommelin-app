@@ -1421,6 +1421,16 @@
   }
   .ranking-tab.active { color: var(--burgundy); border-bottom-color: var(--foil); font-weight: 700; }
 
+  .rank-iro-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 6px 10px; border-radius: 20px;
+    border: 1px solid var(--border); background: #fff;
+    font-size: 12.5px; color: var(--text); cursor: pointer;
+    user-select: none;
+  }
+  .rank-iro-chip input { margin: 0; accent-color: var(--burgundy); }
+  .rank-iro-chip:has(input:checked) { border-color: var(--burgundy); background: var(--burgundy-pale, #f0dde3); color: var(--burgundy); font-weight: 700; }
+
   .ranking-list { padding: 12px; }
 
   .ranking-wine-card {
@@ -2357,35 +2367,35 @@
     <div class="ranking-tab" id="rtab-store" onclick="switchRankingTab('store')">お店</div>
   </div>
 
-  <!-- ソート・絞り込み（2026-07-08追加: 高額ワインばかり並ぶ不具合の対策＋詳細検索を追加） -->
-  <div id="rankSortBar" style="display:flex;gap:8px;padding:0 16px 10px;flex-wrap:wrap;align-items:center;">
-    <select id="rankSortSelect" onchange="rankSortBy=this.value;loadTopWines();" style="font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-family:inherit;color:var(--text);background:#fff;">
-      <option value="cospa">コスパがいい順</option>
-      <option value="total">評価が高い順</option>
-      <option value="price_asc">価格が安い順</option>
-      <option value="price_desc">価格が高い順</option>
-    </select>
-    <select id="rankIroSelect" onchange="rankIro=this.value;loadTopWines();" style="font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-family:inherit;color:var(--text);background:#fff;">
-      <option value="">すべての種類</option>
-      <option value="赤">🍷 赤</option>
-      <option value="白">🥂 白</option>
-      <option value="ロゼ">🌸 ロゼ</option>
-      <option value="泡">🍾 泡</option>
-    </select>
-    <select id="rankKuniSelect" onchange="rankKuni=this.value;loadTopWines();" style="font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-family:inherit;color:var(--text);background:#fff;">
-      <option value="">すべての国</option>
-    </select>
-    <button onclick="toggleRankAdvanced()" style="font-size:12.5px;padding:6px 10px;border-radius:8px;border:1px solid var(--burgundy);background:#fff;color:var(--burgundy);font-weight:700;font-family:inherit;cursor:pointer;">詳細検索 ▾</button>
+  <!-- ソート・絞り込み（2026-07-08追加、2026-07-12刷新: ワード検索＋価格帯を常時表示、種類は複数選択に） -->
+  <div id="rankSortBar" style="padding:10px 16px 10px;">
+    <div style="position:relative;margin-bottom:10px;">
+      <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-sub);pointer-events:none;">🔍</span>
+      <input type="text" id="rankQuery" placeholder="ワイン名・生産者・産地で検索" oninput="onRankQueryInput()" style="width:100%;padding:9px 12px 9px 30px;border-radius:10px;border:1px solid var(--border);font-size:13px;font-family:inherit;">
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+      <label style="font-size:11.5px;color:var(--text-sub);width:44px;flex-shrink:0;">価格帯</label>
+      <input type="number" id="rankPriceMin" placeholder="下限" oninput="onRankPriceInput()" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
+      <span style="font-size:11.5px;color:var(--text-sub);">円 〜</span>
+      <input type="number" id="rankPriceMax" placeholder="上限" oninput="onRankPriceInput()" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
+      <span style="font-size:11.5px;color:var(--text-sub);">円</span>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+      <label class="rank-iro-chip"><input type="checkbox" value="赤" onchange="toggleRankIro(this)">🍷 赤</label>
+      <label class="rank-iro-chip"><input type="checkbox" value="白" onchange="toggleRankIro(this)">🥂 白</label>
+      <label class="rank-iro-chip"><input type="checkbox" value="ロゼ" onchange="toggleRankIro(this)">🌸 ロゼ</label>
+      <label class="rank-iro-chip"><input type="checkbox" value="オレンジ" onchange="toggleRankIro(this)">🟠 オレンジ</label>
+      <label class="rank-iro-chip"><input type="checkbox" value="泡" onchange="toggleRankIro(this)">🍾 泡</label>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <select id="rankKuniSelect" onchange="rankKuni=this.value;loadTopWines();" style="font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-family:inherit;color:var(--text);background:#fff;">
+        <option value="">すべての国</option>
+      </select>
+      <button onclick="toggleRankAdvanced()" style="font-size:12.5px;padding:6px 10px;border-radius:8px;border:1px solid var(--burgundy);background:#fff;color:var(--burgundy);font-weight:700;font-family:inherit;cursor:pointer;">詳細検索 ▾</button>
+    </div>
   </div>
 
   <div id="rankAdvancedFilters" style="display:none;padding:0 16px 12px;">
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-      <label style="font-size:11.5px;color:var(--text-sub);width:64px;flex-shrink:0;">価格帯</label>
-      <input type="number" id="rankPriceMin" placeholder="下限" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
-      <span style="font-size:11.5px;color:var(--text-sub);">円 〜</span>
-      <input type="number" id="rankPriceMax" placeholder="上限" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
-      <span style="font-size:11.5px;color:var(--text-sub);">円</span>
-    </div>
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
       <label style="font-size:11.5px;color:var(--text-sub);width:64px;flex-shrink:0;">ヴィンテージ</label>
       <input type="number" id="rankVintageMin" placeholder="下限" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
@@ -3474,7 +3484,7 @@ const starsHtml = t => {
        + '<span style="color:var(--border);letter-spacing:1px;">' + '★'.repeat(Math.max(0, 5 - full)) + '</span>';
 };
 
-let rankSortBy = 'cospa', rankIro = '', rankKuni = '';
+let rankSortBy = 'cospa', rankIros = [], rankKuni = '', rankQuery = '';
 let rankChiiki = '', rankProducer = '', rankGrape = '', rankPriceMin = '', rankPriceMax = '', rankVintageMin = '', rankVintageMax = '', rankSweet = '';
 function populateRankKuniOptions() {
   const sel = document.getElementById('rankKuniSelect');
@@ -3495,9 +3505,29 @@ function setRankNV() {
   document.getElementById('rankVintageMin').value = 'NV';
   document.getElementById('rankVintageMax').value = 'NV';
 }
+function toggleRankIro(el) {
+  if (el.checked) { if (!rankIros.includes(el.value)) rankIros.push(el.value); }
+  else { rankIros = rankIros.filter(v => v !== el.value); }
+  loadTopWines();
+}
+let rankQueryTimer = null;
+function onRankQueryInput() {
+  clearTimeout(rankQueryTimer);
+  rankQueryTimer = setTimeout(() => {
+    rankQuery = document.getElementById('rankQuery').value.trim();
+    loadTopWines();
+  }, 350);
+}
+let rankPriceTimer = null;
+function onRankPriceInput() {
+  clearTimeout(rankPriceTimer);
+  rankPriceTimer = setTimeout(() => {
+    rankPriceMin = document.getElementById('rankPriceMin').value.trim();
+    rankPriceMax = document.getElementById('rankPriceMax').value.trim();
+    loadTopWines();
+  }, 350);
+}
 function applyRankAdvanced() {
-  rankPriceMin = document.getElementById('rankPriceMin').value.trim();
-  rankPriceMax = document.getElementById('rankPriceMax').value.trim();
   rankVintageMin = document.getElementById('rankVintageMin').value.trim();
   rankVintageMax = document.getElementById('rankVintageMax').value.trim();
   rankChiiki = document.getElementById('rankChiiki').value.trim();
@@ -3507,10 +3537,10 @@ function applyRankAdvanced() {
   loadTopWines();
 }
 function clearRankAdvanced() {
-  ['rankPriceMin','rankPriceMax','rankVintageMin','rankVintageMax','rankChiiki','rankProducer','rankGrape','rankSweet'].forEach(id => {
+  ['rankVintageMin','rankVintageMax','rankChiiki','rankProducer','rankGrape','rankSweet'].forEach(id => {
     document.getElementById(id).value = '';
   });
-  rankPriceMin = rankPriceMax = rankVintageMin = rankVintageMax = rankChiiki = rankProducer = rankGrape = rankSweet = '';
+  rankVintageMin = rankVintageMax = rankChiiki = rankProducer = rankGrape = rankSweet = '';
   loadTopWines();
 }
 
@@ -3519,7 +3549,8 @@ async function loadTopWines() {
   const box = document.getElementById('rankingPop');
   try {
     const qs = new URLSearchParams({ limit: '20', sortBy: rankSortBy });
-    if (rankIro) qs.set('iro', rankIro);
+    if (rankQuery) qs.set('q', rankQuery);
+    if (rankIros.length) qs.set('iro', rankIros.join(','));
     if (rankKuni) qs.set('kuni', rankKuni);
     if (rankChiiki) qs.set('chiiki', rankChiiki);
     if (rankProducer) qs.set('producer', rankProducer);
@@ -3537,8 +3568,8 @@ async function loadTopWines() {
     // 2026-07-12: 絞り込み結果内での動的パーセンタイル表示（#15多軸化構想の先行実装）。
     // 「この条件の中で上位◯%」はd.total（絞り込み後の全件数）とアイテムの並び順から
     // その場で計算できる（sortBy=totalのスコア順の時だけ意味を持つ。新規APIは不要）。
-    const rankFilterLabel = rankChiiki || rankGrape || rankKuni || rankIro || null;
-    const showPct = (rankSortBy === 'cospa' || rankSortBy === 'total') && d.total >= 10;
+    const rankFilterLabel = rankChiiki || rankGrape || rankKuni || (rankIros.length ? rankIros.join('/') : null) || null;
+    const showPct = d.total >= 10;
     box.innerHTML = d.items.map((it, i) => {
       const w = it.wine || {};
       const badge = i===0 ? 'r1' : i===1 ? 'r2' : i===2 ? 'r3' : 'rn';
@@ -3578,7 +3609,7 @@ async function loadTopWines() {
         <div class="rank-score">${scoreHtml}</div>
       </div>`;
     }).join('')
-    + `<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;">${rankSortBy === 'cospa' ? '価格帯の中でコスパが良い順。同じコスパなら評価が高い順' : rankSortBy === 'total' ? 'ソムリン独自の総合評価順。同じ評価なら価格の安い順' : '選んだ並び順で表示中'}</div>`;
+    + '<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;">価格帯の中でコスパが良い順。同じコスパなら評価が高い順</div>';
   } catch (e) {
     box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">ランキングを読み込めませんでした（通信環境をご確認ください）</div>';
   }
