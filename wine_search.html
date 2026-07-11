@@ -547,6 +547,7 @@ async function loadMaster(q){
           <div style="font-size:11px;font-weight:800;margin-top:3px;">${cp.lbl}</div>
         </div>
       </div>
+      ${top.rakutenLink?`<a href="${escHtml(top.rakutenLink.url)}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;background:#BF0000;color:#fff;border-radius:10px;padding:11px;font-size:13px;font-weight:800;text-decoration:none;">🛍️ 楽天市場でこの商品を見る${top.rakutenLink.price?`（${_p(top.rakutenLink.price)}〜）`:''}</a><div style="font-size:9.5px;color:#aaa;text-align:center;margin-top:3px;">提携リンク${top.rakutenLink.shopName?`・${escHtml(top.rakutenLink.shopName)}`:''}</div>`:''}
       ${top.styleNote?`<div style="margin-top:10px;border:1.5px solid #C9973A;color:#8a6a1a;border-radius:10px;padding:7px 12px;font-size:11.5px;font-weight:700;text-align:center;">🏅 ${escHtml(top.styleNote)}</div>`:''}
       ${top.cospaNote?`<div style="margin-top:6px;color:#888;font-size:11px;text-align:center;">${escHtml(top.cospaNote)}</div>`:''}
       ${top.vintageNote?`<div style="margin-top:6px;color:#888;font-size:11px;text-align:center;line-height:1.5;">${escHtml(top.vintageNote)}</div>`:''}
