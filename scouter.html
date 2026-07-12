@@ -132,6 +132,15 @@ body{
   background:#fff;border-radius:22px 22px 0 0;z-index:90;padding-bottom:34px;color:#2C1810;
   transition:transform .36s cubic-bezier(.34,1.56,.64,1);max-height:90dvh;overflow-y:auto;}
 #sheet.on{transform:translateX(-50%) translateY(0);}
+/* 裏ラベル撮影（AE-2） */
+.back-box{margin:10px 0;padding:10px 12px;border:1px dashed rgba(114,47,55,.35);border-radius:12px;background:rgba(114,47,55,.04);}
+.back-box.done{border-style:solid;background:rgba(46,125,50,.06);border-color:rgba(46,125,50,.35);}
+.back-cta{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px;border:none;border-radius:10px;
+  background:var(--burgundy,#722f37);color:#fff;font-size:14px;font-weight:700;cursor:pointer;}
+.back-xp{background:#f6c344;color:#5a3d00;border-radius:999px;padding:2px 8px;font-size:12px;font-weight:800;}
+.back-hint{margin-top:6px;font-size:11.5px;color:#8a7a6e;text-align:center;}
+.back-title{font-size:13px;font-weight:700;color:#2e7d32;margin-bottom:4px;}
+.back-rows{font-size:12.5px;color:#4a3f38;line-height:1.7;}
 .sh-handle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:12px auto;}
 .sh-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:800;color:#fff;margin:0 20px 8px;}
 .sh-name{font-family:var(--font-display);font-size:22px;font-weight:700;padding:0 20px;line-height:1.3;}
@@ -326,6 +335,7 @@ body{
 </div>
 
 <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none">
+<input type="file" id="backCam" accept="image/*" capture="environment" style="display:none">
 
 <!-- ③ RESULT SHEET -->
 <div id="backdrop" onclick="closeSheet()"></div>
@@ -802,6 +812,7 @@ function renderShelfCard(b){
       ${pick}
       ${filterRibbons}
       ${fitRibbon(b)}
+      ${backBlock(b)}
       <div id="simBox"></div>
       <button class="sh-like" onclick="oshiStart()">${t('like_btn')}</button>
       <div class="sh-btns">
@@ -816,6 +827,7 @@ function renderShelfCard(b){
       <div class="sh-region">${esc([id.country,id.region].filter(Boolean).join(' / '))}${id.grape&&id.grape.length?'　/　'+esc(id.grape.join(', ')):''}</div>
       ${fitRibbon(b)}
       <div class="sh-meta">まだソムリンの評価データにありません。<b>推測のスコアは表示しません。</b>スキャンは記録済みです。</div>
+      ${backBlock(b)}
       <div id="simBox"></div>
       <button class="sh-like" onclick="oshiStart()">${t('like_btn')}</button>
       <div class="sh-btns">
@@ -825,6 +837,70 @@ function renderShelfCard(b){
   }
   document.getElementById('sheetBody').innerHTML=inner;
   loadSimilar(b);
+}
+
+// ── 裏ラベル撮影（AE-2節・2026-07-12）: 任意。輸入者名等を追加取得し高XPで釣り合わせる ──
+// XP値はサーバー(XP_RULES.back_label)が正。CTAの「+10 XP」表記はサーバー変更時に要追随。
+function backBlock(b){
+  if(b._backPending){
+    return `<div class="back-box"><div class="back-hint">📸 裏ラベルを読み取り中…</div></div>`;
+  }
+  if(b._back){
+    const bk=b._back;
+    const rows=[];
+    if(bk.importer) rows.push(`🚢 輸入: <b>${esc(bk.importer)}</b>`);
+    if(bk.alcohol!=null) rows.push(`アルコール ${esc(String(bk.alcohol))}%`);
+    if(bk.grape&&bk.grape.length) rows.push(`品種 ${esc(bk.grape.join(', '))}`);
+    if(!rows.length) rows.push('裏ラベルを記録しました');
+    return `<div class="back-box done"><div class="back-title">✅ 裏ラベル記録済み</div><div class="back-rows">${rows.map(r=>`<div>${r}</div>`).join('')}</div></div>`;
+  }
+  return `<div class="back-box">
+    <button class="back-cta" onclick="backStart()">📸 裏ラベルも撮る <span class="back-xp">+10 XP</span></button>
+    <div class="back-hint">輸入元・品種などの詳しい情報がわかります（任意）</div>
+  </div>`;
+}
+
+function backStart(){
+  if(!curOshiBottle) return;
+  document.getElementById('backCam').click();
+}
+
+document.getElementById('backCam').addEventListener('change', function(){
+  const file=this.files && this.files[0];
+  this.value='';
+  if(!file || !curOshiBottle) return;
+  const b=curOshiBottle;
+  const img=new Image();
+  img.onload=async ()=>{
+    const dataUrl=grabFrame(img, false, 1568);
+    URL.revokeObjectURL(img.src);
+    await identifyBack(b, dataUrl);
+  };
+  img.src=URL.createObjectURL(file);
+});
+
+async function identifyBack(b, dataUrl){
+  if(!dataUrl){ toast(t('toast_no_image')); return; }
+  b._backPending=true; renderShelfCard(b);
+  try{
+    const w=b.match && b.match.wine;
+    const r=await fetch(API_BASE+'/api/identify-back',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ image:dataUrl, userId:UID, scanId: shelfRes&&shelfRes.scanId||null, catalogId: w&&w.catalogId||null, locale:'ja-JP' })
+    });
+    if(r.status===429||r.status===403){ const d=await r.json().catch(()=>({})); toast(d.message||t('toast_rate_limit')); return; }
+    if(!r.ok) throw new Error('http '+r.status);
+    const d=await r.json();
+    if(!d.ok){ toast(d.message||'裏ラベルが読み取れませんでした'); return; }
+    b._back=d.back;
+    if(d.xpAwarded) toast(`🎉 +${d.xpAwarded} XP を獲得！`);
+    if(window.sommLog) sommLog('back_label',{importer:d.back&&d.back.importer||null});
+  }catch(e){
+    toast('読み取りに失敗しました。もう一度お試しください');
+  }finally{
+    b._backPending=false; renderShelfCard(b);
+  }
 }
 
 // 近縁おすすめ（/api/similar＝DB照会のみ・AI呼び出しなし）
