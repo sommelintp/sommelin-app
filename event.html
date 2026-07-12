@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>試飲会 参加申込 — ソムリン</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#5C0E2A">
+<style>
+:root{ --burgundy:#9B1B4B; --wine-dark:#5C0E2A; --gold:#C9973A; --bg:#F8F4EF; --text:#2C1810; --text-sub:#7A6055; --border:#E8DDD5; }
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg); color:var(--text);
+  max-width:430px; margin:0 auto; min-height:100dvh; padding:0 0 60px; }
+.top{ background:linear-gradient(135deg,var(--wine-dark),var(--burgundy)); padding:52px 16px 24px; color:#fff; }
+.eyebrow{ font-size:11px; font-weight:700; letter-spacing:.1em; color:rgba(255,255,255,.7); text-transform:uppercase; margin-bottom:8px; }
+.etitle{ font-size:20px; font-weight:800; line-height:1.4; }
+.emeta{ margin-top:14px; display:flex; flex-direction:column; gap:6px; font-size:13px; color:rgba(255,255,255,.9); }
+.emeta .row{ display:flex; align-items:flex-start; gap:8px; }
+.emeta .row .ico{ flex-shrink:0; width:18px; }
+
+.body{ padding:18px 16px; }
+.card{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:14px; }
+.desc{ font-size:13px; line-height:1.8; color:var(--text); white-space:pre-wrap; }
+
+.section-head{ font-size:12px; font-weight:800; color:var(--text-sub); letter-spacing:.06em; margin:4px 0 10px; }
+.field{ margin-bottom:12px; }
+.field label{ display:block; font-size:12px; font-weight:700; color:var(--text-sub); margin-bottom:5px; }
+.field input{ width:100%; padding:11px 12px; border-radius:10px; border:1px solid var(--border); background:#fff; color:var(--text); font-size:14px; font-family:inherit; }
+.field input:focus{ outline:2px solid var(--gold); outline-offset:1px; }
+.field .hint{ font-size:11px; color:var(--text-sub); margin-top:4px; }
+
+.submit-btn{ width:100%; padding:14px; border-radius:12px; border:none; background:var(--burgundy); color:#fff; font-size:15px; font-weight:800; cursor:pointer; }
+.submit-btn:disabled{ opacity:.5; cursor:not-allowed; }
+.submit-btn:active:not(:disabled){ transform:scale(.98); }
+
+.msg{ text-align:center; padding:40px 20px; }
+.msg .icon{ font-size:40px; margin-bottom:14px; }
+.msg .title{ font-size:17px; font-weight:800; margin-bottom:8px; }
+.msg .desc{ font-size:13px; color:var(--text-sub); line-height:1.7; }
+.msg .cancel-link{ display:inline-block; margin-top:18px; font-size:12px; color:var(--text-sub); text-decoration:underline; }
+.msg .ext-link{ display:inline-block; margin-top:18px; padding:12px 24px; background:var(--burgundy); color:#fff; border-radius:10px; text-decoration:none; font-size:14px; font-weight:700; }
+
+.gone{ display:none !important; }
+.consent{ font-size:11px; color:var(--text-sub); line-height:1.7; margin-top:10px; }
+</style>
+</head>
+<body>
+
+<div id="loading" class="msg"><div class="desc">読み込み中…</div></div>
+
+<div id="notFound" class="msg gone">
+  <div class="icon">🔍</div>
+  <div class="title">イベントが見つかりません</div>
+  <div class="desc">URLが正しいかご確認ください。</div>
+</div>
+
+<div id="main" class="gone">
+  <div class="top">
+    <div class="eyebrow">🍷 試飲会 参加申込</div>
+    <div class="etitle" id="eTitle"></div>
+    <div class="emeta" id="eMeta"></div>
+  </div>
+
+  <div class="body">
+    <div class="card gone" id="descCard">
+      <div class="desc" id="eDesc"></div>
+    </div>
+
+    <div class="card" id="formCard">
+      <div class="section-head">参加者情報</div>
+      <form id="regForm">
+        <div class="field">
+          <label for="fName">お名前 <span style="color:var(--burgundy)">*</span></label>
+          <input type="text" id="fName" required placeholder="例：山田 太郎">
+        </div>
+        <div class="field">
+          <label for="fKana">フリガナ</label>
+          <input type="text" id="fKana" placeholder="例：ヤマダ タロウ">
+        </div>
+        <div class="field">
+          <label for="fStore">店舗名・会社名</label>
+          <input type="text" id="fStore" placeholder="例：〇〇酒店">
+        </div>
+        <div class="field">
+          <label for="fEmail">メールアドレス <span style="color:var(--burgundy)">*</span></label>
+          <input type="email" id="fEmail" required placeholder="例：yamada@example.com">
+        </div>
+        <div class="field">
+          <label for="fPhone">電話番号</label>
+          <input type="tel" id="fPhone" placeholder="例：090-1234-5678">
+        </div>
+        <div class="field">
+          <label for="fParty">参加人数</label>
+          <input type="number" id="fParty" min="1" max="20" value="1">
+        </div>
+        <button type="submit" class="submit-btn" id="submitBtn">この内容で申し込む</button>
+        <div class="consent">入力いただいた情報は、本イベントの主催者（インポーター）に参加者名簿として提供されます。イベント終了後、一定期間で削除されます。</div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="resultDone" class="msg gone">
+  <div class="icon">✅</div>
+  <div class="title" id="doneTitle">申込を受け付けました</div>
+  <div class="desc" id="doneDesc"></div>
+  <a href="#" class="cancel-link" id="cancelLink">申込をキャンセルする</a>
+</div>
+
+<div id="resultExternal" class="msg gone">
+  <div class="icon">🔗</div>
+  <div class="title">こちらのイベントは外部フォームで受付中です</div>
+  <div class="desc">お手数ですが、下記の公式フォームからお申し込みください。</div>
+  <a href="#" class="ext-link" id="extLink" target="_blank" rel="noopener">申込フォームを開く</a>
+</div>
+
+<div id="resultFull" class="msg gone">
+  <div class="icon">⚠️</div>
+  <div class="title">定員に達しました</div>
+  <div class="desc">申し訳ございません。このイベントは満席です。</div>
+</div>
+
+<div id="resultDup" class="msg gone">
+  <div class="icon">📨</div>
+  <div class="title">すでに申込済みです</div>
+  <div class="desc">同じメールアドレスでの申込を確認しています。</div>
+</div>
+
+<script>
+const API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function show(id){ document.getElementById(id).classList.remove('gone'); }
+function hide(id){ document.getElementById(id).classList.add('gone'); }
+
+function getEventId(){
+  const params = new URLSearchParams(location.search);
+  return params.get('id');
+}
+
+let currentEvent = null;
+
+async function loadEvent(){
+  const id = getEventId();
+  if(!id){ hide('loading'); show('notFound'); return; }
+  try{
+    const r = await fetch(API_BASE + '/api/events/' + encodeURIComponent(id));
+    if(!r.ok){ hide('loading'); show('notFound'); return; }
+    const data = await r.json();
+    currentEvent = data.event;
+    renderEvent(currentEvent);
+  }catch(e){
+    hide('loading'); show('notFound');
+  }
+}
+
+function renderEvent(ev){
+  hide('loading');
+
+  // 外部フォームが本物の受付である場合は、そちらへ誘導して終わる（AD-1と同じ理由）
+  if(ev.externalRegistrationUrl){
+    document.getElementById('extLink').href = ev.externalRegistrationUrl;
+    show('resultExternal');
+    return;
+  }
+
+  document.getElementById('eTitle').textContent = ev.title || '';
+
+  const metaRows = [];
+  if(ev.eventDate) metaRows.push(['📅', formatDate(ev.eventDate) + (ev.startTime ? ' ' + ev.startTime.slice(0,5) + (ev.endTime ? '〜' + ev.endTime.slice(0,5) : '') : '')]);
+  if(ev.venueName) metaRows.push(['📍', ev.venueName + (ev.venueAddress ? '（' + ev.venueAddress + '）' : '')]);
+  metaRows.push(['💴', ev.cost ? ev.cost.toLocaleString('ja-JP') + '円' + (ev.costNotes ? '（' + ev.costNotes + '）' : '') : '無料']);
+  if(ev.maxAttendees) metaRows.push(['👥', '定員 ' + ev.maxAttendees + '名（現在 ' + (ev.currentAttendeesCount||0) + '名）']);
+  document.getElementById('eMeta').innerHTML = metaRows.map(([ico,text]) =>
+    `<div class="row"><span class="ico">${ico}</span><span>${esc(text)}</span></div>`).join('');
+
+  if(ev.description){
+    document.getElementById('eDesc').textContent = ev.description;
+    show('descCard');
+  }
+
+  if(ev.maxAttendees && ev.currentAttendeesCount >= ev.maxAttendees){
+    hide('formCard');
+    show('resultFull');
+  }
+
+  show('main');
+}
+
+function formatDate(dateStr){
+  try{
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
+  }catch(e){ return dateStr; }
+}
+
+document.getElementById('regForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '送信中…';
+
+  const id = getEventId();
+  const payload = {
+    name: document.getElementById('fName').value.trim(),
+    kana: document.getElementById('fKana').value.trim(),
+    storeName: document.getElementById('fStore').value.trim(),
+    email: document.getElementById('fEmail').value.trim(),
+    phone: document.getElementById('fPhone').value.trim(),
+    partySize: Number(document.getElementById('fParty').value) || 1,
+  };
+
+  try{
+    const r = await fetch(API_BASE + '/api/events/' + encodeURIComponent(id) + '/register', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload),
+    });
+    const data = await r.json();
+
+    if(r.ok){
+      hide('main');
+      const isPending = data.status === 'pending_approval';
+      document.getElementById('doneTitle').textContent = isPending ? '参加申込を受け付けました' : '参加が確定しました！';
+      document.getElementById('doneDesc').textContent = isPending
+        ? '主催者の確認後、結果をご案内します。'
+        : `「${currentEvent ? currentEvent.title : ''}」への参加が確定しました。当日会場でお待ちしております。`;
+      if(data.cancelToken){
+        document.getElementById('cancelLink').addEventListener('click', (ev) => {
+          ev.preventDefault();
+          cancelRegistration(data.cancelToken);
+        });
+      } else {
+        hide('cancelLink');
+      }
+      show('resultDone');
+      return;
+    }
+
+    if(data.error === 'full'){ hide('main'); show('resultFull'); return; }
+    if(data.error === 'already_registered'){ hide('main'); show('resultDup'); return; }
+    if(data.error === 'external_form_only' && data.externalRegistrationUrl){
+      document.getElementById('extLink').href = data.externalRegistrationUrl;
+      hide('main'); show('resultExternal'); return;
+    }
+    alert('申込処理でエラーが発生しました。時間をおいて再度お試しください。');
+    btn.disabled = false; btn.textContent = 'この内容で申し込む';
+  }catch(err){
+    alert('通信エラーが発生しました。時間をおいて再度お試しください。');
+    btn.disabled = false; btn.textContent = 'この内容で申し込む';
+  }
+});
+
+async function cancelRegistration(token){
+  if(!confirm('参加申込をキャンセルします。よろしいですか？')) return;
+  try{
+    const r = await fetch(API_BASE + '/api/events/cancel/' + encodeURIComponent(token), { method:'POST' });
+    if(r.ok){
+      document.getElementById('doneTitle').textContent = 'キャンセルしました';
+      document.getElementById('doneDesc').textContent = 'またの機会にぜひご参加ください。';
+      hide('cancelLink');
+    }
+  }catch(e){}
+}
+
+loadEvent();
+</script>
+</body>
+</html>
