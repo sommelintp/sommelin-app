@@ -116,6 +116,55 @@ body {
   background: var(--wine-dark); border-color: var(--wine-dark); color: white;
 }
 
+/* ── CELLAR SWITCHER（AG節） ── */
+.cellar-switch-row {
+  background: white;
+  padding: 12px 16px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--border);
+}
+.cellar-switch-row::-webkit-scrollbar { display: none; }
+.cellar-chip {
+  padding: 7px 14px; border-radius: 20px; font-size: 12.5px; font-weight: 700;
+  border: 1.5px solid var(--border); background: white; color: var(--text);
+  cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  transition: all 0.15s;
+}
+.cellar-chip.active {
+  background: var(--burgundy); border-color: var(--burgundy); color: white;
+}
+.cellar-chip-add {
+  padding: 7px 14px; border-radius: 20px; font-size: 12.5px; font-weight: 700;
+  border: 1.5px dashed var(--border); background: none; color: var(--text-sub);
+  cursor: pointer; white-space: nowrap; flex-shrink: 0;
+}
+.cellar-badge {
+  display: inline-block; font-size: 9.5px; font-weight: 700; color: var(--wine-dark);
+  background: var(--gold-light); border-radius: 6px; padding: 1px 6px; margin-top: 3px;
+}
+.cellar-manage-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.cellar-manage-item:last-child { border-bottom: none; }
+.cellar-manage-name { flex: 1; font-size: 14px; font-weight: 700; color: var(--text); }
+.cellar-manage-btn {
+  font-size: 11.5px; font-weight: 700; padding: 5px 10px; border-radius: 8px;
+  border: 1px solid var(--border); background: white; color: var(--text-sub); cursor: pointer;
+}
+.cellar-manage-btn.danger { color: #c0392b; border-color: #f0c4bd; }
+
+/* ── SORT ── */
+.sort-row { padding: 0 16px 10px; display: flex; justify-content: flex-end; }
+.sort-select {
+  font-size: 12px; font-weight: 700; color: var(--text); background: white;
+  border: 1.5px solid var(--border); border-radius: 10px; padding: 6px 10px;
+  font-family: inherit;
+}
+
 /* ── WINE CARDS ── */
 .wine-list { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
 
@@ -399,6 +448,9 @@ body {
   <button class="tab-btn"        id="tab-stats"   onclick="switchTab('stats')" data-i18n="tab_stats">📊 レポート</button>
 </div>
 
+<!-- ===== CELLAR SWITCHER（AG節・2026-07-13: 複数セラー対応） ===== -->
+<div class="cellar-switch-row" id="cellarSwitchRow"></div>
+
 <!-- ===== CELLAR PANEL ===== -->
 <div class="panel active" id="panel-cellar">
   <!-- Summary -->
@@ -411,6 +463,17 @@ body {
     <div class="filter-chip" onclick="filterCat('red',this)" data-i18n="cat_chip_red">🍷 赤</div>
     <div class="filter-chip" onclick="filterCat('rose',this)" data-i18n="cat_chip_rose">🌸 ロゼ</div>
     <div class="filter-chip" onclick="filterCat('orange',this)" data-i18n="cat_chip_orange">🟠 橙</div>
+  </div>
+  <div class="sort-row">
+    <select class="sort-select" id="sortSelect" onchange="setSort(this.value)">
+      <option value="date_desc" data-i18n="sort_date_desc">購入日が新しい順</option>
+      <option value="date_asc" data-i18n="sort_date_asc">購入日が古い順</option>
+      <option value="name" data-i18n="sort_name">銘柄名順</option>
+      <option value="vintage" data-i18n="sort_vintage">ヴィンテージ順</option>
+      <option value="price_desc" data-i18n="sort_price_desc">価格が高い順</option>
+      <option value="bottles_desc" data-i18n="sort_bottles_desc">本数が多い順</option>
+      <option value="region" data-i18n="sort_region">産地順</option>
+    </select>
   </div>
   <div class="wine-list" id="cellarList"></div>
 </div>
@@ -480,6 +543,9 @@ body {
         <div class="label" data-i18n="scan_label">ラベルをスキャン</div>
         <div class="sub" data-i18n="scan_sub">カメラでボトルを撮影して自動入力</div>
       </div>
+      <!-- Cellar（AG節: どのセラーに入れるか） -->
+      <div class="field-label" data-i18n="field_cellar">セラー</div>
+      <select class="field-input" id="f-cellar"></select>
       <!-- Category -->
       <div class="field-label" data-i18n="field_category">カテゴリ</div>
       <div class="cat-chips">
@@ -531,6 +597,23 @@ body {
     <div class="modal-handle"></div>
     <button class="modal-close-btn" style="position:absolute;top:16px;right:16px;" onclick="closeDetail()">✕</button>
     <div id="detailContent"></div>
+  </div>
+</div>
+
+<!-- ===== CELLAR MANAGE MODAL（AG節: セラーの新設・改名・削除） ===== -->
+<div class="modal-bg" id="cellarModalBg" onclick="closeCellarModal(event)">
+  <div class="modal" id="cellarModal">
+    <div class="modal-handle"></div>
+    <div class="modal-head">
+      <h3 data-i18n="cellar_manage_title">セラーを管理</h3>
+      <button class="modal-close-btn" onclick="closeCellarModal()">✕</button>
+    </div>
+    <div class="modal-body-pad">
+      <div class="field-label" data-i18n="field_cellar_name">セラー名</div>
+      <input class="field-input" id="f-cellar-name" data-i18n-ph="ph_cellar_name" placeholder="例: 自宅セラー / 実家 / 会社の保管庫">
+      <button class="save-btn" onclick="createOrRenameCellar()" id="cellarModalSaveBtn" data-i18n="cellar_create_btn">セラーを作成</button>
+      <div class="cellar-manage-list" id="cellarManageList" style="margin-top:18px;"></div>
+    </div>
   </div>
 </div>
 
@@ -626,6 +709,31 @@ const I18N = {
     detail_date: '購入日',
     detail_note: 'メモ',
     drink_one: '🍷 1本飲む',
+    cellar_all: '🍷 すべて',
+    cellar_add_chip: '＋ セラーを追加',
+    cellar_manage: '⚙ 管理',
+    cellar_manage_title: 'セラーを管理',
+    field_cellar: 'セラー',
+    field_cellar_name: 'セラー名',
+    ph_cellar_name: '例: 自宅セラー / 実家 / 会社の保管庫',
+    cellar_create_btn: 'セラーを作成',
+    cellar_rename_btn: 'セラー名を変更',
+    cellar_rename: '改名',
+    cellar_delete: '削除',
+    cellar_delete_confirm: 'このセラーを削除しますか？',
+    cellar_not_empty: 'このセラーにはまだワインが入っています。先に他のセラーへ移すか、ワインを削除してください。',
+    cellar_created: 'セラーを作成しました',
+    cellar_renamed: 'セラー名を変更しました',
+    cellar_deleted: 'セラーを削除しました',
+    cellar_name_required: 'セラー名を入力してください',
+    cellar_default_name: 'マイセラー',
+    sort_date_desc: '購入日が新しい順',
+    sort_date_asc: '購入日が古い順',
+    sort_name: '銘柄名順',
+    sort_vintage: 'ヴィンテージ順',
+    sort_price_desc: '価格が高い順',
+    sort_bottles_desc: '本数が多い順',
+    sort_region: '産地順',
   },
   en: {
     header_title: 'My Cellar',
@@ -713,6 +821,31 @@ const I18N = {
     detail_date: 'Purchase date',
     detail_note: 'Notes',
     drink_one: '🍷 Drink one',
+    cellar_all: '🍷 All',
+    cellar_add_chip: '＋ Add cellar',
+    cellar_manage: '⚙ Manage',
+    cellar_manage_title: 'Manage cellars',
+    field_cellar: 'Cellar',
+    field_cellar_name: 'Cellar name',
+    ph_cellar_name: 'e.g. Home cellar / Parents\' house / Office storage',
+    cellar_create_btn: 'Create cellar',
+    cellar_rename_btn: 'Rename cellar',
+    cellar_rename: 'Rename',
+    cellar_delete: 'Delete',
+    cellar_delete_confirm: 'Delete this cellar?',
+    cellar_not_empty: 'This cellar still has wine in it. Move the wines to another cellar or delete them first.',
+    cellar_created: 'Cellar created',
+    cellar_renamed: 'Cellar renamed',
+    cellar_deleted: 'Cellar deleted',
+    cellar_name_required: 'Please enter a cellar name',
+    cellar_default_name: 'My Cellar',
+    sort_date_desc: 'Newest purchase first',
+    sort_date_asc: 'Oldest purchase first',
+    sort_name: 'By name',
+    sort_vintage: 'By vintage',
+    sort_price_desc: 'Highest price first',
+    sort_bottles_desc: 'Most bottles first',
+    sort_region: 'By region',
   },
 };
 let LANG = (() => { try { return localStorage.getItem('somm_lang') || (navigator.language && navigator.language.startsWith('ja') ? 'ja' : 'en'); } catch (e) { return 'ja'; } })();
@@ -760,9 +893,141 @@ function syncWineToServer(w){
   if(!uid) return;
   fetch(CELLAR_API_BASE+'/api/cellar',{
     method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ userId:uid, clientRowId:String(w.id), name:w.name, vintage:w.vintage,
+    body: JSON.stringify({ userId:uid, clientRowId:String(w.id), cellarId:w.cellarId||null, name:w.name, vintage:w.vintage,
       region:w.region, producer:w.producer, cat:w.cat, bottles:w.bottles, note:w.note, isPublic: !!w.isPublic })
   }).catch(()=>{});
+}
+
+// ── CELLARS（AG節・2026-07-13: 複数セラー対応） ──
+let cellars = [];               // {id,name,emoji,sort_order}[]
+let currentCellarId = null;     // null = 全セラー横断
+let currentSort = 'date_desc';
+
+function myUid(){ try{ return localStorage.getItem('somm_uid'); }catch(e){ return null; } }
+
+async function loadCellarsFromServer(){
+  const uid = myUid();
+  if(!uid) return;
+  try{
+    const r = await fetch(CELLAR_API_BASE+'/api/cellars?userId='+encodeURIComponent(uid));
+    if(!r.ok) return;
+    const { items } = await r.json();
+    cellars = Array.isArray(items) ? items : [];
+    renderCellarSwitch();
+  }catch(e){}
+}
+
+function renderCellarSwitch(){
+  const row = document.getElementById('cellarSwitchRow');
+  if(!row) return;
+  if(!cellars.length){ row.innerHTML = ''; row.style.display = 'none'; return; }
+  row.style.display = 'flex';
+  let html = `<div class="cellar-chip${currentCellarId===null?' active':''}" onclick="selectCellar(null)">${esc(t('cellar_all'))}</div>`;
+  cellars.forEach(c => {
+    html += `<div class="cellar-chip${currentCellarId===c.id?' active':''}" onclick="selectCellar('${c.id}')">${esc(c.emoji||'🍾')} ${esc(c.name)}</div>`;
+  });
+  html += `<div class="cellar-chip-add" onclick="openCellarModal()">${esc(t('cellar_add_chip'))}</div>`;
+  html += `<div class="cellar-chip-add" onclick="openCellarModal(true)">${esc(t('cellar_manage'))}</div>`;
+  row.innerHTML = html;
+}
+
+function selectCellar(id){
+  currentCellarId = id;
+  renderCellarSwitch();
+  renderSummary();
+  renderCellar();
+}
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ── セラー管理モーダル ──
+let cellarModalRenameId = null; // nullなら新規作成モード
+function openCellarModal(showList){
+  cellarModalRenameId = null;
+  document.getElementById('f-cellar-name').value = '';
+  document.getElementById('cellarModalSaveBtn').textContent = t('cellar_create_btn');
+  renderCellarManageList();
+  document.getElementById('cellarModalBg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeCellarModal(e){
+  if (e && e.target !== document.getElementById('cellarModalBg')) return;
+  document.getElementById('cellarModalBg').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function renderCellarManageList(){
+  const box = document.getElementById('cellarManageList');
+  if(!cellars.length){ box.innerHTML = ''; return; }
+  box.innerHTML = cellars.map(c => `
+    <div class="cellar-manage-item">
+      <div class="cellar-manage-name">${esc(c.emoji||'🍾')} ${esc(c.name)}</div>
+      <button class="cellar-manage-btn" onclick="startRenameCellar('${c.id}','${esc(c.name).replace(/'/g,"\\'")}')">${esc(t('cellar_rename'))}</button>
+      <button class="cellar-manage-btn danger" onclick="deleteCellarById('${c.id}')">${esc(t('cellar_delete'))}</button>
+    </div>`).join('');
+}
+function startRenameCellar(id, name){
+  cellarModalRenameId = id;
+  document.getElementById('f-cellar-name').value = name;
+  document.getElementById('cellarModalSaveBtn').textContent = t('cellar_rename_btn');
+  document.getElementById('f-cellar-name').focus();
+}
+async function createOrRenameCellar(){
+  const uid = myUid();
+  if(!uid) return;
+  const name = document.getElementById('f-cellar-name').value.trim();
+  if(!name){ showToast(t('cellar_name_required')); return; }
+  try{
+    if(cellarModalRenameId){
+      const r = await fetch(CELLAR_API_BASE+'/api/cellars/'+encodeURIComponent(cellarModalRenameId), {
+        method:'PATCH', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ userId:uid, name })
+      });
+      if(!r.ok) throw new Error('rename failed');
+      showToast(t('cellar_renamed'));
+    } else {
+      const r = await fetch(CELLAR_API_BASE+'/api/cellars', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ userId:uid, name })
+      });
+      if(!r.ok) throw new Error('create failed');
+      showToast(t('cellar_created'));
+    }
+    await loadCellarsFromServer();
+    cellarModalRenameId = null;
+    document.getElementById('f-cellar-name').value = '';
+    document.getElementById('cellarModalSaveBtn').textContent = t('cellar_create_btn');
+    renderCellarManageList();
+  }catch(e){ showToast(t('cellar_name_required')); }
+}
+async function deleteCellarById(id){
+  const uid = myUid();
+  if(!uid) return;
+  if(!confirm(t('cellar_delete_confirm'))) return;
+  try{
+    const r = await fetch(CELLAR_API_BASE+'/api/cellars/'+encodeURIComponent(id)+'?userId='+encodeURIComponent(uid), { method:'DELETE' });
+    if(r.status === 409){ showToast(t('cellar_not_empty')); return; }
+    if(!r.ok) throw new Error('delete failed');
+    if(currentCellarId === id) currentCellarId = null;
+    showToast(t('cellar_deleted'));
+    await loadCellarsFromServer();
+    renderCellarManageList();
+    renderSummary(); renderCellar();
+  }catch(e){ showToast(t('cellar_not_empty')); }
+}
+
+// ── ソート ──
+function setSort(v){ currentSort = v; renderCellar(); }
+function sortWines(list){
+  const arr = list.slice();
+  switch(currentSort){
+    case 'date_asc': return arr.sort((a,b)=> (a.date||'').localeCompare(b.date||''));
+    case 'name': return arr.sort((a,b)=> String(a.name).localeCompare(String(b.name),'ja'));
+    case 'vintage': return arr.sort((a,b)=> String(b.vintage).localeCompare(String(a.vintage)));
+    case 'price_desc': return arr.sort((a,b)=> (b.price||0)-(a.price||0));
+    case 'bottles_desc': return arr.sort((a,b)=> (b.bottles||0)-(a.bottles||0));
+    case 'region': return arr.sort((a,b)=> String(a.region).localeCompare(String(b.region),'ja'));
+    case 'date_desc': default: return arr.sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+  }
 }
 
 // 公開/非公開の切り替え（2026-07-08追加: マイセラーをホームからも見られるようにするため）
@@ -798,7 +1063,7 @@ async function loadCellarFromServer(){
         vintage: it.vintage || '—', region: it.region || '—', grapes: '—',
         bottles: it.bottles != null ? it.bottles : 1, price: 0,
         date: (it.updated_at||'').split('T')[0] || '', note: it.note || '', hasLabel:false,
-        isPublic: !!it.is_public,
+        isPublic: !!it.is_public, cellarId: it.cellar_id || null,
       };
     });
     cellar = Object.values(byRowId).filter(w => w.bottles > 0);
@@ -818,18 +1083,29 @@ const journal = [
 ];
 
 // ── RENDER ──
+// AG節: currentCellarId が設定されていればそのセラーだけに絞った配列を返す（すべての集計・一覧はこれを使う）
+function cellarScoped(){
+  if (currentCellarId === null) return cellar;
+  return cellar.filter(w => w.cellarId === currentCellarId);
+}
+function cellarNameOf(id){
+  const c = cellars.find(x => x.id === id);
+  return c ? (c.emoji||'🍾') + ' ' + c.name : '';
+}
+
 function renderSummary() {
-  const total = cellar.reduce((s,w) => s + w.bottles, 0);
-  const totalSpend = cellar.reduce((s,w) => s + w.price, 0);
-  const cats = [...new Set(cellar.map(w => w.cat))].length;
-  const avgPrice = total ? Math.round(totalSpend / cellar.length) : 0;
+  const scoped = cellarScoped();
+  const total = scoped.reduce((s,w) => s + w.bottles, 0);
+  const totalSpend = scoped.reduce((s,w) => s + w.price, 0);
+  const cats = [...new Set(scoped.map(w => w.cat))].length;
+  const avgPrice = total ? Math.round(totalSpend / scoped.length) : 0;
   document.getElementById('summaryRow').innerHTML = `
     <div class="summary-item">
       <div class="summary-val">${total}</div>
       <div class="summary-label">${t('summary_total')}</div>
     </div>
     <div class="summary-item">
-      <div class="summary-val">${cellar.length}</div>
+      <div class="summary-val">${scoped.length}</div>
       <div class="summary-label">${t('summary_wines')}</div>
     </div>
     <div class="summary-item">
@@ -843,7 +1119,10 @@ function renderSummary() {
 }
 
 function renderCellar() {
-  const list = currentCat === 'all' ? cellar : cellar.filter(w => w.cat === currentCat);
+  const scoped = cellarScoped();
+  const catFiltered = currentCat === 'all' ? scoped : scoped.filter(w => w.cat === currentCat);
+  const list = sortWines(catFiltered);
+  const showBadge = currentCellarId === null && cellars.length > 1;
   document.getElementById('cellarList').innerHTML = list.map(w => {
     const cfg = catCfg[w.cat];
     return `
@@ -859,6 +1138,7 @@ function renderCellar() {
             </div>
             <div class="cellar-producer">${w.producer}</div>
             <div class="cellar-region">📍 ${w.region}</div>
+            ${showBadge && w.cellarId ? `<div class="cellar-badge">${esc(cellarNameOf(w.cellarId))}</div>` : ''}
             <div class="cellar-bottom">
               <div class="cellar-purchase">¥${w.price.toLocaleString()}</div>
               <div class="cellar-stock">
@@ -913,10 +1193,11 @@ function renderJournal() {
 }
 
 function renderStats() {
+  const scoped = cellarScoped();
   // cat breakdown
   const catBreak = document.getElementById('catBreakdown');
   catBreak.innerHTML = Object.entries(catCfg).map(([cat, cfg]) => {
-    const total = cellar.filter(w => w.cat === cat).reduce((s,w) => s + w.bottles, 0);
+    const total = scoped.filter(w => w.cat === cat).reduce((s,w) => s + w.bottles, 0);
     return `<div class="cat-item">
       <div class="cat-item-icon" style="background:${cfg.bg}">${cfg.emoji}</div>
       <div class="cat-item-count">${total}</div>
@@ -940,7 +1221,7 @@ function renderStats() {
 
   // grape chart
   const grapes = {};
-  cellar.forEach(w => {
+  scoped.forEach(w => {
     w.grapes.split('/').forEach(g => {
       const gg = g.trim(); grapes[gg] = (grapes[gg]||0) + 1;
     });
@@ -966,8 +1247,8 @@ function renderStats() {
     </div>`).join('');
 
   // spending
-  const totalSpend = cellar.reduce((s,w)=>s+w.price,0);
-  const thisYear = cellar.filter(w=>w.date.startsWith('2026')).reduce((s,w)=>s+w.price,0);
+  const totalSpend = scoped.reduce((s,w)=>s+w.price,0);
+  const thisYear = scoped.filter(w=>w.date.startsWith('2026')).reduce((s,w)=>s+w.price,0);
   document.getElementById('spendingBlock').innerHTML = `
     <div class="spending-row">
       <span class="spending-label">${t('spend_year')}</span>
@@ -979,7 +1260,7 @@ function renderStats() {
     </div>
     <div class="spending-row">
       <span class="spending-label">${t('spend_wines')}</span>
-      <span class="spending-val">${t('fmt_n_kinds', { n: cellar.length })}</span>
+      <span class="spending-val">${t('fmt_n_kinds', { n: scoped.length })}</span>
     </div>
     <div class="spending-row">
       <span class="spending-label">${t('spend_recorded')}</span>
@@ -1027,6 +1308,12 @@ function openAddModal() {
   // set today's date
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('f-date').value = today;
+  // AG節: セラー選択肢を用意（デフォルトは今見ているセラー。無ければ先頭のセラー）
+  const sel = document.getElementById('f-cellar');
+  if (sel) {
+    sel.innerHTML = cellars.map(c => `<option value="${c.id}">${esc(c.emoji||'🍾')} ${esc(c.name)}</option>`).join('');
+    if (currentCellarId && cellars.some(c => c.id === currentCellarId)) sel.value = currentCellarId;
+  }
 }
 function closeAddModal(e) {
   if (e && e.target !== document.getElementById('addModalBg')) return;
@@ -1064,6 +1351,7 @@ function saveWine() {
   if(window.sommLog) sommLog('cellar_add');
   const name = document.getElementById('f-name').value.trim();
   if (!name) { document.getElementById('f-name').focus(); return; }
+  const cellarSel = document.getElementById('f-cellar');
   const w = {
     id: nextId++,
     cat: selectedCatForAdd,
@@ -1077,6 +1365,7 @@ function saveWine() {
     date:     document.getElementById('f-date').value || new Date().toISOString().split('T')[0],
     note:     document.getElementById('f-note').value || '',
     hasLabel: false,
+    cellarId: (cellarSel && cellarSel.value) || currentCellarId || null,
   };
   cellar.unshift(w);
   saveCellar();
@@ -1143,11 +1432,13 @@ function showToast(msg) {
 }
 
 // ── INIT ──
+renderCellarSwitch();
 renderSummary();
 renderCellar();
 renderJournal();
 renderStats();
 loadCellarFromServer();
+loadCellarsFromServer().then(() => { renderSummary(); renderCellar(); renderStats(); });
 (function initHeaderName(){
   try { const n = localStorage.getItem('sommelin_nickname'); const el = document.getElementById('cellarHeaderName'); if (el && n) el.textContent = n; } catch(e){}
 })();
