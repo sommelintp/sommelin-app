@@ -69,6 +69,7 @@ body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg)
   この生産者のご本人・関係者ですか？<br><b>公式アカウントを申請する →</b>
 </a>
 
+<script src="assets/wine-display.js"></script>
 <script>
 const SB_URL = 'https://gkhdpzfmqraliwaiubwl.supabase.co';
 const SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
@@ -121,15 +122,20 @@ async function load() {
     listEl.innerHTML = '<div class="sec">掲載ワイン（評価順）</div>' + rows.map(w => {
       const price = w.price != null ? '¥' + Math.round(w.price).toLocaleString('ja-JP') : '';
       const badge = w.cospaLevel ? '<span class="wbadge">💰 コスパ良好</span>' : '';
-      return `<div class="wcard">
-        <div class="wname">${esc(w.name)}${w.vintage && w.vintage!=='NV' ? ' ' + esc(w.vintage) : ''}</div>
+      // AJ-8(2026-07-14): カード全体をタップ可能に。詳細は既存のワイン検索画面
+      // （星・詳細情報・楽天リンク・取扱店まで揃っている）に任せる
+      const stars = (w.starRating != null && window.WineDisplay) ? window.WineDisplay.starsHtml(w.starRating, { size: 13 }) : '';
+      const detailUrl = 'wine_search.html?q=' + encodeURIComponent(w.name || '');
+      return `<div class="wcard" onclick="if(window.sommLog)sommLog('producer_wine_tap',{n:'${esc(w.name||'').replace(/'/g,'')}'});location.href='${detailUrl}'" style="cursor:pointer;">
+        <div class="wname">${esc(w.name)}${w.vintage && w.vintage!=='NV' ? ' ' + esc(w.vintage) : ''} <span style="float:right;color:var(--text-sub);font-weight:400;">›</span></div>
         <div class="wmeta">${esc([w.iro, w.kuni, w.chiiki].filter(v => v && v !== '不明').join(' ・ '))}</div>
         <div class="wrow">
           <span class="wprice">${price}</span>
+          ${stars}
           ${badge}
-          ${w.id != null ? `<button class="wherebtn" onclick="toggleWhere(${w.id}, this)">📍 どこで飲める？</button>` : ''}
+          ${w.id != null ? `<button class="wherebtn" onclick="event.stopPropagation();toggleWhere(${w.id}, this)">📍 どこで飲める？</button>` : ''}
         </div>
-        ${w.id != null ? `<div class="wherebox" id="where-${w.id}"></div>` : ''}
+        ${w.id != null ? `<div class="wherebox" id="where-${w.id}" onclick="event.stopPropagation()"></div>` : ''}
       </div>`;
     }).join('');
   } catch (e) {

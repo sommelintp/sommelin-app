@@ -1431,32 +1431,33 @@
   <div class="top-header-icon">🏰</div>
   <div class="top-header-info">
     <div class="top-header-rest">Bistrot Lumière</div>
-    <div class="top-header-sub">Sommelin 管理画面</div>
+    <div class="top-header-sub" data-i18n="hdr_sub">Sommelin 管理画面</div>
   </div>
-  <div class="top-header-badge" id="roleBadge">スタッフ</div>
-  <button onclick="location.href='prototype.html'" title="個人モードに切り替え" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:11px;font-weight:700;cursor:pointer;padding:6px 10px;margin-left:6px;border-radius:14px;white-space:nowrap;">🍷 個人モード</button>
-  <button onclick="sommelinLogout()" title="ログアウト" style="background:none;border:none;color:rgba(255,255,255,.7);font-size:18px;cursor:pointer;padding:4px 8px;margin-left:2px;">⏻</button>
+  <div class="top-header-badge" id="roleBadge" data-i18n="role_staff">スタッフ</div>
+  <button id="langBtn" onclick="setLang(LANG==='ja'?'en':'ja')" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:11px;font-weight:700;cursor:pointer;padding:6px 10px;margin-left:6px;border-radius:14px;white-space:nowrap;"></button>
+  <button onclick="location.href='prototype.html'" title="個人モードに切り替え" data-i18n="btn_personal" data-i18n-title="btn_personal_title" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:11px;font-weight:700;cursor:pointer;padding:6px 10px;margin-left:6px;border-radius:14px;white-space:nowrap;">🍷 個人モード</button>
+  <button onclick="sommelinLogout()" title="ログアウト" data-i18n-title="btn_logout_title" style="background:none;border:none;color:rgba(255,255,255,.7);font-size:18px;cursor:pointer;padding:4px 8px;margin-left:2px;">⏻</button>
 </div>
 
 <!-- TAB NAV -->
 <div class="tab-nav">
   <div class="tab-nav-item active" id="tnav-cal" onclick="switchPanel('calendar')">
-    <span class="nav-icon">📅</span>試飲会
+    <span class="nav-icon">📅</span><span data-i18n="tab_tasting">試飲会</span>
   </div>
   <div class="tab-nav-item" id="tnav-wine" onclick="switchPanel('winelist')">
-    <span class="nav-icon">🍷</span>ワインリスト
+    <span class="nav-icon">🍷</span><span data-i18n="tab_winelist">ワインリスト</span>
   </div>
   <div class="tab-nav-item" id="tnav-qr" onclick="switchPanel('qr')">
-    <span class="nav-icon">📱</span>QRコード
+    <span class="nav-icon">📱</span><span data-i18n="tab_qr">QRコード</span>
   </div>
   <div class="tab-nav-item" id="tnav-stk" onclick="switchPanel('stock')">
-    <span class="nav-icon">📦</span>在庫
+    <span class="nav-icon">📦</span><span data-i18n="tab_stock">在庫</span>
   </div>
   <div class="tab-nav-item" id="tnav-nt" onclick="switchPanel('notes')">
-    <span class="nav-icon">📸</span>試飲メモ
+    <span class="nav-icon">📸</span><span data-i18n="tab_notes">試飲メモ</span>
   </div>
   <div class="tab-nav-item" id="tnav-an" onclick="switchPanel('analytics')">
-    <span class="nav-icon">📈</span>分析
+    <span class="nav-icon">📈</span><span data-i18n="tab_analytics">分析</span>
   </div>
 </div>
 
@@ -1467,20 +1468,20 @@
   <div class="sync-bar">
     <span class="sync-icon">📆</span>
     <div class="sync-info">
-      <div class="sync-title">Google カレンダー連携</div>
-      <div class="sync-sub" id="syncStatus">最終同期: 今日 09:30</div>
+      <div class="sync-title" data-i18n="sync_title">Google カレンダー連携</div>
+      <div class="sync-sub" id="syncStatus" data-i18n="sync_last_today">最終同期: 今日 09:30</div>
     </div>
-    <button class="sync-btn" onclick="simulateSync()">同期する</button>
+    <button class="sync-btn" onclick="simulateSync()" data-i18n="sync_btn">同期する</button>
   </div>
 
   <!-- 招待リンク（2026-07-08追加: 業務店アカウントはonboarding.htmlの招待ミッションに到達できないため） -->
   <div class="sync-bar" style="align-items:flex-start;">
     <span class="sync-icon">🎁</span>
     <div class="sync-info">
-      <div class="sync-title">お友達を招待</div>
-      <div class="sync-sub">このリンクから登録すると、あなたにも特典が届きます</div>
+      <div class="sync-title" data-i18n="invite_title">お友達を招待</div>
+      <div class="sync-sub" data-i18n="invite_sub">このリンクから登録すると、あなたにも特典が届きます</div>
     </div>
-    <button class="sync-btn" onclick="shareAdminInvite()">シェア</button>
+    <button class="sync-btn" onclick="shareAdminInvite()" data-i18n="invite_btn">シェア</button>
   </div>
 
   <!-- LINE 連携カード -->
@@ -1497,30 +1498,30 @@
         </svg>
       </div>
       <div class="line-header-text">
-        <div class="line-header-title">LINE 通知連携</div>
-        <div class="line-header-sub" id="lineHeaderSub">試飲会情報をLINEで受け取ります</div>
+        <div class="line-header-title" data-i18n="line_hdr_title">LINE 通知連携</div>
+        <div class="line-header-sub" id="lineHeaderSub" data-i18n="line_sub_unlinked">試飲会情報をLINEで受け取ります</div>
       </div>
-      <div class="line-status-badge" id="lineStatusBadge">未連携</div>
+      <div class="line-status-badge" id="lineStatusBadge" data-i18n="line_badge_unlinked">未連携</div>
     </div>
 
     <!-- 未連携 ビュー -->
     <div class="line-unconnected" id="lineUnconnected">
-      <p class="line-unconnected-desc">
+      <p class="line-unconnected-desc" data-i18n-html="line_unconnected_desc">
         <strong>3ステップで設定完了。</strong>インポーターが配信する試飲会・セミナー情報をお店のLINEで受け取れます。
       </p>
       <!-- ステップ説明 -->
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
         <div style="display:flex;align-items:flex-start;gap:10px;">
           <div style="width:22px;height:22px;background:var(--line);color:white;border-radius:50%;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">1</div>
-          <div style="font-size:12px;color:var(--text);line-height:1.5;">下のボタンをタップして「<strong>Sommelin</strong>」をLINEで友達追加</div>
+          <div style="font-size:12px;color:var(--text);line-height:1.5;" data-i18n-html="line_step1">下のボタンをタップして「<strong>Sommelin</strong>」をLINEで友達追加</div>
         </div>
         <div style="display:flex;align-items:flex-start;gap:10px;">
           <div style="width:22px;height:22px;background:var(--line);color:white;border-radius:50%;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">2</div>
-          <div style="font-size:12px;color:var(--text);line-height:1.5;">自動で届くメッセージからお店情報を登録</div>
+          <div style="font-size:12px;color:var(--text);line-height:1.5;" data-i18n="line_step2">自動で届くメッセージからお店情報を登録</div>
         </div>
         <div style="display:flex;align-items:flex-start;gap:10px;">
           <div style="width:22px;height:22px;background:var(--line);color:white;border-radius:50%;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">3</div>
-          <div style="font-size:12px;color:var(--text);line-height:1.5;">試飲会情報がLINEに届くようになります 🎉</div>
+          <div style="font-size:12px;color:var(--text);line-height:1.5;" data-i18n="line_step3">試飲会情報がLINEに届くようになります 🎉</div>
         </div>
       </div>
 
@@ -1534,9 +1535,9 @@
         <svg width="22" height="22" viewBox="0 0 36 36" fill="none">
           <path d="M18 7C11.373 7 6 11.477 6 16.97c0 4.928 3.928 9.065 9.237 9.847.359.077.848.237.972.544.111.279.073.716.036 1l-.157 1.02c-.048.31-.22 1.21.955.66 1.175-.55 6.34-4.084 8.65-6.99C27.31 20.96 30 19.12 30 16.97 30 11.477 24.627 7 18 7z" fill="white"/>
         </svg>
-        LINEで友達追加する
+        <span data-i18n="line_add_friend_btn">LINEで友達追加する</span>
       </a>
-      <div style="font-size:11px;color:var(--text-sub);text-align:center;margin-bottom:14px;">
+      <div style="font-size:11px;color:var(--text-sub);text-align:center;margin-bottom:14px;" data-i18n="line_add_friend_note">
         @sommelin_official · タップするとLINEアプリが開きます
       </div>
     </div>
@@ -1546,22 +1547,22 @@
       <div class="line-account-row">
         <div class="line-account-icon">🏰</div>
         <div>
-          <div class="line-account-name">Bistrot Lumière スタッフ</div>
+          <div class="line-account-name" data-i18n="line_account_name">Bistrot Lumière スタッフ</div>
           <div class="line-account-id">@bistrot_lumiere_staff</div>
         </div>
       </div>
-      <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:0.8px;margin-bottom:8px;">通知する種別</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:0.8px;margin-bottom:8px;" data-i18n="line_types_label">通知する種別</div>
       <div class="line-notify-types" id="lineNotifyTypes">
-        <span class="line-type-chip" id="ltc-tasting">🍷 試飲会</span>
-        <span class="line-type-chip" id="ltc-seminar">📚 セミナー</span>
-        <span class="line-type-chip" id="ltc-fair">🏆 フェア</span>
+        <span class="line-type-chip" id="ltc-tasting" data-i18n="chip_tasting">🍷 試飲会</span>
+        <span class="line-type-chip" id="ltc-seminar" data-i18n="chip_seminar">📚 セミナー</span>
+        <span class="line-type-chip" id="ltc-fair" data-i18n="chip_fair">🏆 フェア</span>
       </div>
       <div class="line-timing-row" style="margin-top:8px;">
-        ⏰ 通知タイミング: <span id="lineTimingLabel">1週間前 · 当日</span>
+        ⏰ <span data-i18n="line_timing_prefix">通知タイミング:</span> <span id="lineTimingLabel" data-i18n="line_timing_default">1週間前 · 当日</span>
       </div>
       <div class="line-action-row">
-        <button class="line-settings-btn" onclick="openLineSettings()">⚙️ 設定変更</button>
-        <button class="line-test-btn" onclick="sendLineTest()">💬 テスト送信</button>
+        <button class="line-settings-btn" onclick="openLineSettings()" data-i18n="line_settings_btn">⚙️ 設定変更</button>
+        <button class="line-test-btn" onclick="sendLineTest()" data-i18n="line_test_btn">💬 テスト送信</button>
       </div>
     </div>
   </div>
@@ -1575,15 +1576,15 @@
     </div>
     <div class="cal-admin-grid" id="adminCalGrid">
       <!-- 曜日 -->
-      <div class="cal-dow">日</div><div class="cal-dow">月</div>
-      <div class="cal-dow">火</div><div class="cal-dow">水</div>
-      <div class="cal-dow">木</div><div class="cal-dow">金</div>
-      <div class="cal-dow">土</div>
+      <div class="cal-dow" data-i18n="dow_0">日</div><div class="cal-dow" data-i18n="dow_1">月</div>
+      <div class="cal-dow" data-i18n="dow_2">火</div><div class="cal-dow" data-i18n="dow_3">水</div>
+      <div class="cal-dow" data-i18n="dow_4">木</div><div class="cal-dow" data-i18n="dow_5">金</div>
+      <div class="cal-dow" data-i18n="dow_6">土</div>
     </div>
   </div>
 
   <!-- Event list（月縛りなし: 今日以降を月見出し付きで連続表示） -->
-  <div style="padding: 12px 16px 4px; font-size:11px; font-weight:700; color:var(--text-sub); letter-spacing:1.2px;">今後の試飲会</div>
+  <div style="padding: 12px 16px 4px; font-size:11px; font-weight:700; color:var(--text-sub); letter-spacing:1.2px;" data-i18n="upcoming_tastings">今後の試飲会</div>
   <div id="adminEventList"></div>
 
 </div>
@@ -1593,30 +1594,30 @@
 
   <!-- ツールバー -->
   <div class="wl-toolbar">
-    <input class="wl-search" type="text" placeholder="ワインを検索..." oninput="filterWines(this.value)">
-    <button class="btn-primary" onclick="openWineModal(null)">＋ 追加</button>
+    <input class="wl-search" type="text" placeholder="ワインを検索..." data-i18n-ph="wl_search_ph" oninput="filterWines(this.value)">
+    <button class="btn-primary" onclick="openWineModal(null)" data-i18n="wl_add_btn">＋ 追加</button>
   </div>
   <div class="wl-toolbar2">
-    <button class="btn-import" onclick="openListCapture()">📋 リストを写真で一括読み込み</button>
-    <button class="btn-import" onclick="openPrintList()">🖨 印刷用リストを開く</button>
+    <button class="btn-import" onclick="openListCapture()" data-i18n="wl_bulk_btn">📋 リストを写真で一括読み込み</button>
+    <button class="btn-import" onclick="openPrintList()" data-i18n="wl_print_btn">🖨 印刷用リストを開く</button>
   </div>
 
   <!-- カテゴリタブ -->
   <div class="cat-tabs">
-    <div class="cat-tab active" onclick="filterCat('all',this)">すべて</div>
-    <div class="cat-tab" onclick="filterCat('sparkling',this)">🥂 泡</div>
-    <div class="cat-tab" onclick="filterCat('white',this)">🤍 白</div>
-    <div class="cat-tab" onclick="filterCat('red',this)">🍷 赤</div>
-    <div class="cat-tab" onclick="filterCat('rose',this)">🌸 ロゼ</div>
-    <div class="cat-tab" onclick="filterCat('orange',this)">🍊 オレンジ</div>
+    <div class="cat-tab active" onclick="filterCat('all',this)" data-i18n="cat_all">すべて</div>
+    <div class="cat-tab" onclick="filterCat('sparkling',this)" data-i18n="cat_sparkling">🥂 泡</div>
+    <div class="cat-tab" onclick="filterCat('white',this)" data-i18n="cat_white">🤍 白</div>
+    <div class="cat-tab" onclick="filterCat('red',this)" data-i18n="cat_red">🍷 赤</div>
+    <div class="cat-tab" onclick="filterCat('rose',this)" data-i18n="cat_rose">🌸 ロゼ</div>
+    <div class="cat-tab" onclick="filterCat('orange',this)" data-i18n="cat_orange">🍊 オレンジ</div>
   </div>
 
   <!-- リスト -->
   <div class="panel-section" style="margin-top:10px;">
     <div id="wineTableBody"></div>
     <div class="wl-footer">
-      <span id="wineCount">全 0 種</span>
-      <button class="btn-ghost" onclick="showToast('リストを更新しました ✓')">リストを公開する</button>
+      <span id="wineCount" data-i18n="wine_count_zero">全 0 種</span>
+      <button class="btn-ghost" onclick="showToast(t('toast_list_published'))" data-i18n="wl_publish_btn">リストを公開する</button>
     </div>
   </div>
 
@@ -1628,19 +1629,19 @@
   <!-- QR表示 -->
   <div class="qr-section">
     <div id="qrCodeContainer"></div>
-    <div style="font-size:13px;color:var(--text-sub);">このQRコードをお店に掲示してください</div>
+    <div style="font-size:13px;color:var(--text-sub);" data-i18n="qr_display_note">このQRコードをお店に掲示してください</div>
   </div>
 
   <!-- URL コピー -->
   <div class="qr-url-box">
     <span class="qr-url-text" id="qrUrlText">https://sommelin.app/r/bistrot-lumiere</span>
-    <button class="copy-btn" onclick="copyUrl()">コピー</button>
+    <button class="copy-btn" onclick="copyUrl()" data-i18n="qr_copy_btn">コピー</button>
   </div>
 
   <!-- アクションボタン -->
   <div class="qr-actions">
-    <button class="btn-secondary" onclick="showToast('印刷ダイアログを開きます 🖨️')">🖨️ 印刷</button>
-    <button class="btn-primary" onclick="showToast('QRコードをダウンロードしました ✓')">⬇️ 保存</button>
+    <button class="btn-secondary" onclick="showToast(t('toast_print_dialog'))" data-i18n="qr_print_btn">🖨️ 印刷</button>
+    <button class="btn-primary" onclick="showToast(t('toast_qr_downloaded'))" data-i18n="qr_save_btn">⬇️ 保存</button>
   </div>
 
   <!-- 公開/非公開 設定 -->
@@ -1648,9 +1649,9 @@
     <div class="privacy-row">
       <span class="privacy-icon" id="privacyIcon">🔓</span>
       <div class="privacy-info">
-        <div class="privacy-title">ワインリストの公開設定</div>
+        <div class="privacy-title" data-i18n="privacy_title">ワインリストの公開設定</div>
         <div class="privacy-desc">
-          <strong id="privacyStatus">公開中</strong> — ソムリンアプリを使えばどこからでも閲覧できます
+          <strong id="privacyStatus" data-i18n="privacy_public">公開中</strong> <span data-i18n="privacy_desc">— ソムリンアプリを使えばどこからでも閲覧できます</span>
         </div>
       </div>
       <label class="toggle">
@@ -1658,29 +1659,29 @@
         <span class="toggle-slider"></span>
       </label>
     </div>
-    <div class="privacy-warning" id="privacyWarning">
+    <div class="privacy-warning" id="privacyWarning" data-i18n="privacy_warning">
       ⚠️ 非公開に設定すると、お店のQRコードをスキャンした場合のみリストが表示されます。ランキングや履歴からは閲覧できなくなります。
     </div>
   </div>
 
   <!-- 使い方 -->
   <div class="qr-usage">
-    <div class="qr-usage-title">📖 QRコードの使い方</div>
+    <div class="qr-usage-title" data-i18n="qr_usage_title">📖 QRコードの使い方</div>
     <div class="qr-usage-step">
       <div class="step-num">1</div>
-      <div>テーブルやメニューブックにQRコードを貼り付けます</div>
+      <div data-i18n="qr_usage_1">テーブルやメニューブックにQRコードを貼り付けます</div>
     </div>
     <div class="qr-usage-step">
       <div class="step-num">2</div>
-      <div>お客様がスマートフォンでスキャンすると、ソムリン君がワインをご案内します</div>
+      <div data-i18n="qr_usage_2">お客様がスマートフォンでスキャンすると、ソムリン君がワインをご案内します</div>
     </div>
     <div class="qr-usage-step">
       <div class="step-num">3</div>
-      <div>お客様の好みに合わせたおすすめ・マリアージュ提案が自動で表示されます</div>
+      <div data-i18n="qr_usage_3">お客様の好みに合わせたおすすめ・マリアージュ提案が自動で表示されます</div>
     </div>
     <div class="qr-usage-step">
       <div class="step-num">4</div>
-      <div>ワインリストを更新すると、次回スキャン時に自動で最新版が表示されます</div>
+      <div data-i18n="qr_usage_4">ワインリストを更新すると、次回スキャン時に自動で最新版が表示されます</div>
     </div>
   </div>
 
@@ -1691,63 +1692,63 @@
 
   <!-- Stats -->
   <div class="stk-stats">
-    <div class="stk-stat"><div class="stk-num" id="stkTotal">0</div><div class="stk-lbl">登録ワイン</div></div>
-    <div class="stk-stat"><div class="stk-num stk-green" id="stkIn">0</div><div class="stk-lbl">在庫あり</div></div>
-    <div class="stk-stat"><div class="stk-num stk-red" id="stkOut">0</div><div class="stk-lbl">在庫なし</div></div>
+    <div class="stk-stat"><div class="stk-num" id="stkTotal">0</div><div class="stk-lbl" data-i18n="stk_total_lbl">登録ワイン</div></div>
+    <div class="stk-stat"><div class="stk-num stk-green" id="stkIn">0</div><div class="stk-lbl" data-i18n="stk_in_lbl">在庫あり</div></div>
+    <div class="stk-stat"><div class="stk-num stk-red" id="stkOut">0</div><div class="stk-lbl" data-i18n="stk_out_lbl">在庫なし</div></div>
   </div>
 
   <!-- LINE連携（2026-07-12・R節） -->
   <div style="margin:14px 16px 0;background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;">
-    <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:8px;">📲 LINE連携</div>
-    <div id="lineLinkBody" style="font-size:12.5px;color:var(--text-sub);">読み込み中…</div>
+    <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:8px;" data-i18n="stk_line_title">📲 LINE連携</div>
+    <div id="lineLinkBody" style="font-size:12.5px;color:var(--text-sub);" data-i18n="loading">読み込み中…</div>
   </div>
 
   <!-- Quick add form -->
   <div class="stk-add-card">
-    <div class="stk-add-title">＋ ワインを在庫に登録</div>
-    <input class="stk-input" id="stkName" placeholder="ワイン名（例: Ch. Mouton Rothschild）">
+    <div class="stk-add-title" data-i18n="stk_add_title">＋ ワインを在庫に登録</div>
+    <input class="stk-input" id="stkName" placeholder="ワイン名（例: Ch. Mouton Rothschild）" data-i18n-ph="stk_name_ph">
     <div class="stk-row2">
-      <input class="stk-input stk-short" id="stkVintage" placeholder="ヴィンテージ" maxlength="4" type="number">
-      <input class="stk-input stk-short" id="stkPrice" placeholder="販売価格（円）" type="number">
+      <input class="stk-input stk-short" id="stkVintage" placeholder="ヴィンテージ" data-i18n-ph="stk_vintage_ph" maxlength="4" type="number">
+      <input class="stk-input stk-short" id="stkPrice" placeholder="販売価格（円）" data-i18n-ph="stk_price_ph" type="number">
     </div>
-    <input class="stk-input" id="stkRegion" placeholder="産地（例: Bordeaux, France）">
+    <input class="stk-input" id="stkRegion" placeholder="産地（例: Bordeaux, France）" data-i18n-ph="stk_region_ph">
     <div class="stk-row2">
-      <input class="stk-input stk-short" id="stkQty" placeholder="在庫数" type="number" value="1">
+      <input class="stk-input stk-short" id="stkQty" placeholder="在庫数" data-i18n-ph="stk_qty_ph" type="number" value="1">
       <select class="stk-input stk-short" id="stkType">
-        <option value="bottle">ボトル販売</option>
-        <option value="glass">グラス販売</option>
-        <option value="both">両方</option>
+        <option value="bottle" data-i18n="stk_type_bottle">ボトル販売</option>
+        <option value="glass" data-i18n="stk_type_glass">グラス販売</option>
+        <option value="both" data-i18n="stk_type_both">両方</option>
       </select>
     </div>
-    <button class="stk-add-btn" onclick="addStockItem()">在庫に追加</button>
+    <button class="stk-add-btn" onclick="addStockItem()" data-i18n="stk_add_btn">在庫に追加</button>
   </div>
 
   <!-- Inventory list -->
-  <div style="padding:0 16px 12px;font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:.07em;">在庫リスト</div>
+  <div style="padding:0 16px 12px;font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:.07em;" data-i18n="stk_list_lbl">在庫リスト</div>
   <div id="stkList" style="padding:0 16px 80px;"></div>
 
 </div>
 
 <!-- 在庫公開フッター（店舗名・住所は restaurant_settings に保存され、ワイン検索に表示される） -->
 <div class="stk-publish-bar" id="stkPublishBar">
-  <input class="stk-input" id="stkStoreName" placeholder="店舗名（検索結果に表示されます）" style="margin-bottom:8px;">
+  <input class="stk-input" id="stkStoreName" placeholder="店舗名（検索結果に表示されます）" data-i18n-ph="pub_store_name_ph" style="margin-bottom:8px;">
   <div style="position:relative;margin-bottom:8px;">
-    <input class="stk-input" id="stkStoreAddr" placeholder="住所を入力すると候補が出ます" oninput="storeAddrSuggest()" autocomplete="off" style="width:100%;box-sizing:border-box;">
+    <input class="stk-input" id="stkStoreAddr" placeholder="住所を入力すると候補が出ます" data-i18n-ph="pub_store_addr_ph" oninput="storeAddrSuggest()" autocomplete="off" style="width:100%;box-sizing:border-box;">
     <div id="storeAddrSug" style="display:none;position:absolute;left:0;right:0;top:100%;background:#fff;border:1px solid #ddd;border-radius:10px;margin-top:4px;max-height:220px;overflow:auto;z-index:50;box-shadow:0 4px 14px rgba(0,0,0,.12);"></div>
   </div>
-  <input class="stk-input" id="stkStoreIg" placeholder="Instagram（任意・例: @yourshop）" style="margin-bottom:8px;">
-  <button class="stk-pub-btn" onclick="publishStock()">🌐 在庫情報をソムリンに公開する</button>
+  <input class="stk-input" id="stkStoreIg" placeholder="Instagram（任意・例: @yourshop）" data-i18n-ph="pub_store_ig_ph" style="margin-bottom:8px;">
+  <button class="stk-pub-btn" onclick="publishStock()" data-i18n="pub_btn">🌐 在庫情報をソムリンに公開する</button>
 </div>
 
 <!-- ==================== PANEL: 試飲メモ（良かったワインリスト） ==================== -->
 <div id="panelNotes" class="panel">
   <div style="margin:14px 16px 0;background:linear-gradient(135deg,#fff,#fbeef3);border:1.5px solid var(--burgundy);border-radius:14px;padding:14px 16px;">
-    <div style="font-size:14px;font-weight:800;color:var(--text);">📸 試飲会で撮った写真を、良かったワインリストに</div>
-    <div style="font-size:12px;color:var(--text-sub);line-height:1.7;margin-top:6px;">
+    <div style="font-size:14px;font-weight:800;color:var(--text);" data-i18n="tn_title">📸 試飲会で撮った写真を、良かったワインリストに</div>
+    <div style="font-size:12px;color:var(--text-sub);line-height:1.7;margin-top:6px;" data-i18n="tn_desc">
       カメラアプリで撮ったワインの写真を取り込むと、AIが銘柄を読み取ります。
       インポーター名を書き添えると、そのインポーターに「お店が気に入っています」と伝わります。
     </div>
-    <button onclick="tnPickPhotos()" style="width:100%;margin-top:12px;background:var(--burgundy);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">
+    <button onclick="tnPickPhotos()" data-i18n="tn_pick_btn" style="width:100%;margin-top:12px;background:var(--burgundy);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">
       📁 写真を取り込む（複数OK）
     </button>
     <div id="tnProgress" style="font-size:12px;color:var(--text-sub);margin-top:8px;text-align:center;"></div>
@@ -1755,28 +1756,28 @@
 
   <!-- 認識結果（保存前の確認・インポーター名/メモ入力） -->
   <div id="tnStagingWrap" style="display:none;margin:14px 16px 0;">
-    <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:.07em;margin-bottom:8px;">認識したワイン — インポーター名を書き添えて保存</div>
+    <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:.07em;margin-bottom:8px;" data-i18n="tn_staging_lbl">認識したワイン — インポーター名を書き添えて保存</div>
     <div id="tnStaging"></div>
-    <button onclick="tnSaveStaged()" style="width:100%;background:#16a34a;color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">✓ まとめて保存</button>
+    <button onclick="tnSaveStaged()" data-i18n="tn_save_all_btn" style="width:100%;background:#16a34a;color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">✓ まとめて保存</button>
   </div>
 
   <!-- 保存済みリスト -->
-  <div style="margin:18px 16px 6px;font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:.07em;">良かったワインリスト</div>
+  <div style="margin:18px 16px 6px;font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:.07em;" data-i18n="tn_list_lbl">良かったワインリスト</div>
   <div id="tnList" style="padding:0 16px 80px;"></div>
 </div>
 
 <!-- ==================== PANEL: 分析（実データのみ・/api/store-analytics） ==================== -->
 <div id="panelAnalytics" class="panel">
   <div id="anBody" style="padding:14px 16px 80px;">
-    <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>
+    <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;" data-i18n="loading">読み込み中…</div>
   </div>
 </div>
 
 <!-- ==================== ワインリスト一括インポート オーバーレイ ==================== -->
 <div class="cam-overlay" id="listCamOverlay">
   <div class="cam-top-bar">
-    <div class="cam-top-title">📋 ワインリストを読み込む</div>
-    <button class="cam-close-btn" onclick="closeListCapture()">キャンセル</button>
+    <div class="cam-top-title" data-i18n="lc_title">📋 ワインリストを読み込む</div>
+    <button class="cam-close-btn" onclick="closeListCapture()" data-i18n="cancel">キャンセル</button>
   </div>
 
   <!-- ビューファインダー（横長） -->
@@ -1791,7 +1792,7 @@
         <div style="width:60%;height:2px;background:white;border-radius:1px;"></div>
         <div style="width:70%;height:2px;background:white;border-radius:1px;"></div>
       </div>
-      <div style="position:absolute;bottom:-38px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.55);font-size:12px;white-space:nowrap;">
+      <div style="position:absolute;bottom:-38px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.55);font-size:12px;white-space:nowrap;" data-i18n="lc_frame_hint">
         ワインリスト全体をフレームに収めてください
       </div>
     </div>
@@ -1799,7 +1800,7 @@
 
   <!-- サムネイル不要なのでスリム帯 -->
   <div style="width:100%;padding:14px 16px;background:#0d0d0d;border-top:1px solid rgba(255,255,255,0.08);">
-    <div style="color:rgba(255,255,255,0.4);font-size:12px;text-align:center;" id="listCaptureTip">
+    <div style="color:rgba(255,255,255,0.4);font-size:12px;text-align:center;" id="listCaptureTip" data-i18n="lc_tip">
       📄 メニュー・手書きリスト・印刷リスト、どれでも読み込めます
     </div>
   </div>
@@ -1807,13 +1808,13 @@
   <div class="cam-bottom">
     <div class="cam-controls">
       <div style="min-width:60px;"></div>
-      <button class="cam-shutter" onclick="captureList()" title="撮影">📸</button>
+      <button class="cam-shutter" onclick="captureList()" title="撮影" data-i18n-title="shutter_title">📸</button>
       <div style="min-width:60px;"></div>
     </div>
-    <button class="cam-analyze-btn" id="listAnalyzeBtn" onclick="analyzeList()" disabled>
+    <button class="cam-analyze-btn" id="listAnalyzeBtn" onclick="analyzeList()" disabled data-i18n="lc_analyze_btn">
       📖 ワインリストを読み込む
     </button>
-    <button class="cam-manual-link" onclick="closeListCapture()">キャンセル</button>
+    <button class="cam-manual-link" onclick="closeListCapture()" data-i18n="cancel">キャンセル</button>
   </div>
 </div>
 
@@ -1822,14 +1823,14 @@
   <div class="bulk-results-sheet">
     <div class="br-handle"></div>
     <div class="br-header">
-      <div class="br-title" id="brTitle">📖 ワインが見つかりました</div>
-      <span class="br-select-all" onclick="toggleAllBulk()">すべて選択</span>
+      <div class="br-title" id="brTitle" data-i18n="br_title_default">📖 ワインが見つかりました</div>
+      <span class="br-select-all" onclick="toggleAllBulk()" data-i18n="br_select_all">すべて選択</span>
     </div>
-    <div class="br-sub" id="brSub">追加するワインを選択してください</div>
+    <div class="br-sub" id="brSub" data-i18n="br_sub_default">追加するワインを選択してください</div>
     <div id="bulkWineList"></div>
     <div class="br-footer">
-      <button class="btn-ghost" onclick="closeBulkResults()">キャンセル</button>
-      <button class="btn-primary" id="brAddBtn" onclick="confirmBulkAdd()">追加する</button>
+      <button class="btn-ghost" onclick="closeBulkResults()" data-i18n="cancel">キャンセル</button>
+      <button class="btn-primary" id="brAddBtn" onclick="confirmBulkAdd()" data-i18n="br_add_btn">追加する</button>
     </div>
   </div>
 </div>
@@ -1837,8 +1838,8 @@
 <!-- ==================== カメラキャプチャ オーバーレイ ==================== -->
 <div class="cam-overlay" id="camOverlay">
   <div class="cam-top-bar">
-    <div class="cam-top-title">📷 ボトルを撮影</div>
-    <button class="cam-close-btn" onclick="closeCameraCapture()">キャンセル</button>
+    <div class="cam-top-title" data-i18n="cam_title">📷 ボトルを撮影</div>
+    <button class="cam-close-btn" onclick="closeCameraCapture()" data-i18n="cancel">キャンセル</button>
   </div>
 
   <!-- ビューファインダー -->
@@ -1848,26 +1849,26 @@
       <div class="cam-fc tr"></div>
       <div class="cam-fc bl"></div>
       <div class="cam-fc br"></div>
-      <div class="cam-frame-hint">ボトルをフレームに合わせてください</div>
+      <div class="cam-frame-hint" data-i18n="cam_frame_hint">ボトルをフレームに合わせてください</div>
     </div>
   </div>
 
   <!-- サムネイルストリップ -->
   <div class="cam-thumb-strip" id="camThumbStrip">
-    <div class="cam-thumb-empty" id="camThumbEmpty">撮影したボトルがここに表示されます</div>
+    <div class="cam-thumb-empty" id="camThumbEmpty" data-i18n="cam_thumb_empty">撮影したボトルがここに表示されます</div>
   </div>
 
   <!-- 操作エリア -->
   <div class="cam-bottom">
     <div class="cam-controls">
-      <div class="cam-counter" id="camCounter">0本撮影済み</div>
-      <button class="cam-shutter" onclick="captureBottle()" title="撮影">📸</button>
+      <div class="cam-counter" id="camCounter" data-i18n="cam_count_zero">0本撮影済み</div>
+      <button class="cam-shutter" onclick="captureBottle()" title="撮影" data-i18n-title="shutter_title">📸</button>
       <div style="min-width:60px;"></div>
     </div>
-    <button class="cam-analyze-btn" id="camAnalyzeBtn" onclick="analyzeLabels()" disabled>
+    <button class="cam-analyze-btn" id="camAnalyzeBtn" onclick="analyzeLabels()" disabled data-i18n="cam_analyze_btn">
       ✨ ラベルを解析する
     </button>
-    <button class="cam-manual-link" onclick="closeCameraCapture(); openWineModal(null, true)">
+    <button class="cam-manual-link" onclick="closeCameraCapture(); openWineModal(null, true)" data-i18n="cam_manual_link">
       手動で入力する
     </button>
   </div>
@@ -1876,19 +1877,19 @@
 <!-- ==================== 解析中 オーバーレイ ==================== -->
 <div class="analyzing-overlay" id="analyzingOverlay">
   <div class="analyzing-spinner"></div>
-  <div style="font-size:16px;font-weight:700;">ラベルを解析中…</div>
-  <div class="analyzing-count" id="analyzingCount">0本</div>
+  <div style="font-size:16px;font-weight:700;" data-i18n="analyzing_title">ラベルを解析中…</div>
+  <div class="analyzing-count" id="analyzingCount">0</div>
 </div>
 
 <!-- ==================== ワイン検索結果 シート ==================== -->
 <div class="wine-results-bg" id="wineResultsBg" onclick="closeWineResultsBg(event)">
   <div class="wine-results-sheet">
     <div class="wr-handle"></div>
-    <div class="wr-badge" id="wrBadge">📦 1本分の結果</div>
-    <div class="wr-title">ラベルから検索しました</div>
-    <div class="wr-sub">タップしてワインを選んでください。情報は後から編集できます。</div>
+    <div class="wr-badge" id="wrBadge" data-i18n="wr_badge_default">📦 1本分の結果</div>
+    <div class="wr-title" data-i18n="wr_title">ラベルから検索しました</div>
+    <div class="wr-sub" data-i18n="wr_sub">タップしてワインを選んでください。情報は後から編集できます。</div>
     <div id="wineResultsList"></div>
-    <div class="wr-manual" onclick="closeWineResults(); openWineModal(null, true)">
+    <div class="wr-manual" onclick="closeWineResults(); openWineModal(null, true)" data-i18n="wr_manual">
       一覧にない場合は手動で入力する
     </div>
   </div>
@@ -1898,83 +1899,83 @@
 <div class="modal-bg" id="wineModal" onclick="closeWineModalBg(event)">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="wineModalTitle">ワインを追加</div>
+    <div class="modal-title" id="wineModalTitle" data-i18n="wine_modal_add">ワインを追加</div>
 
     <!-- ラベル画像プレビュー（スキャン済みのとき表示） -->
     <div id="modalLabelPreview" style="display:none; margin-bottom:14px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:0.8px;margin-bottom:8px;">📷 ラベル画像</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:0.8px;margin-bottom:8px;" data-i18n="modal_label_img">📷 ラベル画像</div>
       <div style="display:flex;align-items:center;gap:12px;background:var(--burgundy-pale);border-radius:12px;padding:12px 14px;">
         <div id="modalLabelCard" style="width:56px;height:70px;border-radius:8px;background:linear-gradient(160deg,#fff8f4,#fceee8);border:1px solid rgba(0,0,0,0.1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
           <span id="modalLabelEmoji" style="font-size:24px;">🍷</span>
           <span id="modalLabelText" style="font-size:7px;font-weight:700;color:var(--wine-dark);text-align:center;padding:0 3px;line-height:1.2;max-width:100%;overflow:hidden;"></span>
         </div>
         <div>
-          <div style="font-size:13px;font-weight:700;color:var(--text);">ラベルを読み取り済み</div>
-          <div style="font-size:11px;color:var(--text-sub);margin-top:3px;">カメラで撮影したラベル情報が反映されています</div>
-          <div style="font-size:11px;color:var(--burgundy);margin-top:6px;font-weight:600;">情報を確認・修正してから保存してください</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);" data-i18n="modal_label_scanned">ラベルを読み取り済み</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:3px;" data-i18n="modal_label_scanned_sub">カメラで撮影したラベル情報が反映されています</div>
+          <div style="font-size:11px;color:var(--burgundy);margin-top:6px;font-weight:600;" data-i18n="modal_label_check">情報を確認・修正してから保存してください</div>
         </div>
       </div>
     </div>
 
     <div class="form-group">
-      <label class="form-label">カテゴリ</label>
+      <label class="form-label" data-i18n="f_cat">カテゴリ</label>
       <select class="form-select" id="fCat">
-        <option value="sparkling">🥂 泡・スパークリング</option>
-        <option value="white">🤍 白ワイン</option>
-        <option value="red" selected>🍷 赤ワイン</option>
-        <option value="rose">🌸 ロゼ</option>
-        <option value="orange">🍊 オレンジワイン</option>
+        <option value="sparkling" data-i18n="f_cat_sparkling">🥂 泡・スパークリング</option>
+        <option value="white" data-i18n="f_cat_white">🤍 白ワイン</option>
+        <option value="red" selected data-i18n="f_cat_red">🍷 赤ワイン</option>
+        <option value="rose" data-i18n="f_cat_rose">🌸 ロゼ</option>
+        <option value="orange" data-i18n="f_cat_orange">🍊 オレンジワイン</option>
       </select>
     </div>
     <div class="form-group">
-      <label class="form-label">ワイン名</label>
-      <input class="form-input" id="fName" placeholder="例: Château Margaux">
+      <label class="form-label" data-i18n="f_name">ワイン名</label>
+      <input class="form-input" id="fName" placeholder="例: Château Margaux" data-i18n-ph="f_name_ph">
     </div>
     <div class="form-group">
-      <label class="form-label">生産者</label>
-      <input class="form-input" id="fProducer" placeholder="例: Château Margaux">
+      <label class="form-label" data-i18n="f_producer">生産者</label>
+      <input class="form-input" id="fProducer" placeholder="例: Château Margaux" data-i18n-ph="f_name_ph">
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">ヴィンテージ</label>
+        <label class="form-label" data-i18n="f_vintage">ヴィンテージ</label>
         <input class="form-input" id="fVintage" placeholder="2020">
       </div>
       <div class="form-group">
-        <label class="form-label">産地</label>
+        <label class="form-label" data-i18n="f_region">産地</label>
         <input class="form-input" id="fRegion" placeholder="Bordeaux">
       </div>
     </div>
     <div class="form-group">
-      <label class="form-label">ブドウ品種</label>
+      <label class="form-label" data-i18n="f_grapes">ブドウ品種</label>
       <input class="form-input" id="fGrapes" placeholder="Cabernet Sauvignon">
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">グラス価格 (¥)</label>
+        <label class="form-label" data-i18n="f_price_glass">グラス価格 (¥)</label>
         <input class="form-input" id="fPriceGlass" type="number" placeholder="1800">
       </div>
       <div class="form-group">
-        <label class="form-label">ボトル価格 (¥)</label>
+        <label class="form-label" data-i18n="f_price_bottle">ボトル価格 (¥)</label>
         <input class="form-input" id="fPriceBottle" type="number" placeholder="9000">
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">在庫数（本）</label>
+        <label class="form-label" data-i18n="f_stock">在庫数（本）</label>
         <input class="form-input" id="fStock" type="number" min="0" placeholder="0">
       </div>
       <div class="form-group">
-        <label class="form-label">提供状況</label>
+        <label class="form-label" data-i18n="f_available">提供状況</label>
         <select class="form-select" id="fAvailable">
-          <option value="true">✅ 提供中</option>
-          <option value="false">❌ 売り切れ / 停止</option>
+          <option value="true" data-i18n="f_avail_on">✅ 提供中</option>
+          <option value="false" data-i18n="f_avail_off">❌ 売り切れ / 停止</option>
         </select>
       </div>
     </div>
 
     <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeWineModal()">キャンセル</button>
-      <button class="btn-primary" onclick="saveWine()">保存する</button>
+      <button class="btn-ghost" onclick="closeWineModal()" data-i18n="cancel">キャンセル</button>
+      <button class="btn-primary" onclick="saveWine()" data-i18n="save">保存する</button>
     </div>
   </div>
 </div>
@@ -1983,41 +1984,41 @@
 <div class="modal-bg" id="oshiStoreCardModal" onclick="closeOshiCardModalBg(event)">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <div class="modal-title">推しカードを作る</div>
+    <div class="modal-title" data-i18n="oshi_modal_title">推しカードを作る</div>
     <div style="font-size:13px;color:var(--text-sub);margin:-8px 0 14px;" id="oshiCardWineName"></div>
 
     <div id="oshiCardFormWrap">
       <div class="form-group">
-        <label class="form-label">一言コメント（任意）</label>
-        <textarea class="form-input" id="oshiCardComment" rows="3" maxlength="120" placeholder="例: 当店のグラスで一番人気。魚介と好相性です" style="resize:vertical;"></textarea>
+        <label class="form-label" data-i18n="oshi_comment_lbl">一言コメント（任意）</label>
+        <textarea class="form-input" id="oshiCardComment" rows="3" maxlength="120" placeholder="例: 当店のグラスで一番人気。魚介と好相性です" data-i18n-ph="oshi_comment_ph" style="resize:vertical;"></textarea>
       </div>
       <div class="form-group" id="oshiCardPriceGroup">
-        <label class="form-label">価格表示</label>
+        <label class="form-label" data-i18n="oshi_price_lbl">価格表示</label>
         <select class="form-select" id="oshiCardPriceMode">
-          <option value="none">表示しない</option>
-          <option value="glass">グラス価格のみ</option>
-          <option value="bottle">ボトル価格のみ</option>
-          <option value="both" selected>グラス・ボトル両方</option>
+          <option value="none" data-i18n="oshi_price_none">表示しない</option>
+          <option value="glass" data-i18n="oshi_price_glass">グラス価格のみ</option>
+          <option value="bottle" data-i18n="oshi_price_bottle">ボトル価格のみ</option>
+          <option value="both" selected data-i18n="oshi_price_both">グラス・ボトル両方</option>
         </select>
       </div>
       <div class="form-group" id="oshiCardRatingGroup" style="display:none;">
         <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text);cursor:pointer;">
           <input type="checkbox" id="oshiCardShowRating" checked style="accent-color:var(--burgundy);width:18px;height:18px;">
-          自分の★評価を載せる（<span id="oshiCardRatingLabel"></span>）
+          <span data-i18n="oshi_show_rating_open">自分の★評価を載せる（</span><span id="oshiCardRatingLabel"></span><span data-i18n="oshi_show_rating_close">）</span>
         </label>
       </div>
       <div class="modal-actions">
-        <button class="btn-ghost" onclick="closeOshiCardModal()">キャンセル</button>
-        <button class="btn-primary" onclick="generateOshiCard()">カードを作る</button>
+        <button class="btn-ghost" onclick="closeOshiCardModal()" data-i18n="cancel">キャンセル</button>
+        <button class="btn-primary" onclick="generateOshiCard()" data-i18n="oshi_create_btn">カードを作る</button>
       </div>
     </div>
 
     <div id="oshiCardPreviewWrap" style="display:none;text-align:center;">
       <img id="oshiCardPreviewImg" style="width:100%;max-width:280px;border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.15);margin-bottom:14px;">
-      <div style="font-size:12px;color:var(--text-sub);margin-bottom:14px;">キャプションはコピー済みです</div>
+      <div style="font-size:12px;color:var(--text-sub);margin-bottom:14px;" data-i18n="oshi_caption_copied">キャプションはコピー済みです</div>
       <div class="modal-actions">
-        <button class="btn-ghost" onclick="closeOshiCardModal()">閉じる</button>
-        <button class="btn-primary" onclick="shareOshiStoreCard()">シェア</button>
+        <button class="btn-ghost" onclick="closeOshiCardModal()" data-i18n="close">閉じる</button>
+        <button class="btn-primary" onclick="shareOshiStoreCard()" data-i18n="share">シェア</button>
       </div>
     </div>
   </div>
@@ -2033,53 +2034,53 @@
         <svg width="22" height="22" viewBox="0 0 36 36" fill="none"><path d="M18 7C11.373 7 6 11.477 6 16.97c0 4.928 3.928 9.065 9.237 9.847.359.077.848.237.972.544.111.279.073.716.036 1l-.157 1.02c-.048.31-.22 1.21.955.66 1.175-.55 6.34-4.084 8.65-6.99C27.31 20.96 30 19.12 30 16.97 30 11.477 24.627 7 18 7z" fill="white"/></svg>
       </div>
       <div>
-        <div style="font-size:15px;font-weight:800;color:var(--text);">ソムリン 店舗登録</div>
-        <div style="font-size:11px;color:var(--text-sub);">LINEで試飲会情報を受け取るための登録フォーム</div>
+        <div style="font-size:15px;font-weight:800;color:var(--text);" data-i18n="lreg_title">ソムリン 店舗登録</div>
+        <div style="font-size:11px;color:var(--text-sub);" data-i18n="lreg_sub">LINEで試飲会情報を受け取るための登録フォーム</div>
       </div>
     </div>
 
     <div class="form-group">
-      <label class="form-label">担当者名</label>
-      <input class="form-input" id="lreg-name" placeholder="例: 田中 太郎">
+      <label class="form-label" data-i18n="lreg_name_lbl">担当者名</label>
+      <input class="form-input" id="lreg-name" placeholder="例: 田中 太郎" data-i18n-ph="lreg_name_ph">
     </div>
     <div class="form-group">
-      <label class="form-label">担当者の役職</label>
+      <label class="form-label" data-i18n="lreg_role_lbl">担当者の役職</label>
       <select class="form-select" id="lreg-role">
-        <option value="">選択してください</option>
-        <option value="sommelier">ソムリエ / ワインアドバイザー</option>
-        <option value="chef">シェフ / 料理長</option>
-        <option value="manager">店長 / マネージャー</option>
-        <option value="owner">オーナー</option>
-        <option value="buyer">バイヤー / 仕入れ担当</option>
+        <option value="" data-i18n="lreg_role_select">選択してください</option>
+        <option value="sommelier" data-i18n="lreg_role_sommelier">ソムリエ / ワインアドバイザー</option>
+        <option value="chef" data-i18n="lreg_role_chef">シェフ / 料理長</option>
+        <option value="manager" data-i18n="lreg_role_manager">店長 / マネージャー</option>
+        <option value="owner" data-i18n="lreg_role_owner">オーナー</option>
+        <option value="buyer" data-i18n="lreg_role_buyer">バイヤー / 仕入れ担当</option>
       </select>
     </div>
 
     <div class="form-group">
-      <label class="form-label">受け取りたい試飲会の産地（複数選択可）</label>
+      <label class="form-label" data-i18n="lreg_regions_lbl">受け取りたい試飲会の産地（複数選択可）</label>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;" id="lreg-regions">
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;transition:all 0.15s;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;">🇫🇷 ブルゴーニュ</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;">🇫🇷 ボルドー</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;">🥂 シャンパーニュ</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;">🇮🇹 イタリア全般</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;">🌿 自然派ワイン</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;">🌍 すべての産地</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;transition:all 0.15s;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;"><span data-i18n="lreg_burgundy">🇫🇷 ブルゴーニュ</span></label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;"><span data-i18n="lreg_bordeaux">🇫🇷 ボルドー</span></label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;"><span data-i18n="lreg_champagne">🥂 シャンパーニュ</span></label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;"><span data-i18n="lreg_italy">🇮🇹 イタリア全般</span></label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;"><span data-i18n="lreg_natural">🌿 自然派ワイン</span></label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;"><span data-i18n="lreg_all_regions">🌍 すべての産地</span></label>
       </div>
     </div>
 
     <div class="form-group">
-      <label class="form-label">通知を希望する種別</label>
+      <label class="form-label" data-i18n="lreg_types_lbl">通知を希望する種別</label>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;">🍷 試飲会</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;">📚 セミナー</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;">🏆 フェア・展示会</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;"><span data-i18n="chip_tasting">🍷 試飲会</span></label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;"><span data-i18n="chip_seminar">📚 セミナー</span></label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;"><span data-i18n="chip_fair_ex">🏆 フェア・展示会</span></label>
       </div>
     </div>
 
-    <button class="line-modal-save" onclick="submitLineReg()">
+    <button class="line-modal-save" onclick="submitLineReg()" data-i18n="lreg_submit">
       登録を完了してLINEを連携する
     </button>
     <div style="text-align:center;margin-top:10px;">
-      <span style="font-size:11px;color:var(--text-sub);cursor:pointer;" onclick="closeLineReg()">キャンセル</span>
+      <span style="font-size:11px;color:var(--text-sub);cursor:pointer;" onclick="closeLineReg()" data-i18n="cancel">キャンセル</span>
     </div>
   </div>
 </div>
@@ -2090,60 +2091,60 @@
     <div class="line-modal-handle"></div>
     <div class="line-modal-title">
       <svg width="22" height="22" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#06C755"/><path d="M18 7C11.373 7 6 11.477 6 16.97c0 4.928 3.928 9.065 9.237 9.847.359.077.848.237.972.544.111.279.073.716.036 1l-.157 1.02c-.048.31-.22 1.21.955.66 1.175-.55 6.34-4.084 8.65-6.99C27.31 20.96 30 19.12 30 16.97 30 11.477 24.627 7 18 7z" fill="white"/></svg>
-      LINE 通知設定
+      <span data-i18n="lset_title">LINE 通知設定</span>
     </div>
 
     <!-- 通知する種別 -->
     <div class="line-setting-section">
-      <div class="line-setting-label">通知する種別</div>
+      <div class="line-setting-label" data-i18n="line_types_label">通知する種別</div>
       <div class="line-toggle-row">
-        <div class="row-left"><span>🍷</span> 試飲会</div>
+        <div class="row-left"><span>🍷</span> <span data-i18n="type_tasting">試飲会</span></div>
         <label class="toggle toggle-line"><input type="checkbox" id="lset-tasting" checked onchange="updateLineTypes()"><span class="toggle-slider"></span></label>
       </div>
       <div class="line-toggle-row">
-        <div class="row-left"><span>📚</span> セミナー</div>
+        <div class="row-left"><span>📚</span> <span data-i18n="type_seminar">セミナー</span></div>
         <label class="toggle toggle-line"><input type="checkbox" id="lset-seminar" checked onchange="updateLineTypes()"><span class="toggle-slider"></span></label>
       </div>
       <div class="line-toggle-row">
-        <div class="row-left"><span>🏆</span> フェア・展示会</div>
+        <div class="row-left"><span>🏆</span> <span data-i18n="type_fair_ex">フェア・展示会</span></div>
         <label class="toggle toggle-line"><input type="checkbox" id="lset-fair" checked onchange="updateLineTypes()"><span class="toggle-slider"></span></label>
       </div>
     </div>
 
     <!-- 通知タイミング -->
     <div class="line-setting-section">
-      <div class="line-setting-label">通知タイミング（複数選択可）</div>
+      <div class="line-setting-label" data-i18n="lset_timing_lbl">通知タイミング（複数選択可）</div>
       <div class="line-timing-chips">
-        <div class="line-timing-chip selected" id="ltime-1w" onclick="toggleLineTiming('1w', this)">1週間前</div>
-        <div class="line-timing-chip" id="ltime-3d" onclick="toggleLineTiming('3d', this)">3日前</div>
-        <div class="line-timing-chip" id="ltime-1d" onclick="toggleLineTiming('1d', this)">前日</div>
-        <div class="line-timing-chip selected" id="ltime-0d" onclick="toggleLineTiming('0d', this)">当日</div>
+        <div class="line-timing-chip selected" id="ltime-1w" onclick="toggleLineTiming('1w', this)" data-i18n="timing_1w">1週間前</div>
+        <div class="line-timing-chip" id="ltime-3d" onclick="toggleLineTiming('3d', this)" data-i18n="timing_3d">3日前</div>
+        <div class="line-timing-chip" id="ltime-1d" onclick="toggleLineTiming('1d', this)" data-i18n="timing_1d">前日</div>
+        <div class="line-timing-chip selected" id="ltime-0d" onclick="toggleLineTiming('0d', this)" data-i18n="timing_0d">当日</div>
       </div>
     </div>
 
     <!-- LINE メッセージプレビュー -->
     <div class="line-setting-section">
-      <div class="line-setting-label">通知プレビュー</div>
+      <div class="line-setting-label" data-i18n="lset_preview_lbl">通知プレビュー</div>
       <div style="background:#e9e9e9;border-radius:14px;padding:14px;">
-        <div style="font-size:10px;color:#888;text-align:center;margin-bottom:10px;">ソムリン 試飲会通知</div>
+        <div style="font-size:10px;color:#888;text-align:center;margin-bottom:10px;" data-i18n="line_push_app">ソムリン 試飲会通知</div>
         <!-- LINEバブル -->
         <div style="display:flex;align-items:flex-start;gap:8px;">
           <div style="width:32px;height:32px;background:var(--line);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <svg width="20" height="20" viewBox="0 0 36 36" fill="none"><path d="M18 7C11.373 7 6 11.477 6 16.97c0 4.928 3.928 9.065 9.237 9.847.359.077.848.237.972.544.111.279.073.716.036 1l-.157 1.02c-.048.31-.22 1.21.955.66 1.175-.55 6.34-4.084 8.65-6.99C27.31 20.96 30 19.12 30 16.97 30 11.477 24.627 7 18 7z" fill="white"/></svg>
           </div>
           <div style="background:white;border-radius:0 12px 12px 12px;padding:10px 12px;max-width:82%;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            <div style="font-size:11px;font-weight:800;color:#06C755;margin-bottom:5px;">🍷 新着試飲会のお知らせ</div>
-            <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:4px;">ブルゴーニュ新着ワイン試飲会</div>
-            <div style="font-size:12px;color:#555;line-height:1.5;">📅 5月22日(木) 14:00〜18:00<br>📍 ザ・ウエスティン東京 3F<br>🏢 山田商店（インポーター）</div>
-            <div style="margin-top:8px;background:#f0fdf4;border-radius:8px;padding:7px 10px;font-size:11px;color:#15803d;font-weight:600;">👆 タップして参加申込みへ</div>
+            <div style="font-size:11px;font-weight:800;color:#06C755;margin-bottom:5px;" data-i18n="lset_pv_title">🍷 新着試飲会のお知らせ</div>
+            <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:4px;" data-i18n="lset_pv_event">ブルゴーニュ新着ワイン試飲会</div>
+            <div style="font-size:12px;color:#555;line-height:1.5;" data-i18n-html="lset_pv_meta">📅 5月22日(木) 14:00〜18:00<br>📍 ザ・ウエスティン東京 3F<br>🏢 山田商店（インポーター）</div>
+            <div style="margin-top:8px;background:#f0fdf4;border-radius:8px;padding:7px 10px;font-size:11px;color:#15803d;font-weight:600;" data-i18n="lset_pv_cta">👆 タップして参加申込みへ</div>
           </div>
         </div>
       </div>
     </div>
 
-    <button class="line-modal-save" onclick="saveLineSettings()">設定を保存する</button>
+    <button class="line-modal-save" onclick="saveLineSettings()" data-i18n="lset_save_btn">設定を保存する</button>
     <div style="text-align:center;margin-top:12px;">
-      <span style="font-size:12px;color:#dc2626;cursor:pointer;text-decoration:underline;text-underline-offset:3px;" onclick="disconnectLine()">LINE連携を解除する</span>
+      <span style="font-size:12px;color:#dc2626;cursor:pointer;text-decoration:underline;text-underline-offset:3px;" onclick="disconnectLine()" data-i18n="lset_unlink">LINE連携を解除する</span>
     </div>
   </div>
 </div>
@@ -2156,11 +2157,11 @@
     </svg>
   </div>
   <div class="line-push-body">
-    <div class="line-push-app">ソムリン 試飲会通知</div>
-    <div class="line-push-msg" id="linePushMsg">🍷 新着試飲会が追加されました</div>
-    <div class="line-push-sub" id="linePushSub">タップして詳細を確認</div>
+    <div class="line-push-app" data-i18n="line_push_app">ソムリン 試飲会通知</div>
+    <div class="line-push-msg" id="linePushMsg" data-i18n="push_new_event">🍷 新着試飲会が追加されました</div>
+    <div class="line-push-sub" id="linePushSub" data-i18n="push_tap_detail">タップして詳細を確認</div>
   </div>
-  <div class="line-push-time" id="linePushTime">今</div>
+  <div class="line-push-time" id="linePushTime" data-i18n="now">今</div>
 </div>
 
 <!-- ==================== 試飲会 RSVP モーダル ==================== -->
@@ -2185,7 +2186,7 @@
 
     <!-- フォーム -->
     <div id="rsvpForm">
-      <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:14px;">参加申込み</div>
+      <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:14px;" data-i18n="rsvp_title">参加申込み</div>
 
       <!-- イベント情報 -->
       <div style="background:var(--burgundy-pale);border-radius:12px;padding:12px 14px;margin-bottom:18px;">
@@ -2195,48 +2196,48 @@
         <div style="font-size:12px;color:var(--text-sub);margin-top:2px;">🏢 <span id="rsvpEvOrg">—</span></div>
       </div>
 
-      <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:0.8px;margin-bottom:12px;">参加者情報（プロフィールから自動入力）</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:0.8px;margin-bottom:12px;" data-i18n="rsvp_info_lbl">参加者情報（プロフィールから自動入力）</div>
 
       <div class="form-group">
-        <label class="form-label">氏名 <span style="color:#e53e3e;">✳︎</span></label>
-        <input class="form-input" id="rsvp-name" value="浦川 哲矢" placeholder="氏名">
+        <label class="form-label"><span data-i18n="rsvp_name_lbl">氏名</span> <span style="color:#e53e3e;">✳︎</span></label>
+        <input class="form-input" id="rsvp-name" value="浦川 哲矢" placeholder="氏名" data-i18n-ph="rsvp_name_ph">
       </div>
       <div class="form-group">
-        <label class="form-label">会社名・店名 <span style="color:#e53e3e;">✳︎</span></label>
-        <input class="form-input" id="rsvp-company" value="Bistrot Lumière" placeholder="店名">
+        <label class="form-label"><span data-i18n="rsvp_company_lbl">会社名・店名</span> <span style="color:#e53e3e;">✳︎</span></label>
+        <input class="form-input" id="rsvp-company" value="Bistrot Lumière" placeholder="店名" data-i18n-ph="rsvp_company_ph">
       </div>
       <div class="form-group">
-        <label class="form-label">役職</label>
-        <input class="form-input" id="rsvp-title" value="シェフソムリエ" placeholder="役職">
+        <label class="form-label" data-i18n="rsvp_role_lbl">役職</label>
+        <input class="form-input" id="rsvp-title" value="シェフソムリエ" placeholder="役職" data-i18n-ph="rsvp_role_ph">
       </div>
       <div class="form-group">
-        <label class="form-label">メールアドレス <span style="color:#e53e3e;">✳︎</span></label>
+        <label class="form-label"><span data-i18n="rsvp_email_lbl">メールアドレス</span> <span style="color:#e53e3e;">✳︎</span></label>
         <input class="form-input" id="rsvp-email" type="email" value="domaine.bouchon@gmail.com" placeholder="email">
       </div>
       <div class="form-group">
-        <label class="form-label">参加人数</label>
+        <label class="form-label" data-i18n="rsvp_count_lbl">参加人数</label>
         <select class="form-select" id="rsvp-count">
-          <option value="1" selected>1名</option>
-          <option value="2">2名</option>
-          <option value="3">3名</option>
+          <option value="1" selected data-i18n="rsvp_count_1">1名</option>
+          <option value="2" data-i18n="rsvp_count_2">2名</option>
+          <option value="3" data-i18n="rsvp_count_3">3名</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">備考</label>
-        <input class="form-input" id="rsvp-note" placeholder="アレルギー・特記事項など">
+        <label class="form-label" data-i18n="rsvp_note_lbl">備考</label>
+        <input class="form-input" id="rsvp-note" placeholder="アレルギー・特記事項など" data-i18n-ph="rsvp_note_ph">
       </div>
 
       <div class="modal-actions">
-        <button class="btn-ghost" onclick="closeRsvpModal()">キャンセル</button>
-        <button class="btn-primary" onclick="submitRsvp()">申込みを確定する</button>
+        <button class="btn-ghost" onclick="closeRsvpModal()" data-i18n="cancel">キャンセル</button>
+        <button class="btn-primary" onclick="submitRsvp()" data-i18n="rsvp_submit">申込みを確定する</button>
       </div>
     </div>
 
     <!-- 送信中 -->
     <div id="rsvpSending" style="display:none;text-align:center;padding:48px 20px;">
       <div style="font-size:40px;margin-bottom:16px;animation:spin 1.2s linear infinite;display:inline-block;">⏳</div>
-      <div style="font-size:15px;font-weight:700;color:var(--text);">インポーターへ通知を送信中...</div>
-      <div style="font-size:12px;color:var(--text-sub);margin-top:6px);">しばらくお待ちください</div>
+      <div style="font-size:15px;font-weight:700;color:var(--text);" data-i18n="rsvp_sending">インポーターへ通知を送信中...</div>
+      <div style="font-size:12px;color:var(--text-sub);margin-top:6px);" data-i18n="rsvp_wait">しばらくお待ちください</div>
     </div>
 
     <!-- 完了 -->
@@ -2244,7 +2245,7 @@
       <!-- ヘッダー -->
       <div style="text-align:center;padding:12px 0 20px;">
         <div style="font-size:48px;margin-bottom:10px;">✅</div>
-        <div style="font-size:18px;font-weight:800;color:var(--text);">申込みが完了しました！</div>
+        <div style="font-size:18px;font-weight:800;color:var(--text);" data-i18n="rsvp_done_title">申込みが完了しました！</div>
       </div>
 
       <!-- 処理ステップ -->
@@ -2252,14 +2253,14 @@
         <div style="display:flex;align-items:flex-start;gap:10px;">
           <div style="width:22px;height:22px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:white;font-weight:800;flex-shrink:0;margin-top:1px;">✓</div>
           <div>
-            <div style="font-size:13px;font-weight:700;color:var(--text);">参加情報を記録しました</div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);" data-i18n="rsvp_step_recorded">参加情報を記録しました</div>
             <div style="font-size:12px;color:var(--text-sub);margin-top:1px;" id="rsvpDoneName">—</div>
           </div>
         </div>
         <div style="display:flex;align-items:flex-start;gap:10px;">
           <div style="width:22px;height:22px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:white;font-weight:800;flex-shrink:0;margin-top:1px;">✓</div>
           <div>
-            <div style="font-size:13px;font-weight:700;color:var(--text);">インポーターにメールで通知しました</div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);" data-i18n="rsvp_step_mailed">インポーターにメールで通知しました</div>
             <div style="font-size:12px;color:var(--text-sub);margin-top:1px;" id="rsvpImporterEmail">—</div>
           </div>
         </div>
@@ -2269,7 +2270,7 @@
       <div style="border:1.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px;">
         <!-- メールヘッダー -->
         <div style="background:#f8f9fa;padding:10px 14px;border-bottom:1px solid var(--border);">
-          <div style="font-size:10px;color:var(--text-sub);letter-spacing:.05em;margin-bottom:3px;">📧 送信されたメール（プレビュー）</div>
+          <div style="font-size:10px;color:var(--text-sub);letter-spacing:.05em;margin-bottom:3px;" data-i18n="rsvp_mail_preview">📧 送信されたメール（プレビュー）</div>
           <div style="font-size:12px;font-weight:800;color:var(--text);" id="rsvpMailSubject">—</div>
           <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">To: <span id="rsvpMailTo">—</span></div>
         </div>
@@ -2277,17 +2278,1004 @@
         <div style="padding:14px;background:white;font-size:12px;line-height:2;color:var(--text);" id="rsvpMailBody">—</div>
         <!-- フッター -->
         <div style="background:#f8f9fa;padding:8px 14px;border-top:1px solid var(--border);">
-          <div style="font-size:10px;color:var(--text-sub);">このメールはソムリンシステムから自動送信されました。返信先は申込者のメールアドレスです。</div>
+          <div style="font-size:10px;color:var(--text-sub);" data-i18n="rsvp_mail_footer">このメールはソムリンシステムから自動送信されました。返信先は申込者のメールアドレスです。</div>
         </div>
       </div>
 
-      <button class="btn-primary" onclick="closeRsvpAndRefresh()" style="width:100%;">閉じる</button>
+      <button class="btn-primary" onclick="closeRsvpAndRefresh()" style="width:100%;" data-i18n="close">閉じる</button>
     </div>
   </div>
 </div>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+
+<script>
+/* ===== 多言語対応（i18n）。wine_search.html / scouter.html と同じ構造・同じlocalStorageキーを共有 ===== */
+const I18N = {
+  ja: {
+    page_title: 'Sommelin 管理画面 — Bistrot Lumière',
+    hdr_sub: 'Sommelin 管理画面',
+    role_staff: 'スタッフ',
+    btn_personal: '🍷 個人モード',
+    btn_personal_title: '個人モードに切り替え',
+    btn_logout_title: 'ログアウト',
+    tab_tasting: '試飲会',
+    tab_winelist: 'ワインリスト',
+    tab_qr: 'QRコード',
+    tab_stock: '在庫',
+    tab_notes: '試飲メモ',
+    tab_analytics: '分析',
+    loading: '読み込み中…',
+    cancel: 'キャンセル',
+    close: '閉じる',
+    save: '保存する',
+    share: 'シェア',
+    now: '今',
+    free: '無料',
+    // 試飲会パネル
+    sync_title: 'Google カレンダー連携',
+    sync_last_today: '最終同期: 今日 09:30',
+    sync_btn: '同期する',
+    sync_syncing: '同期中...',
+    sync_last_now: '最終同期: たった今',
+    toast_synced: 'Googleカレンダーと同期しました ✓',
+    invite_title: 'お友達を招待',
+    invite_sub: 'このリンクから登録すると、あなたにも特典が届きます',
+    invite_btn: 'シェア',
+    invite_text: 'ソムリンで一緒にワインを楽しもう🍷 ',
+    toast_invite_copied: '📤 招待リンクをコピーしました！',
+    toast_login_missing: 'ログイン情報を確認できませんでした',
+    line_hdr_title: 'LINE 通知連携',
+    line_sub_unlinked: '試飲会情報をLINEで受け取ります',
+    line_sub_linked: '新着試飲会の通知が届きます',
+    line_sub_linked_name: '{name} のLINEに通知が届きます',
+    line_badge_unlinked: '未連携',
+    line_badge_linked: '✓ 連携中',
+    line_connect_btn: 'LINE アカウントと連携する',
+    line_unconnected_desc: '<strong>3ステップで設定完了。</strong>インポーターが配信する試飲会・セミナー情報をお店のLINEで受け取れます。',
+    line_step1: '下のボタンをタップして「<strong>Sommelin</strong>」をLINEで友達追加',
+    line_step2: '自動で届くメッセージからお店情報を登録',
+    line_step3: '試飲会情報がLINEに届くようになります 🎉',
+    line_add_friend_btn: 'LINEで友達追加する',
+    line_add_friend_note: '@sommelin_official · タップするとLINEアプリが開きます',
+    line_account_name: 'Bistrot Lumière スタッフ',
+    line_types_label: '通知する種別',
+    chip_tasting: '🍷 試飲会',
+    chip_seminar: '📚 セミナー',
+    chip_fair: '🏆 フェア',
+    chip_fair_ex: '🏆 フェア・展示会',
+    type_tasting: '試飲会',
+    type_seminar: 'セミナー',
+    type_fair_ex: 'フェア・展示会',
+    line_timing_prefix: '通知タイミング:',
+    line_timing_default: '1週間前 · 当日',
+    line_settings_btn: '⚙️ 設定変更',
+    line_test_btn: '💬 テスト送信',
+    timing_1w: '1週間前',
+    timing_3d: '3日前',
+    timing_1d: '前日',
+    timing_0d: '当日',
+    timing_none: 'なし',
+    dow_0: '日', dow_1: '月', dow_2: '火', dow_3: '水', dow_4: '木', dow_5: '金', dow_6: '土',
+    upcoming_tastings: '今後の試飲会',
+    no_upcoming: '今後の試飲会はありません',
+    time_tbd: '時間未定',
+    untitled_event: '（無題の試飲会）',
+    venue_tbd: '会場未定',
+    online_suffix: '・オンライン',
+    rsvp_confirm_q: '申込みは完了しましたか？',
+    rsvp_done_btn: '✅ 完了した',
+    rsvp_not_yet: 'まだ',
+    rsvp_chip_done: '✅ 申込済',
+    rsvp_reopen: 'ページを再度開く',
+    rsvp_clear: '記録を解除',
+    rsvp_go_btn: '申込みへ →',
+    rsvp_no_link: '申込みリンク未登録（詳細内の連絡先へ）',
+    ev_detail_lbl: '詳細',
+    ev_url_lbl: '申込みページURL',
+    day_events_title: '{m}月{d}日の試飲会（{n}件）',
+    toast_no_link_event: '申込みリンク未登録のイベントです。イベント詳細内の連絡先へご連絡ください',
+    toast_rsvp_recorded: '✅ 申込み済みとして記録しました',
+    confirm_clear_rsvp: '申込み済みの記録を解除しますか？',
+    // RSVPモーダル
+    rsvp_title: '参加申込み',
+    rsvp_info_lbl: '参加者情報（プロフィールから自動入力）',
+    rsvp_name_lbl: '氏名', rsvp_name_ph: '氏名',
+    rsvp_company_lbl: '会社名・店名', rsvp_company_ph: '店名',
+    rsvp_role_lbl: '役職', rsvp_role_ph: '役職',
+    rsvp_email_lbl: 'メールアドレス',
+    rsvp_count_lbl: '参加人数',
+    rsvp_count_1: '1名', rsvp_count_2: '2名', rsvp_count_3: '3名',
+    rsvp_note_lbl: '備考', rsvp_note_ph: 'アレルギー・特記事項など',
+    rsvp_submit: '申込みを確定する',
+    rsvp_sending: 'インポーターへ通知を送信中...',
+    rsvp_wait: 'しばらくお待ちください',
+    rsvp_done_title: '申込みが完了しました！',
+    rsvp_step_recorded: '参加情報を記録しました',
+    rsvp_step_mailed: 'インポーターにメールで通知しました',
+    rsvp_mail_preview: '📧 送信されたメール（プレビュー）',
+    rsvp_mail_footer: 'このメールはソムリンシステムから自動送信されました。返信先は申込者のメールアドレスです。',
+    toast_enter_name: '氏名を入力してください',
+    toast_enter_email: 'メールアドレスを入力してください',
+    rsvp_done_name: '{name} 様（{company}）· {count}名',
+    no_email_registered: '（メールアドレス未登録）',
+    mail_subject: '【試飲会 参加申込】{name}',
+    mail_greeting: '{org} ご担当者様',
+    mail_intro: 'ソムリン経由で以下の参加申込みがありました。',
+    mail_event: '【イベント】{name}',
+    mail_date: '【日時】{date}',
+    mail_venue: '【会場】{venue}',
+    mail_applicant: '【申込者情報】',
+    mail_name: '氏名：{name}',
+    mail_company: '店名：{company}',
+    mail_email: 'メール：{email}',
+    mail_count: '参加人数：{count}名',
+    mail_note: '備考：{note}',
+    mail_replyto: '返信先: {email}',
+    mail_auto: 'このメールはソムリンシステムから自動送信されています。',
+    toast_rsvp_complete: '参加申込みが完了しました ✓',
+    push_new_event: '🍷 新着試飲会が追加されました',
+    push_tap_detail: 'タップして詳細を確認',
+    push_demo_event: 'ナチュラルワイン試飲会 — 6月10日(水) 15:00〜',
+    push_test_title: '🍷 テスト通知です',
+    push_test_sub: 'ブルゴーニュ試飲会 — 5月22日(木) 14:00〜',
+    toast_test_sent: 'LINEにテスト通知を送信しました 💬',
+    confirm_unlink_line: 'LINE連携を解除しますか？',
+    toast_line_unlinked: 'LINE連携を解除しました',
+    toast_line_saved: 'LINE通知設定を保存しました ✓',
+    line_push_app: 'ソムリン 試飲会通知',
+    // LINE連携（在庫タブ・ワンタイムコード）
+    line_linked: '✅ 連携済み',
+    line_linked_name: '✅ 連携済み（{name}）',
+    line_unlink_btn: '解除',
+    line_link_desc: 'LINEと連携すると、試飲会情報などの通知をLINEで受け取れます。',
+    line_link_btn: '連携する',
+    line_code_add_friend: 'LINEで友だち追加',
+    line_code_step1: '① {link}してください',
+    line_code_step2: '② トーク画面でこのコードを送信してください：',
+    line_code_note: '送信すると自動的に連携が完了します（10分間有効）',
+    line_issuing: '発行中…',
+    toast_code_fail: '⚠️ 連携コードの発行に失敗しました',
+    // LINE登録フォーム・設定モーダル
+    lreg_title: 'ソムリン 店舗登録',
+    lreg_sub: 'LINEで試飲会情報を受け取るための登録フォーム',
+    lreg_name_lbl: '担当者名', lreg_name_ph: '例: 田中 太郎',
+    lreg_role_lbl: '担当者の役職',
+    lreg_role_select: '選択してください',
+    lreg_role_sommelier: 'ソムリエ / ワインアドバイザー',
+    lreg_role_chef: 'シェフ / 料理長',
+    lreg_role_manager: '店長 / マネージャー',
+    lreg_role_owner: 'オーナー',
+    lreg_role_buyer: 'バイヤー / 仕入れ担当',
+    lreg_regions_lbl: '受け取りたい試飲会の産地（複数選択可）',
+    lreg_burgundy: '🇫🇷 ブルゴーニュ',
+    lreg_bordeaux: '🇫🇷 ボルドー',
+    lreg_champagne: '🥂 シャンパーニュ',
+    lreg_italy: '🇮🇹 イタリア全般',
+    lreg_natural: '🌿 自然派ワイン',
+    lreg_all_regions: '🌍 すべての産地',
+    lreg_types_lbl: '通知を希望する種別',
+    lreg_submit: '登録を完了してLINEを連携する',
+    lset_title: 'LINE 通知設定',
+    lset_timing_lbl: '通知タイミング（複数選択可）',
+    lset_preview_lbl: '通知プレビュー',
+    lset_pv_title: '🍷 新着試飲会のお知らせ',
+    lset_pv_event: 'ブルゴーニュ新着ワイン試飲会',
+    lset_pv_meta: '📅 5月22日(木) 14:00〜18:00<br>📍 ザ・ウエスティン東京 3F<br>🏢 山田商店（インポーター）',
+    lset_pv_cta: '👆 タップして参加申込みへ',
+    lset_save_btn: '設定を保存する',
+    lset_unlink: 'LINE連携を解除する',
+    // ワインリスト
+    wl_search_ph: 'ワインを検索...',
+    wl_add_btn: '＋ 追加',
+    wl_bulk_btn: '📋 リストを写真で一括読み込み',
+    wl_print_btn: '🖨 印刷用リストを開く',
+    cat_all: 'すべて',
+    cat_sparkling: '🥂 泡',
+    cat_white: '🤍 白',
+    cat_red: '🍷 赤',
+    cat_rose: '🌸 ロゼ',
+    cat_orange: '🍊 オレンジ',
+    wine_count_zero: '全 0 種',
+    wine_count: '全 {n} 種（表示: {m}）',
+    wl_publish_btn: 'リストを公開する',
+    toast_list_published: 'リストを更新しました ✓',
+    stock_none: '在庫なし',
+    stock_label: '📦 {n}本',
+    thumb_scanned_title: 'ラベル画像（スキャン済み）',
+    thumb_placeholder_title: 'ラベル画像なし（タップして編集）',
+    toggle_on_title: '提供中 → 停止',
+    toggle_off_title: '停止中 → 再開',
+    oshi_btn_title: '推しカードを作る',
+    edit_title: '編集',
+    delete_title: '削除',
+    no_matching_wines: '該当するワインがありません',
+    toast_avail_on: '{name}… を提供中に変更しました',
+    toast_sold_out: '売り切れに設定しました',
+    confirm_delete: '「{name}」を削除しますか？',
+    toast_delete_fail: '⚠️ 削除に失敗しました',
+    toast_deleted: '削除しました',
+    // 印刷用リスト
+    print_winelist: 'ワインリスト',
+    print_cat_sparkling: '泡・スパークリング',
+    print_cat_white: '白ワイン',
+    print_cat_red: '赤ワイン',
+    print_cat_rose: 'ロゼ',
+    print_cat_orange: 'オレンジワイン',
+    toast_no_print: '印刷できるワインがありません（提供中のワインが0件です）',
+    print_th_wine: 'ワイン',
+    print_th_glass: 'グラス',
+    print_th_bottle: 'ボトル',
+    print_doc_title: '{store} ワインリスト',
+    print_btn: '🖨 印刷する',
+    print_asof: '{date} 現在',
+    toast_popup_blocked: 'ポップアップがブロックされました。ブラウザの設定をご確認ください',
+    // ワイン編集モーダル
+    wine_modal_add: 'ワインを追加',
+    wine_modal_edit: 'ワインを編集',
+    wine_modal_confirm: 'ワインを追加（確認・修正）',
+    modal_label_img: '📷 ラベル画像',
+    modal_label_scanned: 'ラベルを読み取り済み',
+    modal_label_scanned_sub: 'カメラで撮影したラベル情報が反映されています',
+    modal_label_check: '情報を確認・修正してから保存してください',
+    f_cat: 'カテゴリ',
+    f_cat_sparkling: '🥂 泡・スパークリング',
+    f_cat_white: '🤍 白ワイン',
+    f_cat_red: '🍷 赤ワイン',
+    f_cat_rose: '🌸 ロゼ',
+    f_cat_orange: '🍊 オレンジワイン',
+    f_name: 'ワイン名', f_name_ph: '例: Château Margaux',
+    f_producer: '生産者',
+    f_vintage: 'ヴィンテージ',
+    f_region: '産地',
+    f_grapes: 'ブドウ品種',
+    f_price_glass: 'グラス価格 (¥)',
+    f_price_bottle: 'ボトル価格 (¥)',
+    f_stock: '在庫数（本）',
+    f_available: '提供状況',
+    f_avail_on: '✅ 提供中',
+    f_avail_off: '❌ 売り切れ / 停止',
+    alert_enter_wine_name: 'ワイン名を入力してください',
+    alert_login_again: 'ログイン情報を確認できません。再ログインしてください。',
+    toast_updated: '更新しました ✓',
+    toast_added: '追加しました ✓',
+    toast_save_fail: '⚠️ 保存に失敗しました（通信環境をご確認ください）',
+    // カメラ・解析
+    cam_title: '📷 ボトルを撮影',
+    cam_frame_hint: 'ボトルをフレームに合わせてください',
+    cam_thumb_empty: '撮影したボトルがここに表示されます',
+    cam_count_zero: '0本撮影済み',
+    cam_count: '{n}本撮影済み',
+    cam_analyze_btn: '✨ ラベルを解析する',
+    cam_manual_link: '手動で入力する',
+    shutter_title: '撮影',
+    analyzing_title: 'ラベルを解析中…',
+    analyzing_count: '{n}本分',
+    wr_badge_default: '📦 1本分の結果',
+    wr_badge: '📦 {n}本 解析完了',
+    wr_title: 'ラベルから検索しました',
+    wr_sub: 'タップしてワインを選んでください。情報は後から編集できます。',
+    wr_manual: '一覧にない場合は手動で入力する',
+    cand_note_high: 'ラベルを高精度で読み取りました',
+    cand_note_vintage: 'ヴィンテージが異なる可能性があります',
+    cand_note_similar: '類似ラベルが検出されました',
+    cand_note_producer: '産地・生産者を確認しました',
+    cand_note_grandcru: 'グランクリュの可能性があります',
+    cand_note_sparkling: '泡ワインとして類似検出',
+    cand_note_orange: 'オレンジワインとして類似検出',
+    toast_autofilled: '「{name}」の情報を自動入力しました ✓',
+    // リスト一括読み込み
+    lc_title: '📋 ワインリストを読み込む',
+    lc_frame_hint: 'ワインリスト全体をフレームに収めてください',
+    lc_tip: '📄 メニュー・手書きリスト・印刷リスト、どれでも読み込めます',
+    lc_analyze_btn: '📖 ワインリストを読み込む',
+    lc_captured: '✅ リストを撮影しました。「読み込む」を押してください',
+    lc_analyzing: 'AIがワインリストを解析中…（10秒ほど）',
+    toast_rate_limit: '⚠️ 回数上限です。少し待ってからお試しください',
+    toast_list_unread: '銘柄を読み取れませんでした。近づいて撮り直してください',
+    toast_analyze_fail: '⚠️ 解析に失敗しました（通信環境をご確認ください）',
+    br_title_default: '📖 ワインが見つかりました',
+    br_select_all: 'すべて選択',
+    br_sub_default: '追加するワインを選択してください',
+    br_add_btn: '追加する',
+    bulk_found: '📖 {n}本のワインが見つかりました',
+    bulk_sub: '追加するワインを選択してください（すべてチェック済み）',
+    bulk_add_n: '✓ {n}本を追加する',
+    bulk_accuracy: '読取精度 {n}%',
+    bulk_select: '選択してください',
+    toast_register_fail: '⚠️ 登録に失敗しました（通信環境をご確認ください）',
+    toast_bulk_added: '{n}本のワインを追加しました ✓',
+    // QRコード
+    qr_display_note: 'このQRコードをお店に掲示してください',
+    qr_copy_btn: 'コピー',
+    toast_print_dialog: '印刷ダイアログを開きます 🖨️',
+    toast_qr_downloaded: 'QRコードをダウンロードしました ✓',
+    qr_print_btn: '🖨️ 印刷',
+    qr_save_btn: '⬇️ 保存',
+    privacy_title: 'ワインリストの公開設定',
+    privacy_public: '公開中',
+    privacy_private: '非公開',
+    privacy_desc: '— ソムリンアプリを使えばどこからでも閲覧できます',
+    privacy_warning: '⚠️ 非公開に設定すると、お店のQRコードをスキャンした場合のみリストが表示されます。ランキングや履歴からは閲覧できなくなります。',
+    qr_usage_title: '📖 QRコードの使い方',
+    qr_usage_1: 'テーブルやメニューブックにQRコードを貼り付けます',
+    qr_usage_2: 'お客様がスマートフォンでスキャンすると、ソムリン君がワインをご案内します',
+    qr_usage_3: 'お客様の好みに合わせたおすすめ・マリアージュ提案が自動で表示されます',
+    qr_usage_4: 'ワインリストを更新すると、次回スキャン時に自動で最新版が表示されます',
+    toast_url_copied: 'URLをコピーしました ✓',
+    toast_published_on: 'ワインリストを公開しました 🔓',
+    toast_unpublished: 'ワインリストを非公開にしました 🔒',
+    // 在庫
+    stk_total_lbl: '登録ワイン',
+    stk_in_lbl: '在庫あり',
+    stk_out_lbl: '在庫なし',
+    stk_line_title: '📲 LINE連携',
+    stk_add_title: '＋ ワインを在庫に登録',
+    stk_name_ph: 'ワイン名（例: Ch. Mouton Rothschild）',
+    stk_vintage_ph: 'ヴィンテージ',
+    stk_price_ph: '販売価格（円）',
+    stk_region_ph: '産地（例: Bordeaux, France）',
+    stk_qty_ph: '在庫数',
+    stk_type_bottle: 'ボトル販売',
+    stk_type_glass: 'グラス販売',
+    stk_type_both: '両方',
+    stk_add_btn: '在庫に追加',
+    stk_list_lbl: '在庫リスト',
+    stk_empty: 'まだ在庫が登録されていません。<br>上のフォームから追加するか、「ワインリスト」タブの写真一括インポートをご利用ください。',
+    type_bottle_glass: 'ボトル/グラス',
+    type_glass: 'グラス',
+    type_bottle: 'ボトル',
+    n_bottles: '{n}本',
+    stk_in_btn: '在庫あり',
+    stk_out_btn: '在庫なし',
+    toast_stock_added: '✓ 在庫に追加しました（ワインリストにも反映されます）',
+    toast_stock_in: '✓ 在庫ありに変更しました',
+    toast_stock_out: '在庫なしに変更しました',
+    pub_store_name_ph: '店舗名（検索結果に表示されます）',
+    pub_store_addr_ph: '住所を入力すると候補が出ます',
+    pub_store_ig_ph: 'Instagram（任意・例: @yourshop）',
+    pub_btn: '🌐 在庫情報をソムリンに公開する',
+    searching: '検索中…',
+    venue_claim_title: '📍 お客様が記録してくれたデータが{n}件あります',
+    venue_claim_sub: 'このお店に来店したお客様がスカウターで記録した内容です。取り込むワインを選んでください（公開設定は今のあなたの設定に従います）',
+    toast_enter_store_name: '店舗名を入力してください',
+    toast_publish_fail: '⚠️ 公開に失敗しました（通信環境をご確認ください）',
+    toast_published: '🌐 公開しました。ワイン検索に「{name}」として表示されます ✓',
+    // 試飲メモ
+    tn_title: '📸 試飲会で撮った写真を、良かったワインリストに',
+    tn_desc: 'カメラアプリで撮ったワインの写真を取り込むと、AIが銘柄を読み取ります。インポーター名を書き添えると、そのインポーターに「お店が気に入っています」と伝わります。',
+    tn_pick_btn: '📁 写真を取り込む（複数OK）',
+    tn_staging_lbl: '認識したワイン — インポーター名を書き添えて保存',
+    tn_save_all_btn: '✓ まとめて保存',
+    tn_list_lbl: '良かったワインリスト',
+    tn_reading: 'AIが読み取り中… {i}/{n}枚目（10秒ほど）',
+    tn_read_fail: '⚠️ 読み取りに失敗した写真があります',
+    tn_recognized: '✅ {n}本を認識しました。下で確認してください',
+    tn_none_read: '写真からワインを読み取れませんでした',
+    unknown_wine: '（銘柄不明）',
+    tn_my_rating: 'お店の評価',
+    tn_importer_ph: 'インポーター名（例: テラヴェール）',
+    tn_memo_ph: 'メモ（例: 果実味しっかり。グラス向き）',
+    tn_condition_lbl: 'ボトルの状態が悪かったかも（ブショネ等）— チェックすると評価の集計から除外されます',
+    toast_tn_saved: '✓ {n}本を保存しました',
+    tn_no_price: 'ソムリンDB未登録のため価格の実データがありません',
+    tn_ref_price: '参考小売価格',
+    tn_ref_price_src: '（ソムリン実データ）',
+    tn_price_est: '仕入れの目安 <b>{a}〜{b}</b> ／ ボトル提供 <b>{c}〜{d}</b> ／ グラス <b>{e}〜{f}</b>',
+    tn_price_note: '※ 一般的な掛け率（仕入=小売の7〜8割、提供=仕入の2.5〜3倍、グラス=ボトル1/4）による目安です',
+    tn_empty: 'まだ記録がありません。<br>試飲会で撮った写真を取り込んでみてください。',
+    tn_details_summary: '詳細（総合評価・みんなの評価）',
+    tn_buzz_loading: 'みんなの評価 読み込み中…',
+    tn_buzz_unregistered: 'みんなの評価 —（ソムリンDB未登録のため集計できません）',
+    tn_somm_rating: 'ソムリン評価 {stars} <span style="font-size:10px;color:var(--text-sub);">（ソムリン＋店舗の評価を信頼度で重み付け）</span>',
+    tn_buzz_community: 'みんなの評価 <b style="color:#C9973A;">{v}</b> <span style="font-size:10px;color:var(--text-sub);">（{n}店舗の平均・匿名）</span>',
+    tn_buzz_none: 'みんなの評価 —（まだ他の店舗の評価がありません）',
+    tn_buzz_fail: 'みんなの評価 —（取得できませんでした）',
+    tn_pair_btn: '🍽 合う料理をAIに聞く',
+    tn_share_btn: '📣 推しカードでシェア',
+    confirm_delete_note: 'この記録を削除しますか？',
+    tn_pair_thinking: '🍽 ソムリン君が考え中…',
+    tn_pair_prompt: '「{name}」（{region}{color}のワイン）を飲食店で提供します。合わせやすいおすすめ料理を3つ、それぞれ一言の理由つきで簡潔に提案してください。',
+    region_unknown: '産地不明',
+    toast_pair_fail: '⚠️ 提案の取得に失敗しました',
+    // 推しカード
+    oshi_modal_title: '推しカードを作る',
+    oshi_comment_lbl: '一言コメント（任意）',
+    oshi_comment_ph: '例: 当店のグラスで一番人気。魚介と好相性です',
+    oshi_price_lbl: '価格表示',
+    oshi_price_none: '表示しない',
+    oshi_price_glass: 'グラス価格のみ',
+    oshi_price_bottle: 'ボトル価格のみ',
+    oshi_price_both: 'グラス・ボトル両方',
+    oshi_show_rating_open: '自分の★評価を載せる（',
+    oshi_show_rating_close: '）',
+    oshi_create_btn: 'カードを作る',
+    oshi_caption_copied: 'キャプションはコピー済みです',
+    tier_experienced: '経験豊富なレビュアー',
+    tier_regular: '一般レビュアー',
+    tier_founder: '創業者',
+    tier_critic: '評価誌・批評家',
+    tier_sommelier: '認定ソムリエ',
+    somm_user: 'ソムリンユーザー',
+    caption_glass: 'グラス¥{n}',
+    caption_bottle: 'ボトル¥{n}',
+    caption_hashtags_store: '#Sommelin #ソムリン #ワインのある時間',
+    caption_hashtags_reviewer: '#Sommelin #ソムリン #試飲メモ #ワイン好きと繋がりたい',
+    caption_my_rating: '私の評価 ',
+    quote_open: '「',
+    quote_close: '」',
+    toast_need_store_name: '先に「在庫公開」設定で店舗名を入力してください',
+    toast_card_fail: 'カード生成に失敗しました',
+    toast_share_unsupported: 'この端末は画像共有に対応していません。画像を長押しで保存してください',
+    // 分析
+    an_login: '分析を見るには店舗アカウントでログインし直してください',
+    an_score_title: '🏆 あなたのお店の総合評価',
+    an_rank_line: 'お店ランキング <strong>{rank}位</strong> / {total}店中 ・ ⭐良いワイン <strong>{good}</strong>本',
+    an_score_hint: '評価の高いワインをリストに増やすと、ランキングで見つけてもらいやすくなります',
+    an_no_score_title: '総合評価はまだありません',
+    an_no_score_hint: '「🌐公開する」をオンにして、ワインリストにワインを追加すると評価が付きます',
+    an_views_title: '📱 ワインリストの閲覧（QR経由・直近30日: <span style="color:var(--burgundy);">{n}回</span>）',
+    an_views_tip: '{d}: {c}回',
+    an_2w_ago: '2週間前',
+    an_today: '今日',
+    an_views_empty: 'QRコードタブのQRをお店に置くと、お客様の閲覧がここに出ます',
+    an_cat_sparkling: '🍾 泡', an_cat_white: '🥂 白', an_cat_red: '🍷 赤', an_cat_rose: '🌸 ロゼ', an_cat_orange: '🟠 オレンジ', an_cat_other: 'その他',
+    an_list_title: '🍷 リスト構成（提供中 {n}本）',
+    an_list_empty: 'ワインリストにワインを追加するとここに出ます',
+    an_band_title: 'ボトル価格帯',
+    an_cospa_title: '💫 リスト内のコスパ上位',
+    cospa_top: '圧倒的コスパ',
+    cospa_good: 'コスパ良好',
+    an_notes_title: '📸 試飲メモ（{n}件{avg}）',
+    an_notes_avg: ' ・ お店の評価平均 ★{v}',
+    an_notes_importers: 'よく記録しているインポーター',
+    an_notes_empty: '試飲メモタブで写真を取り込むと、インポーター別の集計が出ます',
+    an_error: '分析を読み込めませんでした（通信環境をご確認ください）',
+    // ヘッダー・その他
+    confirm_logout: 'ログアウトしますか？',
+    logo_change_title: 'タップでロゴを変更',
+    toast_logo_uploading: 'ロゴをアップロード中…',
+    toast_logo_done: '✓ ロゴを変更しました',
+    toast_upload_fail: '⚠️ アップロードに失敗しました',
+    toast_img_load_fail: '画像を読み込めませんでした',
+    role_both: '🛒🍽 酒販店・レストラン',
+    role_retailer: '🛒 酒販店',
+    role_store: '🍽 レストラン',
+    role_generic: '🍽 店舗',
+    role_switch_importer: '⇄ 🚢 インポーターに切替',
+    // 併存キー（同義エイリアス含む）
+    alert_relogin: 'ログイン情報を確認できません。再ログインしてください。',
+    confirm_delete_named: '「{name}」を削除しますか？',
+    confirm_delete_record: 'この記録を削除しますか？',
+    confirm_line_unlink: 'LINE連携を解除しますか？',
+    toast_added_n: '{n}本のワインを追加しました ✓',
+    toast_image_load_fail: '画像を読み込めませんでした',
+    toast_label_read_fail: '銘柄を読み取れませんでした。近づいて撮り直してください',
+    toast_line_settings_saved: 'LINE通知設定を保存しました ✓',
+    toast_line_test_sent: 'LINEにテスト通知を送信しました 💬',
+    toast_list_private: 'ワインリストを非公開にしました 🔒',
+    toast_list_public: 'ワインリストを公開しました 🔓',
+    toast_login_unknown: 'ログイン情報を確認できませんでした',
+    toast_login_unknown2: 'ログイン情報を確認できません',
+    toast_logo_changed: '✓ ロゴを変更しました',
+    toast_need_email: 'メールアドレスを入力してください',
+    toast_need_name: '氏名を入力してください',
+    toast_need_store_name_first: '先に「在庫公開」設定で店舗名を入力してください',
+    toast_need_wine_name: 'ワイン名を入力してください',
+    toast_no_printable_wines: '印刷できるワインがありません（提供中のワインが0件です）',
+    toast_pairing_fail: '⚠️ 提案の取得に失敗しました',
+    toast_photo_read_fail: '⚠️ 読み取りに失敗した写真があります',
+    toast_published_as: '🌐 公開しました。ワイン検索に「{name}」として表示されます ✓',
+    toast_rsvp_done: '参加申込みが完了しました ✓',
+    toast_saved_n: '✓ {n}本を保存しました',
+    toast_stock_off: '在庫なしに変更しました',
+    toast_stock_on: '✓ 在庫ありに変更しました',
+  },
+  en: {
+    page_title: 'Sommelin Admin — Bistrot Lumière',
+    hdr_sub: 'Sommelin Admin',
+    role_staff: 'Staff',
+    btn_personal: '🍷 Personal',
+    btn_personal_title: 'Switch to personal mode',
+    btn_logout_title: 'Log out',
+    tab_tasting: 'Tastings',
+    tab_winelist: 'Wine List',
+    tab_qr: 'QR Code',
+    tab_stock: 'Stock',
+    tab_notes: 'Notes',
+    tab_analytics: 'Analytics',
+    loading: 'Loading…',
+    cancel: 'Cancel',
+    close: 'Close',
+    save: 'Save',
+    share: 'Share',
+    now: 'now',
+    free: 'Free',
+    sync_title: 'Google Calendar Sync',
+    sync_last_today: 'Last synced: today 09:30',
+    sync_btn: 'Sync',
+    sync_syncing: 'Syncing...',
+    sync_last_now: 'Last synced: just now',
+    toast_synced: 'Synced with Google Calendar ✓',
+    invite_title: 'Invite friends',
+    invite_sub: 'When someone signs up via this link, you get a reward too',
+    invite_btn: 'Share',
+    invite_text: 'Enjoy wine together on Sommelin 🍷 ',
+    toast_invite_copied: '📤 Invite link copied!',
+    toast_login_missing: 'Could not verify your login',
+    line_hdr_title: 'LINE Notifications',
+    line_sub_unlinked: 'Receive tasting event info on LINE',
+    line_sub_linked: 'You will be notified of new tasting events',
+    line_sub_linked_name: 'Notifications will be sent to {name} on LINE',
+    line_badge_unlinked: 'Not linked',
+    line_badge_linked: '✓ Linked',
+    line_connect_btn: 'Link your LINE account',
+    line_unconnected_desc: '<strong>Set up in 3 steps.</strong> Receive tasting event and seminar announcements from importers on your store\'s LINE.',
+    line_step1: 'Tap the button below to add "<strong>Sommelin</strong>" as a friend on LINE',
+    line_step2: 'Register your store info from the message that arrives automatically',
+    line_step3: 'Tasting event info will start arriving on LINE 🎉',
+    line_add_friend_btn: 'Add as friend on LINE',
+    line_add_friend_note: '@sommelin_official · Tapping opens the LINE app',
+    line_account_name: 'Bistrot Lumière Staff',
+    line_types_label: 'Notification types',
+    chip_tasting: '🍷 Tastings',
+    chip_seminar: '📚 Seminars',
+    chip_fair: '🏆 Fairs',
+    chip_fair_ex: '🏆 Fairs & expos',
+    type_tasting: 'Tasting',
+    type_seminar: 'Seminar',
+    type_fair_ex: 'Fairs & expos',
+    line_timing_prefix: 'Notify me:',
+    line_timing_default: '1 week before · same day',
+    line_settings_btn: '⚙️ Settings',
+    line_test_btn: '💬 Send test',
+    timing_1w: '1 week before',
+    timing_3d: '3 days before',
+    timing_1d: 'Day before',
+    timing_0d: 'Same day',
+    timing_none: 'None',
+    dow_0: 'Sun', dow_1: 'Mon', dow_2: 'Tue', dow_3: 'Wed', dow_4: 'Thu', dow_5: 'Fri', dow_6: 'Sat',
+    upcoming_tastings: 'UPCOMING TASTING EVENTS',
+    no_upcoming: 'No upcoming tasting events',
+    time_tbd: 'Time TBD',
+    untitled_event: '(Untitled tasting event)',
+    venue_tbd: 'Venue TBD',
+    online_suffix: ' · Online',
+    rsvp_confirm_q: 'Did you complete your registration?',
+    rsvp_done_btn: '✅ Done',
+    rsvp_not_yet: 'Not yet',
+    rsvp_chip_done: '✅ Registered',
+    rsvp_reopen: 'Open the page again',
+    rsvp_clear: 'Clear record',
+    rsvp_go_btn: 'Register →',
+    rsvp_no_link: 'No registration link (see contact info in details)',
+    ev_detail_lbl: 'DETAILS',
+    ev_url_lbl: 'REGISTRATION PAGE URL',
+    day_events_title: 'Tastings on {m}/{d} ({n})',
+    toast_no_link_event: 'This event has no registration link. Please use the contact info in the event details',
+    toast_rsvp_recorded: '✅ Recorded as registered',
+    confirm_clear_rsvp: 'Clear the registration record?',
+    rsvp_title: 'Event Registration',
+    rsvp_info_lbl: 'Attendee info (auto-filled from your profile)',
+    rsvp_name_lbl: 'Name', rsvp_name_ph: 'Name',
+    rsvp_company_lbl: 'Company / store name', rsvp_company_ph: 'Store name',
+    rsvp_role_lbl: 'Title', rsvp_role_ph: 'Title',
+    rsvp_email_lbl: 'Email address',
+    rsvp_count_lbl: 'Number of attendees',
+    rsvp_count_1: '1 person', rsvp_count_2: '2 people', rsvp_count_3: '3 people',
+    rsvp_note_lbl: 'Notes', rsvp_note_ph: 'Allergies, special requests, etc.',
+    rsvp_submit: 'Confirm registration',
+    rsvp_sending: 'Notifying the importer...',
+    rsvp_wait: 'Please wait a moment',
+    rsvp_done_title: 'Registration complete!',
+    rsvp_step_recorded: 'Attendance recorded',
+    rsvp_step_mailed: 'The importer was notified by email',
+    rsvp_mail_preview: '📧 Email sent (preview)',
+    rsvp_mail_footer: 'This email was sent automatically by the Sommelin system. Replies go to the applicant\'s email address.',
+    toast_enter_name: 'Please enter your name',
+    toast_enter_email: 'Please enter your email address',
+    rsvp_done_name: '{name} ({company}) · {count} attendee(s)',
+    no_email_registered: '(no email address registered)',
+    mail_subject: '[Tasting Event RSVP] {name}',
+    mail_greeting: 'Dear {org},',
+    mail_intro: 'A registration was submitted via Sommelin.',
+    mail_event: 'Event: {name}',
+    mail_date: 'Date: {date}',
+    mail_venue: 'Venue: {venue}',
+    mail_applicant: 'Applicant:',
+    mail_name: 'Name: {name}',
+    mail_company: 'Store: {company}',
+    mail_email: 'Email: {email}',
+    mail_count: 'Attendees: {count}',
+    mail_note: 'Notes: {note}',
+    mail_replyto: 'Reply to: {email}',
+    mail_auto: 'This email was sent automatically by the Sommelin system.',
+    toast_rsvp_complete: 'Registration complete ✓',
+    push_new_event: '🍷 A new tasting event was added',
+    push_tap_detail: 'Tap for details',
+    push_demo_event: 'Natural Wine Tasting — Jun 10 (Wed) 15:00–',
+    push_test_title: '🍷 This is a test notification',
+    push_test_sub: 'Burgundy Tasting — May 22 (Thu) 14:00–',
+    toast_test_sent: 'Test notification sent to LINE 💬',
+    confirm_unlink_line: 'Unlink LINE?',
+    toast_line_unlinked: 'LINE unlinked',
+    toast_line_saved: 'LINE notification settings saved ✓',
+    line_push_app: 'Sommelin Tasting Alerts',
+    line_linked: '✅ Linked',
+    line_linked_name: '✅ Linked ({name})',
+    line_unlink_btn: 'Unlink',
+    line_link_desc: 'Link LINE to receive tasting event notifications on LINE.',
+    line_link_btn: 'Link',
+    line_code_add_friend: 'Add Sommelin as a friend on LINE',
+    line_code_step1: '① {link}',
+    line_code_step2: '② Send this code in the chat:',
+    line_code_note: 'Linking completes automatically once you send it (valid for 10 minutes)',
+    line_issuing: 'Issuing…',
+    toast_code_fail: '⚠️ Failed to issue a link code',
+    lreg_title: 'Sommelin Store Registration',
+    lreg_sub: 'Registration form to receive tasting event info on LINE',
+    lreg_name_lbl: 'Contact name', lreg_name_ph: 'e.g. Taro Tanaka',
+    lreg_role_lbl: 'Contact\'s role',
+    lreg_role_select: 'Please select',
+    lreg_role_sommelier: 'Sommelier / Wine advisor',
+    lreg_role_chef: 'Chef / Head chef',
+    lreg_role_manager: 'Store manager',
+    lreg_role_owner: 'Owner',
+    lreg_role_buyer: 'Buyer / Purchasing',
+    lreg_regions_lbl: 'Regions you want tasting info for (multiple)',
+    lreg_burgundy: '🇫🇷 Burgundy',
+    lreg_bordeaux: '🇫🇷 Bordeaux',
+    lreg_champagne: '🥂 Champagne',
+    lreg_italy: '🇮🇹 All Italy',
+    lreg_natural: '🌿 Natural wine',
+    lreg_all_regions: '🌍 All regions',
+    lreg_types_lbl: 'Notification types you want',
+    lreg_submit: 'Complete registration and link LINE',
+    lset_title: 'LINE Notification Settings',
+    lset_timing_lbl: 'Notification timing (multiple)',
+    lset_preview_lbl: 'Notification preview',
+    lset_pv_title: '🍷 New tasting event',
+    lset_pv_event: 'Burgundy New Arrivals Tasting',
+    lset_pv_meta: '📅 May 22 (Thu) 14:00–18:00<br>📍 The Westin Tokyo 3F<br>🏢 Yamada Shoten (importer)',
+    lset_pv_cta: '👆 Tap to register',
+    lset_save_btn: 'Save settings',
+    lset_unlink: 'Unlink LINE',
+    wl_search_ph: 'Search wines...',
+    wl_add_btn: '＋ Add',
+    wl_bulk_btn: '📋 Import list from a photo',
+    wl_print_btn: '🖨 Open print list',
+    cat_all: 'All',
+    cat_sparkling: '🥂 Sparkling',
+    cat_white: '🤍 White',
+    cat_red: '🍷 Red',
+    cat_rose: '🌸 Rosé',
+    cat_orange: '🍊 Orange',
+    wine_count_zero: 'All: 0 wines',
+    wine_count: 'All: {n} wines (showing {m})',
+    wl_publish_btn: 'Publish list',
+    toast_list_published: 'List updated ✓',
+    stock_none: 'Out of stock',
+    stock_label: '📦 {n} btl',
+    thumb_scanned_title: 'Label image (scanned)',
+    thumb_placeholder_title: 'No label image (tap to edit)',
+    toggle_on_title: 'Available → pause',
+    toggle_off_title: 'Paused → resume',
+    oshi_btn_title: 'Create a wine pick card',
+    edit_title: 'Edit',
+    delete_title: 'Delete',
+    no_matching_wines: 'No matching wines',
+    toast_avail_on: 'Set {name}… to available',
+    toast_sold_out: 'Marked as sold out',
+    confirm_delete: 'Delete "{name}"?',
+    toast_delete_fail: '⚠️ Delete failed',
+    toast_deleted: 'Deleted',
+    print_winelist: 'Wine List',
+    print_cat_sparkling: 'Sparkling',
+    print_cat_white: 'White Wine',
+    print_cat_red: 'Red Wine',
+    print_cat_rose: 'Rosé',
+    print_cat_orange: 'Orange Wine',
+    toast_no_print: 'No wines to print (0 wines currently on the list)',
+    print_th_wine: 'Wine',
+    print_th_glass: 'Glass',
+    print_th_bottle: 'Bottle',
+    print_doc_title: '{store} Wine List',
+    print_btn: '🖨 Print',
+    print_asof: 'As of {date}',
+    toast_popup_blocked: 'Pop-up was blocked. Please check your browser settings',
+    wine_modal_add: 'Add Wine',
+    wine_modal_edit: 'Edit Wine',
+    wine_modal_confirm: 'Add Wine (confirm & edit)',
+    modal_label_img: '📷 LABEL IMAGE',
+    modal_label_scanned: 'Label scanned',
+    modal_label_scanned_sub: 'Details from the scanned label have been filled in',
+    modal_label_check: 'Please check and correct the details before saving',
+    f_cat: 'Category',
+    f_cat_sparkling: '🥂 Sparkling',
+    f_cat_white: '🤍 White wine',
+    f_cat_red: '🍷 Red wine',
+    f_cat_rose: '🌸 Rosé',
+    f_cat_orange: '🍊 Orange wine',
+    f_name: 'Wine name', f_name_ph: 'e.g. Château Margaux',
+    f_producer: 'Producer',
+    f_vintage: 'Vintage',
+    f_region: 'Region',
+    f_grapes: 'Grape varieties',
+    f_price_glass: 'Glass price (¥)',
+    f_price_bottle: 'Bottle price (¥)',
+    f_stock: 'Stock (bottles)',
+    f_available: 'Availability',
+    f_avail_on: '✅ Available',
+    f_avail_off: '❌ Sold out / paused',
+    alert_enter_wine_name: 'Please enter a wine name',
+    alert_login_again: 'Could not verify your login. Please log in again.',
+    toast_updated: 'Updated ✓',
+    toast_added: 'Added ✓',
+    toast_save_fail: '⚠️ Save failed (please check your connection)',
+    cam_title: '📷 Photograph Bottles',
+    cam_frame_hint: 'Fit the bottle in the frame',
+    cam_thumb_empty: 'Captured bottles will appear here',
+    cam_count_zero: '0 captured',
+    cam_count: '{n} captured',
+    cam_analyze_btn: '✨ Analyze labels',
+    cam_manual_link: 'Enter manually',
+    shutter_title: 'Capture',
+    analyzing_title: 'Analyzing labels…',
+    analyzing_count: '{n} bottle(s)',
+    wr_badge_default: '📦 Results for 1 bottle',
+    wr_badge: '📦 {n} bottle(s) analyzed',
+    wr_title: 'Matched from the label',
+    wr_sub: 'Tap to choose a wine. You can edit the details later.',
+    wr_manual: 'Not in the list? Enter manually',
+    cand_note_high: 'Label read with high confidence',
+    cand_note_vintage: 'The vintage may be different',
+    cand_note_similar: 'A similar label was detected',
+    cand_note_producer: 'Region and producer confirmed',
+    cand_note_grandcru: 'Possibly a grand cru',
+    cand_note_sparkling: 'Similar match as a sparkling wine',
+    cand_note_orange: 'Similar match as an orange wine',
+    toast_autofilled: 'Details for "{name}" auto-filled ✓',
+    lc_title: '📋 Scan Wine List',
+    lc_frame_hint: 'Fit the entire wine list in the frame',
+    lc_tip: '📄 Menus, handwritten lists, printed lists — all can be read',
+    lc_analyze_btn: '📖 Read wine list',
+    lc_captured: '✅ List captured. Tap "Read wine list"',
+    lc_analyzing: 'AI is reading the wine list… (about 10 s)',
+    toast_rate_limit: '⚠️ Usage limit reached. Please wait a moment and try again',
+    toast_list_unread: 'Could not read any wines. Please move closer and retake the photo',
+    toast_analyze_fail: '⚠️ Analysis failed (please check your connection)',
+    br_title_default: '📖 Wines found',
+    br_select_all: 'Select all',
+    br_sub_default: 'Select the wines to add',
+    br_add_btn: 'Add',
+    bulk_found: '📖 Found {n} wines',
+    bulk_sub: 'Select the wines to add (all checked)',
+    bulk_add_n: '✓ Add {n} wines',
+    bulk_accuracy: 'Read accuracy {n}%',
+    bulk_select: 'Select wines',
+    toast_register_fail: '⚠️ Registration failed (please check your connection)',
+    toast_bulk_added: '{n} wines added ✓',
+    qr_display_note: 'Display this QR code in your store',
+    qr_copy_btn: 'Copy',
+    toast_print_dialog: 'Opening the print dialog 🖨️',
+    toast_qr_downloaded: 'QR code downloaded ✓',
+    qr_print_btn: '🖨️ Print',
+    qr_save_btn: '⬇️ Save',
+    privacy_title: 'Wine list visibility',
+    privacy_public: 'Public',
+    privacy_private: 'Private',
+    privacy_desc: '— viewable from anywhere in the Sommelin app',
+    privacy_warning: '⚠️ When set to private, the list is only shown after scanning your store\'s QR code. It will no longer appear in rankings or history.',
+    qr_usage_title: '📖 How to use the QR code',
+    qr_usage_1: 'Place the QR code on tables or in your menu book',
+    qr_usage_2: 'When guests scan it with their phone, Sommelin-kun guides them through your wines',
+    qr_usage_3: 'Recommendations and pairing suggestions tailored to each guest appear automatically',
+    qr_usage_4: 'When you update your wine list, the latest version is shown automatically on the next scan',
+    toast_url_copied: 'URL copied ✓',
+    toast_published_on: 'Wine list is now public 🔓',
+    toast_unpublished: 'Wine list is now private 🔒',
+    stk_total_lbl: 'Wines',
+    stk_in_lbl: 'In stock',
+    stk_out_lbl: 'Out of stock',
+    stk_line_title: '📲 LINE Link',
+    stk_add_title: '＋ Add wine to stock',
+    stk_name_ph: 'Wine name (e.g. Ch. Mouton Rothschild)',
+    stk_vintage_ph: 'Vintage',
+    stk_price_ph: 'Price (JPY)',
+    stk_region_ph: 'Region (e.g. Bordeaux, France)',
+    stk_qty_ph: 'Quantity',
+    stk_type_bottle: 'By the bottle',
+    stk_type_glass: 'By the glass',
+    stk_type_both: 'Both',
+    stk_add_btn: 'Add to stock',
+    stk_list_lbl: 'STOCK LIST',
+    stk_empty: 'No stock registered yet.<br>Add wines with the form above, or use the photo import on the Wine List tab.',
+    type_bottle_glass: 'Bottle/Glass',
+    type_glass: 'Glass',
+    type_bottle: 'Bottle',
+    n_bottles: '{n} bottles',
+    stk_in_btn: 'In stock',
+    stk_out_btn: 'Out of stock',
+    toast_stock_added: '✓ Added to stock (also appears on your wine list)',
+    toast_stock_in: '✓ Marked as in stock',
+    toast_stock_out: 'Marked as out of stock',
+    pub_store_name_ph: 'Store name (shown in search results)',
+    pub_store_addr_ph: 'Type an address to see suggestions',
+    pub_store_ig_ph: 'Instagram (optional, e.g. @yourshop)',
+    pub_btn: '🌐 Publish stock on Sommelin',
+    searching: 'Searching…',
+    venue_claim_title: '📍 {n} records from your customers',
+    venue_claim_sub: 'These were recorded with the scouter by customers who visited your store. Select the wines to import (visibility follows your current settings)',
+    toast_enter_store_name: 'Please enter a store name',
+    toast_publish_fail: '⚠️ Publishing failed (please check your connection)',
+    toast_published: '🌐 Published. Your store appears in wine search as "{name}" ✓',
+    tn_title: '📸 Turn tasting event photos into your favorite wines list',
+    tn_desc: 'Import wine photos taken with your camera and AI will identify the labels. Add the importer\'s name and they\'ll know your store liked their wine.',
+    tn_pick_btn: '📁 Import photos (multiple OK)',
+    tn_staging_lbl: 'Recognized wines — add the importer name and save',
+    tn_save_all_btn: '✓ Save all',
+    tn_list_lbl: 'FAVORITE WINES',
+    tn_reading: 'AI reading… photo {i}/{n} (about 10 s)',
+    tn_read_fail: '⚠️ Some photos could not be read',
+    tn_recognized: '✅ Recognized {n} wines. Review them below',
+    tn_none_read: 'No wines could be read from the photos',
+    unknown_wine: '(Unknown wine)',
+    tn_my_rating: 'Your rating',
+    tn_importer_ph: 'Importer name (e.g. Terravert)',
+    tn_memo_ph: 'Notes (e.g. fruit-forward, great by the glass)',
+    tn_condition_lbl: 'Bottle may have been faulty (corked etc.) — checking excludes it from rating stats',
+    toast_tn_saved: '✓ Saved {n} wines',
+    tn_no_price: 'No price data — not registered in the Sommelin database',
+    tn_ref_price: 'Reference retail price',
+    tn_ref_price_src: '(Sommelin data)',
+    tn_price_est: 'Est. wholesale <b>{a}–{b}</b> / bottle list <b>{c}–{d}</b> / glass <b>{e}–{f}</b>',
+    tn_price_note: '* Estimates based on typical trade margins (wholesale = 70–80% of retail, list = 2.5–3x wholesale, glass = 1/4 of bottle)',
+    tn_empty: 'No records yet.<br>Try importing photos taken at a tasting event.',
+    tn_details_summary: 'Details (overall & community ratings)',
+    tn_buzz_loading: 'Loading community ratings…',
+    tn_buzz_unregistered: 'Community rating — (not in the Sommelin database, no stats available)',
+    tn_somm_rating: 'Sommelin rating {stars} <span style="font-size:10px;color:var(--text-sub);">(Sommelin + store ratings weighted by reliability)</span>',
+    tn_buzz_community: 'Community rating <b style="color:#C9973A;">{v}</b> <span style="font-size:10px;color:var(--text-sub);">(average of {n} stores, anonymous)</span>',
+    tn_buzz_none: 'Community rating — (no ratings from other stores yet)',
+    tn_buzz_fail: 'Community rating — (could not be loaded)',
+    tn_pair_btn: '🍽 Ask AI for pairings',
+    tn_share_btn: '📣 Share as a pick card',
+    confirm_delete_note: 'Delete this note?',
+    tn_pair_thinking: '🍽 Sommelin-kun is thinking…',
+    tn_pair_prompt: 'We serve "{name}" ({region}{color} wine) at our restaurant. Please suggest 3 dishes that pair well with it, each with a one-line reason, concisely.',
+    region_unknown: 'unknown region',
+    toast_pair_fail: '⚠️ Failed to get suggestions',
+    oshi_modal_title: 'Create a Wine Pick Card',
+    oshi_comment_lbl: 'Short comment (optional)',
+    oshi_comment_ph: 'e.g. Our most popular glass pour. Great with seafood',
+    oshi_price_lbl: 'Price display',
+    oshi_price_none: 'Hide prices',
+    oshi_price_glass: 'Glass price only',
+    oshi_price_bottle: 'Bottle price only',
+    oshi_price_both: 'Glass & bottle',
+    oshi_show_rating_open: 'Show my ★ rating (',
+    oshi_show_rating_close: ')',
+    oshi_create_btn: 'Create card',
+    oshi_caption_copied: 'Caption copied to clipboard',
+    tier_experienced: 'Experienced reviewer',
+    tier_regular: 'Reviewer',
+    tier_founder: 'Founder',
+    tier_critic: 'Critic / wine press',
+    tier_sommelier: 'Certified sommelier',
+    somm_user: 'Sommelin user',
+    caption_glass: 'Glass ¥{n}',
+    caption_bottle: 'Bottle ¥{n}',
+    caption_hashtags_store: '#Sommelin #ソムリン #winetime',
+    caption_hashtags_reviewer: '#Sommelin #ソムリン #tastingnotes #winelover',
+    caption_my_rating: 'My rating ',
+    quote_open: '"',
+    quote_close: '"',
+    toast_need_store_name: 'Please enter your store name in the stock publish settings first',
+    toast_card_fail: 'Failed to create the card',
+    toast_share_unsupported: 'This device does not support image sharing. Long-press the image to save it',
+    an_login: 'Please log in again with a store account to view analytics',
+    an_score_title: '🏆 Your store\'s overall score',
+    an_rank_line: 'Store ranking: <strong>#{rank}</strong> of {total} stores · ⭐ great wines: <strong>{good}</strong>',
+    an_score_hint: 'Adding highly rated wines to your list makes you easier to find in the rankings',
+    an_no_score_title: 'No overall score yet',
+    an_no_score_hint: 'Turn on "🌐 Publish" and add wines to your list to receive a score',
+    an_views_title: '📱 Wine list views (via QR, last 30 days: <span style="color:var(--burgundy);">{n}</span>)',
+    an_views_tip: '{d}: {c} views',
+    an_2w_ago: '2 weeks ago',
+    an_today: 'Today',
+    an_views_empty: 'Place the QR from the QR Code tab in your store and guest views will appear here',
+    an_cat_sparkling: '🍾 Sparkling', an_cat_white: '🥂 White', an_cat_red: '🍷 Red', an_cat_rose: '🌸 Rosé', an_cat_orange: '🟠 Orange', an_cat_other: 'Other',
+    an_list_title: '🍷 List composition ({n} wines on the list)',
+    an_list_empty: 'Add wines to your wine list and they will appear here',
+    an_band_title: 'Bottle price bands',
+    an_cospa_title: '💫 Top value picks on your list',
+    cospa_top: 'Best value',
+    cospa_good: 'Great value',
+    an_notes_title: '📸 Tasting notes ({n}{avg})',
+    an_notes_avg: ' · avg store rating ★{v}',
+    an_notes_importers: 'Importers you record most often',
+    an_notes_empty: 'Import photos on the Notes tab to see per-importer stats',
+    an_error: 'Could not load analytics (please check your connection)',
+    confirm_logout: 'Log out?',
+    logo_change_title: 'Tap to change logo',
+    toast_logo_uploading: 'Uploading logo…',
+    toast_logo_done: '✓ Logo updated',
+    toast_upload_fail: '⚠️ Upload failed',
+    toast_img_load_fail: 'Could not load the image',
+    role_both: '🛒🍽 Retailer & Restaurant',
+    role_retailer: '🛒 Retailer',
+    role_store: '🍽 Restaurant',
+    role_generic: '🍽 Store',
+    role_switch_importer: '⇄ 🚢 Switch to importer',
+    alert_relogin: 'Could not verify your login. Please log in again.',
+    confirm_delete_named: 'Delete "{name}"?',
+    confirm_delete_record: 'Delete this note?',
+    confirm_line_unlink: 'Unlink LINE?',
+    toast_added_n: '{n} wines added ✓',
+    toast_image_load_fail: 'Could not load the image',
+    toast_label_read_fail: 'Could not read any wines. Please move closer and retake the photo',
+    toast_line_settings_saved: 'LINE notification settings saved ✓',
+    toast_line_test_sent: 'Test notification sent to LINE 💬',
+    toast_list_private: 'Wine list is now private 🔒',
+    toast_list_public: 'Wine list is now public 🔓',
+    toast_login_unknown: 'Could not verify your login',
+    toast_login_unknown2: 'Could not verify your login',
+    toast_logo_changed: '✓ Logo updated',
+    toast_need_email: 'Please enter your email address',
+    toast_need_name: 'Please enter your name',
+    toast_need_store_name_first: 'Please enter your store name in the stock publish settings first',
+    toast_need_wine_name: 'Please enter a wine name',
+    toast_no_printable_wines: 'No wines to print (0 wines currently on the list)',
+    toast_pairing_fail: '⚠️ Failed to get suggestions',
+    toast_photo_read_fail: '⚠️ Some photos could not be read',
+    toast_published_as: '🌐 Published. Your store appears in wine search as "{name}" ✓',
+    toast_rsvp_done: 'Registration complete ✓',
+    toast_saved_n: '✓ Saved {n} wines',
+    toast_stock_off: 'Marked as out of stock',
+    toast_stock_on: '✓ Marked as in stock',
+  },
+};
+let LANG = (() => { try { return localStorage.getItem('somm_lang') || (navigator.language && navigator.language.startsWith('ja') ? 'ja' : 'en'); } catch (e) { return 'ja'; } })();
+function t(key) {
+  const d = I18N[LANG] || I18N.ja;
+  return (d && d[key] != null) ? d[key] : (I18N.ja[key] != null ? I18N.ja[key] : key);
+}
+// 月・曜日の配列（動的レンダリング用）
+const I18N_MONTHS = {
+  ja: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
+  en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+};
+function i18nMonth(m) { return (I18N_MONTHS[LANG] || I18N_MONTHS.ja)[m]; }
+function i18nDow(d) { return t('dow_' + d); }
+// 年月見出し（例: 2026年 7月 / Jul 2026）
+function i18nMonthYear(y, m) { return LANG === 'ja' ? `${y}年 ${i18nMonth(m)}` : `${i18nMonth(m)} ${y}`; }
+// フル日付（例: 2026年7月14日（火） / Jul 14 (Tue), 2026）
+function i18nFullDate(date) {
+  return LANG === 'ja'
+    ? `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日（${i18nDow(date.getDay())}）`
+    : `${i18nMonth(date.getMonth())} ${date.getDate()} (${i18nDow(date.getDay())}), ${date.getFullYear()}`;
+}
+function applyI18n() {
+  document.documentElement.lang = LANG;
+  document.title = t('page_title');
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
+  const btn = document.getElementById('langBtn');
+  if (btn) btn.textContent = LANG === 'ja' ? '🌐 EN' : '🌐 日本語';
+}
+function setLang(l) {
+  LANG = l;
+  try { localStorage.setItem('somm_lang', l); } catch (e) {}
+  if (window.sommLog) sommLog('lang_switch', { lang: l });
+  // この画面は動的描画が多いため、言語切替はリロードで全体を再描画する
+  location.reload();
+}
+applyI18n();
+</script>
 
 <script>
 // ============================================================
@@ -2346,25 +3334,25 @@ async function lineLinkApiFetch(path, opts) {
 function lineLinkRenderLinked(displayName) {
   document.getElementById('lineLinkBody').innerHTML =
     `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-      <span style="color:var(--text);font-weight:700;">✅ 連携済み${displayName ? '（' + escLineLink(displayName) + '）' : ''}</span>
-      <button class="btn-ghost" style="padding:6px 12px;font-size:12px;" onclick="lineLinkUnlink()">解除</button>
+      <span style="color:var(--text);font-weight:700;">${displayName ? t('line_linked_name').replace('{name}', escLineLink(displayName)) : t('line_linked')}</span>
+      <button class="btn-ghost" style="padding:6px 12px;font-size:12px;" onclick="lineLinkUnlink()">${t('line_unlink_btn')}</button>
     </div>`;
 }
 function lineLinkRenderUnlinked() {
   document.getElementById('lineLinkBody').innerHTML =
     `<div>
-      <div style="margin-bottom:8px;">LINEと連携すると、試飲会情報などの通知をLINEで受け取れます。</div>
-      <button class="btn-primary" style="padding:8px 16px;font-size:13px;" onclick="lineLinkStart()">連携する</button>
+      <div style="margin-bottom:8px;">${t('line_link_desc')}</div>
+      <button class="btn-primary" style="padding:8px 16px;font-size:13px;" onclick="lineLinkStart()">${t('line_link_btn')}</button>
     </div>`;
 }
 function lineLinkRenderCode(code, url) {
   if (lineLinkPollTimer) { clearInterval(lineLinkPollTimer); lineLinkPollTimer = null; }
   document.getElementById('lineLinkBody').innerHTML =
     `<div>
-      <div style="margin-bottom:8px;">① <a href="${escLineLinkAttr(url)}" target="_blank" rel="noopener" style="color:var(--burgundy);font-weight:700;">LINEで友だち追加</a>してください</div>
-      <div style="margin-bottom:8px;">② トーク画面でこのコードを送信してください：</div>
+      <div style="margin-bottom:8px;">${t('line_code_step1').replace('{link}', `<a href="${escLineLinkAttr(url)}" target="_blank" rel="noopener" style="color:var(--burgundy);font-weight:700;">${t('line_code_add_friend')}</a>`)}</div>
+      <div style="margin-bottom:8px;">${t('line_code_step2')}</div>
       <div style="text-align:center;background:var(--bg);border-radius:10px;padding:10px;font-size:22px;font-weight:800;letter-spacing:.15em;color:var(--burgundy);margin-bottom:8px;">${escLineLink(code)}</div>
-      <div style="font-size:11px;color:var(--text-sub);">送信すると自動的に連携が完了します（10分間有効）</div>
+      <div style="font-size:11px;color:var(--text-sub);">${t('line_code_note')}</div>
     </div>`;
   // 数秒おきに連携完了をポーリング
   lineLinkPollTimer = setInterval(lineLinkCheckStatus, 3000);
@@ -2385,14 +3373,14 @@ async function lineLinkCheckStatus() {
 }
 
 async function lineLinkStart() {
-  document.getElementById('lineLinkBody').textContent = '発行中…';
+  document.getElementById('lineLinkBody').textContent = t('line_issuing');
   try {
     const r = await lineLinkApiFetch('/start', { method: 'POST' });
     if (!r.ok) throw 0;
     const d = await r.json();
     lineLinkRenderCode(d.code, d.officialAccountUrl);
   } catch (e) {
-    showToast('⚠️ 連携コードの発行に失敗しました');
+    showToast(t('toast_code_fail'));
     lineLinkRenderUnlinked();
   }
 }
@@ -2435,7 +3423,7 @@ async function loadWineData(){
       restaurant.isPrivate = !pub;
       const t = document.getElementById('privacyToggle'); if (t) t.checked = pub;
       document.getElementById('privacyIcon').textContent = pub ? '🔓' : '🔒';
-      document.getElementById('privacyStatus').textContent = pub ? '公開中' : '非公開';
+      document.getElementById('privacyStatus').textContent = pub ? t('privacy_public') : t('privacy_private');
       document.getElementById('privacyWarning').classList.toggle('show', !pub);
       if (rows.length){
         const nEl = document.getElementById('stkStoreName'); if (nEl && rows[0].display_name) nEl.value = rows[0].display_name;
@@ -2478,13 +3466,13 @@ async function loadRealEvents() {
       const st = fmtTime(e.start_time), en = fmtTime(e.end_time);
       const online = /オンライン|zoom|online|配信/i.test((e.venue_name || '') + (e.description || ''));
       mapped.push({
-        id: String(e.id), googleCalId: '', type: 'tasting', typeLabel: '試飲会',
+        id: String(e.id), googleCalId: '', type: 'tasting', typeLabel: t('type_tasting'),
         date: new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])),
-        time: st ? (en ? st + ' – ' + en : st) : '時間未定',
-        name: e.title || '（無題の試飲会）',
+        time: st ? (en ? st + ' – ' + en : st) : t('time_tbd'),
+        name: e.title || t('untitled_event'),
         organizer: '',
         importerEmail: '',
-        venue: e.venue_name || e.venue_address || '会場未定',
+        venue: e.venue_name || e.venue_address || t('venue_tbd'),
         venueAddress: e.venue_address || '',
         cost: e.cost,
         description: e.description || '',
@@ -2515,7 +3503,7 @@ async function loadAnalytics() {
       headers: { Authorization: 'Bearer ' + (rwToken() || '') }
     });
     if (r.status === 401) {
-      box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">分析を見るには店舗アカウントでログインし直してください</div>';
+      box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">' + t('an_login') + '</div>';
       return;
     }
     if (!r.ok) throw 0;
@@ -2540,20 +3528,20 @@ async function loadAnalytics() {
     if (d.score != null) {
       html += `
       <div style="background:linear-gradient(135deg,var(--wine-dark),var(--burgundy));border-radius:16px;padding:18px;color:#fff;">
-        <div style="font-size:11px;opacity:.85;font-weight:700;letter-spacing:.06em;">🏆 あなたのお店の総合評価</div>
+        <div style="font-size:11px;opacity:.85;font-weight:700;letter-spacing:.06em;">${t('an_score_title')}</div>
         <div style="display:flex;align-items:baseline;gap:10px;margin-top:6px;">
           <div style="font-size:40px;font-weight:800;line-height:1;">${d.score}</div>
           <div>${stars(d.score)}</div>
         </div>
-        <div style="font-size:12px;margin-top:8px;opacity:.95;">お店ランキング <strong>${d.rank}位</strong> / ${d.totalStores}店中 ・ ⭐良いワイン <strong>${d.list.good}</strong>本</div>
-        <div style="font-size:11px;margin-top:6px;opacity:.8;">評価の高いワインをリストに増やすと、ランキングで見つけてもらいやすくなります</div>
+        <div style="font-size:12px;margin-top:8px;opacity:.95;">${t('an_rank_line').replace('{rank}', d.rank).replace('{total}', d.totalStores).replace('{good}', d.list.good)}</div>
+        <div style="font-size:11px;margin-top:6px;opacity:.8;">${t('an_score_hint')}</div>
       </div>`;
     } else {
       html += `
       <div style="background:var(--bg);border:1.5px dashed var(--border);border-radius:16px;padding:18px;text-align:center;">
         <div style="font-size:28px;">🏆</div>
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-top:6px;">総合評価はまだありません</div>
-        <div style="font-size:11px;color:var(--text-sub);margin-top:6px;line-height:1.7;">「🌐公開する」をオンにして、ワインリストにワインを追加すると評価が付きます</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-top:6px;">${t('an_no_score_title')}</div>
+        <div style="font-size:11px;color:var(--text-sub);margin-top:6px;line-height:1.7;">${t('an_no_score_hint')}</div>
       </div>`;
     }
 
@@ -2565,41 +3553,41 @@ async function loadAnalytics() {
     const vmax = Math.max(1, ...days.map(x => x.c));
     html += `
     <div style="background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;margin-top:14px;">
-      <div style="font-size:12px;font-weight:800;color:var(--text);">📱 ワインリストの閲覧（QR経由・直近30日: <span style="color:var(--burgundy);">${d.views.total30d}回</span>）</div>
+      <div style="font-size:12px;font-weight:800;color:var(--text);">${t('an_views_title').replace('{n}', d.views.total30d)}</div>
       <div style="display:flex;align-items:flex-end;gap:3px;height:56px;margin-top:10px;">
-        ${days.map(x => `<div title="${x.d}: ${x.c}回" style="flex:1;background:${x.c>0?'var(--burgundy)':'var(--bg)'};height:${Math.max(6, Math.round(x.c/vmax*100))}%;border-radius:3px 3px 0 0;"></div>`).join('')}
+        ${days.map(x => `<div title="${t('an_views_tip').replace('{d}', x.d).replace('{c}', x.c)}" style="flex:1;background:${x.c>0?'var(--burgundy)':'var(--bg)'};height:${Math.max(6, Math.round(x.c/vmax*100))}%;border-radius:3px 3px 0 0;"></div>`).join('')}
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-sub);margin-top:4px;"><span>2週間前</span><span>今日</span></div>
-      ${d.views.total30d===0?'<div style="font-size:11px;color:var(--text-sub);margin-top:8px;">QRコードタブのQRをお店に置くと、お客様の閲覧がここに出ます</div>':''}
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-sub);margin-top:4px;"><span>${t('an_2w_ago')}</span><span>${t('an_today')}</span></div>
+      ${d.views.total30d===0?'<div style="font-size:11px;color:var(--text-sub);margin-top:8px;">'+t('an_views_empty')+'</div>':''}
     </div>`;
 
     // ③ リスト構成
-    const CAT_JA = { sparkling:'🍾 泡', white:'🥂 白', red:'🍷 赤', rose:'🌸 ロゼ', orange:'🟠 オレンジ', other:'その他' };
+    const CAT_JA = { sparkling:t('an_cat_sparkling'), white:t('an_cat_white'), red:t('an_cat_red'), rose:t('an_cat_rose'), orange:t('an_cat_orange'), other:t('an_cat_other') };
     const cats = Object.entries(d.list.byCat || {});
     const cmax = Math.max(1, ...cats.map(([,v]) => v));
     const bandEntries = Object.entries(d.list.bands || {}).filter(([k,v]) => !(k==='価格未設定' && v===0));
     const bmax = Math.max(1, ...bandEntries.map(([,v]) => v));
     html += `
     <div style="background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;margin-top:14px;">
-      <div style="font-size:12px;font-weight:800;color:var(--text);">🍷 リスト構成（提供中 ${d.list.total}本）</div>
-      ${cats.length ? cats.map(([k,v]) => bar(CAT_JA[k]||k, v, cmax, 'var(--burgundy)')).join('') : '<div style="font-size:11px;color:var(--text-sub);margin-top:8px;">ワインリストにワインを追加するとここに出ます</div>'}
-      ${bandEntries.length ? '<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-top:14px;">ボトル価格帯</div>' + bandEntries.map(([k,v]) => bar(k, v, bmax, 'var(--gold)')).join('') : ''}
-      ${(d.list.cospaTop||[]).length ? '<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-top:14px;">💫 リスト内のコスパ上位</div>' + d.list.cospaTop.map(w => `<div style="font-size:12px;color:var(--text);margin-top:5px;">・${esc(w.name)} <span style="color:var(--gold);font-weight:700;">${w.cospaLevel==='top'?'圧倒的コスパ':'コスパ良好'}</span></div>`).join('') : ''}
+      <div style="font-size:12px;font-weight:800;color:var(--text);">${t('an_list_title').replace('{n}', d.list.total)}</div>
+      ${cats.length ? cats.map(([k,v]) => bar(CAT_JA[k]||k, v, cmax, 'var(--burgundy)')).join('') : '<div style="font-size:11px;color:var(--text-sub);margin-top:8px;">'+t('an_list_empty')+'</div>'}
+      ${bandEntries.length ? '<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-top:14px;">'+t('an_band_title')+'</div>' + bandEntries.map(([k,v]) => bar(k, v, bmax, 'var(--gold)')).join('') : ''}
+      ${(d.list.cospaTop||[]).length ? '<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-top:14px;">'+t('an_cospa_title')+'</div>' + d.list.cospaTop.map(w => `<div style="font-size:12px;color:var(--text);margin-top:5px;">・${esc(w.name)} <span style="color:var(--gold);font-weight:700;">${w.cospaLevel==='top'?t('cospa_top'):t('cospa_good')}</span></div>`).join('') : ''}
     </div>`;
 
     // ④ 試飲メモ
     html += `
     <div style="background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px;margin-top:14px;">
-      <div style="font-size:12px;font-weight:800;color:var(--text);">📸 試飲メモ（${d.notes.count}件${d.notes.avgRating!=null?` ・ お店の評価平均 ★${d.notes.avgRating}`:''}）</div>
+      <div style="font-size:12px;font-weight:800;color:var(--text);">${t('an_notes_title').replace('{n}', d.notes.count).replace('{avg}', d.notes.avgRating!=null?t('an_notes_avg').replace('{v}', d.notes.avgRating):'')}</div>
       ${(d.notes.topImporters||[]).length
-        ? '<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-top:10px;">よく記録しているインポーター</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">'
-          + d.notes.topImporters.map(t => `<span style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text);">${esc(t.name)} <strong>${t.count}</strong></span>`).join('') + '</div>'
-        : '<div style="font-size:11px;color:var(--text-sub);margin-top:8px;">試飲メモタブで写真を取り込むと、インポーター別の集計が出ます</div>'}
+        ? '<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-top:10px;">'+t('an_notes_importers')+'</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">'
+          + d.notes.topImporters.map(x => `<span style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text);">${esc(x.name)} <strong>${x.count}</strong></span>`).join('') + '</div>'
+        : '<div style="font-size:11px;color:var(--text-sub);margin-top:8px;">'+t('an_notes_empty')+'</div>'}
     </div>`;
 
     box.innerHTML = html;
   } catch (e) {
-    box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">分析を読み込めませんでした（通信環境をご確認ください）</div>';
+    box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">' + t('an_error') + '</div>';
   }
 }
 
@@ -2633,8 +3621,7 @@ let adminCalYear  = new Date().getFullYear();
 let adminCalMonth = new Date().getMonth();
 
 function renderAdminCalendar() {
-  const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-  document.getElementById('adminMonthLabel').textContent = `${adminCalYear}年 ${months[adminCalMonth]}`;
+  document.getElementById('adminMonthLabel').textContent = i18nMonthYear(adminCalYear, adminCalMonth);
 
   const grid = document.getElementById('adminCalGrid');
   // clear old cells (keep dow headers = first 7 children)
@@ -2698,25 +3685,25 @@ function adminRsvpActionHtml(ev) {
     ? `<a class="ev-url-link" href="${ev.registrationUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${ev.registrationUrl.replace(/^https?:\/\//, '')}</a>`
     : '';
   if (st === 'opened') {
-    return `<div class="ev-confirm-strip">申込みは完了しましたか？
-      <button onclick="event.stopPropagation();adminRsvpDone('${ev.id}')" style="background:#2e7d32;color:#fff;">✅ 完了した</button>
-      <button onclick="event.stopPropagation();adminRsvpLater('${ev.id}')" style="background:#fff;border:1px solid var(--border);color:var(--text);">まだ</button>
+    return `<div class="ev-confirm-strip">${t('rsvp_confirm_q')}
+      <button onclick="event.stopPropagation();adminRsvpDone('${ev.id}')" style="background:#2e7d32;color:#fff;">${t('rsvp_done_btn')}</button>
+      <button onclick="event.stopPropagation();adminRsvpLater('${ev.id}')" style="background:#fff;border:1px solid var(--border);color:var(--text);">${t('rsvp_not_yet')}</button>
     </div>`;
   }
   if (st === 'done') {
     return `<div class="ev-action-row">
-      <span class="ev-rsvp-chip">✅ 申込済</span>
-      ${ev.registrationUrl ? `<a href="#" onclick="event.stopPropagation();event.preventDefault();rsvpAdminEvent('${ev.id}')" style="font-size:10.5px;color:var(--text-sub);">ページを再度開く</a>` : ''}
-      <a href="#" onclick="event.stopPropagation();event.preventDefault();adminRsvpClear('${ev.id}')" style="font-size:10.5px;color:var(--text-sub);">記録を解除</a>
+      <span class="ev-rsvp-chip">${t('rsvp_chip_done')}</span>
+      ${ev.registrationUrl ? `<a href="#" onclick="event.stopPropagation();event.preventDefault();rsvpAdminEvent('${ev.id}')" style="font-size:10.5px;color:var(--text-sub);">${t('rsvp_reopen')}</a>` : ''}
+      <a href="#" onclick="event.stopPropagation();event.preventDefault();adminRsvpClear('${ev.id}')" style="font-size:10.5px;color:var(--text-sub);">${t('rsvp_clear')}</a>
     </div>`;
   }
   if (ev.registrationUrl) {
     return `<div class="ev-action-row">
-      <button class="ev-rsvp-btn" onclick="event.stopPropagation();rsvpAdminEvent('${ev.id}')">申込みへ →</button>
+      <button class="ev-rsvp-btn" onclick="event.stopPropagation();rsvpAdminEvent('${ev.id}')">${t('rsvp_go_btn')}</button>
       ${urlLink}
     </div>`;
   }
-  return `<div class="ev-action-row"><span style="font-size:10.5px;color:var(--text-sub);">申込みリンク未登録（詳細内の連絡先へ）</span></div>`;
+  return `<div class="ev-action-row"><span style="font-size:10.5px;color:var(--text-sub);">${t('rsvp_no_link')}</span></div>`;
 }
 
 function renderAdminEventList() {
@@ -2729,10 +3716,9 @@ function renderAdminEventList() {
     .sort((a, b) => a.date - b.date);
 
   const ms = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const ds = ['日','月','火','水','木','金','土'];
 
   if (upcoming.length === 0) {
-    container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">今後の試飲会はありません</div>`;
+    container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">${t('no_upcoming')}</div>`;
     return;
   }
 
@@ -2741,7 +3727,7 @@ function renderAdminEventList() {
   upcoming.forEach(ev => {
     const monthKey = ev.date.getFullYear() + '-' + ev.date.getMonth();
     if (monthKey !== lastMonthKey) {
-      html += `<div class="cal-month-divider">${ev.date.getFullYear()}年${ev.date.getMonth() + 1}月</div>`;
+      html += `<div class="cal-month-divider">${LANG === 'ja' ? `${ev.date.getFullYear()}年${ev.date.getMonth() + 1}月` : `${i18nMonth(ev.date.getMonth())} ${ev.date.getFullYear()}`}</div>`;
       lastMonthKey = monthKey;
     }
     html += `
@@ -2749,11 +3735,11 @@ function renderAdminEventList() {
         <div class="ev-date-col">
           <div class="ev-date-m">${ms[ev.date.getMonth()]}</div>
           <div class="ev-date-d">${ev.date.getDate()}</div>
-          <div class="ev-date-w">${ds[ev.date.getDay()]}曜</div>
+          <div class="ev-date-w">${LANG === 'ja' ? i18nDow(ev.date.getDay()) + '曜' : i18nDow(ev.date.getDay())}</div>
         </div>
         <div class="ev-body">
           <div class="ev-name">${ev.name}</div>
-          <div class="ev-meta">⏰ ${ev.time} ・ 📍 ${ev.venue.split('（')[0]} <span class="ev-type-tag ${ev.type}">${ev.typeLabel}${ev.isOnline ? '・オンライン' : ''}</span></div>
+          <div class="ev-meta">⏰ ${ev.time} ・ 📍 ${ev.venue.split('（')[0]} <span class="ev-type-tag ${ev.type}">${ev.typeLabel}${ev.isOnline ? t('online_suffix') : ''}</span></div>
           ${adminRsvpActionHtml(ev)}
         </div>
       </div>`;
@@ -2778,12 +3764,11 @@ function openAdminEventDetail(id) {
   const ev = adminEvents.find(e => e.id === id);
   if (!ev) return;
   evDetailCurrentId = id;
-  const ds = ['日','月','火','水','木','金','土'];
-  const dateStr = `${ev.date.getFullYear()}年${ev.date.getMonth() + 1}月${ev.date.getDate()}日（${ds[ev.date.getDay()]}）`;
-  const costStr = ev.cost == null ? '' : (ev.cost === 0 ? '無料' : '¥' + Number(ev.cost).toLocaleString('ja-JP'));
+  const dateStr = i18nFullDate(ev.date);
+  const costStr = ev.cost == null ? '' : (ev.cost === 0 ? t('free') : '¥' + Number(ev.cost).toLocaleString('ja-JP'));
   document.getElementById('evDetailBody').innerHTML = `
     <div style="font-size:16px;font-weight:800;line-height:1.4;margin-bottom:4px;">${evEsc(ev.name)}</div>
-    <span class="ev-type-tag ${ev.type}">${ev.typeLabel}${ev.isOnline ? '・オンライン' : ''}</span>
+    <span class="ev-type-tag ${ev.type}">${ev.typeLabel}${ev.isOnline ? t('online_suffix') : ''}</span>
     <div style="margin-top:10px;font-size:13px;line-height:1.9;">
       <div>📅 ${dateStr}</div>
       <div>⏰ ${evEsc(ev.time)}</div>
@@ -2791,15 +3776,15 @@ function openAdminEventDetail(id) {
       ${costStr ? `<div>💴 ${costStr}</div>` : ''}
     </div>
     ${ev.description ? `
-      <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:1px;margin-top:12px;">詳細</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:1px;margin-top:12px;">${t('ev_detail_lbl')}</div>
       <div style="font-size:12.5px;line-height:1.7;white-space:pre-line;max-height:180px;overflow-y:auto;background:var(--bg);border-radius:10px;padding:10px 12px;margin-top:4px;">${evEsc(ev.description)}</div>` : ''}
     ${ev.registrationUrl ? `
-      <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:1px;margin-top:12px;">申込みページURL</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:1px;margin-top:12px;">${t('ev_url_lbl')}</div>
       <a href="${evEsc(ev.registrationUrl)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--burgundy);word-break:break-all;text-decoration:underline;line-height:1.6;">${evEsc(ev.registrationUrl)}</a>` : `
-      <div style="font-size:11.5px;color:var(--text-sub);margin-top:12px;">申込みリンク未登録（詳細内の連絡先へ）</div>`}
+      <div style="font-size:11.5px;color:var(--text-sub);margin-top:12px;">${t('rsvp_no_link')}</div>`}
     <div style="margin-top:12px;" id="evDetailActions">${adminRsvpActionHtml(ev)}</div>
     <div class="modal-actions" style="margin-top:14px;">
-      <button class="btn-ghost" onclick="document.getElementById('evDetailModal').classList.remove('open')">閉じる</button>
+      <button class="btn-ghost" onclick="document.getElementById('evDetailModal').classList.remove('open')">${t('close')}</button>
     </div>`;
   document.getElementById('evDetailModal').classList.add('open');
 }
@@ -2820,7 +3805,7 @@ function openAdminCalDay(dayNum) {
   ).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
   if (!dayEvents.length) return;
   if (dayEvents.length === 1) { openAdminEventDetail(dayEvents[0].id); return; }
-  document.getElementById('dayEventsTitleA').textContent = `${adminCalMonth + 1}月${dayNum}日の試飲会（${dayEvents.length}件）`;
+  document.getElementById('dayEventsTitleA').textContent = t('day_events_title').replace('{m}', adminCalMonth + 1).replace('{d}', dayNum).replace('{n}', dayEvents.length);
   document.getElementById('dayEventsListA').innerHTML = dayEvents.map(ev => {
     const done = rsvpStateOfId(ev.id) === 'done';
     return `
@@ -2828,7 +3813,7 @@ function openAdminCalDay(dayNum) {
          style="display:flex;gap:10px;align-items:center;padding:11px 4px;border-bottom:1px solid var(--border);cursor:pointer;">
       <div style="flex:1;min-width:0;">
         <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${evEsc(ev.name)}</div>
-        <div style="font-size:11px;color:var(--text-sub);">⏰ ${evEsc(ev.time)}${done ? ' <span class="ev-rsvp-chip">✅ 申込済</span>' : ''}</div>
+        <div style="font-size:11px;color:var(--text-sub);">⏰ ${evEsc(ev.time)}${done ? ' <span class="ev-rsvp-chip">' + t('rsvp_chip_done') + '</span>' : ''}</div>
       </div>
       <span style="color:var(--text-sub);">›</span>
     </div>`;
@@ -2848,14 +3833,14 @@ function rsvpAdminEvent(id) {
     renderAdminEventList();
     refreshEvDetailIfOpen(ev.id);
   } else {
-    showToast('申込みリンク未登録のイベントです。イベント詳細内の連絡先へご連絡ください');
+    showToast(t('toast_no_link_event'));
   }
 }
 function adminRsvpDone(id) {
   setRsvpStateA(id, 'done');
   renderAdminCalendar(); // リストも中で再描画される
   refreshEvDetailIfOpen(id);
-  showToast('✅ 申込み済みとして記録しました');
+  showToast(t('toast_rsvp_recorded'));
 }
 function adminRsvpLater(id) {
   setRsvpStateA(id, null); // 「まだ」なら状態を消す（次回開いた時にまた聞かない）
@@ -2863,7 +3848,7 @@ function adminRsvpLater(id) {
   refreshEvDetailIfOpen(id);
 }
 function adminRsvpClear(id) {
-  if (!confirm('申込み済みの記録を解除しますか？')) return;
+  if (!confirm(t('confirm_clear_rsvp'))) return;
   setRsvpStateA(id, null);
   renderAdminCalendar();
   refreshEvDetailIfOpen(id);
@@ -2878,10 +3863,8 @@ function openRsvpModal(id) {
   rsvpTargetId = id;
   const ev = adminEvents.find(e => e.id === id);
   if (!ev) return;
-  const ms = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const ds = ['日','月','火','水','木','金','土'];
   document.getElementById('rsvpEvName').textContent  = ev.name;
-  document.getElementById('rsvpEvDate').textContent  = `${ms[ev.date.getMonth()]} ${ev.date.getDate()}日(${ds[ev.date.getDay()]}) ${ev.time}`;
+  document.getElementById('rsvpEvDate').textContent  = `${i18nFullDate(ev.date)} ${ev.time}`;
   document.getElementById('rsvpEvVenue').textContent = ev.venue;
   document.getElementById('rsvpEvOrg').textContent   = ev.organizer;
   document.getElementById('rsvpModalBg').classList.add('open');
@@ -2898,8 +3881,8 @@ function submitRsvp() {
   const email   = document.getElementById('rsvp-email').value.trim();
   const count   = document.getElementById('rsvp-count').value;
   const note    = document.getElementById('rsvp-note').value.trim();
-  if (!name)  { showToast('氏名を入力してください'); return; }
-  if (!email) { showToast('メールアドレスを入力してください'); return; }
+  if (!name)  { showToast(t('toast_need_name')); return; }
+  if (!email) { showToast(t('toast_need_email')); return; }
 
   const ev = adminEvents.find(e => e.id === rsvpTargetId);
   if (!ev) return;
@@ -2916,37 +3899,35 @@ function submitRsvp() {
     ev.rsvpd = true;
 
     // 日付フォーマット
-    const ms = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-    const ds = ['日','月','火','水','木','金','土'];
-    const dateStr = `${ev.date.getFullYear()}年${ms[ev.date.getMonth()]}${ev.date.getDate()}日(${ds[ev.date.getDay()]}) ${ev.time}`;
+    const dateStr = `${i18nFullDate(ev.date)} ${ev.time}`;
 
     // ステップ表示
     document.getElementById('rsvpDoneName').textContent =
-      `${name} 様（${company}）· ${count}名`;
+      t('rsvp_done_name').replace('{name}', name).replace('{company}', company).replace('{count}', count);
     document.getElementById('rsvpImporterEmail').textContent =
-      ev.importerEmail || '（メールアドレス未登録）';
+      ev.importerEmail || t('no_email_registered');
 
     // メールプレビュー
-    const subject = `【試飲会 参加申込】${ev.name}`;
+    const subject = t('mail_subject').replace('{name}', ev.name);
     document.getElementById('rsvpMailSubject').textContent = subject;
     document.getElementById('rsvpMailTo').textContent = ev.importerEmail || '—';
     document.getElementById('rsvpMailBody').innerHTML =
-      `${ev.organizer} ご担当者様<br><br>` +
-      `ソムリン経由で以下の参加申込みがありました。<br><br>` +
+      `${t('mail_greeting').replace('{org}', ev.organizer)}<br><br>` +
+      `${t('mail_intro')}<br><br>` +
       `─────────────────<br>` +
-      `【イベント】${ev.name}<br>` +
-      `【日時】${dateStr}<br>` +
-      `【会場】${ev.venue}<br>` +
+      `${t('mail_event').replace('{name}', ev.name)}<br>` +
+      `${t('mail_date').replace('{date}', dateStr)}<br>` +
+      `${t('mail_venue').replace('{venue}', ev.venue)}<br>` +
       `─────────────────<br>` +
-      `【申込者情報】<br>` +
-      `氏名：${name}<br>` +
-      `店名：${company}${title ? `（${title}）` : ''}<br>` +
-      `メール：${email}<br>` +
-      `参加人数：${count}名` +
-      (note ? `<br>備考：${note}` : '') +
+      `${t('mail_applicant')}<br>` +
+      `${t('mail_name').replace('{name}', name)}<br>` +
+      `${t('mail_company').replace('{company}', company + (title ? `（${title}）` : ''))}<br>` +
+      `${t('mail_email').replace('{email}', email)}<br>` +
+      t('mail_count').replace('{count}', count) +
+      (note ? `<br>${t('mail_note').replace('{note}', note)}` : '') +
       `<br>─────────────────<br>` +
-      `<span style="color:var(--text-sub)">返信先: ${email}<br>` +
-      `このメールはソムリンシステムから自動送信されています。</span>`;
+      `<span style="color:var(--text-sub)">${t('mail_replyto').replace('{email}', email)}<br>` +
+      `${t('mail_auto')}</span>`;
   }, 1200);
 }
 
@@ -2955,25 +3936,25 @@ function closeRsvpAndRefresh() {
   document.getElementById('rsvpDone').style.display = 'none';
   closeRsvpModal();
   renderAdminEventList();
-  showToast('参加申込みが完了しました ✓');
+  showToast(t('toast_rsvp_done'));
 }
 
 function simulateSync() {
   const btn = event.target;
-  btn.textContent = '同期中...';
+  btn.textContent = t('sync_syncing');
   btn.disabled = true;
   setTimeout(() => {
-    btn.textContent = '同期する';
+    btn.textContent = t('sync_btn');
     btn.disabled = false;
-    document.getElementById('syncStatus').textContent = '最終同期: たった今';
-    showToast('Googleカレンダーと同期しました ✓');
+    document.getElementById('syncStatus').textContent = t('sync_last_now');
+    showToast(t('toast_synced'));
     renderAdminCalendar();
     // LINE連携中なら新着イベントをLINE通知
     if (lineState.connected && lineState.types.tasting) {
       setTimeout(() => {
         showLinePush(
-          '🍷 新着試飲会が追加されました',
-          'ナチュラルワイン試飲会 — 6月10日(水) 15:00〜'
+          t('push_new_event'),
+          t('push_demo_event')
         );
       }, 600);
     }
@@ -3044,12 +4025,12 @@ function simulateLineAdd() {
 
 // 連携解除（実APIも呼ぶ）
 function disconnectLine() {
-  if (!confirm('LINE連携を解除しますか？')) return;
+  if (!confirm(t('confirm_line_unlink'))) return;
   try { lineLinkUnlink(); } catch (e) {}
   lineState.connected = false;
   closeLineModal();
   renderLineCard();
-  showToast('LINE連携を解除しました');
+  showToast(t('toast_line_unlinked'));
 }
 
 // カードの状態をサーバーの実ステータス（/api/line-link/status）から反映する
@@ -3075,20 +4056,20 @@ function renderLineCard() {
   if (lineState.connected) {
     uncon.style.display = 'none';
     con.style.display   = 'block';
-    badge.textContent   = '✓ 連携中';
+    badge.textContent   = t('line_badge_linked');
     badge.classList.add('connected');
-    sub.textContent     = lineState.displayName ? `${lineState.displayName} のLINEに通知が届きます` : '新着試飲会の通知が届きます';
+    sub.textContent     = lineState.displayName ? t('line_sub_linked_name').replace('{name}', lineState.displayName) : t('line_sub_linked');
     updateLineTypesDisplay();
     updateLineTimingDisplay();
   } else {
     uncon.style.display = 'block';
     con.style.display   = 'none';
-    badge.textContent   = '未連携';
+    badge.textContent   = t('line_badge_unlinked');
     badge.classList.remove('connected');
-    sub.textContent     = '試飲会情報をLINEで受け取ります';
+    sub.textContent     = t('line_sub_unlinked');
     // ボタンをリセット
     const btn = document.querySelector('.line-connect-btn');
-    if (btn) { btn.textContent = 'LINE アカウントと連携する'; btn.disabled = false; }
+    if (btn) { btn.textContent = t('line_connect_btn'); btn.disabled = false; }
   }
 }
 
@@ -3114,8 +4095,8 @@ function toggleLineTiming(key, el) {
   updateLineTimingDisplay();
 }
 function updateLineTimingDisplay() {
-  const labels = { '1w':'1週間前', '3d':'3日前', '1d':'前日', '0d':'当日' };
-  const text = lineState.timing.map(k => labels[k]).join(' · ') || 'なし';
+  const labels = { '1w':t('timing_1w'), '3d':t('timing_3d'), '1d':t('timing_1d'), '0d':t('timing_0d') };
+  const text = lineState.timing.map(k => labels[k]).join(' · ') || t('timing_none');
   const el = document.getElementById('lineTimingLabel');
   if (el) el.textContent = text;
 }
@@ -3140,16 +4121,16 @@ function saveLineSettings() {
   updateLineTypes();
   updateLineTimingDisplay();
   closeLineModal();
-  showToast('LINE通知設定を保存しました ✓');
+  showToast(t('toast_line_settings_saved'));
 }
 
 // テスト送信
 function sendLineTest() {
   showLinePush(
-    '🍷 テスト通知です',
-    'ブルゴーニュ試飲会 — 5月22日(木) 14:00〜'
+    t('push_test_title'),
+    t('push_test_sub')
   );
-  showToast('LINEにテスト通知を送信しました 💬');
+  showToast(t('toast_line_test_sent'));
 }
 
 // LINE プッシュ通知トースト
@@ -3158,7 +4139,7 @@ function showLinePush(msg, sub) {
   const push = document.getElementById('linePush');
   document.getElementById('linePushMsg').textContent  = msg;
   document.getElementById('linePushSub').textContent  = sub;
-  document.getElementById('linePushTime').textContent = '今';
+  document.getElementById('linePushTime').textContent = t('now');
   push.classList.add('show');
   clearTimeout(linePushTimer);
   linePushTimer = setTimeout(() => push.classList.remove('show'), 4500);
@@ -3184,10 +4165,10 @@ function renderWineTable(cat, search) {
     (w.name.toLowerCase().includes(currentSearch) || w.producer.toLowerCase().includes(currentSearch) || w.region.toLowerCase().includes(currentSearch))
   );
 
-  document.getElementById('wineCount').textContent = `全 ${wineData.length} 種（表示: ${filtered.length}）`;
+  document.getElementById('wineCount').textContent = t('wine_count').replace('{n}', wineData.length).replace('{m}', filtered.length);
 
   const stockClass = s => s === 0 ? 'zero' : s <= 3 ? 'low' : 'ok';
-  const stockLabel = s => s === 0 ? '在庫なし' : `📦 ${s}本`;
+  const stockLabel = s => s === 0 ? t('stock_none') : t('stock_label').replace('{n}', s);
 
   const labelThumb = w => {
     if (w.hasLabel) {
@@ -3195,13 +4176,13 @@ function renderWineTable(cat, search) {
       const initials = w.name.split(' ').slice(0,2).map(s => s[0]).join('').toUpperCase().slice(0,3);
       const bgColors = { sparkling:'#f8f0ff', white:'#f0f8ff', red:'#fff0f0', rose:'#fff0f5', orange:'#fff8f0' };
       const fgColors = { sparkling:'#6B3FA0', white:'#1d4ed8', red:'#9B1B4B', rose:'#be185d', orange:'#92400e' };
-      return `<div class="wine-label-thumb scanned" onclick="openWineModal('${w.id}')" title="ラベル画像（スキャン済み）" style="background:linear-gradient(160deg,#fff8f4,#fceee8);">
+      return `<div class="wine-label-thumb scanned" onclick="openWineModal('${w.id}')" title="${t('thumb_scanned_title')}" style="background:linear-gradient(160deg,#fff8f4,#fceee8);">
         <span class="label-emoji">${catEmoji[w.cat]}</span>
         <span class="label-name">${w.name.split(' ').slice(0,3).join(' ')}</span>
         <span class="label-cam-badge">📷</span>
       </div>`;
     }
-    return `<div class="wine-label-thumb placeholder" onclick="openWineModal('${w.id}')" title="ラベル画像なし（タップして編集）">${catEmoji[w.cat]}</div>`;
+    return `<div class="wine-label-thumb placeholder" onclick="openWineModal('${w.id}')" title="${t('thumb_placeholder_title')}">${catEmoji[w.cat]}</div>`;
   };
 
   body.innerHTML = filtered.map(w => `
@@ -3217,15 +4198,15 @@ function renderWineTable(cat, search) {
       </div>
       <span class="stock-chip ${stockClass(w.stock ?? 0)}">${stockLabel(w.stock ?? 0)}</span>
       <div class="wine-row-actions">
-        <label class="toggle" title="${w.available ? '提供中 → 停止' : '停止中 → 再開'}">
+        <label class="toggle" title="${w.available ? t('toggle_on_title') : t('toggle_off_title')}">
           <input type="checkbox" ${w.available ? 'checked' : ''} onchange="toggleAvailability('${w.id}', this.checked)">
           <span class="toggle-slider"></span>
         </label>
-        <button class="edit-btn" onclick="openOshiCardModal('${w.id}')" title="推しカードを作る">📣</button>
-        <button class="edit-btn" onclick="openWineModal('${w.id}')" title="編集">✏️</button>
-        <button class="del-btn" onclick="deleteWine('${w.id}')" title="削除">🗑</button>
+        <button class="edit-btn" onclick="openOshiCardModal('${w.id}')" title="${t('oshi_btn_title')}">📣</button>
+        <button class="edit-btn" onclick="openWineModal('${w.id}')" title="${t('edit_title')}">✏️</button>
+        <button class="del-btn" onclick="deleteWine('${w.id}')" title="${t('delete_title')}">🗑</button>
       </div>
-    </div>`).join('') || `<div style="text-align:center;padding:32px;color:var(--text-sub);font-size:13px;">該当するワインがありません</div>`;
+    </div>`).join('') || `<div style="text-align:center;padding:32px;color:var(--text-sub);font-size:13px;">${t('no_matching_wines')}</div>`;
 }
 
 function filterCat(cat, btn) {
@@ -3242,21 +4223,21 @@ async function toggleAvailability(id, val) {
   const w = wineData.find(w => w.id === id);
   if (!w) return;
   w.available = val;
-  showToast(val ? `${w.name.split(' ')[0]}… を提供中に変更しました` : `売り切れに設定しました`);
+  showToast(val ? t('toast_avail_on').replace('{name}', w.name.split(' ')[0]) : t('toast_sold_out'));
   try { await rwFetch('restaurant_wines?id=eq.' + id, { method:'PATCH', body: JSON.stringify({ available: val }) }); } catch (e) {}
 }
 
 async function deleteWine(id) {
   const w = wineData.find(w => w.id === id);
   if (!w) return;
-  if (!confirm(`「${w.name}」を削除しますか？`)) return;
+  if (!confirm(t('confirm_delete_named').replace('{name}', w.name))) return;
   try {
     const r = await rwFetch('restaurant_wines?id=eq.' + id, { method:'DELETE' });
     if (!r.ok) throw 0;
-  } catch (e) { showToast('⚠️ 削除に失敗しました'); return; }
+  } catch (e) { showToast(t('toast_delete_fail')); return; }
   wineData = wineData.filter(w => w.id !== id);
   renderWineTable(currentCat, currentSearch);
-  showToast('削除しました');
+  showToast(t('toast_deleted'));
 }
 
 // ============================================================
@@ -3264,14 +4245,14 @@ async function deleteWine(id) {
 //   別ウィンドウにA4向けの印刷用ドキュメントを開く。編集画面のUIは含めない。
 // ============================================================
 function openPrintList() {
-  const storeName = (document.getElementById('stkStoreName').value || '').trim() || 'ワインリスト';
-  const catLabel = { sparkling: '泡・スパークリング', white: '白ワイン', red: '赤ワイン', rose: 'ロゼ', orange: 'オレンジワイン' };
+  const storeName = (document.getElementById('stkStoreName').value || '').trim() || t('print_winelist');
+  const catLabel = { sparkling: t('print_cat_sparkling'), white: t('print_cat_white'), red: t('print_cat_red'), rose: t('print_cat_rose'), orange: t('print_cat_orange') };
   const catOrder = ['sparkling', 'white', 'red', 'rose', 'orange'];
   const available = wineData.filter(w => w.available !== false);
-  if (!available.length) { showToast('印刷できるワインがありません（提供中のワインが0件です）'); return; }
+  if (!available.length) { showToast(t('toast_no_printable_wines')); return; }
 
   const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const dateStr = new Date().toLocaleDateString('ja-JP');
+  const dateStr = new Date().toLocaleDateString(LANG === 'ja' ? 'ja-JP' : 'en-US');
 
   const sections = catOrder.map(cat => {
     const rows = available.filter(w => w.cat === cat).sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ja'));
@@ -3285,13 +4266,13 @@ function openPrintList() {
     return `
       <h2>${catLabel[cat]}</h2>
       <table>
-        <thead><tr><th>ワイン</th><th>グラス</th><th>ボトル</th></tr></thead>
+        <thead><tr><th>${t('print_th_wine')}</th><th>${t('print_th_glass')}</th><th>${t('print_th_bottle')}</th></tr></thead>
         <tbody>${trs}</tbody>
       </table>`;
   }).join('');
 
-  const html = `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
-<title>${esc(storeName)} ワインリスト</title>
+  const html = `<!DOCTYPE html><html lang="${LANG}"><head><meta charset="UTF-8">
+<title>${t('print_doc_title').replace('{store}', esc(storeName))}</title>
 <style>
   body{font-family:'Hiragino Mincho ProN','Yu Mincho',serif;color:#2C1810;max-width:720px;margin:0 auto;padding:32px 24px;}
   h1{font-size:22px;text-align:center;margin-bottom:4px;letter-spacing:.05em;}
@@ -3309,14 +4290,14 @@ function openPrintList() {
   .pl-printbtn{display:block;margin:0 auto 24px;padding:10px 24px;font-size:14px;cursor:pointer;}
   @media print { body{padding:0;} .pl-printbtn{display:none;} }
 </style></head><body>
-<button class="pl-printbtn" onclick="window.print()">🖨 印刷する</button>
+<button class="pl-printbtn" onclick="window.print()">${t('print_btn')}</button>
 <h1>${esc(storeName)}</h1>
-<div class="pl-date">${dateStr} 現在</div>
+<div class="pl-date">${t('print_asof').replace('{date}', dateStr)}</div>
 ${sections}
 </body></html>`;
 
   const win = window.open('', '_blank');
-  if (!win) { showToast('ポップアップがブロックされました。ブラウザの設定をご確認ください'); return; }
+  if (!win) { showToast(t('toast_popup_blocked')); return; }
   win.document.write(html);
   win.document.close();
   if (window.sommLog) sommLog('print_list_open', { count: available.length });
@@ -3333,7 +4314,7 @@ function openWineModal(id, skipCamera) {
   const modal = document.getElementById('wineModal');
   if (id) {
     const w = wineData.find(w => w.id === id);
-    document.getElementById('wineModalTitle').textContent = 'ワインを編集';
+    document.getElementById('wineModalTitle').textContent = t('wine_modal_edit');
     document.getElementById('fCat').value = w.cat;
     document.getElementById('fName').value = w.name;
     document.getElementById('fProducer').value = w.producer;
@@ -3347,7 +4328,7 @@ function openWineModal(id, skipCamera) {
     pendingHasLabel = w.hasLabel || false;
     updateModalLabelPreview(w.hasLabel, w.cat, w.name);
   } else {
-    document.getElementById('wineModalTitle').textContent = 'ワインを追加';
+    document.getElementById('wineModalTitle').textContent = t('wine_modal_add');
     ['fName','fProducer','fVintage','fRegion','fGrapes','fPriceGlass','fPriceBottle'].forEach(fid => document.getElementById(fid).value = '');
     document.getElementById('fCat').value = 'red';
     document.getElementById('fStock').value = '';
@@ -3374,9 +4355,9 @@ const bottleEmojis = ['🍷','🥂','🤍','🍾','🍊','🌸'];
 
 function openCameraCapture() {
   capturedBottles = 0;
-  document.getElementById('camCounter').textContent = '0本撮影済み';
+  document.getElementById('camCounter').textContent = t('cam_count_zero');
   document.getElementById('camAnalyzeBtn').disabled = true;
-  document.getElementById('camThumbStrip').innerHTML = '<div class="cam-thumb-empty" id="camThumbEmpty">撮影したボトルがここに表示されます</div>';
+  document.getElementById('camThumbStrip').innerHTML = '<div class="cam-thumb-empty" id="camThumbEmpty">' + t('cam_thumb_empty') + '</div>';
   document.getElementById('camOverlay').classList.add('open');
 }
 
@@ -3398,7 +4379,7 @@ function captureBottle() {
   strip.appendChild(thumb);
   strip.scrollLeft = strip.scrollWidth;
 
-  document.getElementById('camCounter').textContent = `${capturedBottles}本撮影済み`;
+  document.getElementById('camCounter').textContent = t('cam_count').replace('{n}', capturedBottles);
   document.getElementById('camAnalyzeBtn').disabled = false;
   // シャッターの触感演出
   const shutter = document.querySelector('.cam-shutter');
@@ -3409,7 +4390,7 @@ function captureBottle() {
 function analyzeLabels() {
   closeCameraCapture();
   const overlay = document.getElementById('analyzingOverlay');
-  document.getElementById('analyzingCount').textContent = `${capturedBottles}本分`;
+  document.getElementById('analyzingCount').textContent = t('analyzing_count').replace('{n}', capturedBottles);
   overlay.classList.add('open');
   setTimeout(() => {
     overlay.classList.remove('open');
@@ -3424,18 +4405,18 @@ function analyzeLabels() {
 // 解析結果の候補データ（ラベル読み取りを想定）
 const wineSearchCandidates = [
   [
-    { cat:'red', emoji:'🍷', name:'Château Pichon Baron', producer:'Château Pichon Baron', vintage:'2019', region:'Pauillac, Bordeaux', grapes:'Cabernet Sauvignon 65%, Merlot 35%', priceGlass:0, priceBottle:0, score:'98%', note:'ラベルを高精度で読み取りました' },
-    { cat:'red', emoji:'🍷', name:'Château Pichon Baron', producer:'Château Pichon Baron', vintage:'2018', region:'Pauillac, Bordeaux', grapes:'Cabernet Sauvignon 65%, Merlot 35%', priceGlass:0, priceBottle:0, score:'94%', note:'ヴィンテージが異なる可能性があります' },
-    { cat:'red', emoji:'🍷', name:'Château Pichon Lalande', producer:'Château Pichon Lalande', vintage:'2019', region:'Pauillac, Bordeaux', grapes:'Cabernet Sauvignon 45%, Merlot 35%', priceGlass:0, priceBottle:0, score:'72%', note:'類似ラベルが検出されました' },
+    { cat:'red', emoji:'🍷', name:'Château Pichon Baron', producer:'Château Pichon Baron', vintage:'2019', region:'Pauillac, Bordeaux', grapes:'Cabernet Sauvignon 65%, Merlot 35%', priceGlass:0, priceBottle:0, score:'98%', note:'cand_note_high' },
+    { cat:'red', emoji:'🍷', name:'Château Pichon Baron', producer:'Château Pichon Baron', vintage:'2018', region:'Pauillac, Bordeaux', grapes:'Cabernet Sauvignon 65%, Merlot 35%', priceGlass:0, priceBottle:0, score:'94%', note:'cand_note_vintage' },
+    { cat:'red', emoji:'🍷', name:'Château Pichon Lalande', producer:'Château Pichon Lalande', vintage:'2019', region:'Pauillac, Bordeaux', grapes:'Cabernet Sauvignon 45%, Merlot 35%', priceGlass:0, priceBottle:0, score:'72%', note:'cand_note_similar' },
   ],
   [
-    { cat:'white', emoji:'🤍', name:'Chablis 1er Cru "Fourchaume"', producer:'William Fèvre', vintage:'2022', region:'Chablis, Bourgogne', grapes:'Chardonnay', priceGlass:0, priceBottle:0, score:'96%', note:'産地・生産者を確認しました' },
-    { cat:'white', emoji:'🤍', name:'Chablis Grand Cru "Valmur"', producer:'Domaine Raveneau', vintage:'2021', region:'Chablis, Bourgogne', grapes:'Chardonnay', priceGlass:0, priceBottle:0, score:'81%', note:'グランクリュの可能性があります' },
-    { cat:'sparkling', emoji:'🥂', name:'Blanc de Blancs Brut Nature', producer:'Jacques Selosse', vintage:'NV', region:'Champagne', grapes:'Chardonnay 100%', priceGlass:0, priceBottle:0, score:'58%', note:'泡ワインとして類似検出' },
+    { cat:'white', emoji:'🤍', name:'Chablis 1er Cru "Fourchaume"', producer:'William Fèvre', vintage:'2022', region:'Chablis, Bourgogne', grapes:'Chardonnay', priceGlass:0, priceBottle:0, score:'96%', note:'cand_note_producer' },
+    { cat:'white', emoji:'🤍', name:'Chablis Grand Cru "Valmur"', producer:'Domaine Raveneau', vintage:'2021', region:'Chablis, Bourgogne', grapes:'Chardonnay', priceGlass:0, priceBottle:0, score:'81%', note:'cand_note_grandcru' },
+    { cat:'sparkling', emoji:'🥂', name:'Blanc de Blancs Brut Nature', producer:'Jacques Selosse', vintage:'NV', region:'Champagne', grapes:'Chardonnay 100%', priceGlass:0, priceBottle:0, score:'58%', note:'cand_note_sparkling' },
   ],
   [
-    { cat:'orange', emoji:'🍊', name:'Ramato Pinot Grigio', producer:'Vodopivec', vintage:'2021', region:'Carso, Friuli', grapes:'Pinot Grigio', priceGlass:0, priceBottle:0, score:'97%', note:'ラベルを高精度で読み取りました' },
-    { cat:'orange', emoji:'🍊', name:'Skin Contact Gravner', producer:'Joško Gravner', vintage:'2015', region:'Oslavia, Friuli', grapes:'Ribolla Gialla', priceGlass:0, priceBottle:0, score:'68%', note:'オレンジワインとして類似検出' },
+    { cat:'orange', emoji:'🍊', name:'Ramato Pinot Grigio', producer:'Vodopivec', vintage:'2021', region:'Carso, Friuli', grapes:'Pinot Grigio', priceGlass:0, priceBottle:0, score:'97%', note:'cand_note_high' },
+    { cat:'orange', emoji:'🍊', name:'Skin Contact Gravner', producer:'Joško Gravner', vintage:'2015', region:'Oslavia, Friuli', grapes:'Ribolla Gialla', priceGlass:0, priceBottle:0, score:'68%', note:'cand_note_orange' },
   ]
 ];
 
@@ -3447,7 +4428,7 @@ function showWineSearchResults(bottleCount) {
   const candidates = wineSearchCandidates[Math.max(0, candidateIdx % wineSearchCandidates.length)];
   currentCandidateSet = candidates;
 
-  document.getElementById('wrBadge').textContent = `📦 ${bottleCount}本 解析完了`;
+  document.getElementById('wrBadge').textContent = t('wr_badge').replace('{n}', bottleCount);
 
   const list = document.getElementById('wineResultsList');
   list.innerHTML = candidates.map((c, i) => `
@@ -3457,7 +4438,7 @@ function showWineSearchResults(bottleCount) {
         <div class="wine-result-name">${c.name}</div>
         <div class="wine-result-meta">${c.producer} &nbsp;·&nbsp; ${c.vintage} &nbsp;·&nbsp; ${c.region}</div>
         <div class="wine-result-meta" style="margin-top:2px;color:#9a7a55;">${c.grapes}</div>
-        <div style="font-size:11px;color:var(--text-sub);margin-top:4px;">💬 ${c.note}</div>
+        <div style="font-size:11px;color:var(--text-sub);margin-top:4px;">💬 ${t(c.note)}</div>
       </div>
       <span class="wine-result-score">✓ ${c.score}</span>
     </div>`).join('');
@@ -3480,7 +4461,7 @@ function selectWineCandidate(i) {
   // フォームに候補データをセット（hasLabel=true でラベル画像あり扱いにする）
   pendingHasLabel = true;
   editingWineId = null;
-  document.getElementById('wineModalTitle').textContent = 'ワインを追加（確認・修正）';
+  document.getElementById('wineModalTitle').textContent = t('wine_modal_confirm');
   document.getElementById('fCat').value      = c.cat;
   document.getElementById('fName').value     = c.name;
   document.getElementById('fProducer').value = c.producer;
@@ -3494,7 +4475,7 @@ function selectWineCandidate(i) {
   // モーダル内のラベルプレビューを更新
   updateModalLabelPreview(true, c.cat, c.name);
   document.getElementById('wineModal').classList.add('open');
-  showToast(`「${c.name}」の情報を自動入力しました ✓`);
+  showToast(t('toast_autofilled').replace('{name}', c.name));
 }
 
 // ============================================================
@@ -3507,7 +4488,7 @@ let _listDataUrl = null;
 function openListCapture() {
   _listDataUrl = null;
   document.getElementById('listAnalyzeBtn').disabled = true;
-  document.getElementById('listCaptureTip').textContent = '📄 メニュー・手書きリスト・印刷リスト、どれでも読み込めます';
+  document.getElementById('listCaptureTip').textContent = t('lc_tip');
   document.getElementById('listCamOverlay').classList.add('open');
 }
 
@@ -3535,7 +4516,7 @@ function captureList() {
         _listDataUrl = c.toDataURL('image/jpeg', 0.8);
         URL.revokeObjectURL(img.src);
         document.getElementById('listAnalyzeBtn').disabled = false;
-        document.getElementById('listCaptureTip').textContent = '✅ リストを撮影しました。「読み込む」を押してください';
+        document.getElementById('listCaptureTip').textContent = t('lc_captured');
       };
       img.src = URL.createObjectURL(f);
     });
@@ -3550,7 +4531,7 @@ async function analyzeList() {
   if (!_listDataUrl) return;
   closeListCapture();
   const overlay = document.getElementById('analyzingOverlay');
-  document.getElementById('analyzingCount').textContent = 'AIがワインリストを解析中…（10秒ほど）';
+  document.getElementById('analyzingCount').textContent = t('lc_analyzing');
   overlay.classList.add('open');
   try {
     const uid = await rwUid();
@@ -3559,11 +4540,11 @@ async function analyzeList() {
       body: JSON.stringify({ image:_listDataUrl, userId:'store-' + (uid || 'unknown'), locale:'ja-JP' })
     });
     overlay.classList.remove('open');
-    if (r.status === 429) { showToast('⚠️ 回数上限です。少し待ってからお試しください'); return; }
+    if (r.status === 429) { showToast(t('toast_rate_limit')); return; }
     if (!r.ok) throw 0;
     const res = await r.json();
     const items = (res.items || []).filter(it => it.input && (it.input.name || it.input.rawText));
-    if (!items.length) { showToast('銘柄を読み取れませんでした。近づいて撮り直してください'); return; }
+    if (!items.length) { showToast(t('toast_label_read_fail')); return; }
     const rows = items.map(it => {
       const inp = it.input, w = it.match && it.match.wine;
       const cat = RW_CAT[inp.color] || 'red';
@@ -3583,16 +4564,16 @@ async function analyzeList() {
     showBulkResults(rows);
   } catch (e) {
     overlay.classList.remove('open');
-    showToast('⚠️ 解析に失敗しました（通信環境をご確認ください）');
+    showToast(t('toast_analyze_fail'));
   }
 }
 
 function showBulkResults(rows, opts) {
   const count = rows.length;
   bulkChecked = rows.map((_, i) => i); // 全チェック済み
-  document.getElementById('brTitle').textContent = (opts && opts.title) || `📖 ${count}本のワインが見つかりました`;
-  document.getElementById('brSub').textContent   = (opts && opts.sub) || '追加するワインを選択してください（すべてチェック済み）';
-  document.getElementById('brAddBtn').textContent = `✓ ${count}本を追加する`;
+  document.getElementById('brTitle').textContent = (opts && opts.title) || t('bulk_found').replace('{n}', count);
+  document.getElementById('brSub').textContent   = (opts && opts.sub) || t('bulk_sub');
+  document.getElementById('brAddBtn').textContent = t('bulk_add_n').replace('{n}', count);
   document.getElementById('bulkWineList').dataset.count = count;
 
   renderBulkList(rows);
@@ -3610,7 +4591,7 @@ function renderBulkList(wines) {
       <div class="bulk-wine-info">
         <div class="bulk-wine-name">${w.name} <span style="font-weight:400;color:var(--text-sub);">${w.vintage}</span></div>
         <div class="bulk-wine-meta">${w.producer} · ${w.region} · ${w.grapes}</div>
-        <div style="display:inline-block;margin-top:3px;font-size:10px;font-weight:700;color:#15803d;background:#dcfce7;padding:1px 7px;border-radius:6px;">読取精度 ${w.confidence}%</div>
+        <div style="display:inline-block;margin-top:3px;font-size:10px;font-weight:700;color:#15803d;background:#dcfce7;padding:1px 7px;border-radius:6px;">${t('bulk_accuracy').replace('{n}', w.confidence)}</div>
       </div>
     </div>`).join('');
 }
@@ -3628,7 +4609,7 @@ function toggleBulkCheck(i, row) {
     check.textContent = '✓';
   }
   const n = bulkChecked.length;
-  document.getElementById('brAddBtn').textContent = n > 0 ? `✓ ${n}本を追加する` : '選択してください';
+  document.getElementById('brAddBtn').textContent = n > 0 ? t('bulk_add_n').replace('{n}', n) : t('bulk_select');
   document.getElementById('brAddBtn').disabled = n === 0;
 }
 
@@ -3642,14 +4623,14 @@ function toggleAllBulk() {
     check.textContent = !allChecked ? '✓' : '';
   });
   const n = bulkChecked.length;
-  document.getElementById('brAddBtn').textContent = n > 0 ? `✓ ${n}本を追加する` : '選択してください';
+  document.getElementById('brAddBtn').textContent = n > 0 ? t('bulk_add_n').replace('{n}', n) : t('bulk_select');
 }
 
 async function confirmBulkAdd() {
   const added = bulkChecked.map(i => window._bulkWines[i]);
   if (!added.length) return;
   const uid = await rwUid();
-  if (!uid) { alert('ログイン情報を確認できません。再ログインしてください。'); return; }
+  if (!uid) { alert(t('alert_relogin')); return; }
   try {
     const payload = added.map(w => uiToDb({
       cat: w.cat, name: w.name, producer: w.producer,
@@ -3661,10 +4642,10 @@ async function confirmBulkAdd() {
       { method:'POST', headers:{ Prefer:'return=representation' }, body: JSON.stringify(payload) });
     if (!r.ok) throw 0;
     (await r.json()).forEach(row => wineData.push(dbToUi(row)));
-  } catch (e) { showToast('⚠️ 登録に失敗しました（通信環境をご確認ください）'); return; }
+  } catch (e) { showToast(t('toast_register_fail')); return; }
   closeBulkResults();
   renderWineTable(currentCat, currentSearch);
-  showToast(`${added.length}本のワインを追加しました ✓`);
+  showToast(t('toast_added_n').replace('{n}', added.length));
 }
 
 function closeBulkResultsBg(e) {
@@ -3739,8 +4720,8 @@ async function openOshiReviewerCardModal(noteId) {
   // レビュアー情報（表示名・信頼度ティア・IG）を1回だけ取得
   // フォールバック名は取得成否に関わらず必ず埋める（未ログイン相当でも空表示にしない）
   oshiCardReviewer = {
-    name: (document.getElementById('stkStoreName').value || '').trim() || 'ソムリンユーザー',
-    tierLabel: tnNotes.length >= 20 ? '経験豊富なレビュアー' : '一般レビュアー',
+    name: (document.getElementById('stkStoreName').value || '').trim() || t('somm_user'),
+    tierLabel: tnNotes.length >= 20 ? t('tier_experienced') : t('tier_regular'),
     tierIcon: tnNotes.length >= 20 ? '🍷' : '🙂',
     ig: null,
   };
@@ -3755,9 +4736,9 @@ async function openOshiReviewerCardModal(noteId) {
       const prof = pr.ok ? (await pr.json())[0] : null;
       // ティア判定はバックエンドのreviewerTier(identify.js L2867)と同じ考え方。
       // rater_profilesが引けない場合は投稿数(tnNotes.length)からのフォールバックのまま維持。
-      if (rater && rater.kind === 'founder') { oshiCardReviewer.tierLabel = '創業者'; oshiCardReviewer.tierIcon = '👑'; }
-      else if (rater && rater.kind === 'critic') { oshiCardReviewer.tierLabel = '評価誌・批評家'; oshiCardReviewer.tierIcon = '📰'; }
-      else if (rater && rater.verified) { oshiCardReviewer.tierLabel = '認定ソムリエ'; oshiCardReviewer.tierIcon = '🎖️'; }
+      if (rater && rater.kind === 'founder') { oshiCardReviewer.tierLabel = t('tier_founder'); oshiCardReviewer.tierIcon = '👑'; }
+      else if (rater && rater.kind === 'critic') { oshiCardReviewer.tierLabel = t('tier_critic'); oshiCardReviewer.tierIcon = '📰'; }
+      else if (rater && rater.verified) { oshiCardReviewer.tierLabel = t('tier_sommelier'); oshiCardReviewer.tierIcon = '🎖️'; }
       oshiCardReviewer.name = (rater && rater.display_name) || (prof && prof.display_name) || oshiCardReviewer.name;
       oshiCardReviewer.ig = (prof && prof.instagram) || null;
     }
@@ -3774,13 +4755,13 @@ function closeOshiCardModalBg(e) {
 function buildOshiStoreCaption(w, comment, priceMode) {
   const L = [];
   L.push(`🍷 ${w.name}${w.vintage ? ' ' + w.vintage : ''}`);
-  if (comment) L.push(`「${comment}」`);
+  if (comment) L.push(t('quote_open') + comment + t('quote_close'));
   const prices = [];
-  if ((priceMode === 'glass' || priceMode === 'both') && w.priceGlass) prices.push(`グラス¥${w.priceGlass.toLocaleString()}`);
-  if ((priceMode === 'bottle' || priceMode === 'both') && w.priceBottle) prices.push(`ボトル¥${w.priceBottle.toLocaleString()}`);
+  if ((priceMode === 'glass' || priceMode === 'both') && w.priceGlass) prices.push(t('caption_glass').replace('{n}', w.priceGlass.toLocaleString()));
+  if ((priceMode === 'bottle' || priceMode === 'both') && w.priceBottle) prices.push(t('caption_bottle').replace('{n}', w.priceBottle.toLocaleString()));
   if (prices.length) L.push(prices.join('・'));
   L.push('');
-  L.push('#Sommelin #ソムリン #ワインのある時間');
+  L.push(t('caption_hashtags_store'));
   L.push(`📱 ${OSHI_CARD_APP_URL}`);
   return L.join('\n');
 }
@@ -3788,10 +4769,10 @@ function buildOshiStoreCaption(w, comment, priceMode) {
 function buildOshiReviewerCaption(n, comment, showRating) {
   const L = [];
   L.push(`🍷 ${n.name}${n.vintage ? ' ' + n.vintage : ''}`);
-  if (comment) L.push(`「${comment}」`);
-  if (showRating && n.rating) L.push('私の評価 ' + '★'.repeat(Math.round(n.rating)) + '☆'.repeat(5 - Math.round(n.rating)));
+  if (comment) L.push(t('quote_open') + comment + t('quote_close'));
+  if (showRating && n.rating) L.push(t('caption_my_rating') + '★'.repeat(Math.round(n.rating)) + '☆'.repeat(5 - Math.round(n.rating)));
   L.push('');
-  L.push('#Sommelin #ソムリン #試飲メモ #ワイン好きと繋がりたい');
+  L.push(t('caption_hashtags_reviewer'));
   L.push(`📱 ${OSHI_CARD_APP_URL}`);
   return L.join('\n');
 }
@@ -3805,7 +4786,7 @@ async function generateOshiStoreCard() {
   const w = wineData.find(x => x.id === oshiCardWineId);
   if (!w) return;
   const storeName = (document.getElementById('stkStoreName').value || '').trim();
-  if (!storeName) { showToast('先に「在庫公開」設定で店舗名を入力してください'); return; }
+  if (!storeName) { showToast(t('toast_need_store_name_first')); return; }
   const comment = (document.getElementById('oshiCardComment').value || '').trim().slice(0, 120);
   const priceMode = document.getElementById('oshiCardPriceMode').value;
   try {
@@ -3823,7 +4804,7 @@ async function generateOshiStoreCard() {
     document.getElementById('oshiCardFormWrap').style.display = 'none';
     document.getElementById('oshiCardPreviewWrap').style.display = 'block';
     if (window.sommLog) sommLog('store_card_created', { hasComment: !!comment, priceMode });
-  } catch (e) { showToast('カード生成に失敗しました'); }
+  } catch (e) { showToast(t('toast_card_fail')); }
 }
 
 async function generateOshiReviewerCard() {
@@ -3847,7 +4828,7 @@ async function generateOshiReviewerCard() {
     document.getElementById('oshiCardFormWrap').style.display = 'none';
     document.getElementById('oshiCardPreviewWrap').style.display = 'block';
     if (window.sommLog) sommLog('reviewer_card_created', { hasComment: !!comment, showRating, tier: rv.tierLabel });
-  } catch (e) { showToast('カード生成に失敗しました'); }
+  } catch (e) { showToast(t('toast_card_fail')); }
 }
 
 async function shareOshiStoreCard() {
@@ -3859,7 +4840,7 @@ async function shareOshiStoreCard() {
       return;
     }
   } catch (e) { if (e && e.name === 'AbortError') return; }
-  showToast('この端末は画像共有に対応していません。画像を長押しで保存してください');
+  showToast(t('toast_share_unsupported'));
 }
 
 async function saveWine() {
@@ -3877,10 +4858,10 @@ async function saveWine() {
     available: document.getElementById('fAvailable').value === 'true',
     hasLabel: pendingHasLabel,
   };
-  if (!data.name) { alert('ワイン名を入力してください'); return; }
+  if (!data.name) { alert(t('toast_need_wine_name')); return; }
 
   const uid = await rwUid();
-  if (!uid) { alert('ログイン情報を確認できません。再ログインしてください。'); return; }
+  if (!uid) { alert(t('alert_login_again')); return; }
 
   try {
     if (editingWineId) {
@@ -3890,16 +4871,16 @@ async function saveWine() {
         { method:'PATCH', body: JSON.stringify(uiToDb({ ...w, ...data }, uid)) });
       if (!r.ok) throw 0;
       Object.assign(w, data);
-      showToast('更新しました ✓');
+      showToast(t('toast_updated'));
     } else {
       const r = await rwFetch('restaurant_wines',
         { method:'POST', headers:{ Prefer:'return=representation' }, body: JSON.stringify(uiToDb(data, uid)) });
       if (!r.ok) throw 0;
       const rows = await r.json();
       wineData.push(dbToUi(rows[0]));
-      showToast('追加しました ✓');
+      showToast(t('toast_added'));
     }
-  } catch (e) { showToast('⚠️ 保存に失敗しました（通信環境をご確認ください）'); return; }
+  } catch (e) { showToast(t('toast_save_fail')); return; }
   pendingHasLabel = false;
   closeWineModal();
   renderWineTable(currentCat, currentSearch);
@@ -3929,16 +4910,16 @@ function renderQr() {
 function copyUrl() {
   const url = restaurant.qrUrl;
   if (navigator.clipboard) {
-    navigator.clipboard.writeText(url).then(() => showToast('URLをコピーしました ✓'));
+    navigator.clipboard.writeText(url).then(() => showToast(t('toast_url_copied')));
   } else {
-    showToast('URLをコピーしました ✓');
+    showToast(t('toast_url_copied'));
   }
 }
 
 async function togglePrivacy(isPublic) {
   restaurant.isPrivate = !isPublic;
   document.getElementById('privacyIcon').textContent = isPublic ? '🔓' : '🔒';
-  document.getElementById('privacyStatus').textContent = isPublic ? '公開中' : '非公開';
+  document.getElementById('privacyStatus').textContent = isPublic ? t('privacy_public') : t('privacy_private');
   document.getElementById('privacyWarning').classList.toggle('show', !isPublic);
   const uid = await rwUid();
   if (uid) {
@@ -3950,7 +4931,7 @@ async function togglePrivacy(isPublic) {
       });
     } catch (e) {}
   }
-  showToast(isPublic ? 'ワインリストを公開しました 🔓' : 'ワインリストを非公開にしました 🔒');
+  showToast(isPublic ? t('toast_list_public') : t('toast_list_private'));
 }
 
 // ============================================================
@@ -3972,12 +4953,12 @@ function showToast(msg) {
 async function shareAdminInvite() {
   let uid = null;
   try { const s = JSON.parse(localStorage.getItem('sommelin_session') || 'null'); uid = s && s.user && s.user.id; } catch (e) {}
-  if (!uid) { showToast('ログイン情報を確認できませんでした'); return; }
+  if (!uid) { showToast(t('toast_login_unknown')); return; }
   const link = 'https://sommelintp.github.io/sommelin-app/login.html?ref=' + encodeURIComponent(uid);
-  const text = 'ソムリンで一緒にワインを楽しもう🍷 ' + link;
+  const text = t('invite_text') + link;
   try {
     if (navigator.share) { await navigator.share({ text, url: link }); }
-    else { await navigator.clipboard.writeText(link); showToast('📤 招待リンクをコピーしました！'); }
+    else { await navigator.clipboard.writeText(link); showToast(t('toast_invite_copied')); }
   } catch (e) { /* シェアをキャンセルした場合等は何もしない */ }
 }
 
@@ -3994,9 +4975,9 @@ setTimeout(renderLineQr, 300);
 //    公開＝restaurant_settings（店舗名/住所/is_public）→ wine_search.html の「近くのお店」に実表示。
 // ============================================================
 function stockPriceLabel(w) {
-  if (w.priceBottle && w.priceGlass) return { price: w.priceBottle, type: 'ボトル/グラス' };
-  if (w.priceGlass) return { price: w.priceGlass, type: 'グラス' };
-  return { price: w.priceBottle || 0, type: 'ボトル' };
+  if (w.priceBottle && w.priceGlass) return { price: w.priceBottle, type: t('type_bottle_glass') };
+  if (w.priceGlass) return { price: w.priceGlass, type: t('type_glass') };
+  return { price: w.priceBottle || 0, type: t('type_bottle') };
 }
 
 function renderStock() {
@@ -4011,7 +4992,7 @@ function renderStock() {
   if (items.length === 0) {
     list.innerHTML = `<div style="text-align:center;padding:32px 16px;color:var(--text-sub);">
       <div style="font-size:36px;margin-bottom:12px;">📦</div>
-      まだ在庫が登録されていません。<br>上のフォームから追加するか、「ワインリスト」タブの写真一括インポートをご利用ください。</div>`;
+      ${t('stk_empty')}</div>`;
   } else {
     list.innerHTML = items.map(it => {
       const pl = stockPriceLabel(it);
@@ -4020,13 +5001,13 @@ function renderStock() {
         <div class="inv-info">
           <div class="inv-name">${it.name}</div>
           <div class="inv-meta">${it.vintage || ''}　${it.region || ''}</div>
-          <div class="inv-price">¥${(pl.price||0).toLocaleString()}　<span style="font-size:11px;font-weight:500;color:var(--text-sub);">${pl.type} ${it.stock || 0}本</span></div>
+          <div class="inv-price">¥${(pl.price||0).toLocaleString()}　<span style="font-size:11px;font-weight:500;color:var(--text-sub);">${pl.type} · ${t('n_bottles').replace('{n}', it.stock || 0)}</span></div>
         </div>
         <div class="inv-right">
           <button class="inv-toggle ${it.available?'in-stock':'no-stock'}" onclick="toggleStock('${it.id}')">
-            ${it.available ? '在庫あり' : '在庫なし'}
+            ${it.available ? t('stk_in_btn') : t('stk_out_btn')}
           </button>
-          <button class="inv-del" onclick="deleteStock('${it.id}')" title="削除">✕</button>
+          <button class="inv-del" onclick="deleteStock('${it.id}')" title="${t('delete_title')}">✕</button>
         </div>
       </div>`;
     }).join('');
@@ -4042,9 +5023,9 @@ async function addStockItem() {
   const region  = document.getElementById('stkRegion').value.trim();
   const qty     = parseInt(document.getElementById('stkQty').value) || 1;
   const type    = document.getElementById('stkType').value;
-  if (!name) { showToast('ワイン名を入力してください'); return; }
+  if (!name) { showToast(t('toast_need_wine_name')); return; }
   const uid = await rwUid();
-  if (!uid) { alert('ログイン情報を確認できません。再ログインしてください。'); return; }
+  if (!uid) { alert(t('alert_login_again')); return; }
 
   const w = {
     cat: null, name, producer: '', vintage, region, grapes: '',
@@ -4057,12 +5038,12 @@ async function addStockItem() {
       { method:'POST', headers:{ Prefer:'return=representation' }, body: JSON.stringify(uiToDb(w, uid)) });
     if (!r.ok) throw 0;
     wineData.push(dbToUi((await r.json())[0]));
-  } catch (e) { showToast('⚠️ 保存に失敗しました（通信環境をご確認ください）'); return; }
+  } catch (e) { showToast(t('toast_save_fail')); return; }
 
   ['stkName','stkVintage','stkPrice','stkRegion'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('stkQty').value = '1';
   renderStock();
-  showToast('✓ 在庫に追加しました（ワインリストにも反映されます）');
+  showToast(t('toast_stock_added'));
 }
 
 async function toggleStock(id) {
@@ -4073,20 +5054,20 @@ async function toggleStock(id) {
   else if (!it.stock) it.stock = 1;
   renderStock();
   try { await rwFetch('restaurant_wines?id=eq.' + id, { method:'PATCH', body: JSON.stringify({ available: it.available, stock: it.stock }) }); } catch (e) {}
-  showToast(it.available ? '✓ 在庫ありに変更しました' : '在庫なしに変更しました');
+  showToast(it.available ? t('toast_stock_on') : t('toast_stock_off'));
 }
 
 async function deleteStock(id) {
   const it = wineData.find(i => i.id === id);
   if (!it) return;
-  if (!confirm(`「${it.name}」を削除しますか？`)) return;
+  if (!confirm(t('confirm_delete_named').replace('{name}', it.name))) return;
   try {
     const r = await rwFetch('restaurant_wines?id=eq.' + id, { method:'DELETE' });
     if (!r.ok) throw 0;
-  } catch (e) { showToast('⚠️ 削除に失敗しました'); return; }
+  } catch (e) { showToast(t('toast_delete_fail')); return; }
   wineData = wineData.filter(i => i.id !== id);
   renderStock();
-  showToast('削除しました');
+  showToast(t('toast_deleted'));
 }
 
 // ── 住所サジェスト（backend /api/places/suggest = Google Places。会場サジェストと同じ部品） ──
@@ -4101,7 +5082,7 @@ function storeAddrSuggest() {
   const box = document.getElementById('storeAddrSug');
   if (q.length < 2) { box.style.display = 'none'; return; }
   if (!storeAddrSession) newStoreAddrSession();
-  box.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:var(--text-sub);">検索中…</div>';
+  box.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:var(--text-sub);">' + t('searching') + '</div>';
   box.style.display = 'block';
   const myQ = q;
   storeAddrTimer = setTimeout(async () => {
@@ -4152,7 +5133,7 @@ async function checkVenueClaim(googlePlaceId) {
       const cat = RW_CAT[it.color] || 'red';
       return {
         cat, emoji: RW_EMOJI[cat] || '🍷',
-        name: it.name_raw || '（銘柄不明）', producer: it.producer_raw || '',
+        name: it.name_raw || t('unknown_wine'), producer: it.producer_raw || '',
         vintage: it.vintage_raw || '', region: '', grapes: '',
         priceGlass: it.by_glass && it.list_price ? it.list_price : 0,
         priceBottle: !it.by_glass && it.list_price ? it.list_price : 0,
@@ -4161,8 +5142,8 @@ async function checkVenueClaim(googlePlaceId) {
       };
     });
     showBulkResults(rows, {
-      title: `📍 お客様が記録してくれたデータが${rows.length}件あります`,
-      sub: 'このお店に来店したお客様がスカウターで記録した内容です。取り込むワインを選んでください（公開設定は今のあなたの設定に従います）',
+      title: t('venue_claim_title').replace('{n}', rows.length),
+      sub: t('venue_claim_sub'),
     });
   } catch (e) {}
 }
@@ -4170,9 +5151,9 @@ async function checkVenueClaim(googlePlaceId) {
 async function publishStock() {
   const name = (document.getElementById('stkStoreName').value || '').trim();
   const addr = (document.getElementById('stkStoreAddr').value || '').trim();
-  if (!name) { showToast('店舗名を入力してください'); return; }
+  if (!name) { showToast(t('toast_need_store_name')); return; }
   const uid = await rwUid();
-  if (!uid) { alert('ログイン情報を確認できません。再ログインしてください。'); return; }
+  if (!uid) { alert(t('alert_login_again')); return; }
   try {
     const settingsBody = { owner_id: uid, display_name: name, address: addr || null, is_public: true };
     if (storeAddrPicked) {
@@ -4189,12 +5170,12 @@ async function publishStock() {
     // Instagram（任意）はprofilesへ＝レビュアー一覧にリンク表示される
     const ig = (document.getElementById('stkStoreIg').value || '').trim().replace(/^@/, '').slice(0, 60);
     try { await rwFetch('profiles?id=eq.' + uid, { method:'PATCH', body: JSON.stringify({ instagram: ig || null }) }); } catch (e2) {}
-  } catch (e) { showToast('⚠️ 公開に失敗しました（通信環境をご確認ください）'); return; }
+  } catch (e) { showToast(t('toast_publish_fail')); return; }
   restaurant.isPrivate = false;
   const t = document.getElementById('privacyToggle'); if (t) t.checked = true;
   document.getElementById('privacyIcon').textContent = '🔓';
-  document.getElementById('privacyStatus').textContent = '公開中';
-  showToast(`🌐 公開しました。ワイン検索に「${name}」として表示されます ✓`);
+  document.getElementById('privacyStatus').textContent = t('privacy_public');
+  showToast(t('toast_published_as').replace('{name}', name));
 }
 
 // ============================================================
@@ -4257,7 +5238,7 @@ async function tnProcessFiles(files) {
   const prog = document.getElementById('tnProgress');
   const uid = await rwUid();
   for (let i = 0; i < files.length; i++) {
-    prog.textContent = `AIが読み取り中… ${i + 1}/${files.length}枚目（10秒ほど）`;
+    prog.textContent = t('tn_reading').replace('{i}', i + 1).replace('{n}', files.length);
     const dataUrl = await tnToDataUrl(files[i]);
     if (!dataUrl) continue;
     try {
@@ -4265,7 +5246,7 @@ async function tnProcessFiles(files) {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: dataUrl, userId: 'store-' + (uid || 'unknown'), locale: 'ja-JP' })
       });
-      if (r.status === 429) { showToast('⚠️ 回数上限です。少し待ってからお試しください'); break; }
+      if (r.status === 429) { showToast(t('toast_rate_limit')); break; }
       if (!r.ok) throw 0;
       const res = await r.json();
       (res.bottles || []).filter(b => b.readable !== false && b.identification).forEach(b => {
@@ -4273,7 +5254,7 @@ async function tnProcessFiles(files) {
         const id = b.identification;
         tnStaged.push({
           wine_id: w ? w.id : null,
-          name: (w && w.name) || [id.producer, id.wine].filter(Boolean).join(' ') || '（銘柄不明）',
+          name: (w && w.name) || [id.producer, id.wine].filter(Boolean).join(' ') || t('unknown_wine'),
           producer: (w && w.producer) || id.producer || null,
           vintage: (w && w.vintage) || (id.vintage != null ? String(id.vintage) : null),
           region: w ? [w.kuni, w.chiiki].filter(v=>v&&v!=='不明').join(' ') : [id.country, id.region].filter(Boolean).join(' '),
@@ -4286,9 +5267,9 @@ async function tnProcessFiles(files) {
           importer_name: '', memo: '',
         });
       });
-    } catch (e) { showToast('⚠️ 読み取りに失敗した写真があります'); }
+    } catch (e) { showToast(t('toast_photo_read_fail')); }
   }
-  prog.textContent = tnStaged.length ? `✅ ${tnStaged.length}本を認識しました。下で確認してください` : '写真からワインを読み取れませんでした';
+  prog.textContent = tnStaged.length ? t('tn_recognized').replace('{n}', tnStaged.length) : t('tn_none_read');
   renderTnStaging();
 }
 
@@ -4309,16 +5290,16 @@ function renderTnStaging() {
         <button onclick="tnStaged.splice(${i},1);renderTnStaging()" style="background:none;border:none;color:#bbb;font-size:16px;cursor:pointer;flex-shrink:0;">✕</button>
       </div>
       <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
-        <span style="font-size:12px;color:var(--text-sub);font-weight:700;">お店の評価</span>
+        <span style="font-size:12px;color:var(--text-sub);font-weight:700;">${t('tn_my_rating')}</span>
         <span>${tnMyStars(s.rating || 0, i)}</span>
       </div>
-      <input placeholder="インポーター名（例: テラヴェール）" value="${tnEsc(s.importer_name)}" oninput="tnStaged[${i}].importer_name=this.value"
+      <input placeholder="${t('tn_importer_ph')}" value="${tnEsc(s.importer_name)}" oninput="tnStaged[${i}].importer_name=this.value"
         style="width:100%;margin-top:8px;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;">
-      <input placeholder="メモ（例: 果実味しっかり。グラス向き）" value="${tnEsc(s.memo)}" oninput="tnStaged[${i}].memo=this.value"
+      <input placeholder="${t('tn_memo_ph')}" value="${tnEsc(s.memo)}" oninput="tnStaged[${i}].memo=this.value"
         style="width:100%;margin-top:6px;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;">
       <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;color:var(--text-sub);cursor:pointer;">
         <input type="checkbox" ${s.condition_issue ? 'checked' : ''} onchange="tnStaged[${i}].condition_issue=this.checked" style="accent-color:var(--burgundy);">
-        ボトルの状態が悪かったかも（ブショネ等）— チェックすると評価の集計から除外されます
+        ${t('tn_condition_lbl')}
       </label>
     </div>`;
   }).join('');
@@ -4327,7 +5308,7 @@ function renderTnStaging() {
 async function tnSaveStaged() {
   if (!tnStaged.length) return;
   const uid = await rwUid();
-  if (!uid) { alert('ログイン情報を確認できません。再ログインしてください。'); return; }
+  if (!uid) { alert(t('alert_login_again')); return; }
   // 2026-07-09: sp/osuは内部指標につきAPIから受け取れなくなった。tasting_notesの
   // sp/osu列の型・要否はDB側の確認が必要なため、ここでは送らない（列自体はnullのまま残る）。
   const payload = tnStaged.map(s => ({
@@ -4347,13 +5328,13 @@ async function tnSaveStaged() {
     renderTnStaging();
     renderTnList();
     document.getElementById('tnProgress').textContent = '';
-    showToast(`✓ ${rows.length}本を保存しました`);
-  } catch (e) { showToast('⚠️ 保存に失敗しました（通信環境をご確認ください）'); }
+    showToast(t('toast_saved_n').replace('{n}', rows.length));
+  } catch (e) { showToast(t('toast_save_fail')); }
 }
 
 // 価格の目安（実データ=参考小売価格に、業界の一般的な掛け率を当てた概算。すべて「目安」表記）
 function tnPriceHint(ref) {
-  if (!ref) return '<div style="font-size:11px;color:var(--text-sub);margin-top:6px;">ソムリンDB未登録のため価格の実データがありません</div>';
+  if (!ref) return '<div style="font-size:11px;color:var(--text-sub);margin-top:6px;">' + t('tn_no_price') + '</div>';
   const r10 = x => Math.round(x / 10) * 10, r100 = x => Math.round(x / 100) * 100, r50 = x => Math.round(x / 50) * 50;
   const buyLo = r10(ref * 0.7), buyHi = r10(ref * 0.8);
   const btlLo = r100(buyLo * 2.5), btlHi = r100(buyHi * 3);
@@ -4361,9 +5342,9 @@ function tnPriceHint(ref) {
   const f = n => '¥' + n.toLocaleString('ja-JP');
   return `
     <div style="background:#faf7f4;border-radius:10px;padding:10px 12px;margin-top:8px;font-size:12px;line-height:1.9;">
-      <div>参考小売価格 <b>${f(Math.round(ref))}</b> <span style="font-size:10px;color:var(--text-sub);">（ソムリン実データ）</span></div>
-      <div>仕入れの目安 <b>${f(buyLo)}〜${f(buyHi)}</b> ／ ボトル提供 <b>${f(btlLo)}〜${f(btlHi)}</b> ／ グラス <b>${f(glLo)}〜${f(glHi)}</b></div>
-      <div style="font-size:10px;color:var(--text-sub);">※ 一般的な掛け率（仕入=小売の7〜8割、提供=仕入の2.5〜3倍、グラス=ボトル1/4）による目安です</div>
+      <div>${t('tn_ref_price')} <b>${f(Math.round(ref))}</b> <span style="font-size:10px;color:var(--text-sub);">${t('tn_ref_price_src')}</span></div>
+      <div>${t('tn_price_est').replace('{a}', f(buyLo)).replace('{b}', f(buyHi)).replace('{c}', f(btlLo)).replace('{d}', f(btlHi)).replace('{e}', f(glLo)).replace('{f}', f(glHi))}</div>
+      <div style="font-size:10px;color:var(--text-sub);">${t('tn_price_note')}</div>
     </div>`;
 }
 
@@ -4383,7 +5364,7 @@ function renderTnList() {
   if (!tnNotes.length) {
     box.innerHTML = `<div style="text-align:center;padding:32px 16px;color:var(--text-sub);">
       <div style="font-size:36px;margin-bottom:12px;">🍷</div>
-      まだ記録がありません。<br>試飲会で撮った写真を取り込んでみてください。</div>`;
+      ${t('tn_empty')}</div>`;
     return;
   }
   box.innerHTML = tnNotes.map(n => {
@@ -4399,19 +5380,19 @@ function renderTnList() {
         <button onclick="tnDelete('${n.id}')" style="background:none;border:none;color:#bbb;font-size:16px;cursor:pointer;flex-shrink:0;">✕</button>
       </div>
       <div style="margin-top:6px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-        ${n.rating ? `<span style="font-size:12px;color:var(--text-sub);">お店の評価 <span style="font-size:15px;">${tnMyStars(n.rating)}</span></span>` : ''}
+        ${n.rating ? `<span style="font-size:12px;color:var(--text-sub);">${t('tn_my_rating')} <span style="font-size:15px;">${tnMyStars(n.rating)}</span></span>` : ''}
       </div>
       ${n.memo ? `<div style="font-size:12px;color:#555;margin-top:6px;">💬 ${tnEsc(n.memo)}</div>` : ''}
       ${tnPriceHint(n.ref_price)}
       <details style="margin-top:8px;" ${n.wine_id ? `ontoggle="if(this.open)tnLoadBuzz('${n.id}',${n.wine_id})"` : ''}>
-        <summary style="font-size:11px;color:var(--text-sub);cursor:pointer;font-weight:700;">詳細（総合評価・みんなの評価）</summary>
+        <summary style="font-size:11px;color:var(--text-sub);cursor:pointer;font-weight:700;">${t('tn_details_summary')}</summary>
         <div style="background:#faf7f4;border-radius:10px;padding:10px 12px;margin-top:6px;font-size:12px;line-height:1.9;">
-          <div id="tnBuzz-${n.id}">${n.wine_id ? 'みんなの評価 読み込み中…' : 'みんなの評価 —（ソムリンDB未登録のため集計できません）'}</div>
+          <div id="tnBuzz-${n.id}">${n.wine_id ? t('tn_buzz_loading') : t('tn_buzz_unregistered')}</div>
         </div>
       </details>
       <div style="display:flex;gap:8px;margin-top:8px;">
-        <button onclick="tnPairing('${n.id}', this)" style="flex:1;background:#f5f3f0;color:var(--burgundy);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🍽 合う料理をAIに聞く</button>
-        <button onclick="openOshiReviewerCardModal('${n.id}')" style="flex:1;background:#f5f3f0;color:var(--burgundy);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">📣 推しカードでシェア</button>
+        <button onclick="tnPairing('${n.id}', this)" style="flex:1;background:#f5f3f0;color:var(--burgundy);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">${t('tn_pair_btn')}</button>
+        <button onclick="openOshiReviewerCardModal('${n.id}')" style="flex:1;background:#f5f3f0;color:var(--burgundy);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">${t('tn_share_btn')}</button>
       </div>
       <div id="tnPair-${n.id}" style="display:none;background:#fbeef3;border-radius:10px;padding:10px 12px;margin-top:8px;font-size:12px;color:#5a2a3a;line-height:1.8;white-space:pre-line;"></div>
     </div>`;
@@ -4430,50 +5411,50 @@ async function tnLoadBuzz(noteId, wineId) {
     const d = await r.json();
     if (!el) return;
     const lines = [];
-    if (d.starRating != null && window.WineDisplay) lines.push(`ソムリン評価 ${window.WineDisplay.starsHtml(d.starRating, {size:13})} <span style="font-size:10px;color:var(--text-sub);">（ソムリン＋店舗の評価を信頼度で重み付け）</span>`);
+    if (d.starRating != null && window.WineDisplay) lines.push(t('tn_somm_rating').replace('{stars}', window.WineDisplay.starsHtml(d.starRating, {size:13})));
     lines.push(d.communityCount
-      ? `みんなの評価 <b style="color:#C9973A;">${Number(d.communityAvg).toFixed(1)}</b> <span style="font-size:10px;color:var(--text-sub);">（${d.communityCount}店舗の平均・匿名）</span>`
-      : 'みんなの評価 —（まだ他の店舗の評価がありません）');
+      ? t('tn_buzz_community').replace('{v}', Number(d.communityAvg).toFixed(1)).replace('{n}', d.communityCount)
+      : t('tn_buzz_none'));
     el.innerHTML = lines.join('<br>');
   } catch (e) {
-    if (el) el.textContent = 'みんなの評価 —（取得できませんでした）';
+    if (el) el.textContent = t('tn_buzz_fail');
     tnBuzzLoaded[noteId] = false;
   }
 }
 
 async function tnDelete(id) {
-  if (!confirm('この記録を削除しますか？')) return;
+  if (!confirm(t('confirm_delete_record'))) return;
   try {
     const r = await rwFetch('tasting_notes?id=eq.' + id, { method: 'DELETE' });
     if (!r.ok) throw 0;
     tnNotes = tnNotes.filter(n => n.id !== id);
     renderTnList();
-    showToast('削除しました');
-  } catch (e) { showToast('⚠️ 削除に失敗しました'); }
+    showToast(t('toast_deleted'));
+  } catch (e) { showToast(t('toast_delete_fail')); }
 }
 
 async function tnPairing(id, btn) {
   const n = tnNotes.find(x => x.id === id);
   if (!n) return;
   const box = document.getElementById('tnPair-' + id);
-  btn.disabled = true; btn.textContent = '🍽 ソムリン君が考え中…';
+  btn.disabled = true; btn.textContent = t('tn_pair_thinking');
   try {
     const r = await fetch(RW_API + '/api/chat', {
       method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (rwToken() || '') },
       body: JSON.stringify({ messages: [{ role: 'user', content:
-        `「${n.name}」（${n.region || '産地不明'}${n.color ? '・' + n.color : ''}のワイン）を飲食店で提供します。合わせやすいおすすめ料理を3つ、それぞれ一言の理由つきで簡潔に提案してください。` }] })
+        t('tn_pair_prompt').replace('{name}', n.name).replace('{region}', n.region || t('region_unknown')).replace('{color}', n.color ? '・' + n.color : '') }] })
     });
     if (!r.ok) throw 0;
     const d = await r.json();
     box.textContent = d.reply;
     box.style.display = 'block';
-  } catch (e) { showToast('⚠️ 提案の取得に失敗しました'); }
-  btn.disabled = false; btn.textContent = '🍽 合う料理をAIに聞く';
+  } catch (e) { showToast(t('toast_pairing_fail')); }
+  btn.disabled = false; btn.textContent = t('tn_pair_btn');
 }
 
 // ── ログアウト ──
 function sommelinLogout() {
-  if (!confirm('ログアウトしますか？')) return;
+  if (!confirm(t('confirm_logout'))) return;
   try {
     const s = JSON.parse(localStorage.getItem('sommelin_session') || 'null');
     if (s && s.access_token) {
@@ -4499,7 +5480,7 @@ function initHeaderIdentity(){
   const ic=document.querySelector('.top-header-icon');
   if(ic){
     if(p.avatar_url) ic.innerHTML='<img src="'+p.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" alt="logo">';
-    ic.style.cursor='pointer'; ic.title='タップでロゴを変更'; ic.style.overflow='hidden';
+    ic.style.cursor='pointer'; ic.title=t('logo_change_title'); ic.style.overflow='hidden';
     ic.onclick=pickHeaderLogo;
   }
 }
@@ -4517,8 +5498,8 @@ function pickHeaderLogo(){
 
 async function uploadHeaderLogo(file){
   const uid=await rwUid();
-  if(!uid){ showToast('ログイン情報を確認できません'); return; }
-  showToast('ロゴをアップロード中…');
+  if(!uid){ showToast(t('toast_login_unknown2')); return; }
+  showToast(t('toast_logo_uploading'));
   const img=new Image();
   img.onload=()=>{
     const c=document.createElement('canvas');
@@ -4545,11 +5526,11 @@ async function uploadHeaderLogo(file){
         p.avatar_url=url;
         localStorage.setItem('sommelin_profile',JSON.stringify(p));
         initHeaderIdentity();
-        showToast('✓ ロゴを変更しました');
-      }catch(e){ showToast('⚠️ アップロードに失敗しました'); }
+        showToast(t('toast_logo_changed'));
+      }catch(e){ showToast(t('toast_upload_fail')); }
     },'image/jpeg',0.85);
   };
-  img.onerror=()=>showToast('画像を読み込めませんでした');
+  img.onerror=()=>showToast(t('toast_image_load_fail'));
   img.src=URL.createObjectURL(file);
 }
 
@@ -4570,16 +5551,16 @@ function initRoleSwitcher() {
     row.style.cssText = 'display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap;';
     info.appendChild(row);
   }
-  el.textContent = (hasStore && hasRetail) ? '🛒🍽 酒販店・レストラン'
-                 : hasRetail ? '🛒 酒販店'
-                 : hasStore ? '🍽 レストラン'
-                 : '🍽 店舗';
+  el.textContent = (hasStore && hasRetail) ? t('role_both')
+                 : hasRetail ? t('role_retailer')
+                 : hasStore ? t('role_store')
+                 : t('role_generic');
   el.style.cssText += ';font-size:12px;font-weight:800;background:#C9973A;color:#fff;white-space:nowrap;padding:5px 12px;flex-shrink:0;';
   if (row && el.parentNode !== row) row.appendChild(el);
   if (roles.includes('importer') && !document.getElementById('roleSwitchBtn')) {
     const btn = document.createElement('button');
     btn.id = 'roleSwitchBtn';
-    btn.textContent = '⇄ 🚢 インポーターに切替';
+    btn.textContent = t('role_switch_importer');
     btn.style.cssText = 'background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:14px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;';
     btn.onclick = () => { location.href = 'importer_admin.html'; };
     (row || el.parentNode).appendChild(btn);

@@ -1136,26 +1136,27 @@
   <div class="th-icon">🏢</div>
   <div class="th-info">
     <div class="th-name">山田商店</div>
-    <div class="th-sub">Sommelin インポーター管理</div>
+    <div class="th-sub" data-i18n="th_sub">Sommelin インポーター管理</div>
   </div>
-  <div class="th-badge" id="roleBadge">インポーター</div>
-  <button onclick="location.href='prototype.html'" title="個人モードに切り替え" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:11px;font-weight:700;cursor:pointer;padding:6px 10px;margin-left:6px;border-radius:14px;white-space:nowrap;">🍷 個人モード</button>
-  <button onclick="sommelinLogout()" title="ログアウト" style="background:none;border:none;color:rgba(255,255,255,.7);font-size:18px;cursor:pointer;padding:4px 8px;margin-left:2px;">⏻</button>
+  <div class="th-badge" id="roleBadge" data-i18n="role_badge">インポーター</div>
+  <button id="langBtn" onclick="setLang(LANG==='ja'?'en':'ja')" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:11px;font-weight:700;cursor:pointer;padding:6px 10px;margin-left:6px;border-radius:14px;white-space:nowrap;"></button>
+  <button onclick="location.href='prototype.html'" title="個人モードに切り替え" data-i18n="personal_mode" data-i18n-title="title_personal_mode" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:11px;font-weight:700;cursor:pointer;padding:6px 10px;margin-left:6px;border-radius:14px;white-space:nowrap;">🍷 個人モード</button>
+  <button onclick="sommelinLogout()" title="ログアウト" data-i18n-title="title_logout" style="background:none;border:none;color:rgba(255,255,255,.7);font-size:18px;cursor:pointer;padding:4px 8px;margin-left:2px;">⏻</button>
 </div>
 
 <!-- TAB NAV -->
 <div class="tab-nav">
   <div class="tab-nav-item" id="tnav-calendar" onclick="switchPanel('calendar')">
-    <span class="ni">📅</span>カレンダー
+    <span class="ni">📅</span><span data-i18n="tab_calendar">カレンダー</span>
   </div>
   <div class="tab-nav-item active" id="tnav-broadcast" onclick="switchPanel('broadcast')">
-    <span class="ni">📤</span>発信
+    <span class="ni">📤</span><span data-i18n="tab_broadcast">発信</span>
   </div>
   <div class="tab-nav-item" id="tnav-members" onclick="switchPanel('members')">
-    <span class="ni">👥</span>顧客
+    <span class="ni">👥</span><span data-i18n="tab_members">顧客</span>
   </div>
   <div class="tab-nav-item" id="tnav-catalog" onclick="switchPanel('catalog')">
-    <span class="ni">📋</span>カタログ
+    <span class="ni">📋</span><span data-i18n="tab_catalog">カタログ</span>
   </div>
 </div>
 
@@ -1166,22 +1167,22 @@
   <div class="gcal-sync-bar">
     <span style="font-size:22px;">📆</span>
     <div class="gcal-sync-info">
-      <div class="gcal-sync-title">Sommelin 共有カレンダー</div>
-      <div class="gcal-sync-sub" id="impSyncStatus">最終同期: 今日 09:30</div>
+      <div class="gcal-sync-title" data-i18n="gcal_title">Sommelin 共有カレンダー</div>
+      <div class="gcal-sync-sub" id="impSyncStatus" data-i18n="sync_last_today">最終同期: 今日 09:30</div>
     </div>
-    <button class="gcal-sync-btn" onclick="impSimulateSync(this)">同期</button>
+    <button class="gcal-sync-btn" onclick="impSimulateSync(this)" data-i18n="sync_btn">同期</button>
   </div>
 
   <!-- 凡例 -->
   <div class="cal-legend">
     <div class="legend-item">
-      <div class="legend-dot" style="background:var(--burgundy);"></div>自社イベント
+      <div class="legend-dot" style="background:var(--burgundy);"></div><span data-i18n="legend_own">自社イベント</span>
     </div>
     <div class="legend-item">
-      <div class="legend-dot" style="background:#2563eb;"></div>他社イベント
+      <div class="legend-dot" style="background:#2563eb;"></div><span data-i18n="legend_others">他社イベント</span>
     </div>
     <div class="legend-item">
-      <div class="legend-dot" style="background:var(--gold);"></div>フェア・展示会
+      <div class="legend-dot" style="background:var(--gold);"></div><span data-i18n="legend_fair">フェア・展示会</span>
     </div>
   </div>
 
@@ -1193,17 +1194,17 @@
       <button class="cal-imp-nav" onclick="impChangeMonth(1)">›</button>
     </div>
     <div class="cal-imp-grid" id="impCalGrid">
-      <div class="cal-imp-dow">日</div><div class="cal-imp-dow">月</div>
-      <div class="cal-imp-dow">火</div><div class="cal-imp-dow">水</div>
-      <div class="cal-imp-dow">木</div><div class="cal-imp-dow">金</div>
-      <div class="cal-imp-dow">土</div>
+      <div class="cal-imp-dow" data-i18n="dow_0">日</div><div class="cal-imp-dow" data-i18n="dow_1">月</div>
+      <div class="cal-imp-dow" data-i18n="dow_2">火</div><div class="cal-imp-dow" data-i18n="dow_3">水</div>
+      <div class="cal-imp-dow" data-i18n="dow_4">木</div><div class="cal-imp-dow" data-i18n="dow_5">金</div>
+      <div class="cal-imp-dow" data-i18n="dow_6">土</div>
     </div>
   </div>
 
   <!-- 近日中のイベント一覧 -->
   <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 6px;">
-    <div style="font-size:11px;font-weight:800;color:var(--text-sub);letter-spacing:1.2px;">近日中の試飲会・イベント</div>
-    <button onclick="openNewEventForm()" style="background:var(--burgundy);color:white;border:none;border-radius:10px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;">＋ 追加</button>
+    <div style="font-size:11px;font-weight:800;color:var(--text-sub);letter-spacing:1.2px;" data-i18n="upcoming_head">近日中の試飲会・イベント</div>
+    <button onclick="openNewEventForm()" style="background:var(--burgundy);color:white;border:none;border-radius:10px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;" data-i18n="btn_add">＋ 追加</button>
   </div>
   <div id="impEventList" style="padding-bottom:20px;"></div>
 
@@ -1213,25 +1214,25 @@
 <div style="display:none;position:fixed;inset:0;background:rgba(44,26,29,0.55);z-index:300;align-items:flex-end;justify-content:center;" id="newEvBg" onclick="closeNewEvBg(event)">
   <div style="background:white;border-radius:20px 20px 0 0;width:100%;max-width:430px;max-height:90vh;overflow-y:auto;padding:20px 20px 48px;animation:slideUp 0.25s ease;" id="newEvSheet">
     <div style="width:36px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 18px;"></div>
-    <div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:18px;">🍷 新しい試飲会を追加</div>
+    <div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:18px;" data-i18n="nev_head">🍷 新しい試飲会を追加</div>
 
     <div style="margin-bottom:14px;">
-      <label style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:0.5px;display:block;margin-bottom:6px;">イベント種別 <span style="color:#e53e3e;">✳︎</span></label>
+      <label style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:0.5px;display:block;margin-bottom:6px;"><span data-i18n="lbl_ev_type">イベント種別</span> <span style="color:#e53e3e;">✳︎</span></label>
       <div style="display:flex;gap:8px;flex-wrap:wrap;" id="evTypeGrid">
-        <div onclick="selectEvType(this,'tasting','🍷 試飲会')" style="padding:8px 14px;border-radius:20px;border:1.5px solid var(--burgundy);background:var(--burgundy-pale);color:var(--burgundy);font-size:12px;font-weight:700;cursor:pointer;" data-type="tasting">🍷 試飲会</div>
-        <div onclick="selectEvType(this,'seminar','📚 セミナー')" style="padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:white;color:var(--text-sub);font-size:12px;font-weight:700;cursor:pointer;" data-type="seminar">📚 セミナー</div>
-        <div onclick="selectEvType(this,'fair','🏆 フェア')" style="padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:white;color:var(--text-sub);font-size:12px;font-weight:700;cursor:pointer;" data-type="fair">🏆 フェア</div>
-        <div onclick="selectEvType(this,'online','💻 オンライン')" style="padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:white;color:var(--text-sub);font-size:12px;font-weight:700;cursor:pointer;" data-type="online">💻 オンライン</div>
+        <div onclick="selectEvType(this,'tasting')" style="padding:8px 14px;border-radius:20px;border:1.5px solid var(--burgundy);background:var(--burgundy-pale);color:var(--burgundy);font-size:12px;font-weight:700;cursor:pointer;" data-type="tasting" data-i18n="evtype_tasting">🍷 試飲会</div>
+        <div onclick="selectEvType(this,'seminar')" style="padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:white;color:var(--text-sub);font-size:12px;font-weight:700;cursor:pointer;" data-type="seminar" data-i18n="evtype_seminar">📚 セミナー</div>
+        <div onclick="selectEvType(this,'fair')" style="padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:white;color:var(--text-sub);font-size:12px;font-weight:700;cursor:pointer;" data-type="fair" data-i18n="evtype_fair">🏆 フェア</div>
+        <div onclick="selectEvType(this,'online')" style="padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:white;color:var(--text-sub);font-size:12px;font-weight:700;cursor:pointer;" data-type="online" data-i18n="evtype_online">💻 オンライン</div>
       </div>
     </div>
 
     <div style="margin-bottom:14px;">
-      <label style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:0.5px;display:block;margin-bottom:6px;">イベント名 <span style="color:#e53e3e;">✳︎</span></label>
-      <input id="nev-title" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;font-family:inherit;outline:none;" placeholder="例: ブルゴーニュ新着ワイン試飲会">
+      <label style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:0.5px;display:block;margin-bottom:6px;"><span data-i18n="lbl_ev_name">イベント名</span> <span style="color:#e53e3e;">✳︎</span></label>
+      <input id="nev-title" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;font-family:inherit;outline:none;" data-i18n-ph="ph_ev_name" placeholder="例: ブルゴーニュ新着ワイン試飲会">
     </div>
 
     <div style="margin-bottom:14px;">
-      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">開催日（複数日OK） <span style="color:#e53e3e;">✳︎</span></label>
+      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;"><span data-i18n="lbl_ev_dates">開催日（複数日OK）</span> <span style="color:#e53e3e;">✳︎</span></label>
       <div id="nevDateChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"></div>
       <div style="border:1.5px solid var(--border);border-radius:10px;padding:12px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
@@ -1242,62 +1243,62 @@
         <div id="nevCalDow" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;"></div>
         <div id="nevCalGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;"></div>
       </div>
-      <div style="font-size:10px;color:var(--text-sub);margin-top:4px;">タップした日が開催日になります（複数選択OK・もう一度タップで解除）</div>
+      <div style="font-size:10px;color:var(--text-sub);margin-top:4px;" data-i18n="hint_dates">タップした日が開催日になります（複数選択OK・もう一度タップで解除）</div>
     </div>
 
     <div style="margin-bottom:14px;">
-      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">開始時間</label>
+      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;" data-i18n="lbl_start">開始時間</label>
       <input id="nev-start" type="time" onchange="recalcSessions()" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;">
     </div>
     <div style="margin-bottom:14px;">
-      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">終了時間</label>
+      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;" data-i18n="lbl_end">終了時間</label>
       <input id="nev-end" type="time" onchange="recalcSessions()" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;">
     </div>
 
     <div style="margin-bottom:14px;">
-      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">部制・休憩</label>
+      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;" data-i18n="lbl_parts">部制・休憩</label>
       <div style="display:flex;gap:10px;">
         <select id="nev-parts" onchange="recalcSessions()" style="flex:1;min-width:0;border:1.5px solid var(--border);border-radius:10px;padding:10px 8px;font-size:14px;font-family:inherit;outline:none;background:white;box-sizing:border-box;">
-          <option value="1">一斉（部制なし）</option>
-          <option value="2">2部制</option>
-          <option value="3">3部制</option>
-          <option value="4">4部制</option>
-          <option value="5">5部制</option>
-          <option value="6">6部制</option>
-          <option value="7">7部制</option>
-          <option value="8">8部制</option>
-          <option value="9">9部制</option>
-          <option value="10">10部制</option>
+          <option value="1" data-i18n="opt_parts_1">一斉（部制なし）</option>
+          <option value="2" data-i18n="opt_parts_2">2部制</option>
+          <option value="3" data-i18n="opt_parts_3">3部制</option>
+          <option value="4" data-i18n="opt_parts_4">4部制</option>
+          <option value="5" data-i18n="opt_parts_5">5部制</option>
+          <option value="6" data-i18n="opt_parts_6">6部制</option>
+          <option value="7" data-i18n="opt_parts_7">7部制</option>
+          <option value="8" data-i18n="opt_parts_8">8部制</option>
+          <option value="9" data-i18n="opt_parts_9">9部制</option>
+          <option value="10" data-i18n="opt_parts_10">10部制</option>
         </select>
         <div style="flex:1;min-width:0;position:relative;">
           <input id="nev-break" type="number" step="5" min="0" value="0" oninput="recalcSessions()" style="width:100%;min-width:0;border:1.5px solid var(--border);border-radius:10px;padding:10px 34px 10px 8px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;">
-          <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text-sub);pointer-events:none;">分</span>
+          <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text-sub);pointer-events:none;" data-i18n="unit_min">分</span>
         </div>
       </div>
-      <div style="font-size:10px;color:var(--text-sub);margin-top:4px;">休憩は5分刻みで入力できます（数時間の休憩は分に換算して入力。例: 3時間→180）</div>
-      <input id="nev-sessions" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:13px;font-family:inherit;outline:none;margin-top:8px;box-sizing:border-box;" placeholder="部制を選ぶと開始・終了時間から自動計算されます（手直しOK）">
+      <div style="font-size:10px;color:var(--text-sub);margin-top:4px;" data-i18n="hint_break">休憩は5分刻みで入力できます（数時間の休憩は分に換算して入力。例: 3時間→180）</div>
+      <input id="nev-sessions" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:13px;font-family:inherit;outline:none;margin-top:8px;box-sizing:border-box;" data-i18n-ph="ph_sessions" placeholder="部制を選ぶと開始・終了時間から自動計算されます（手直しOK）">
     </div>
 
     <div style="margin-bottom:14px;position:relative;">
-      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">会場 <span style="color:#e53e3e;">✳︎</span></label>
-      <input id="nev-venue" oninput="venueSuggest()" autocomplete="off" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;" placeholder="会場名を入力すると候補が出ます">
+      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;"><span data-i18n="lbl_venue">会場</span> <span style="color:#e53e3e;">✳︎</span></label>
+      <input id="nev-venue" oninput="venueSuggest()" autocomplete="off" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;" data-i18n-ph="ph_venue" placeholder="会場名を入力すると候補が出ます">
       <div id="venueSug" style="display:none;position:absolute;left:0;right:0;top:100%;background:white;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:20;max-height:220px;overflow-y:auto;"></div>
       <input type="hidden" id="nev-venue-addr">
       <div id="venueAddrNote" style="font-size:10px;color:var(--text-sub);margin-top:4px;"></div>
     </div>
 
     <div style="margin-bottom:14px;">
-      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;">概要・説明</label>
-      <textarea id="nev-desc" rows="3" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;font-family:inherit;outline:none;resize:none;" placeholder="試飲できるワイン、参加費など..."></textarea>
+      <label style="font-size:11px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:6px;" data-i18n="lbl_desc">概要・説明</label>
+      <textarea id="nev-desc" rows="3" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;font-family:inherit;outline:none;resize:none;" data-i18n-ph="ph_desc" placeholder="試飲できるワイン、参加費など..."></textarea>
     </div>
 
-    <div style="margin-bottom:20px;background:#f5f5f5;border-radius:10px;padding:12px 14px;font-size:12px;color:var(--text-sub);line-height:1.7;">
+    <div style="margin-bottom:20px;background:#f5f5f5;border-radius:10px;padding:12px 14px;font-size:12px;color:var(--text-sub);line-height:1.7;" data-i18n="note_publish">
       💡 登録すると業界共有カレンダーに公開されます。特定の店舗にLINEで直接届けたい場合は、登録後「発信」タブの配信機能から店舗を選んで送れます。
     </div>
 
     <div style="display:flex;gap:10px;">
-      <button onclick="closeNewEvModal()" style="background:white;color:var(--text-sub);border:1.5px solid var(--border);border-radius:12px;padding:13px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">キャンセル</button>
-      <button onclick="saveNewEvent()" style="flex:1;background:var(--burgundy);color:white;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;">登録する</button>
+      <button onclick="closeNewEvModal()" style="background:white;color:var(--text-sub);border:1.5px solid var(--border);border-radius:12px;padding:13px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;" data-i18n="btn_cancel">キャンセル</button>
+      <button onclick="saveNewEvent()" style="flex:1;background:var(--burgundy);color:white;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;" data-i18n="btn_register">登録する</button>
     </div>
   </div>
 </div>
@@ -1307,8 +1308,8 @@
 
   <!-- サブタブ: 配信 / 履歴 -->
   <div class="sub-tabs">
-    <button class="sub-tab active" id="btab-send" onclick="switchBroadcastTab('send')">📤 配信</button>
-    <button class="sub-tab" id="btab-history" onclick="switchBroadcastTab('history')">🕘 履歴</button>
+    <button class="sub-tab active" id="btab-send" onclick="switchBroadcastTab('send')" data-i18n="btab_send">📤 配信</button>
+    <button class="sub-tab" id="btab-history" onclick="switchBroadcastTab('history')" data-i18n="btab_history">🕘 履歴</button>
   </div>
 
   <!-- ===== 配信 サブビュー ===== -->
@@ -1316,33 +1317,33 @@
 
     <!-- 作成エントリーポイント -->
     <div class="create-row">
-      <button class="create-btn" onclick="openNewEventForm()">＋ イベント作成</button>
-      <button class="create-btn" onclick="startNewPost()">＋ 投稿作成</button>
+      <button class="create-btn" onclick="openNewEventForm()" data-i18n="btn_create_event">＋ イベント作成</button>
+      <button class="create-btn" onclick="startNewPost()" data-i18n="btn_create_post">＋ 投稿作成</button>
     </div>
 
     <!-- 配信タイプ -->
     <div class="bcast-type-toggle">
-      <button class="bct-btn active" id="bct-event" onclick="setBroadcastType('event')">🍷 イベント</button>
-      <button class="bct-btn" id="bct-post" onclick="setBroadcastType('post')">📣 おすすめ・お知らせ</button>
+      <button class="bct-btn active" id="bct-event" onclick="setBroadcastType('event')" data-i18n="bct_event">🍷 イベント</button>
+      <button class="bct-btn" id="bct-post" onclick="setBroadcastType('post')" data-i18n="bct_post">📣 おすすめ・お知らせ</button>
     </div>
 
     <!-- 配信タイプ: イベント -->
     <div id="bcastEventBlock">
-      <div class="section-head">配信するイベント</div>
+      <div class="section-head" data-i18n="head_bcast_event">配信するイベント</div>
       <div class="event-card" id="bcastEventCard"></div>
     </div>
 
     <!-- 配信タイプ: おすすめ・お知らせ（投稿コンポーザー） -->
     <div id="bcastPostBlock" style="display:none;">
-      <div class="section-head">投稿を作成</div>
+      <div class="section-head" data-i18n="head_create_post">投稿を作成</div>
       <div class="composer-card">
-        <textarea id="postText" class="composer-textarea" placeholder="お客様へのメッセージ（おすすめワイン・新着・お知らせなど）"></textarea>
+        <textarea id="postText" class="composer-textarea" data-i18n-ph="ph_post_text" placeholder="お客様へのメッセージ（おすすめワイン・新着・お知らせなど）"></textarea>
         <div class="composer-tools">
           <label class="composer-tool-btn">
-            📷 写真を添付
+            <span data-i18n="tool_photo">📷 写真を添付</span>
             <input type="file" accept="image/*" style="display:none;" onchange="onPostPhoto(this)">
           </label>
-          <button class="composer-tool-btn" onclick="attachPostWine()">🍷 おすすめワインを添付</button>
+          <button class="composer-tool-btn" onclick="attachPostWine()" data-i18n="tool_wine">🍷 おすすめワインを添付</button>
         </div>
         <div id="postPhotoPreview"></div>
         <div id="postWineChip"></div>
@@ -1350,63 +1351,63 @@
       <!-- 投稿のみ: 個人客にも配信 -->
       <label class="post-person-toggle" id="postPersonToggle">
         <input type="checkbox" id="postToPersons" onchange="onPostPersonToggle()">
-        <span class="ppt-text">🙋 個人客（LINE連携済み）にも配信する</span>
-        <span class="ppt-count" id="postPersonCount">+0名</span>
+        <span class="ppt-text" data-i18n="post_person_label">🙋 個人客（LINE連携済み）にも配信する</span>
+        <span class="ppt-count" id="postPersonCount" data-i18n="post_person_zero">+0名</span>
       </label>
     </div>
 
     <!-- LINE課金 案内 -->
-    <div class="line-billing-note">
+    <div class="line-billing-note" data-i18n="note_line_billing">
       💡 LINE配信は無料枠（月あたり一定通数）まで無料、超過分は従量課金です。将来、無料枠＋有料プランを用意予定。
     </div>
 
     <!-- 配信モード -->
-    <div class="section-head" style="margin-top:14px;">配信先を選ぶ</div>
+    <div class="section-head" style="margin-top:14px;" data-i18n="head_choose_recipients">配信先を選ぶ</div>
     <div class="mode-selector">
-      <div class="mode-selector-header">配信モード</div>
+      <div class="mode-selector-header" data-i18n="head_bcast_mode">配信モード</div>
       <div class="mode-tabs">
         <div class="mode-tab" id="mtab-all" onclick="setMode('all')">
           <span class="mt-count" id="mc-all">—</span>
-          <span class="mt-label">すべて</span>
+          <span class="mt-label" data-i18n="mode_all">すべて</span>
         </div>
         <div class="mode-tab active" id="mtab-prev" onclick="setMode('prev')">
           <span class="mt-count" id="mc-prev">—</span>
-          <span class="mt-label">前回と同じ</span>
+          <span class="mt-label" data-i18n="mode_prev">前回と同じ</span>
         </div>
         <div class="mode-tab" id="mtab-custom" onclick="setMode('custom')">
           <span class="mt-count" id="mc-custom">—</span>
-          <span class="mt-label">カスタム</span>
+          <span class="mt-label" data-i18n="mode_custom">カスタム</span>
         </div>
       </div>
-      <div class="mode-previous-hint" id="prevHint">
+      <div class="mode-previous-hint" id="prevHint" data-i18n="hint_prev_static">
         📋 前回配信の宛先を引き継いでいます
       </div>
     </div>
 
     <!-- フィルタバー -->
     <div class="filter-bar">
-      <input class="filter-search" type="text" placeholder="顧客を検索…" oninput="filterStores(this.value)">
-      <button class="filter-btn" id="farea-btn" onclick="cycleAreaFilter(this)">エリア ▾</button>
-      <button class="filter-btn" id="ftype-btn" onclick="cycleTypeFilter(this)">業種 ▾</button>
+      <input class="filter-search" type="text" data-i18n-ph="ph_search_customers" placeholder="顧客を検索…" oninput="filterStores(this.value)">
+      <button class="filter-btn" id="farea-btn" onclick="cycleAreaFilter(this)" data-i18n="filter_area">エリア ▾</button>
+      <button class="filter-btn" id="ftype-btn" onclick="cycleTypeFilter(this)" data-i18n="filter_type">業種 ▾</button>
     </div>
 
     <!-- 統計バー -->
     <div class="stats-bar">
       <div class="stat-item">
         <div class="stat-val" id="statTotal">—</div>
-        <div class="stat-label">全顧客</div>
+        <div class="stat-label" data-i18n="stat_total">全顧客</div>
       </div>
       <div class="stat-item">
         <div class="stat-val" style="color:var(--line);" id="statLine">—</div>
-        <div class="stat-label">LINE連携済み</div>
+        <div class="stat-label" data-i18n="stat_line">LINE連携済み</div>
       </div>
       <div class="stat-item">
         <div class="stat-val" style="color:#aaa;" id="statNoLine">—</div>
-        <div class="stat-label">未連携</div>
+        <div class="stat-label" data-i18n="stat_noline">未連携</div>
       </div>
       <div class="stat-item">
         <div class="stat-val" style="color:#dc2626;" id="statExcluded">—</div>
-        <div class="stat-label">除外中</div>
+        <div class="stat-label" data-i18n="stat_excluded">除外中</div>
       </div>
     </div>
 
@@ -1416,7 +1417,7 @@
 
   <!-- ===== 履歴 サブビュー ===== -->
   <div id="bcastHistoryView" style="display:none;">
-    <div class="section-head" style="padding-top:14px;">配信履歴</div>
+    <div class="section-head" style="padding-top:14px;" data-i18n="head_history">配信履歴</div>
     <div id="historyList"></div>
   </div>
 
@@ -1427,32 +1428,32 @@
 
   <!-- 反響: 店舗があなたのワインを気に入っています（実データ: tasting_notes） -->
   <div style="margin:14px 16px 4px;background:linear-gradient(135deg,#fff,#fbeef3);border:1.5px solid var(--burgundy);border-radius:14px;padding:14px 16px;">
-    <div style="font-size:14px;font-weight:800;color:var(--text);">💬 あなたのワインへの反響</div>
-    <div style="font-size:11px;color:var(--text-sub);line-height:1.7;margin-top:4px;">店舗が試飲会で「良かった」と記録したワインのうち、貴社名が書き添えられたものが届きます。</div>
+    <div style="font-size:14px;font-weight:800;color:var(--text);" data-i18n="fb_head">💬 あなたのワインへの反響</div>
+    <div style="font-size:11px;color:var(--text-sub);line-height:1.7;margin-top:4px;" data-i18n="fb_desc">店舗が試飲会で「良かった」と記録したワインのうち、貴社名が書き添えられたものが届きます。</div>
     <div style="display:flex;gap:8px;margin-top:10px;">
-      <input id="fbImporterName" placeholder="会社名（例: テラヴェール）" style="flex:1;min-width:0;border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;">
-      <button onclick="loadTastingFeedback()" style="background:var(--burgundy);color:#fff;border:none;border-radius:10px;padding:0 16px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">確認</button>
+      <input id="fbImporterName" data-i18n-ph="ph_fb_name" placeholder="会社名（例: テラヴェール）" style="flex:1;min-width:0;border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;">
+      <button onclick="loadTastingFeedback()" style="background:var(--burgundy);color:#fff;border:none;border-radius:10px;padding:0 16px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;" data-i18n="btn_check">確認</button>
     </div>
     <div id="fbList" style="margin-top:10px;"></div>
   </div>
 
   <!-- サブタブ: 店舗 / 個人 -->
   <div class="sub-tabs">
-    <button class="sub-tab active" id="ctab-store" onclick="switchCustomerTab('store')">🏪 店舗</button>
-    <button class="sub-tab" id="ctab-person" onclick="switchCustomerTab('person')">🙋 個人</button>
+    <button class="sub-tab active" id="ctab-store" onclick="switchCustomerTab('store')" data-i18n="ctab_store">🏪 店舗</button>
+    <button class="sub-tab" id="ctab-person" onclick="switchCustomerTab('person')" data-i18n="ctab_person">🙋 個人</button>
   </div>
 
   <!-- 店舗 サブビュー -->
   <div id="custStoreView">
-    <div class="section-head" style="padding-top:14px;">LINE連携済み店舗</div>
+    <div class="section-head" style="padding-top:14px;" data-i18n="head_line_stores">LINE連携済み店舗</div>
     <div id="memberListConnected"></div>
-    <div class="section-head" style="margin-top:8px;">未連携店舗</div>
+    <div class="section-head" style="margin-top:8px;" data-i18n="head_noline_stores">未連携店舗</div>
     <div id="memberListNotConnected"></div>
   </div>
 
   <!-- 個人 サブビュー -->
   <div id="custPersonView" style="display:none;">
-    <div class="section-head" style="padding-top:14px;">個人のお客様</div>
+    <div class="section-head" style="padding-top:14px;" data-i18n="head_persons">個人のお客様</div>
     <div id="memberListPersons"></div>
   </div>
 </div>
@@ -1462,48 +1463,48 @@
 
   <!-- Stats -->
   <div class="cat-stats">
-    <div class="cat-stat"><div class="cat-snum" id="catTotal">0</div><div class="cat-slbl">登録ワイン</div></div>
-    <div class="cat-stat"><div class="cat-snum cat-ok" id="catAvail">0</div><div class="cat-slbl">取り扱い中</div></div>
-    <div class="cat-stat"><div class="cat-snum cat-ng" id="catSold">0</div><div class="cat-slbl">取り扱い停止</div></div>
+    <div class="cat-stat"><div class="cat-snum" id="catTotal">0</div><div class="cat-slbl" data-i18n="cat_total_lbl">登録ワイン</div></div>
+    <div class="cat-stat"><div class="cat-snum cat-ok" id="catAvail">0</div><div class="cat-slbl" data-i18n="cat_avail_lbl">取り扱い中</div></div>
+    <div class="cat-stat"><div class="cat-snum cat-ng" id="catSold">0</div><div class="cat-slbl" data-i18n="cat_sold_lbl">取り扱い停止</div></div>
   </div>
 
   <!-- Add form -->
   <div class="cat-add-card">
-    <div class="cat-add-title">＋ 取り扱いワインを追加</div>
+    <div class="cat-add-title" data-i18n="cat_add_title">＋ 取り扱いワインを追加</div>
     <div class="cat-photo-row">
-      <label class="cat-photo-btn">📷 ボトルを撮影
+      <label class="cat-photo-btn"><span data-i18n="cat_photo_bottle">📷 ボトルを撮影</span>
         <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="onCatPhoto(this)">
       </label>
-      <label class="cat-photo-btn">🧾 納品書を撮影
+      <label class="cat-photo-btn"><span data-i18n="cat_photo_invoice">🧾 納品書を撮影</span>
         <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="onCatPhoto(this)">
       </label>
     </div>
-    <div class="cat-photo-hint">📷写真からの自動入力は近日対応予定。今は写真を添付して、足りない情報を入力してください。</div>
+    <div class="cat-photo-hint" data-i18n="cat_photo_hint">📷写真からの自動入力は近日対応予定。今は写真を添付して、足りない情報を入力してください。</div>
     <div id="catPhotoPreview"></div>
-    <input class="cat-input" id="catName" placeholder="ワイン名（例: Alex Gambal Charmes-Chambertin）">
-    <input class="cat-input" id="catProducer" placeholder="生産者名">
+    <input class="cat-input" id="catName" data-i18n-ph="ph_cat_name" placeholder="ワイン名（例: Alex Gambal Charmes-Chambertin）">
+    <input class="cat-input" id="catProducer" data-i18n-ph="ph_cat_producer" placeholder="生産者名">
     <div class="cat-row2">
-      <input class="cat-input cat-short" id="catVintage" placeholder="ヴィンテージ" maxlength="4" type="number">
-      <input class="cat-input cat-short" id="catRegion" placeholder="産地">
+      <input class="cat-input cat-short" id="catVintage" data-i18n-ph="ph_cat_vintage" placeholder="ヴィンテージ" maxlength="4" type="number">
+      <input class="cat-input cat-short" id="catRegion" data-i18n-ph="ph_cat_region" placeholder="産地">
     </div>
     <div class="cat-row2">
-      <input class="cat-input cat-short" id="catPrice" placeholder="参考価格（円）" type="number">
+      <input class="cat-input cat-short" id="catPrice" data-i18n-ph="ph_cat_price" placeholder="参考価格（円）" type="number">
       <select class="cat-input cat-short" id="catAvailSel">
-        <option value="1">取り扱い中</option>
-        <option value="0">取り扱い停止</option>
+        <option value="1" data-i18n="opt_avail">取り扱い中</option>
+        <option value="0" data-i18n="opt_unavail">取り扱い停止</option>
       </select>
     </div>
-    <input class="cat-input" id="catDesc" placeholder="説明・テイスティングノート（任意）">
-    <button class="cat-add-btn" onclick="addCatalogItem()">カタログに追加</button>
+    <input class="cat-input" id="catDesc" data-i18n-ph="ph_cat_desc" placeholder="説明・テイスティングノート（任意）">
+    <button class="cat-add-btn" onclick="addCatalogItem()" data-i18n="btn_cat_add">カタログに追加</button>
   </div>
 
   <!-- Actions -->
   <div class="cat-actions">
     <button class="cat-act-btn" onclick="exportCatalog()">⬇ CSV</button>
-    <button class="cat-act-btn cat-line" onclick="shareCatalogLine()">💬 LINEでシェア</button>
+    <button class="cat-act-btn cat-line" onclick="shareCatalogLine()" data-i18n="btn_share_line">💬 LINEでシェア</button>
   </div>
 
-  <div style="padding:0 16px 12px;font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:.07em;">カタログ一覧</div>
+  <div style="padding:0 16px 12px;font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:.07em;" data-i18n="cat_list_head">カタログ一覧</div>
   <div id="catList" style="padding:0 16px 100px;"></div>
 
 </div>
@@ -1512,22 +1513,22 @@
 <div class="ctx-menu-bg" id="ctxMenuBg" onclick="closeCtxMenu(event)">
   <div class="ctx-menu">
     <div class="ctx-handle"></div>
-    <div class="ctx-store-name" id="ctxStoreName">店舗名</div>
+    <div class="ctx-store-name" id="ctxStoreName" data-i18n="ctx_store_ph">店舗名</div>
     <div class="ctx-item" onclick="ctxSelectToggle()">
       <span class="ci-icon" id="ctxSelectIcon">☑️</span>
-      <span id="ctxSelectLabel">配信リストに追加</span>
+      <span id="ctxSelectLabel" data-i18n="ctx_add">配信リストに追加</span>
     </div>
     <div class="ctx-item" onclick="ctxExclude()">
       <span class="ci-icon" id="ctxExcludeIcon">🚫</span>
-      <span id="ctxExcludeLabel">今回の配信から除外する</span>
+      <span id="ctxExcludeLabel" data-i18n="ctx_exclude">今回の配信から除外する</span>
     </div>
     <div class="ctx-item" onclick="ctxNote()">
       <span class="ci-icon">📝</span>
-      <span>メモを追加</span>
+      <span data-i18n="ctx_note">メモを追加</span>
     </div>
     <div class="ctx-item danger" onclick="ctxRemove()">
       <span class="ci-icon">🗑</span>
-      <span>顧客リストから削除</span>
+      <span data-i18n="ctx_remove">顧客リストから削除</span>
     </div>
   </div>
 </div>
@@ -1536,16 +1537,16 @@
 <div class="confirm-bg" id="confirmBg">
   <div class="confirm-modal">
     <div class="cm-icon">💬</div>
-    <div class="cm-title">LINEで配信しますか？</div>
+    <div class="cm-title" data-i18n="cm_title">LINEで配信しますか？</div>
     <div class="cm-count" id="confirmCount">—</div>
-    <div class="cm-count-label">店舗に送信します</div>
+    <div class="cm-count-label" data-i18n="cm_count_label">店舗に送信します</div>
     <div class="cm-event-preview">
-      <div class="cm-event-name" id="cmEventName">🍷 ブルゴーニュ新着ワイン試飲会</div>
-      <div class="cm-event-meta" id="cmEventMeta">5月22日(木) 14:00〜18:00 · ザ・ウエスティン東京</div>
+      <div class="cm-event-name" id="cmEventName">—</div>
+      <div class="cm-event-meta" id="cmEventMeta">—</div>
     </div>
     <div class="cm-btns">
-      <button class="cm-cancel" onclick="closeConfirm()">キャンセル</button>
-      <button class="cm-send"   onclick="startSending()">📤 配信する</button>
+      <button class="cm-cancel" onclick="closeConfirm()" data-i18n="btn_cancel">キャンセル</button>
+      <button class="cm-send"   onclick="startSending()" data-i18n="btn_send_now">📤 配信する</button>
     </div>
   </div>
 </div>
@@ -1554,41 +1555,41 @@
 <div class="sending-overlay" id="sendingOverlay">
   <div class="sending-spinner"></div>
   <div class="sending-count" id="sendingCount">0</div>
-  <div class="sending-label" id="sendingLabel">店舗に送信中…</div>
+  <div class="sending-label" id="sendingLabel" data-i18n="sending_label_static">店舗に送信中…</div>
   <div class="sending-progress"><div class="sending-progress-fill" id="sendingFill"></div></div>
 </div>
 
 <!-- ==================== 送信完了 ==================== -->
 <div class="done-overlay" id="doneOverlay">
   <div class="done-checkmark">✓</div>
-  <div class="done-title">配信完了！</div>
+  <div class="done-title" data-i18n="done_title_default">配信完了！</div>
   <div class="done-count" id="doneCount">—</div>
-  <div class="done-label">店舗にLINEを送信しました</div>
+  <div class="done-label" data-i18n="done_label_store">店舗にLINEを送信しました</div>
   <div class="done-stats">
     <div class="done-stat">
       <div class="done-stat-val" id="doneSent">—</div>
-      <div class="done-stat-label">送信成功</div>
+      <div class="done-stat-label" data-i18n="done_sent">送信成功</div>
     </div>
     <div class="done-stat">
       <div class="done-stat-val" id="doneDelivered">—</div>
-      <div class="done-stat-label">既読</div>
+      <div class="done-stat-label" data-i18n="done_read">既読</div>
     </div>
     <div class="done-stat">
       <div class="done-stat-val" id="doneRsvp">—</div>
-      <div class="done-stat-label">RSVP済み</div>
+      <div class="done-stat-label" data-i18n="done_rsvp">RSVP済み</div>
     </div>
   </div>
-  <button class="done-back-btn" onclick="closeDone()">管理画面に戻る</button>
+  <button class="done-back-btn" onclick="closeDone()" data-i18n="btn_back_admin">管理画面に戻る</button>
 </div>
 
 <!-- STICKY FOOTER (発信→配信サブタブのみ) -->
 <div class="sticky-footer" id="stickyFooter">
   <div class="sf-count-row">
     <span class="sf-count-num" id="sfCount">0</span>
-    <span class="sf-count-label">店舗に配信します</span>
-    <span class="sf-count-sub" id="sfSub">全18店舗中 LINE連携済み14</span>
+    <span class="sf-count-label" data-i18n="sf_label">店舗に配信します</span>
+    <span class="sf-count-sub" id="sfSub">—</span>
   </div>
-  <button class="sf-send-btn" id="sfSendBtn" onclick="openConfirm()" disabled>
+  <button class="sf-send-btn" id="sfSendBtn" onclick="openConfirm()" disabled data-i18n="sf_send_btn">
     💬 LINE で一括配信する
   </button>
 </div>
@@ -1607,22 +1608,22 @@
       <div class="att-stats">
         <div class="att-stat">
           <div class="att-stat-num" id="attStatStores">0</div>
-          <div class="att-stat-label">登録店舗数</div>
+          <div class="att-stat-label" data-i18n="att_stat_stores">登録店舗数</div>
         </div>
         <div class="att-stat">
           <div class="att-stat-num" id="attStatPeople">0</div>
-          <div class="att-stat-label">合計参加人数</div>
+          <div class="att-stat-label" data-i18n="att_stat_people">合計参加人数</div>
         </div>
         <div class="att-stat">
           <div class="att-stat-num" id="attStatNew">0</div>
-          <div class="att-stat-label">直近24h新着</div>
+          <div class="att-stat-label" data-i18n="att_stat_new">直近24h新着</div>
         </div>
       </div>
       <!-- タブ -->
       <div class="att-tabs">
-        <button class="att-tab active" id="attTabPeople" onclick="switchAttTab('people')">👥 参加者一覧</button>
-        <button class="att-tab" id="attTabWines"  onclick="switchAttTab('wines')">📋 ワイン配信</button>
-        <button class="att-tab" id="attTabSurvey" onclick="switchAttTab('survey')">📊 アンケート</button>
+        <button class="att-tab active" id="attTabPeople" onclick="switchAttTab('people')" data-i18n="att_tab_people">👥 参加者一覧</button>
+        <button class="att-tab" id="attTabWines"  onclick="switchAttTab('wines')" data-i18n="att_tab_wines">📋 ワイン配信</button>
+        <button class="att-tab" id="attTabSurvey" onclick="switchAttTab('survey')" data-i18n="att_tab_survey">📊 アンケート</button>
       </div>
     </div>
     <!-- スクロール可能なコンテンツ -->
@@ -1633,12 +1634,12 @@
 <!-- ==================== メール送信確認ダイアログ ==================== -->
 <div class="mail-confirm-bg" id="mailConfirmBg" onclick="if(event.target===this)closeMailConfirm()">
   <div class="mail-confirm-box">
-    <div class="mail-confirm-title">✉ CSV をメールで送信</div>
-    <div class="mail-confirm-sub" id="mailConfirmSub">参加者一覧をCSVファイルに添付してメール送信します。</div>
+    <div class="mail-confirm-title" data-i18n="mail_title">✉ CSV をメールで送信</div>
+    <div class="mail-confirm-sub" id="mailConfirmSub" data-i18n="mail_sub_static">参加者一覧をCSVファイルに添付してメール送信します。</div>
     <div class="mail-confirm-preview" id="mailConfirmPreview">—</div>
     <div class="mail-confirm-btns">
-      <button class="mail-confirm-cancel" onclick="closeMailConfirm()">キャンセル</button>
-      <button class="mail-confirm-send" onclick="sendCsvMail()">送信する</button>
+      <button class="mail-confirm-cancel" onclick="closeMailConfirm()" data-i18n="btn_cancel">キャンセル</button>
+      <button class="mail-confirm-send" onclick="sendCsvMail()" data-i18n="btn_send">送信する</button>
     </div>
   </div>
 </div>
@@ -1647,8 +1648,8 @@
 <div class="picker-bg" id="eventPickerBg" onclick="if(event.target===this)closeEventPicker()">
   <div class="picker-sheet">
     <div class="picker-head">
-      <div class="picker-title">配信するイベントを選ぶ</div>
-      <button class="picker-close" aria-label="閉じる" onclick="closeEventPicker()">✕</button>
+      <div class="picker-title" data-i18n="picker_event_title">配信するイベントを選ぶ</div>
+      <button class="picker-close" aria-label="閉じる" data-i18n-aria="aria_close" onclick="closeEventPicker()">✕</button>
     </div>
     <div class="picker-body" id="eventPickerBody"></div>
   </div>
@@ -1658,8 +1659,8 @@
 <div class="picker-bg" id="winePickerBg" onclick="if(event.target===this)closeWinePicker()">
   <div class="picker-sheet">
     <div class="picker-head">
-      <div class="picker-title">おすすめワインを選ぶ</div>
-      <button class="picker-close" aria-label="閉じる" onclick="closeWinePicker()">✕</button>
+      <div class="picker-title" data-i18n="picker_wine_title">おすすめワインを選ぶ</div>
+      <button class="picker-close" aria-label="閉じる" data-i18n-aria="aria_close" onclick="closeWinePicker()">✕</button>
     </div>
     <div class="picker-body" id="winePickerBody"></div>
   </div>
@@ -1667,6 +1668,689 @@
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<script>
+/* ===== 多言語対応（i18n）。wine_search.html と同じ方式（localStorage キー somm_lang を全ページ共有） ===== */
+const I18N = {
+  ja: {
+    page_title: 'Sommelin — インポーター管理 | 山田商店',
+    th_sub: 'Sommelin インポーター管理',
+    role_badge: 'インポーター',
+    role_importer_badge: '🚢 インポーター',
+    switch_both: '⇄ 🛒🍽 店舗に切替',
+    switch_restaurant: '⇄ 🍽 レストランに切替',
+    switch_retailer: '⇄ 🛒 酒販店に切替',
+    personal_mode: '🍷 個人モード',
+    title_personal_mode: '個人モードに切り替え',
+    title_logout: 'ログアウト',
+    tab_calendar: 'カレンダー',
+    tab_broadcast: '発信',
+    tab_members: '顧客',
+    tab_catalog: 'カタログ',
+    gcal_title: 'Sommelin 共有カレンダー',
+    sync_last_today: '最終同期: 今日 09:30',
+    sync_just_now: '最終同期: たった今',
+    sync_btn: '同期',
+    sync_syncing: '同期中…',
+    toast_synced: 'Googleカレンダーと同期しました ✓',
+    legend_own: '自社イベント',
+    legend_others: '他社イベント',
+    legend_fair: 'フェア・展示会',
+    dow_0: '日', dow_1: '月', dow_2: '火', dow_3: '水', dow_4: '木', dow_5: '金', dow_6: '土',
+    upcoming_head: '近日中の試飲会・イベント',
+    btn_add: '＋ 追加',
+    ev_load_error_inline: '⚠️ イベントを読み込めませんでした（表示中はデモ・自社分のみ）',
+    ev_load_error: 'イベントを読み込めませんでした',
+    no_events: '予定はありません',
+    rsvp_badge: '👥 {s}軒 / {p}名 登録済み',
+    btn_attendees: '参加者',
+    btn_broadcast: '配信',
+    btn_saved: '✓ 保存済み',
+    btn_add_schedule: '予定追加',
+    org_own: '🏢 自社',
+    org_other: '他社',
+    toast_cal_removed: 'カレンダーから削除しました',
+    toast_cal_added: 'カレンダーに追加しました ✓',
+    time_tbd: '時間未定',
+    untitled_tasting: '（無題の試飲会）',
+    venue_tbd: '会場未定',
+    nev_head: '🍷 新しい試飲会を追加',
+    lbl_ev_type: 'イベント種別',
+    evtype_tasting: '🍷 試飲会',
+    evtype_seminar: '📚 セミナー',
+    evtype_fair: '🏆 フェア',
+    evtype_online: '💻 オンライン',
+    lbl_ev_name: 'イベント名',
+    ph_ev_name: '例: ブルゴーニュ新着ワイン試飲会',
+    lbl_ev_dates: '開催日（複数日OK）',
+    hint_dates: 'タップした日が開催日になります（複数選択OK・もう一度タップで解除）',
+    lbl_start: '開始時間',
+    lbl_end: '終了時間',
+    lbl_parts: '部制・休憩',
+    opt_parts_1: '一斉（部制なし）',
+    opt_parts_2: '2部制', opt_parts_3: '3部制', opt_parts_4: '4部制', opt_parts_5: '5部制',
+    opt_parts_6: '6部制', opt_parts_7: '7部制', opt_parts_8: '8部制', opt_parts_9: '9部制', opt_parts_10: '10部制',
+    unit_min: '分',
+    hint_break: '休憩は5分刻みで入力できます（数時間の休憩は分に換算して入力。例: 3時間→180）',
+    ph_sessions: '部制を選ぶと開始・終了時間から自動計算されます（手直しOK）',
+    sess_break_only: '途中休憩{n}分あり',
+    sess_break_suffix: '（休憩{n}分）',
+    toast_sessions_short: '時間が短すぎて部割りできません（開始・終了時間を確認）',
+    lbl_venue: '会場',
+    ph_venue: '会場名を入力すると候補が出ます',
+    searching: '検索中…',
+    lbl_desc: '概要・説明',
+    ph_desc: '試飲できるワイン、参加費など...',
+    note_publish: '💡 登録すると業界共有カレンダーに公開されます。特定の店舗にLINEで直接届けたい場合は、登録後「発信」タブの配信機能から店舗を選んで送れます。',
+    btn_cancel: 'キャンセル',
+    btn_register: '登録する',
+    toast_need_title: 'イベント名を入力してください',
+    toast_need_venue: '会場を入力してください',
+    toast_need_dates: '開催日を選んでください',
+    toast_session_expired: '⚠️ ログインの有効期限が切れています。再ログインしてください',
+    toast_save_ev_fail: '⚠️ 保存に失敗しました：{msg}',
+    err_network: '通信エラー',
+    toast_publish_partial: '⚠️ {n}日分を公開（{dates} は失敗）',
+    toast_publish_ok: '✓ {n}日分のイベントを公開しました（店舗・顧客のカレンダーに表示されます）',
+    toast_save_fail_net: '⚠️ 保存に失敗しました（通信環境をご確認ください）',
+    btab_send: '📤 配信',
+    btab_history: '🕘 履歴',
+    btn_create_event: '＋ イベント作成',
+    btn_create_post: '＋ 投稿作成',
+    bct_event: '🍷 イベント',
+    bct_post: '📣 おすすめ・お知らせ',
+    head_bcast_event: '配信するイベント',
+    head_create_post: '投稿を作成',
+    ph_post_text: 'お客様へのメッセージ（おすすめワイン・新着・お知らせなど）',
+    tool_photo: '📷 写真を添付',
+    tool_wine: '🍷 おすすめワインを添付',
+    post_person_label: '🙋 個人客（LINE連携済み）にも配信する',
+    post_person_zero: '+0名',
+    plus_n: '+{n}名',
+    note_line_billing: '💡 LINE配信は無料枠（月あたり一定通数）まで無料、超過分は従量課金です。将来、無料枠＋有料プランを用意予定。',
+    head_choose_recipients: '配信先を選ぶ',
+    head_bcast_mode: '配信モード',
+    mode_all: 'すべて',
+    mode_prev: '前回と同じ',
+    mode_custom: 'カスタム',
+    hint_prev_static: '📋 前回配信の宛先を引き継いでいます',
+    hint_prev: '📋 前回配信（{date}）の宛先 {n}店舗を引き継いでいます',
+    ph_search_customers: '顧客を検索…',
+    filter_area: 'エリア ▾',
+    filter_type: '業種 ▾',
+    stat_total: '全顧客',
+    stat_line: 'LINE連携済み',
+    stat_noline: '未連携',
+    stat_excluded: '除外中',
+    no_stores_found: '店舗が見つかりません',
+    badge_no_line: 'LINE未連携',
+    badge_excluded: '🚫 除外中',
+    badge_sent_prev: '前回送信済',
+    badge_never: '未配信',
+    badge_line: '💬 LINE連携',
+    badge_not_linked: '💬 未連携',
+    aria_store_menu: 'この顧客の操作メニュー',
+    head_history: '配信履歴',
+    no_history: '配信履歴はまだありません',
+    hist_sent_store: '店舗に送信',
+    hist_sent_post: '件に送信',
+    hist_read: '既読',
+    hist_rates: '📊 既読率 {o} &nbsp;·&nbsp; RSVP率 {r}',
+    hist_reuse: 'この宛先を再利用 →',
+    toast_recipients_loaded: '「{name}」の宛先 {n}店舗を読み込みました',
+    bcast_no_event_html: '配信できる自社イベントがありません。「＋ イベント作成」から登録してください。',
+    btn_change: '変更',
+    aria_change_event: '配信するイベントを変更',
+    picker_event_title: '配信するイベントを選ぶ',
+    picker_no_events: 'イベントがありません',
+    picker_wine_title: 'おすすめワインを選ぶ',
+    aria_close: '閉じる',
+    toast_no_catalog_wine: 'カタログに取り扱い中のワインがありません',
+    alt_attached_photo: '添付画像',
+    aria_del_photo: '写真を削除',
+    aria_remove_wine: 'ワインを外す',
+    cm_title: 'LINEで配信しますか？',
+    cm_count_label: '店舗に送信します',
+    btn_send_now: '📤 配信する',
+    toast_need_post: '投稿内容を入力してください',
+    toast_need_recipients: '配信先を選んでください',
+    post_media_only: '（写真・ワインのみの投稿）',
+    extra_photo: '📷 写真添付',
+    extra_persons: '🙋 個人客 {n}名にも配信',
+    post_type_label: 'おすすめ・お知らせ投稿',
+    hist_post_title: 'おすすめ投稿',
+    hist_photo: '📷写真',
+    hist_generic: '配信',
+    done_post: '投稿を配信しました',
+    done_event: 'イベント案内を配信しました',
+    toast_no_own_event: '配信できる自社イベントがありません',
+    sending_label_static: '店舗に送信中…',
+    sending_to: '/ {total}{unit}に送信中…',
+    unit_store: '店舗',
+    unit_post: '件',
+    done_title_default: '配信完了！',
+    done_label_store: '店舗にLINEを送信しました',
+    done_label_post: '件のLINEを送信しました',
+    done_sent: '送信成功',
+    done_read: '既読',
+    done_rsvp: 'RSVP済み',
+    btn_back_admin: '管理画面に戻る',
+    sf_label: '店舗に配信します',
+    sf_sub_all: '全{a}店舗中 LINE連携済み{b}',
+    sf_sub_mixed: '店舗{s} ＋ 個人{p}名',
+    sf_send_btn: '💬 LINE で一括配信する',
+    ctx_store_ph: '店舗名',
+    ctx_add: '配信リストに追加',
+    ctx_deselect: '選択を外す',
+    ctx_exclude: '今回の配信から除外する',
+    ctx_unexclude: '除外を解除する',
+    ctx_note: 'メモを追加',
+    ctx_remove: '顧客リストから削除',
+    toast_excluded: '「{name}」を除外しました',
+    toast_unexcluded: '「{name}」の除外を解除しました',
+    prompt_note: '「{name}」のメモ',
+    toast_note_saved: 'メモを保存しました',
+    toast_note_deleted: 'メモを削除しました',
+    toast_store_removed: '「{name}」を顧客リストから削除しました',
+    att_stat_stores: '登録店舗数',
+    att_stat_people: '合計参加人数',
+    att_stat_new: '直近24h新着',
+    att_tab_people: '👥 参加者一覧',
+    att_tab_wines: '📋 ワイン配信',
+    att_tab_survey: '📊 アンケート',
+    btn_mail: '✉ メール',
+    att_empty_people: 'まだ参加申込みはありません。<br>店舗からの申込みがあると<br>ここに順番に表示されます。',
+    n_people: '👥 {n}名',
+    reg_at: '登録: {d}',
+    att_empty_wines: 'ワインリストが登録されていません。<br>イベント作成時にワインを追加してください。',
+    send_winelist_btn: '参加者 {n}軒 全員にLINEで送る',
+    send_survey_btn: 'アンケートをLINEで送る',
+    winelist_head: '📋 試飲ワインリスト（{n}本）',
+    winelist_note: '※ LINEで送信されるリストには価格は含まれません。<br>価格は任意で設定できます。',
+    no_survey_data: 'アンケートデータがありません',
+    survey_sent: '送信件数',
+    survey_responded: '回答数',
+    survey_rate: '回答率',
+    survey_ranking_head: '🏆 人気ランキング',
+    n_votes: '{n}票',
+    somm_report: 'ソムリンレポート',
+    somm_report_sub: '全ユーザーへの配信プレビュー',
+    line_preview_label: 'LINE 配信イメージ ▼',
+    report_head: '🍷 先日の試飲会レポート',
+    somm_pick_html: '🎯 <strong>ソムリン\'s pick:</strong> 今回の注目は「{name}」。{comment}という声が多数！',
+    btn_broadcast_all: '📢 全ユーザーに配信する',
+    toast_no_attendees: '参加者がいません',
+    csv_filename_att: '参加者一覧_{name}_{date}.csv',
+    toast_csv_done: 'CSVをダウンロードしました ✓',
+    not_set: '（未設定）',
+    mail_title: '✉ CSV をメールで送信',
+    mail_sub: '参加者一覧（{n}件）をCSV添付でメール送信します。',
+    mail_sub_static: '参加者一覧をCSVファイルに添付してメール送信します。',
+    mail_preview_html: '<b>送信先:</b> {email}<br><b>件名:</b> 【参加者一覧】{name}<br><b>添付:</b> {file}<br><b>内容:</b> 全{s}軒 / 合計{p}名の参加情報',
+    btn_send: '送信する',
+    toast_mail_sent: '✉ メールで送信しました ✓',
+    wl_modal_title: 'LINE で配信',
+    wl_modal_sub: '参加者 {n}軒 に試飲リストを送信します',
+    wl_line_msg: '🍷 【試飲会のご案内】\n{name}\n📅 {date}　📍 {venue}\n\n試飲ワインリスト：\n{list}\n\n当日のご参加をお待ちしております。\n— {org}',
+    wl_send_btn: '💬 {n}軒 全員に送信する',
+    sending_short: '送信中…',
+    toast_winelist_sent: '💬 {n}軒にLINEでワインリストを送信しました ✓',
+    sv_modal_title: 'アンケートを送信',
+    sv_modal_sub: '参加者 {n}軒 にLINEでアンケートを送ります',
+    sv_line_msg: '📊 【試飲会アンケート】\n{name}\n\nご参加ありがとうございました！\n\n今回飲んだワインの中で、\n一番おいしかったのはどれでしたか？\n評価と感想をお聞かせください 🍷\n\n▼ アンケートはこちら\nhttps://sommelin.app/survey/xxxx',
+    sv_send_btn: '📊 {n}軒 全員にアンケートを送る',
+    toast_survey_sent: '📊 {n}軒にアンケートを送信しました ✓',
+    rep_modal_title: '📢 ソムリンレポート配信',
+    rep_modal_sub: 'ソムリンに登録している全ユーザーにLINEで送信します',
+    rep_line_msg: '🍷 ソムリンレポート\n{name}\n\n人気ワインランキング ▼\n{ranking}\n\n🎯 ソムリン\'s pick:\n「{pick}」\n「{comment}」という声が多数！\n\n詳細はソムリンアプリで →\nhttps://sommelin.app',
+    rep_review_note: '⚠️ 配信前にソムリン編集チームが内容を確認します（通常24時間以内）',
+    rep_submit_btn: '📢 配信申請を送る',
+    toast_rep_submitted: '📢 ソムリンチームに配信申請を送りました ✓',
+    toast_bcast_opened: '「{name}」の配信を開きました',
+    toast_bcast_mode: '配信モードを開きました',
+    fb_head: '💬 あなたのワインへの反響',
+    fb_desc: '店舗が試飲会で「良かった」と記録したワインのうち、貴社名が書き添えられたものが届きます。',
+    ph_fb_name: '会社名（例: テラヴェール）',
+    btn_check: '確認',
+    toast_fb_min: '会社名を2文字以上入れてください',
+    fb_checking: '確認中…',
+    fb_empty: '「{q}」宛の反響はまだありません。店舗が試飲メモに貴社名を書くとここに届きます。',
+    fb_liked: '🏪 {store} が気に入っています',
+    toast_fetch_fail: '⚠️ 取得に失敗しました（通信環境をご確認ください）',
+    ctab_store: '🏪 店舗',
+    ctab_person: '🙋 個人',
+    head_line_stores: 'LINE連携済み店舗',
+    head_noline_stores: '未連携店舗',
+    head_persons: '個人のお客様',
+    line_linked_inline: '💬 LINE連携済',
+    badge_linked: '💬 連携済',
+    invited_done: '招待済み',
+    btn_invite: '招待する',
+    toast_invite_copied: '招待リンクをコピーしました 📋',
+    prev_label: '前回: {d}',
+    cat_total_lbl: '登録ワイン',
+    cat_avail_lbl: '取り扱い中',
+    cat_sold_lbl: '取り扱い停止',
+    cat_add_title: '＋ 取り扱いワインを追加',
+    cat_photo_bottle: '📷 ボトルを撮影',
+    cat_photo_invoice: '🧾 納品書を撮影',
+    cat_photo_hint: '📷写真からの自動入力は近日対応予定。今は写真を添付して、足りない情報を入力してください。',
+    ph_cat_name: 'ワイン名（例: Alex Gambal Charmes-Chambertin）',
+    ph_cat_producer: '生産者名',
+    ph_cat_vintage: 'ヴィンテージ',
+    ph_cat_region: '産地',
+    ph_cat_price: '参考価格（円）',
+    opt_avail: '取り扱い中',
+    opt_unavail: '取り扱い停止',
+    ph_cat_desc: '説明・テイスティングノート（任意）',
+    btn_cat_add: 'カタログに追加',
+    btn_share_line: '💬 LINEでシェア',
+    cat_list_head: 'カタログ一覧',
+    cat_empty_html: 'カタログが空です。<br>上のフォームから取り扱いワインを追加してください。',
+    cat_stopped: '停止中',
+    toast_need_wine_name: 'ワイン名を入力してください',
+    toast_cat_added: '✓ カタログに追加しました',
+    toast_cat_avail: '✓ 取り扱い中に変更しました',
+    toast_cat_unavail: '取り扱い停止に変更しました',
+    toast_deleted: '削除しました',
+    toast_cat_empty: 'カタログが空です',
+    toast_cat_csv: 'カタログをCSVでダウンロードしました',
+    share_cat_title: 'LINEでカタログをシェア',
+    cat_line_msg: '📋 【{org} 取り扱いカタログ】\n取り扱い中ワイン（{n}本）\n\n{lines}{more}\n\n詳細・ご注文はお気軽にお問い合わせください。\n\nhttps://sommelin.app/catalog/{id}',
+    more_n: '\n…他{n}本',
+    btn_line_send: '💬 LINEで送る',
+    toast_cat_shared: '💬 LINEでカタログを送信しました ✓',
+    alt_wine_photo: 'ワイン写真',
+    confirm_logout: 'ログアウトしますか？',
+    toast_no_login: 'ログイン情報を確認できません',
+    toast_logo_uploading: 'ロゴをアップロード中…',
+    toast_logo_changed: '✓ ロゴを変更しました',
+    toast_upload_fail: '⚠️ アップロードに失敗しました',
+    toast_img_fail: '画像を読み込めませんでした',
+    title_change_logo: 'タップでロゴを変更',
+    toast_save_fail_quota: '保存できませんでした（端末の保存容量が不足しています）',
+    toast_save_fail: '保存できませんでした',
+    toast_save_fail_photo: '保存できませんでした（写真が大きすぎる可能性があります）',
+  },
+  en: {
+    page_title: 'Sommelin — Importer Admin | Yamada Shoten',
+    th_sub: 'Sommelin Importer Admin',
+    role_badge: 'Importer',
+    role_importer_badge: '🚢 Importer',
+    switch_both: '⇄ 🛒🍽 Switch to store',
+    switch_restaurant: '⇄ 🍽 Switch to restaurant',
+    switch_retailer: '⇄ 🛒 Switch to retailer',
+    personal_mode: '🍷 Personal mode',
+    title_personal_mode: 'Switch to personal mode',
+    title_logout: 'Log out',
+    tab_calendar: 'Calendar',
+    tab_broadcast: 'Broadcast',
+    tab_members: 'Customers',
+    tab_catalog: 'Catalog',
+    gcal_title: 'Sommelin Shared Calendar',
+    sync_last_today: 'Last synced: today 09:30',
+    sync_just_now: 'Last synced: just now',
+    sync_btn: 'Sync',
+    sync_syncing: 'Syncing…',
+    toast_synced: 'Synced with Google Calendar ✓',
+    legend_own: 'Our events',
+    legend_others: 'Other importers',
+    legend_fair: 'Fairs & trade shows',
+    dow_0: 'Sun', dow_1: 'Mon', dow_2: 'Tue', dow_3: 'Wed', dow_4: 'Thu', dow_5: 'Fri', dow_6: 'Sat',
+    upcoming_head: 'Upcoming tasting events',
+    btn_add: '＋ Add',
+    ev_load_error_inline: '⚠️ Could not load events (showing demo / own events only)',
+    ev_load_error: 'Could not load events',
+    no_events: 'No events scheduled',
+    rsvp_badge: '👥 {s} stores / {p} guests registered',
+    btn_attendees: 'Attendees',
+    btn_broadcast: 'Broadcast',
+    btn_saved: '✓ Saved',
+    btn_add_schedule: 'Add to calendar',
+    org_own: '🏢 Our company',
+    org_other: 'Other importer',
+    toast_cal_removed: 'Removed from your calendar',
+    toast_cal_added: 'Added to your calendar ✓',
+    time_tbd: 'Time TBD',
+    untitled_tasting: '(Untitled tasting event)',
+    venue_tbd: 'Venue TBD',
+    nev_head: '🍷 Add a New Tasting Event',
+    lbl_ev_type: 'Event type',
+    evtype_tasting: '🍷 Tasting',
+    evtype_seminar: '📚 Seminar',
+    evtype_fair: '🏆 Fair',
+    evtype_online: '💻 Online',
+    lbl_ev_name: 'Event name',
+    ph_ev_name: 'e.g. New Burgundy Arrivals Tasting',
+    lbl_ev_dates: 'Dates (multiple OK)',
+    hint_dates: 'Tap dates to select them (multiple allowed; tap again to deselect)',
+    lbl_start: 'Start time',
+    lbl_end: 'End time',
+    lbl_parts: 'Sessions & breaks',
+    opt_parts_1: 'Single session',
+    opt_parts_2: '2 sessions', opt_parts_3: '3 sessions', opt_parts_4: '4 sessions', opt_parts_5: '5 sessions',
+    opt_parts_6: '6 sessions', opt_parts_7: '7 sessions', opt_parts_8: '8 sessions', opt_parts_9: '9 sessions', opt_parts_10: '10 sessions',
+    unit_min: 'min',
+    hint_break: 'Enter breaks in 5-minute steps (convert hours to minutes, e.g. 3 hours → 180)',
+    ph_sessions: 'Choosing sessions auto-fills times from start/end (editable)',
+    sess_break_only: 'Includes a {n}-min break',
+    sess_break_suffix: ' ({n}-min breaks)',
+    toast_sessions_short: 'Not enough time to split into sessions (check start/end times)',
+    lbl_venue: 'Venue',
+    ph_venue: 'Type a venue name to see suggestions',
+    searching: 'Searching…',
+    lbl_desc: 'Description',
+    ph_desc: 'Wines to taste, participation fee, etc...',
+    note_publish: '💡 Registered events are published to the shared industry calendar. To reach specific stores directly via LINE, use the Broadcast tab after registering.',
+    btn_cancel: 'Cancel',
+    btn_register: 'Register',
+    toast_need_title: 'Please enter an event name',
+    toast_need_venue: 'Please enter a venue',
+    toast_need_dates: 'Please select event dates',
+    toast_session_expired: '⚠️ Your session has expired. Please log in again',
+    toast_save_ev_fail: '⚠️ Failed to save: {msg}',
+    err_network: 'network error',
+    toast_publish_partial: '⚠️ Published {n} day(s) ({dates} failed)',
+    toast_publish_ok: '✓ Published {n} event day(s) — now visible on customers\' calendars',
+    toast_save_fail_net: '⚠️ Failed to save (please check your connection)',
+    btab_send: '📤 Send',
+    btab_history: '🕘 History',
+    btn_create_event: '＋ New event',
+    btn_create_post: '＋ New post',
+    bct_event: '🍷 Event',
+    bct_post: '📣 Picks & News',
+    head_bcast_event: 'Event to broadcast',
+    head_create_post: 'Create a post',
+    ph_post_text: 'Message to your customers (recommendations, new arrivals, announcements...)',
+    tool_photo: '📷 Attach photo',
+    tool_wine: '🍷 Attach a recommended wine',
+    post_person_label: '🙋 Also send to individual customers (on LINE)',
+    post_person_zero: '+0',
+    plus_n: '+{n}',
+    note_line_billing: '💡 LINE broadcasts are free up to a monthly quota; overages are pay-as-you-go. Free and paid plans are planned.',
+    head_choose_recipients: 'Choose recipients',
+    head_bcast_mode: 'Broadcast mode',
+    mode_all: 'All',
+    mode_prev: 'Same as last',
+    mode_custom: 'Custom',
+    hint_prev_static: '📋 Reusing recipients from your last broadcast',
+    hint_prev: '📋 Reusing {n} recipients from your last broadcast ({date})',
+    ph_search_customers: 'Search customers…',
+    filter_area: 'Area ▾',
+    filter_type: 'Type ▾',
+    stat_total: 'All customers',
+    stat_line: 'On LINE',
+    stat_noline: 'Not linked',
+    stat_excluded: 'Excluded',
+    no_stores_found: 'No stores found',
+    badge_no_line: 'No LINE link',
+    badge_excluded: '🚫 Excluded',
+    badge_sent_prev: 'Sent last time',
+    badge_never: 'Never sent',
+    badge_line: '💬 On LINE',
+    badge_not_linked: '💬 Not linked',
+    aria_store_menu: 'Actions for this customer',
+    head_history: 'Broadcast history',
+    no_history: 'No broadcast history yet',
+    hist_sent_store: ' stores',
+    hist_sent_post: ' sent',
+    hist_read: ' read',
+    hist_rates: '📊 Read rate {o} &nbsp;·&nbsp; RSVP rate {r}',
+    hist_reuse: 'Reuse these recipients →',
+    toast_recipients_loaded: 'Loaded {n} recipients from "{name}"',
+    bcast_no_event_html: 'No own events to broadcast. Create one via “＋ New event”.',
+    btn_change: 'Change',
+    aria_change_event: 'Change the event to broadcast',
+    picker_event_title: 'Choose an Event to Broadcast',
+    picker_no_events: 'No events',
+    picker_wine_title: 'Choose a Recommended Wine',
+    aria_close: 'Close',
+    toast_no_catalog_wine: 'No available wines in your catalog',
+    alt_attached_photo: 'Attached photo',
+    aria_del_photo: 'Remove photo',
+    aria_remove_wine: 'Remove wine',
+    cm_title: 'Send via LINE?',
+    cm_count_label: 'recipients will receive this',
+    btn_send_now: '📤 Send',
+    toast_need_post: 'Please enter post content',
+    toast_need_recipients: 'Please choose recipients',
+    post_media_only: '(Photo / wine-only post)',
+    extra_photo: '📷 Photo attached',
+    extra_persons: '🙋 Also to {n} individual customers',
+    post_type_label: 'Picks & news post',
+    hist_post_title: 'Recommendation post',
+    hist_photo: '📷 photo',
+    hist_generic: 'Broadcast',
+    done_post: 'Post sent!',
+    done_event: 'Event announcement sent!',
+    toast_no_own_event: 'No own events available to broadcast',
+    sending_label_static: 'Sending…',
+    sending_to: 'of {total}{unit} sent…',
+    unit_store: ' stores',
+    unit_post: ' messages',
+    done_title_default: 'Broadcast complete!',
+    done_label_store: 'stores received your LINE message',
+    done_label_post: 'LINE messages sent',
+    done_sent: 'Sent',
+    done_read: 'Read',
+    done_rsvp: 'RSVPs',
+    btn_back_admin: 'Back to admin',
+    sf_label: 'recipients selected',
+    sf_sub_all: '{b} of {a} stores on LINE',
+    sf_sub_mixed: '{s} stores + {p} individuals',
+    sf_send_btn: '💬 Send to all via LINE',
+    ctx_store_ph: 'Store name',
+    ctx_add: 'Add to recipient list',
+    ctx_deselect: 'Deselect',
+    ctx_exclude: 'Exclude from this broadcast',
+    ctx_unexclude: 'Remove exclusion',
+    ctx_note: 'Add a note',
+    ctx_remove: 'Remove from customer list',
+    toast_excluded: 'Excluded "{name}"',
+    toast_unexcluded: 'Removed exclusion for "{name}"',
+    prompt_note: 'Note for "{name}"',
+    toast_note_saved: 'Note saved',
+    toast_note_deleted: 'Note deleted',
+    toast_store_removed: 'Removed "{name}" from your customer list',
+    att_stat_stores: 'Stores registered',
+    att_stat_people: 'Total attendees',
+    att_stat_new: 'New in last 24h',
+    att_tab_people: '👥 Attendees',
+    att_tab_wines: '📋 Wine List',
+    att_tab_survey: '📊 Survey',
+    btn_mail: '✉ Email',
+    att_empty_people: 'No registrations yet.<br>Registrations from stores<br>will appear here as they come in.',
+    n_people: '👥 {n} people',
+    reg_at: 'Registered: {d}',
+    att_empty_wines: 'No wine list registered.<br>Add wines when creating the event.',
+    send_winelist_btn: 'Send via LINE to all {n} attending stores',
+    send_survey_btn: 'Send survey via LINE',
+    winelist_head: '📋 Tasting wine list ({n} bottles)',
+    winelist_note: '* Prices are not included in the list sent via LINE.<br>Prices are optional.',
+    no_survey_data: 'No survey data available',
+    survey_sent: 'Sent',
+    survey_responded: 'Responses',
+    survey_rate: 'Response rate',
+    survey_ranking_head: '🏆 Popularity Ranking',
+    n_votes: '{n} votes',
+    somm_report: 'Sommelin Report',
+    somm_report_sub: 'Broadcast preview for all users',
+    line_preview_label: 'LINE message preview ▼',
+    report_head: '🍷 Recent Tasting Event Report',
+    somm_pick_html: '🎯 <strong>Sommelin\'s pick:</strong> the standout was "{name}". Many attendees said "{comment}"!',
+    btn_broadcast_all: '📢 Broadcast to all users',
+    toast_no_attendees: 'No attendees yet',
+    csv_filename_att: 'attendees_{name}_{date}.csv',
+    toast_csv_done: 'CSV downloaded ✓',
+    not_set: '(not set)',
+    mail_title: '✉ Send CSV by Email',
+    mail_sub: 'The attendee list ({n} entries) will be emailed as a CSV attachment.',
+    mail_sub_static: 'The attendee list will be emailed as a CSV attachment.',
+    mail_preview_html: '<b>To:</b> {email}<br><b>Subject:</b> Attendee List — {name}<br><b>Attachment:</b> {file}<br><b>Summary:</b> {s} stores / {p} attendees total',
+    btn_send: 'Send',
+    toast_mail_sent: '✉ Email sent ✓',
+    wl_modal_title: 'Send via LINE',
+    wl_modal_sub: 'The tasting list will be sent to {n} attending stores',
+    wl_line_msg: '🍷 Tasting Event Invitation\n{name}\n📅 {date}  📍 {venue}\n\nTasting wine list:\n{list}\n\nWe look forward to welcoming you.\n— {org}',
+    wl_send_btn: '💬 Send to all {n} stores',
+    sending_short: 'Sending…',
+    toast_winelist_sent: '💬 Wine list sent via LINE to {n} stores ✓',
+    sv_modal_title: 'Send Survey',
+    sv_modal_sub: 'The survey will be sent via LINE to {n} attending stores',
+    sv_line_msg: '📊 Tasting Event Survey\n{name}\n\nThank you for attending!\n\nWhich wine did you enjoy most\nat this tasting?\nPlease share your ratings and comments 🍷\n\n▼ Take the survey\nhttps://sommelin.app/survey/xxxx',
+    sv_send_btn: '📊 Send survey to all {n} stores',
+    toast_survey_sent: '📊 Survey sent to {n} stores ✓',
+    rep_modal_title: '📢 Sommelin Report Broadcast',
+    rep_modal_sub: 'This will be sent via LINE to all registered Sommelin users',
+    rep_line_msg: '🍷 Sommelin Report\n{name}\n\nPopularity ranking ▼\n{ranking}\n\n🎯 Sommelin\'s pick:\n"{pick}"\nMany attendees said "{comment}"!\n\nSee details in the Sommelin app →\nhttps://sommelin.app',
+    rep_review_note: '⚠️ The Sommelin editorial team reviews content before broadcast (usually within 24 hours)',
+    rep_submit_btn: '📢 Submit for broadcast',
+    toast_rep_submitted: '📢 Broadcast request sent to the Sommelin team ✓',
+    toast_bcast_opened: 'Opened broadcast for "{name}"',
+    toast_bcast_mode: 'Opened broadcast mode',
+    fb_head: '💬 Feedback on Your Wines',
+    fb_desc: 'When stores record a wine they liked at a tasting and mention your company name, it appears here.',
+    ph_fb_name: 'Company name (e.g. Terravert)',
+    btn_check: 'Check',
+    toast_fb_min: 'Please enter at least 2 characters',
+    fb_checking: 'Checking…',
+    fb_empty: 'No feedback for "{q}" yet. When stores mention your company in their tasting notes, it will appear here.',
+    fb_liked: '🏪 Liked by {store}',
+    toast_fetch_fail: '⚠️ Failed to fetch (please check your connection)',
+    ctab_store: '🏪 Stores',
+    ctab_person: '🙋 Individuals',
+    head_line_stores: 'Stores on LINE',
+    head_noline_stores: 'Stores not linked',
+    head_persons: 'Individual customers',
+    line_linked_inline: '💬 On LINE',
+    badge_linked: '💬 Linked',
+    invited_done: 'Invited',
+    btn_invite: 'Invite',
+    toast_invite_copied: 'Invite link copied 📋',
+    prev_label: 'Last: {d}',
+    cat_total_lbl: 'Wines listed',
+    cat_avail_lbl: 'Available',
+    cat_sold_lbl: 'Discontinued',
+    cat_add_title: '＋ Add a Wine to Your Portfolio',
+    cat_photo_bottle: '📷 Photograph bottle',
+    cat_photo_invoice: '🧾 Photograph invoice',
+    cat_photo_hint: '📷 Auto-fill from photos is coming soon. For now, attach a photo and fill in the remaining details.',
+    ph_cat_name: 'Wine name (e.g. Alex Gambal Charmes-Chambertin)',
+    ph_cat_producer: 'Producer',
+    ph_cat_vintage: 'Vintage',
+    ph_cat_region: 'Region',
+    ph_cat_price: 'Reference price (JPY)',
+    opt_avail: 'Available',
+    opt_unavail: 'Discontinued',
+    ph_cat_desc: 'Description / tasting notes (optional)',
+    btn_cat_add: 'Add to catalog',
+    btn_share_line: '💬 Share via LINE',
+    cat_list_head: 'Catalog',
+    cat_empty_html: 'Your catalog is empty.<br>Add wines using the form above.',
+    cat_stopped: 'Stopped',
+    toast_need_wine_name: 'Please enter a wine name',
+    toast_cat_added: '✓ Added to catalog',
+    toast_cat_avail: '✓ Marked as available',
+    toast_cat_unavail: 'Marked as discontinued',
+    toast_deleted: 'Deleted',
+    toast_cat_empty: 'Your catalog is empty',
+    toast_cat_csv: 'Catalog downloaded as CSV',
+    share_cat_title: 'Share Catalog via LINE',
+    cat_line_msg: '📋 {org} — Wine Catalog\nWines currently available ({n} bottles)\n\n{lines}{more}\n\nFor details or orders, feel free to contact us.\n\nhttps://sommelin.app/catalog/{id}',
+    more_n: '\n…and {n} more',
+    btn_line_send: '💬 Send via LINE',
+    toast_cat_shared: '💬 Catalog sent via LINE ✓',
+    alt_wine_photo: 'Wine photo',
+    confirm_logout: 'Log out?',
+    toast_no_login: 'Could not verify your login',
+    toast_logo_uploading: 'Uploading logo…',
+    toast_logo_changed: '✓ Logo updated',
+    toast_upload_fail: '⚠️ Upload failed',
+    toast_img_fail: 'Could not load the image',
+    title_change_logo: 'Tap to change logo',
+    toast_save_fail_quota: 'Could not save (device storage is full)',
+    toast_save_fail: 'Could not save',
+    toast_save_fail_photo: 'Could not save (the photo may be too large)',
+  },
+};
+let LANG = (() => { try { return localStorage.getItem('somm_lang') || (navigator.language && navigator.language.startsWith('ja') ? 'ja' : 'en'); } catch (e) { return 'ja'; } })();
+function t(key) {
+  const d = I18N[LANG] || I18N.ja;
+  return (d && d[key] != null) ? d[key] : (I18N.ja[key] != null ? I18N.ja[key] : key);
+}
+// {name} 形式のプレースホルダーを差し込む（例: tfmt('hint_prev', { date, n })）
+function tfmt(key, vars) {
+  let s = t(key);
+  if (vars) { Object.keys(vars).forEach(k => { s = s.split('{' + k + '}').join(vars[k]); }); }
+  return s;
+}
+function applyI18n() {
+  document.documentElement.lang = LANG;
+  document.title = t('page_title');
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+  const btn = document.getElementById('langBtn');
+  if (btn) btn.textContent = LANG === 'ja' ? '🌐 EN' : '🌐 日本語';
+}
+function setLang(l) {
+  LANG = l;
+  try { localStorage.setItem('somm_lang', l); } catch (e) {}
+  if (window.sommLog) sommLog('lang_switch', { lang: l });
+  // このページは動的描画が多いためリロードで全体を新しい言語で再描画する
+  location.reload();
+}
+// ── 表示用ローカライズヘルパー（DB/デモデータの日本語値はそのまま保持し、EN表示時のみ変換） ──
+function qw(s) { return LANG === 'ja' ? '「' + s + '」' : '"' + s + '"'; }
+const AREA_EN = {
+  '恵比寿':'Ebisu','代官山':'Daikanyama','中目黒':'Nakameguro','麻布十番':'Azabu-Juban','銀座':'Ginza',
+  '六本木':'Roppongi','渋谷':'Shibuya','目黒':'Meguro','新宿':'Shinjuku','西麻布':'Nishi-Azabu',
+  '学芸大学':'Gakugei-Daigaku','表参道':'Omotesando','白金台':'Shirokanedai','広尾':'Hiroo','神楽坂':'Kagurazaka',
+};
+function dispArea(v) { return (LANG === 'en' && v && AREA_EN[v]) ? AREA_EN[v] : v; }
+const TYPE_EN = { 'フレンチ':'French','イタリアン':'Italian','ワインバー':'Wine bar','和食':'Japanese','スペイン料理':'Spanish' };
+function dispType(v) { return (LANG === 'en' && v && TYPE_EN[v]) ? TYPE_EN[v] : v; }
+const EVTYPE_EN = { '試飲会':'Tasting','セミナー':'Seminar','フェア':'Fair','オンライン':'Online' };
+function dispEvType(v) { return (LANG === 'en' && v && EVTYPE_EN[v]) ? EVTYPE_EN[v] : v; }
+const NOTE_EN = {
+  '赤ワイン好き':'Loves red wine','ブルゴーニュ愛好家':'Burgundy enthusiast','シャンパーニュ党':'Champagne devotee',
+  'イタリアワイン好き':'Italian wine fan','自然派ワインを探し中':'Exploring natural wines','コスパ重視':'Value-focused',
+};
+function dispNote(v) { return (LANG === 'en' && v && NOTE_EN[v]) ? NOTE_EN[v] : v; }
+const EVENT_EN = {
+  'シャンパーニュ特集 試飲会':'Champagne Feature Tasting','イタリアワイン新着セミナー':'New Italian Wines Seminar',
+  'プロヴァンスロゼ試飲会':'Provence Rosé Tasting','ボルドー格付けシャトー試飲会':'Bordeaux Classified Growths Tasting',
+};
+function dispEvent(v) { return (LANG === 'en' && v && EVENT_EN[v]) ? EVENT_EN[v] : v; }
+const CATDESC_EN = {
+  'ブルゴーニュの新星。緻密なタンニンと赤果実の香り。':'A rising star of Burgundy. Fine-grained tannins and red-fruit aromas.',
+  'コスパ優秀な村名格。飲みやすくエレガント。':'Excellent value at village level. Approachable and elegant.',
+  '繊細なフローラルアロマ。女性的なシャンボール・ミュジニー。':'Delicate floral aromas. A graceful, feminine Chambolle-Musigny.',
+  'ルロワの最高峰。圧倒的な存在感と長い余韻。':'Leroy at its finest. Commanding presence and a long finish.',
+  '1er Cruの力強さの中に繊細さ。まだ若い印象。3〜5年後がベスト。':'Premier Cru power with finesse. Still young — at its best in 3–5 years.',
+};
+function dispDesc(v) { return (LANG === 'en' && v && CATDESC_EN[v]) ? CATDESC_EN[v] : v; }
+function tMonthsShort() {
+  return LANG === 'en'
+    ? ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    : ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+}
+function tMonthsFull() {
+  return LANG === 'en'
+    ? ['January','February','March','April','May','June','July','August','September','October','November','December']
+    : ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+}
+function tDows() {
+  return LANG === 'en' ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] : ['日','月','火','水','木','金','土'];
+}
+function fmtYM(y, mIdx) { return LANG === 'en' ? tMonthsFull()[mIdx] + ' ' + y : y + '年 ' + (mIdx + 1) + '月'; }
+function fmtMD(d) { return LANG === 'en' ? tMonthsShort()[d.getMonth()] + ' ' + d.getDate() : (d.getMonth() + 1) + '月' + d.getDate() + '日'; }
+function fmtMDW(d) { return fmtMD(d) + (LANG === 'en' ? ' (' + tDows()[d.getDay()] + ')' : '(' + tDows()[d.getDay()] + ')'); }
+function fmtDowLong(d) { return LANG === 'en' ? tDows()[d.getDay()] : tDows()[d.getDay()] + '曜'; }
+applyI18n();
+</script>
 
 <script>
 // ============================================================
@@ -1701,7 +2385,8 @@ let allLineIds = stores.filter(s => s.lineConnected).map(s => s.id);
 // 前回配信の表示用日付（"5月1日" 等）。履歴・ヒント文に使う。
 function fmtPrevDate() {
   const m = PREV_SENT_DATE.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  return m ? `${Number(m[2])}月${Number(m[3])}日` : PREV_SENT_DATE;
+  if (!m) return PREV_SENT_DATE;
+  return LANG === 'en' ? `${tMonthsShort()[Number(m[2]) - 1]} ${Number(m[3])}` : `${Number(m[2])}月${Number(m[3])}日`;
 }
 
 // 配信履歴データ（各エントリに stable な id を付与。再利用時に index ではなく id で参照する）
@@ -1732,9 +2417,9 @@ function lsSet(key, val) {
   catch (e) {
     console.warn('[ls] write失敗', key, e);
     if (e && (e.name === 'QuotaExceededError' || /quota/i.test(String(e.message || '')))) {
-      showToast('保存できませんでした（端末の保存容量が不足しています）');
+      showToast(t('toast_save_fail_quota'));
     } else {
-      showToast('保存できませんでした');
+      showToast(t('toast_save_fail'));
     }
     return false;
   }
@@ -1812,7 +2497,7 @@ function persistEvent(evObj) {
 
 // ── ログアウト ──
 function sommelinLogout() {
-  if (!confirm('ログアウトしますか？')) return;
+  if (!confirm(t('confirm_logout'))) return;
   try {
     const s = JSON.parse(localStorage.getItem('sommelin_session') || 'null');
     if (s && s.access_token) {
@@ -1851,7 +2536,7 @@ function initHeaderIdentity(){
   const ic=document.querySelector('.th-icon');
   if(ic){
     if(p.avatar_url) ic.innerHTML='<img src="'+p.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" alt="logo">';
-    ic.style.cursor='pointer'; ic.title='タップでロゴを変更'; ic.style.overflow='hidden';
+    ic.style.cursor='pointer'; ic.title=t('title_change_logo'); ic.style.overflow='hidden';
     ic.onclick=pickHeaderLogo;
   }
 }
@@ -1869,8 +2554,8 @@ function pickHeaderLogo(){
 
 async function uploadHeaderLogo(file){
   const uid=await hdrUid();
-  if(!uid){ showToast('ログイン情報を確認できません'); return; }
-  showToast('ロゴをアップロード中…');
+  if(!uid){ showToast(t('toast_no_login')); return; }
+  showToast(t('toast_logo_uploading'));
   const img=new Image();
   img.onload=()=>{
     const c=document.createElement('canvas');
@@ -1897,11 +2582,11 @@ async function uploadHeaderLogo(file){
         p.avatar_url=url;
         localStorage.setItem('sommelin_profile',JSON.stringify(p));
         initHeaderIdentity();
-        showToast('✓ ロゴを変更しました');
-      }catch(e){ showToast('⚠️ アップロードに失敗しました'); }
+        showToast(t('toast_logo_changed'));
+      }catch(e){ showToast(t('toast_upload_fail')); }
     },'image/jpeg',0.85);
   };
-  img.onerror=()=>showToast('画像を読み込めませんでした');
+  img.onerror=()=>showToast(t('toast_img_fail'));
   img.src=URL.createObjectURL(file);
 }
 
@@ -1921,7 +2606,7 @@ function initRoleSwitcher() {
     info.appendChild(row);
   }
   // 今の画面の業態（強調表示）
-  el.textContent = '🚢 インポーター';
+  el.textContent = t('role_importer_badge');
   el.style.cssText += ';font-size:12px;font-weight:800;background:#C9973A;color:#fff;white-space:nowrap;padding:5px 12px;flex-shrink:0;';
   if (row && el.parentNode !== row) row.appendChild(el);
   // 他業態を持っていれば切替ボタン（行き先の業態名を表示）
@@ -1929,7 +2614,7 @@ function initRoleSwitcher() {
   if ((hasStore || hasRetail) && !document.getElementById('roleSwitchBtn')) {
     const btn = document.createElement('button');
     btn.id = 'roleSwitchBtn';
-    btn.textContent = '⇄ ' + (hasStore && hasRetail ? '🛒🍽 店舗に切替' : hasStore ? '🍽 レストランに切替' : '🛒 酒販店に切替');
+    btn.textContent = hasStore && hasRetail ? t('switch_both') : hasStore ? t('switch_restaurant') : t('switch_retailer');
     btn.style.cssText = 'background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:14px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;';
     btn.onclick = () => { location.href = 'restaurant_admin.html'; };
     (row || el.parentNode).appendChild(btn);
@@ -1947,29 +2632,29 @@ function evAuthToken(){ try{ const s=JSON.parse(localStorage.getItem('sommelin_s
 async function loadTastingFeedback() {
   const q = document.getElementById('fbImporterName').value.trim();
   const box = document.getElementById('fbList');
-  if (q.length < 2) { showToast('会社名を2文字以上入れてください'); return; }
-  box.innerHTML = '<div style="font-size:12px;color:var(--text-sub);padding:6px 0;">確認中…</div>';
+  if (q.length < 2) { showToast(t('toast_fb_min')); return; }
+  box.innerHTML = '<div style="font-size:12px;color:var(--text-sub);padding:6px 0;">' + t('fb_checking') + '</div>';
   try {
     const r = await fetch(EV_API_BASE + '/api/tasting-feedback?importer=' + encodeURIComponent(q), {
       headers: { 'Authorization': 'Bearer ' + (evAuthToken() || '') }
     });
-    if (r.status === 401) { box.innerHTML = ''; showToast('⚠️ ログインの有効期限が切れています。再ログインしてください'); return; }
+    if (r.status === 401) { box.innerHTML = ''; showToast(t('toast_session_expired')); return; }
     if (!r.ok) throw 0;
     const d = await r.json();
     if (!d.items || !d.items.length) {
-      box.innerHTML = `<div style="font-size:12px;color:var(--text-sub);padding:6px 0;">「${q}」宛の反響はまだありません。店舗が試飲メモに貴社名を書くとここに届きます。</div>`;
+      box.innerHTML = `<div style="font-size:12px;color:var(--text-sub);padding:6px 0;">${tfmt('fb_empty', { q })}</div>`;
       return;
     }
     const esc = s => String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     box.innerHTML = d.items.map(it => `
       <div style="background:white;border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
         <div style="font-size:13px;font-weight:800;color:var(--text);">🍷 ${esc(it.wine)}</div>
-        <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">🏪 ${esc(it.store)} が気に入っています　${new Date(it.ts).toLocaleDateString('ja-JP')}</div>
+        <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">${tfmt('fb_liked', { store: esc(it.store) })}　${new Date(it.ts).toLocaleDateString(LANG === 'ja' ? 'ja-JP' : 'en-US')}</div>
         ${it.memo ? `<div style="font-size:12px;color:#555;margin-top:4px;">💬 ${esc(it.memo)}</div>` : ''}
       </div>`).join('');
   } catch (e) {
     box.innerHTML = '';
-    showToast('⚠️ 取得に失敗しました（通信環境をご確認ください）');
+    showToast(t('toast_fetch_fail'));
   }
 }
 
@@ -2022,11 +2707,10 @@ function nevCalNav(delta) {
   renderNevCal();
 }
 function renderNevCal() {
-  const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-  document.getElementById('nevCalLabel').textContent = `${nevCalYear}年 ${months[nevCalMonth]}`;
+  document.getElementById('nevCalLabel').textContent = fmtYM(nevCalYear, nevCalMonth);
 
   const dowBox = document.getElementById('nevCalDow');
-  const dows = ['日','月','火','水','木','金','土'];
+  const dows = tDows();
   dowBox.innerHTML = dows.map((d, i) =>
     `<div style="text-align:center;font-size:10px;font-weight:700;color:${i===0?'#e53e3e':i===6?'#2563eb':'var(--text-sub)'};padding:2px 0;">${d}</div>`).join('');
 
@@ -2058,13 +2742,13 @@ function recalcSessions() {
   const st  = document.getElementById('nev-start').value;
   const en  = document.getElementById('nev-end').value;
   const out = document.getElementById('nev-sessions');
-  if (n <= 1) { out.value = brk ? `途中休憩${brk}分あり` : ''; return; }
+  if (n <= 1) { out.value = brk ? tfmt('sess_break_only', { n: brk }) : ''; return; }
   if (!st || !en) { out.value = ''; return; }
   const toMin = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
   const toHM  = x => `${Math.floor(x / 60)}:${String(x % 60).padStart(2, '0')}`;
   const s = toMin(st), e = toMin(en);
   const total = e - s - brk * (n - 1);
-  if (total < n * 10) { out.value = ''; showToast('時間が短すぎて部割りできません（開始・終了時間を確認）'); return; }
+  if (total < n * 10) { out.value = ''; showToast(t('toast_sessions_short')); return; }
   const dur = Math.floor(total / n / 5) * 5;   // 5分刻み
   const marks = ['①', '②', '③', '④', '⑤'];
   let cur = s; const seg = [];
@@ -2073,7 +2757,7 @@ function recalcSessions() {
     seg.push(`${marks[i]}${toHM(cur)}〜${toHM(end)}`);
     cur = end + brk;
   }
-  out.value = seg.join(' ') + (brk ? `（休憩${brk}分）` : '');
+  out.value = seg.join(' ') + (brk ? tfmt('sess_break_suffix', { n: brk }) : '');
 }
 
 // ── 会場サジェスト（backend /api/places/suggest = Google Places。キー未設定時はPhotonに自動切替） ──
@@ -2091,7 +2775,7 @@ function venueSuggest() {
   if (q.length < 2) { box.style.display = 'none'; return; }
   if (!venueSession) newVenueSession();
   // すぐに「検索中…」を出して体感速度を上げる（実際の検索は少し遅れて開始）
-  box.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:var(--text-sub);">検索中…</div>';
+  box.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:var(--text-sub);">' + t('searching') + '</div>';
   box.style.display = 'block';
   const myQ = q;
   venueTimer = setTimeout(async () => {
@@ -2160,12 +2844,12 @@ function selectEvType(el, type, label) {
 async function saveNewEvent() {
   const title = document.getElementById('nev-title').value.trim();
   const venue = document.getElementById('nev-venue').value.trim();
-  if (!title) { showToast('イベント名を入力してください'); return; }
-  if (!venue) { showToast('会場を入力してください'); return; }
+  if (!title) { showToast(t('toast_need_title')); return; }
+  if (!venue) { showToast(t('toast_need_venue')); return; }
 
   // 開催日: カレンダーでタップ選択した日付（複数日OK）
   const dates = [...nevDates].sort();
-  if (!dates.length) { showToast('開催日を選んでください'); return; }
+  if (!dates.length) { showToast(t('toast_need_dates')); return; }
 
   const typeDots = { tasting:'#9B1B4B', seminar:'#9B1B4B', fair:'#C9973A', online:'#2563eb' };
   const typeLabels = { tasting:'試飲会', seminar:'セミナー', fair:'フェア', online:'オンライン' };
@@ -2190,15 +2874,15 @@ async function saveNewEvent() {
       })
     });
     const dres = await r.json().catch(() => ({}));
-    if (r.status === 401) { showToast('⚠️ ログインの有効期限が切れています。再ログインしてください'); return; }
-    if (!r.ok) { showToast('⚠️ 保存に失敗しました：' + (dres.message || '通信エラー')); return; }
+    if (r.status === 401) { showToast(t('toast_session_expired')); return; }
+    if (!r.ok) { showToast(tfmt('toast_save_ev_fail', { msg: dres.message || t('err_network') })); return; }
     created = dres.events || [];
     if (dres.failedDates && dres.failedDates.length) {
-      showToast(`⚠️ ${created.length}日分を公開（${dres.failedDates.join(', ')} は失敗）`);
+      showToast(tfmt('toast_publish_partial', { n: created.length, dates: dres.failedDates.join(', ') }));
     } else {
-      showToast(`✓ ${created.length}日分のイベントを公開しました（店舗・顧客のカレンダーに表示されます）`);
+      showToast(tfmt('toast_publish_ok', { n: created.length }));
     }
-  } catch (e) { showToast('⚠️ 保存に失敗しました（通信環境をご確認ください）'); return; }
+  } catch (e) { showToast(t('toast_save_fail_net')); return; }
 
   // ② ローカル表示にも即反映（1日=1エントリ）
   created.forEach(ev => {
@@ -2277,9 +2961,9 @@ async function loadIndustryEvents() {
       mapped.push({
         id: String(e.id), mine: false, type: 'tasting', typeLabel: '試飲会', dotColor: '#2563eb',
         date: new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])),
-        time: st ? (en ? st + '〜' + en : st) : '時間未定',
-        name: e.title || '（無題の試飲会）',
-        organizer: '', venue: e.venue_name || e.venue_address || '会場未定',
+        time: st ? (en ? st + '〜' + en : st) : t('time_tbd'),
+        name: e.title || t('untitled_tasting'),
+        organizer: '', venue: e.venue_name || e.venue_address || t('venue_tbd'),
         registrationUrl: e.registration_url || '',
         notifyEmail: '', wines: [], survey: null, rsvps: [],
       });
@@ -2304,8 +2988,7 @@ let impCalMonth = new Date().getMonth();
 // カレンダー描画
 // ============================================================
 function renderImporterCalendar() {
-  const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-  document.getElementById('impMonthLabel').textContent = `${impCalYear}年 ${months[impCalMonth]}`;
+  document.getElementById('impMonthLabel').textContent = fmtYM(impCalYear, impCalMonth);
 
   const grid  = document.getElementById('impCalGrid');
   const today = new Date();
@@ -2354,7 +3037,6 @@ function impChangeMonth(delta) {
 
 function renderImpEventList() {
   const ms = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const ds = ['日','月','火','水','木','金','土'];
   const upcoming = industryEvents
     .filter(e => e.date >= new Date(impCalYear, impCalMonth, 1) && e.date < new Date(impCalYear, impCalMonth + 1, 1))
     .sort((a,b) => a.date - b.date);
@@ -2363,10 +3045,10 @@ function renderImpEventList() {
   // フェッチ失敗/空のときはインラインで状態を表示（自社シードがあれば一覧自体は出る）
   let stateMsg = '';
   if (eventLoadState === 'error') {
-    stateMsg = `<div style="background:#fdeef0;border:1px solid #f3c6cf;border-radius:10px;padding:10px 12px;margin-bottom:10px;color:#9B1B4B;font-size:12px;">⚠️ イベントを読み込めませんでした（表示中はデモ・自社分のみ）</div>`;
+    stateMsg = `<div style="background:#fdeef0;border:1px solid #f3c6cf;border-radius:10px;padding:10px 12px;margin-bottom:10px;color:#9B1B4B;font-size:12px;">${t('ev_load_error_inline')}</div>`;
   }
   if (!upcoming.length) {
-    container.innerHTML = stateMsg + `<div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">${eventLoadState==='error' ? 'イベントを読み込めませんでした' : '予定はありません'}</div>`;
+    container.innerHTML = stateMsg + `<div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">${eventLoadState==='error' ? t('ev_load_error') : t('no_events')}</div>`;
     return;
   }
 
@@ -2382,27 +3064,27 @@ function renderImpEventList() {
       const totalStores  = ev.rsvps.length;
       const totalPeople  = ev.rsvps.reduce((s, r) => s + r.count, 0);
       if (totalStores > 0) {
-        rsvpBadge = `<span class="rsvp-badge">👥 ${totalStores}軒 / ${totalPeople}名 登録済み</span>`;
+        rsvpBadge = `<span class="rsvp-badge">${tfmt('rsvp_badge', { s: totalStores, p: totalPeople })}</span>`;
       }
       actionBtns = `
-        <button class="imp-ev-btn mine" onclick="openAttSheet('${ev.id}')">参加者</button>
-        <button class="imp-ev-btn send" onclick="goToBroadcast('${ev.id}')">配信</button>`;
+        <button class="imp-ev-btn mine" onclick="openAttSheet('${ev.id}')">${t('btn_attendees')}</button>
+        <button class="imp-ev-btn send" onclick="goToBroadcast('${ev.id}')">${t('btn_broadcast')}</button>`;
     } else {
       // 他社イベント: 「予定追加」を保存済みトグルにして localStorage に反映
       const isSaved = savedExt.includes(ev.id);
-      actionBtns = `<button class="imp-ev-btn send${isSaved ? ' saved' : ''}" onclick="toggleSavedExternal('${ev.id}')">${isSaved ? '✓ 保存済み' : '予定追加'}</button>`;
+      actionBtns = `<button class="imp-ev-btn send${isSaved ? ' saved' : ''}" onclick="toggleSavedExternal('${ev.id}')">${isSaved ? t('btn_saved') : t('btn_add_schedule')}</button>`;
     }
 
     return `<div class="imp-ev-card ${cls}" id="iev-${ev.id}">
       <div class="imp-ev-date">
         <div class="imp-ev-date-m">${ms[ev.date.getMonth()]}</div>
         <div class="imp-ev-date-d">${ev.date.getDate()}</div>
-        <div class="imp-ev-date-w">${ds[ev.date.getDay()]}曜</div>
+        <div class="imp-ev-date-w">${fmtDowLong(ev.date)}</div>
       </div>
       <div class="imp-ev-body">
         <div class="imp-ev-name">${ev.name}</div>
         <div class="imp-ev-meta">⏰ ${ev.time} &nbsp;|&nbsp; 📍 ${ev.venue}</div>
-        <span class="imp-ev-organizer ${orgCls}">${ev.mine ? '🏢 自社' : '🏢 ' + ev.organizer}</span>
+        <span class="imp-ev-organizer ${orgCls}">${ev.mine ? t('org_own') : '🏢 ' + (ev.organizer || t('org_other'))}</span>
         ${rsvpBadge}
       </div>
       <div class="imp-ev-actions">${actionBtns}</div>
@@ -2420,8 +3102,8 @@ function toggleSavedExternal(id) {
   // TODO(backend): replace with Supabase INSERT/DELETE on saved_events (auth + RLS)
   const arr = lsGet(LS.savedExt, []);
   const i = arr.indexOf(id);
-  if (i >= 0) { arr.splice(i, 1); showToast('カレンダーから削除しました'); }
-  else        { arr.push(id);     showToast('カレンダーに追加しました ✓'); }
+  if (i >= 0) { arr.splice(i, 1); showToast(t('toast_cal_removed')); }
+  else        { arr.push(id);     showToast(t('toast_cal_added')); }
   lsSet(LS.savedExt, arr);
   renderImpEventList();
 }
@@ -2438,9 +3120,7 @@ function openAttSheet(evId) {
   const ev = industryEvents.find(e => e.id === evId);
   if (!ev) return;
 
-  const ms = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-  const ds = ['日','月','火','水','木','金','土'];
-  const dateStr = `${ms[ev.date.getMonth()]}${ev.date.getDate()}日(${ds[ev.date.getDay()]}) ${ev.time}`;
+  const dateStr = `${fmtMDW(ev.date)} ${ev.time}`;
   document.getElementById('attEvName').textContent = ev.name;
   document.getElementById('attEvMeta').textContent = `📅 ${dateStr}　📍 ${ev.venue}`;
 
@@ -2485,11 +3165,11 @@ function renderAttTab(tab) {
     const rsvps = ev.rsvps || [];
     let h = `<div class="att-actions" style="margin-bottom:12px;">
       <button class="att-action-btn att-btn-csv"  onclick="downloadCsv()">⬇ CSV</button>
-      <button class="att-action-btn att-btn-mail" onclick="openMailConfirm()">✉ メール</button>
+      <button class="att-action-btn att-btn-mail" onclick="openMailConfirm()">${t('btn_mail')}</button>
     </div>`;
     if (rsvps.length === 0) {
       h += `<div class="att-empty"><div style="font-size:40px;margin-bottom:12px;">📋</div>
-        まだ参加申込みはありません。<br>店舗からの申込みがあると<br>ここに順番に表示されます。</div>`;
+        ${t('att_empty_people')}</div>`;
     } else {
       h += rsvps.map((r, i) => `
         <div class="att-card">
@@ -2500,8 +3180,8 @@ function renderAttTab(tab) {
             <div class="att-email">${r.email}</div>
             ${r.note ? `<div class="att-note">📝 ${r.note}</div>` : ''}
             <div class="att-foot">
-              <span class="att-count">👥 ${r.count}名</span>
-              <span class="att-date">登録: ${r.at}</span>
+              <span class="att-count">${tfmt('n_people', { n: r.count })}</span>
+              <span class="att-date">${tfmt('reg_at', { d: r.at })}</span>
             </div>
           </div>
         </div>`).join('');
@@ -2517,20 +3197,20 @@ function renderAttTab(tab) {
 
     if (wines.length === 0) {
       h = `<div class="att-empty"><div style="font-size:36px;margin-bottom:12px;">🍾</div>
-        ワインリストが登録されていません。<br>イベント作成時にワインを追加してください。</div>`;
+        ${t('att_empty_wines')}</div>`;
     } else {
       h += `<div style="margin-bottom:12px;">
         <button class="line-send-btn" onclick="sendWineListLine(${rsvps.length})">
-          <span style="font-size:18px;">💬</span> 参加者 ${rsvps.length}軒 全員にLINEで送る
+          <span style="font-size:18px;">💬</span> ${tfmt('send_winelist_btn', { n: rsvps.length })}
         </button>`;
       if (isAfter) {
         h += `<button class="line-send-btn secondary" style="margin-bottom:0;" onclick="sendSurveyLine(${rsvps.length})">
-          <span style="font-size:16px;">📊</span> アンケートをLINEで送る
+          <span style="font-size:16px;">📊</span> ${t('send_survey_btn')}
         </button>`;
       }
       h += `</div>`;
 
-      h += `<div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:.07em;margin-bottom:8px;">📋 試飲ワインリスト（${wines.length}本）</div>`;
+      h += `<div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:.07em;margin-bottom:8px;">${tfmt('winelist_head', { n: wines.length })}</div>`;
       h += wines.map((w, i) => `
         <div class="wine-list-card">
           <div class="wl-rank">${i + 1}</div>
@@ -2542,7 +3222,7 @@ function renderAttTab(tab) {
         </div>`).join('');
 
       h += `<div style="margin-top:10px;font-size:11px;color:var(--text-sub);text-align:center;line-height:1.7;">
-        ※ LINEで送信されるリストには価格は含まれません。<br>価格は任意で設定できます。</div>`;
+        ${t('winelist_note')}</div>`;
     }
     body.innerHTML = h;
 
@@ -2550,7 +3230,7 @@ function renderAttTab(tab) {
     // ── アンケート結果 ──
     const s = ev.survey;
     if (!s) {
-      body.innerHTML = `<div class="att-empty">アンケートデータがありません</div>`;
+      body.innerHTML = `<div class="att-empty">${t('no_survey_data')}</div>`;
       return;
     }
     const medals = ['🥇','🥈','🥉'];
@@ -2559,12 +3239,12 @@ function renderAttTab(tab) {
 
     // 集計ヘッダー
     h += `<div class="survey-header">
-      <div class="survey-stat"><div class="survey-stat-num">${s.sent}</div><div class="survey-stat-label">送信件数</div></div>
-      <div class="survey-stat"><div class="survey-stat-num">${s.responded}</div><div class="survey-stat-label">回答数</div></div>
-      <div class="survey-stat"><div class="survey-stat-num">${Math.round(s.responded/s.sent*100)}%</div><div class="survey-stat-label">回答率</div></div>
+      <div class="survey-stat"><div class="survey-stat-num">${s.sent}</div><div class="survey-stat-label">${t('survey_sent')}</div></div>
+      <div class="survey-stat"><div class="survey-stat-num">${s.responded}</div><div class="survey-stat-label">${t('survey_responded')}</div></div>
+      <div class="survey-stat"><div class="survey-stat-num">${Math.round(s.responded/s.sent*100)}%</div><div class="survey-stat-label">${t('survey_rate')}</div></div>
     </div>`;
 
-    h += `<div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:.07em;margin-bottom:8px;">🏆 人気ランキング</div>`;
+    h += `<div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:.07em;margin-bottom:8px;">${t('survey_ranking_head')}</div>`;
 
     h += s.results.map((r, i) => `
       <div class="survey-wine-card">
@@ -2573,11 +3253,11 @@ function renderAttTab(tab) {
           <div class="sw-name">${r.name}</div>
           <div>
             <div class="sw-score">${r.avg.toFixed(1)}</div>
-            <div class="sw-votes">${r.votes}票</div>
+            <div class="sw-votes">${tfmt('n_votes', { n: r.votes })}</div>
           </div>
         </div>
         <div class="sw-comments">
-          ${r.comments.slice(0,2).map(c => `<div class="sw-comment">「${c}」</div>`).join('')}
+          ${r.comments.slice(0,2).map(c => `<div class="sw-comment">${qw(c)}</div>`).join('')}
         </div>
       </div>`).join('');
 
@@ -2586,14 +3266,14 @@ function renderAttTab(tab) {
       <div class="sr-header">
         <div class="sr-icon">🍷</div>
         <div>
-          <div class="sr-title">ソムリンレポート</div>
-          <div class="sr-sub">全ユーザーへの配信プレビュー</div>
+          <div class="sr-title">${t('somm_report')}</div>
+          <div class="sr-sub">${t('somm_report_sub')}</div>
         </div>
       </div>
       <div class="sr-preview">
-        <div class="sr-preview-label">LINE 配信イメージ ▼</div>
+        <div class="sr-preview-label">${t('line_preview_label')}</div>
         <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.9);margin-bottom:8px;">
-          🍷 先日の試飲会レポート<br>
+          ${t('report_head')}<br>
           <span style="font-weight:400;font-size:10px;opacity:.7;">${ev.name}</span>
         </div>
         ${s.results.slice(0,3).map((r, i) => `
@@ -2603,13 +3283,11 @@ function renderAttTab(tab) {
             <span class="sr-pts">⭐${r.avg.toFixed(1)}</span>
           </div>`).join('')}
         <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.15);font-size:11px;color:rgba(255,255,255,.8);">
-          🎯 <strong>ソムリン's pick:</strong> 今回の注目は
-          「${s.results[0].name.split(' ').slice(-2).join(' ')}」。
-          ${s.results[0].comments[0]}という声が多数！
+          ${tfmt('somm_pick_html', { name: s.results[0].name.split(' ').slice(-2).join(' '), comment: s.results[0].comments[0] })}
         </div>
       </div>
       <button class="sr-broadcast-btn" onclick="broadcastSommelinReport()">
-        📢 全ユーザーに配信する
+        ${t('btn_broadcast_all')}
       </button>
     </div>`;
 
@@ -2624,12 +3302,11 @@ function downloadCsv() {
   const ev = industryEvents.find(e => e.id === currentAttEvId);
   if (!ev) return;
   const rsvps = ev.rsvps || [];
-  if (rsvps.length === 0) { showToast('参加者がいません'); return; }
+  if (rsvps.length === 0) { showToast(t('toast_no_attendees')); return; }
 
-  const ms = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-  const ds = ['日','月','火','水','木','金','土'];
-
-  const header = ['No','店名','氏名','役職','メールアドレス','参加人数','備考','登録日時'];
+  const header = LANG === 'en'
+    ? ['No','Store','Name','Title','Email','Party size','Notes','Registered at']
+    : ['No','店名','氏名','役職','メールアドレス','参加人数','備考','登録日時'];
   const rows = rsvps.map((r, i) =>
     [i+1, r.store, r.name, r.title, r.email, r.count, r.note, r.at]
       .map(v => `"${String(v).replace(/"/g, '""')}"`)
@@ -2642,10 +3319,10 @@ function downloadCsv() {
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
-  a.download = `参加者一覧_${ev.name}_${ms[ev.date.getMonth()]}${ev.date.getDate()}日.csv`;
+  a.download = tfmt('csv_filename_att', { name: ev.name, date: fmtMD(ev.date) });
   a.click();
   URL.revokeObjectURL(url);
-  showToast('CSVをダウンロードしました ✓');
+  showToast(t('toast_csv_done'));
 }
 
 // ============================================================
@@ -2655,16 +3332,14 @@ function openMailConfirm() {
   const ev = industryEvents.find(e => e.id === currentAttEvId);
   if (!ev) return;
   const rsvps = ev.rsvps || [];
-  const email = ev.notifyEmail || '（未設定）';
-  const ms = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const email = ev.notifyEmail || t('not_set');
 
-  document.getElementById('mailConfirmSub').textContent =
-    `参加者一覧（${rsvps.length}件）をCSV添付でメール送信します。`;
-  document.getElementById('mailConfirmPreview').innerHTML =
-    `<b>送信先:</b> ${email}<br>` +
-    `<b>件名:</b> 【参加者一覧】${ev.name}<br>` +
-    `<b>添付:</b> 参加者一覧_${ev.name}_${ms[ev.date.getMonth()]}${ev.date.getDate()}日.csv<br>` +
-    `<b>内容:</b> 全${rsvps.length}軒 / 合計${rsvps.reduce((s,r)=>s+r.count,0)}名の参加情報`;
+  document.getElementById('mailConfirmSub').textContent = tfmt('mail_sub', { n: rsvps.length });
+  document.getElementById('mailConfirmPreview').innerHTML = tfmt('mail_preview_html', {
+    email, name: ev.name,
+    file: tfmt('csv_filename_att', { name: ev.name, date: fmtMD(ev.date) }),
+    s: rsvps.length, p: rsvps.reduce((s, r) => s + r.count, 0),
+  });
 
   document.getElementById('mailConfirmBg').classList.add('open');
 }
@@ -2675,14 +3350,14 @@ function closeMailConfirm() {
 
 function sendCsvMail() {
   closeMailConfirm();
-  setTimeout(() => showToast('✉ メールで送信しました ✓'), 600);
+  setTimeout(() => showToast(t('toast_mail_sent')), 600);
 }
 
 // ============================================================
 // LINE 配信：ワインリスト → 参加者全員
 // ============================================================
 function sendWineListLine(storeCount) {
-  if (storeCount === 0) { showToast('参加者がいません'); return; }
+  if (storeCount === 0) { showToast(t('toast_no_attendees')); return; }
   const ev    = industryEvents.find(e => e.id === currentAttEvId);
   const wines = ev?.wines || [];
 
@@ -2692,27 +3367,26 @@ function sendWineListLine(storeCount) {
     position:fixed;inset:0;z-index:3000;
     display:flex;align-items:flex-end;justify-content:center;
     background:rgba(0,0,0,0.5);`;
-  const ms = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-  const dateStr = ev ? `${ms[ev.date.getMonth()]}${ev.date.getDate()}日` : '';
+  const dateStr = ev ? fmtMD(ev.date) : '';
   const wineLines = wines.map((w,i) => `${i+1}. ${w.name}（${w.vintage}）`).join('\n');
   modal.innerHTML = `
     <div style="background:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:24px 20px 32px;">
-      <div style="text-align:center;font-size:15px;font-weight:800;color:#2C1A1D;margin-bottom:4px;">LINE で配信</div>
-      <div style="text-align:center;font-size:12px;color:#7A5A62;margin-bottom:16px;">参加者 ${storeCount}軒 に試飲リストを送信します</div>
-      <div style="background:#e8faf0;border:1.5px solid #06C755;border-radius:12px;padding:14px 16px;margin-bottom:16px;white-space:pre-line;font-size:12px;line-height:1.8;color:#1a3c2a;font-family:monospace;">🍷 【試飲会のご案内】\n${ev?.name || ''}\n📅 ${dateStr}　📍 ${ev?.venue || ''}\n\n試飲ワインリスト：\n${wineLines}\n\n当日のご参加をお待ちしております。\n— ${ev?.organizer || '山田商店'}</div>
-      <button onclick="confirmSendWineLine(this,${storeCount})" style="width:100%;padding:14px;background:#06C755;color:#fff;font-size:15px;font-weight:800;border:none;border-radius:12px;cursor:pointer;margin-bottom:10px;">💬 ${storeCount}軒 全員に送信する</button>
-      <button onclick="this.closest('[style*=fixed]').remove()" style="width:100%;padding:12px;background:#f5f3f0;color:#7A5A62;font-size:14px;font-weight:700;border:none;border-radius:12px;cursor:pointer;">キャンセル</button>
+      <div style="text-align:center;font-size:15px;font-weight:800;color:#2C1A1D;margin-bottom:4px;">${t('wl_modal_title')}</div>
+      <div style="text-align:center;font-size:12px;color:#7A5A62;margin-bottom:16px;">${tfmt('wl_modal_sub', { n: storeCount })}</div>
+      <div style="background:#e8faf0;border:1.5px solid #06C755;border-radius:12px;padding:14px 16px;margin-bottom:16px;white-space:pre-line;font-size:12px;line-height:1.8;color:#1a3c2a;font-family:monospace;">${tfmt('wl_line_msg', { name: ev?.name || '', date: dateStr, venue: ev?.venue || '', list: wineLines, org: ev?.organizer || IMP_INFO.name })}</div>
+      <button onclick="confirmSendWineLine(this,${storeCount})" style="width:100%;padding:14px;background:#06C755;color:#fff;font-size:15px;font-weight:800;border:none;border-radius:12px;cursor:pointer;margin-bottom:10px;">${tfmt('wl_send_btn', { n: storeCount })}</button>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="width:100%;padding:12px;background:#f5f3f0;color:#7A5A62;font-size:14px;font-weight:700;border:none;border-radius:12px;cursor:pointer;">${t('btn_cancel')}</button>
     </div>`;
   document.body.appendChild(modal);
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 }
 
 function confirmSendWineLine(btn, count) {
-  btn.textContent = '送信中…';
+  btn.textContent = t('sending_short');
   btn.disabled = true;
   setTimeout(() => {
     btn.closest('[style*=fixed]').remove();
-    showToast(`💬 ${count}軒にLINEでワインリストを送信しました ✓`);
+    showToast(tfmt('toast_winelist_sent', { n: count }));
   }, 1000);
 }
 
@@ -2720,7 +3394,7 @@ function confirmSendWineLine(btn, count) {
 // LINE 配信：アンケート → 参加者全員
 // ============================================================
 function sendSurveyLine(storeCount) {
-  if (storeCount === 0) { showToast('参加者がいません'); return; }
+  if (storeCount === 0) { showToast(t('toast_no_attendees')); return; }
   const ev = industryEvents.find(e => e.id === currentAttEvId);
 
   const modal = document.createElement('div');
@@ -2730,22 +3404,22 @@ function sendSurveyLine(storeCount) {
     background:rgba(0,0,0,0.5);`;
   modal.innerHTML = `
     <div style="background:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:24px 20px 32px;">
-      <div style="text-align:center;font-size:15px;font-weight:800;color:#2C1A1D;margin-bottom:4px;">アンケートを送信</div>
-      <div style="text-align:center;font-size:12px;color:#7A5A62;margin-bottom:16px;">参加者 ${storeCount}軒 にLINEでアンケートを送ります</div>
-      <div style="background:#e8faf0;border:1.5px solid #06C755;border-radius:12px;padding:14px 16px;margin-bottom:16px;white-space:pre-line;font-size:12px;line-height:1.8;color:#1a3c2a;font-family:monospace;">📊 【試飲会アンケート】\n${ev?.name || ''}\n\nご参加ありがとうございました！\n\n今回飲んだワインの中で、\n一番おいしかったのはどれでしたか？\n評価と感想をお聞かせください 🍷\n\n▼ アンケートはこちら\nhttps://sommelin.app/survey/xxxx</div>
-      <button onclick="confirmSendSurveyLine(this,${storeCount})" style="width:100%;padding:14px;background:#06C755;color:#fff;font-size:15px;font-weight:800;border:none;border-radius:12px;cursor:pointer;margin-bottom:10px;">📊 ${storeCount}軒 全員にアンケートを送る</button>
-      <button onclick="this.closest('[style*=fixed]').remove()" style="width:100%;padding:12px;background:#f5f3f0;color:#7A5A62;font-size:14px;font-weight:700;border:none;border-radius:12px;cursor:pointer;">キャンセル</button>
+      <div style="text-align:center;font-size:15px;font-weight:800;color:#2C1A1D;margin-bottom:4px;">${t('sv_modal_title')}</div>
+      <div style="text-align:center;font-size:12px;color:#7A5A62;margin-bottom:16px;">${tfmt('sv_modal_sub', { n: storeCount })}</div>
+      <div style="background:#e8faf0;border:1.5px solid #06C755;border-radius:12px;padding:14px 16px;margin-bottom:16px;white-space:pre-line;font-size:12px;line-height:1.8;color:#1a3c2a;font-family:monospace;">${tfmt('sv_line_msg', { name: ev?.name || '' })}</div>
+      <button onclick="confirmSendSurveyLine(this,${storeCount})" style="width:100%;padding:14px;background:#06C755;color:#fff;font-size:15px;font-weight:800;border:none;border-radius:12px;cursor:pointer;margin-bottom:10px;">${tfmt('sv_send_btn', { n: storeCount })}</button>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="width:100%;padding:12px;background:#f5f3f0;color:#7A5A62;font-size:14px;font-weight:700;border:none;border-radius:12px;cursor:pointer;">${t('btn_cancel')}</button>
     </div>`;
   document.body.appendChild(modal);
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 }
 
 function confirmSendSurveyLine(btn, count) {
-  btn.textContent = '送信中…';
+  btn.textContent = t('sending_short');
   btn.disabled = true;
   setTimeout(() => {
     btn.closest('[style*=fixed]').remove();
-    showToast(`📊 ${count}軒にアンケートを送信しました ✓`);
+    showToast(tfmt('toast_survey_sent', { n: count }));
     // アンケートタブに切り替えてデータ更新イメージ
     const ev = industryEvents.find(e => e.id === currentAttEvId);
     if (ev) {
@@ -2767,7 +3441,7 @@ function confirmSendSurveyLine(btn, count) {
 function broadcastSommelinReport() {
   const ev = industryEvents.find(e => e.id === currentAttEvId);
   const s  = ev?.survey;
-  if (!s || s.results.length === 0) { showToast('アンケートデータがありません'); return; }
+  if (!s || s.results.length === 0) { showToast(t('no_survey_data')); return; }
 
   const medals = ['🥇','🥈','🥉'];
   const top3   = s.results.slice(0, 3);
@@ -2785,23 +3459,23 @@ function broadcastSommelinReport() {
 
   modal.innerHTML = `
     <div style="background:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:24px 20px 32px;">
-      <div style="text-align:center;font-size:15px;font-weight:800;color:#9B1B4B;margin-bottom:2px;">📢 ソムリンレポート配信</div>
-      <div style="text-align:center;font-size:12px;color:#7A5A62;margin-bottom:16px;">ソムリンに登録している全ユーザーにLINEで送信します</div>
-      <div style="background:linear-gradient(135deg,#3d0a1c,#6b1230);border-radius:12px;padding:16px;margin-bottom:16px;white-space:pre-line;font-size:12px;line-height:1.9;color:rgba(255,255,255,0.9);font-family:monospace;">🍷 ソムリンレポート\n${ev?.name || ''}\n\n人気ワインランキング ▼\n${previewLines}\n\n🎯 ソムリン's pick:\n「${pickName}」\n「${pickComment}」という声が多数！\n\n詳細はソムリンアプリで →\nhttps://sommelin.app</div>
-      <div style="background:#fff3e0;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:11px;color:#7A5A62;">⚠️ 配信前にソムリン編集チームが内容を確認します（通常24時間以内）</div>
-      <button onclick="confirmBroadcast(this)" style="width:100%;padding:14px;background:linear-gradient(135deg,#9B1B4B,#5C0E2A);color:#fff;font-size:15px;font-weight:800;border:none;border-radius:12px;cursor:pointer;margin-bottom:10px;">📢 配信申請を送る</button>
-      <button onclick="this.closest('[style*=fixed]').remove()" style="width:100%;padding:12px;background:#f5f3f0;color:#7A5A62;font-size:14px;font-weight:700;border:none;border-radius:12px;cursor:pointer;">キャンセル</button>
+      <div style="text-align:center;font-size:15px;font-weight:800;color:#9B1B4B;margin-bottom:2px;">${t('rep_modal_title')}</div>
+      <div style="text-align:center;font-size:12px;color:#7A5A62;margin-bottom:16px;">${t('rep_modal_sub')}</div>
+      <div style="background:linear-gradient(135deg,#3d0a1c,#6b1230);border-radius:12px;padding:16px;margin-bottom:16px;white-space:pre-line;font-size:12px;line-height:1.9;color:rgba(255,255,255,0.9);font-family:monospace;">${tfmt('rep_line_msg', { name: ev?.name || '', ranking: previewLines, pick: pickName, comment: pickComment })}</div>
+      <div style="background:#fff3e0;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:11px;color:#7A5A62;">${t('rep_review_note')}</div>
+      <button onclick="confirmBroadcast(this)" style="width:100%;padding:14px;background:linear-gradient(135deg,#9B1B4B,#5C0E2A);color:#fff;font-size:15px;font-weight:800;border:none;border-radius:12px;cursor:pointer;margin-bottom:10px;">${t('rep_submit_btn')}</button>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="width:100%;padding:12px;background:#f5f3f0;color:#7A5A62;font-size:14px;font-weight:700;border:none;border-radius:12px;cursor:pointer;">${t('btn_cancel')}</button>
     </div>`;
   document.body.appendChild(modal);
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 }
 
 function confirmBroadcast(btn) {
-  btn.textContent = '送信中…';
+  btn.textContent = t('sending_short');
   btn.disabled = true;
   setTimeout(() => {
     btn.closest('[style*=fixed]').remove();
-    showToast('📢 ソムリンチームに配信申請を送りました ✓');
+    showToast(t('toast_rep_submitted'));
   }, 900);
 }
 
@@ -2811,15 +3485,15 @@ function goToBroadcast(evId) {
   switchPanel('broadcast');
   switchBroadcastTab('send');
   setBroadcastType('event');   // 内部で renderBroadcastEventCard を呼ぶ
-  showToast(ev ? `「${ev.name}」の配信を開きました` : '配信モードを開きました');
+  showToast(ev ? tfmt('toast_bcast_opened', { name: ev.name }) : t('toast_bcast_mode'));
 }
 
 function impSimulateSync(btn) {
-  btn.textContent = '同期中…'; btn.disabled = true;
+  btn.textContent = t('sync_syncing'); btn.disabled = true;
   setTimeout(() => {
-    btn.textContent = '同期'; btn.disabled = false;
-    document.getElementById('impSyncStatus').textContent = '最終同期: たった今';
-    showToast('Googleカレンダーと同期しました ✓');
+    btn.textContent = t('sync_btn'); btn.disabled = false;
+    document.getElementById('impSyncStatus').textContent = t('sync_just_now');
+    showToast(t('toast_synced'));
     renderImporterCalendar();
   }, 1500);
 }
@@ -2897,7 +3571,6 @@ function ensureSelectedBroadcastEvent() {
 }
 
 const BCAST_MS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-const BCAST_WD = ['日','月','火','水','木','金','土'];
 
 // 配信タイプ「イベント」のカード描画（#bcastEventCard）
 function renderBroadcastEventCard() {
@@ -2905,36 +3578,35 @@ function renderBroadcastEventCard() {
   if (!card) return;
   const ev = selectedBroadcastEvent;
   if (!ev) {
-    card.innerHTML = `<div style="padding:14px;font-size:12px;color:var(--text-sub);">配信できる自社イベントがありません。「＋ イベント作成」から登録してください。</div>`;
+    card.innerHTML = `<div style="padding:14px;font-size:12px;color:var(--text-sub);">${t('bcast_no_event_html')}</div>`;
     return;
   }
   card.innerHTML = `
     <div class="ev-date-col">
       <div class="ev-date-m">${BCAST_MS[ev.date.getMonth()]}</div>
       <div class="ev-date-d">${ev.date.getDate()}</div>
-      <div class="ev-date-w">${BCAST_WD[ev.date.getDay()]}曜</div>
+      <div class="ev-date-w">${fmtDowLong(ev.date)}</div>
     </div>
     <div class="ev-info">
-      <span class="ev-tag">🍷 ${ev.typeLabel || '試飲会'}</span>
+      <span class="ev-tag">🍷 ${dispEvType(ev.typeLabel || '試飲会')}</span>
       <div class="ev-name">${ev.name}</div>
       <div class="ev-meta">⏰ ${ev.time} &nbsp;|&nbsp; 📍 ${ev.venue}</div>
     </div>
-    <button class="ev-change-btn" aria-label="配信するイベントを変更" onclick="openEventPicker()">変更</button>`;
+    <button class="ev-change-btn" aria-label="${t('aria_change_event')}" onclick="openEventPicker()">${t('btn_change')}</button>`;
 }
 
 // 配信イベント選択シート
 function openEventPicker() {
   const body = document.getElementById('eventPickerBody');
-  const ms = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
   // 自社イベントを先頭に、日付順で表示
   const list = [...industryEvents].sort((a,b) => (b.mine - a.mine) || (a.date - b.date));
   if (!list.length) {
-    body.innerHTML = `<div class="picker-empty">イベントがありません</div>`;
+    body.innerHTML = `<div class="picker-empty">${t('picker_no_events')}</div>`;
   } else {
     body.innerHTML = list.map(ev => {
       const sel = selectedBroadcastEvent && ev.id === selectedBroadcastEvent.id;
-      const meta = `${ms[ev.date.getMonth()]}${ev.date.getDate()}日(${BCAST_WD[ev.date.getDay()]}) · ${ev.time} · 📍 ${ev.venue}`;
-      const org = ev.mine ? '🏢 自社' : '🏢 ' + (ev.organizer || '他社');
+      const meta = `${fmtMDW(ev.date)} · ${ev.time} · 📍 ${ev.venue}`;
+      const org = ev.mine ? t('org_own') : '🏢 ' + (ev.organizer || t('org_other'));
       return `<div class="picker-item${sel ? ' selected' : ''}" onclick="selectBroadcastEvent('${ev.id}')">
         <div class="picker-item-main">
           <div class="picker-item-title">${ev.name}</div>
@@ -2971,8 +3643,8 @@ function onPostPhoto(input) {
     postPhotoData = dataUrl;
     document.getElementById('postPhotoPreview').innerHTML =
       `<div class="composer-thumb-wrap">
-         <img class="composer-thumb" src="${postPhotoData}" alt="添付画像">
-         <button class="composer-thumb-del" aria-label="写真を削除" onclick="removePostPhoto()">✕</button>
+         <img class="composer-thumb" src="${postPhotoData}" alt="${t('alt_attached_photo')}">
+         <button class="composer-thumb-del" aria-label="${t('aria_del_photo')}" onclick="removePostPhoto()">✕</button>
        </div>`;
   });
   input.value = '';
@@ -2986,7 +3658,7 @@ function removePostPhoto() {
 let postWineName = null;
 function attachPostWine() {
   const items = loadCatalog().filter(i => i.importerId === IMP_INFO.id && i.available);
-  if (!items.length) { showToast('カタログに取り扱い中のワインがありません'); return; }
+  if (!items.length) { showToast(t('toast_no_catalog_wine')); return; }
   const body = document.getElementById('winePickerBody');
   body.innerHTML = items.map(it => {
     const label = `${it.name}${it.vintage ? ' ' + it.vintage : ''}`;
@@ -3009,7 +3681,7 @@ function selectPostWine(id) {
   if (it) {
     postWineName = `${it.name}${it.vintage ? ' ' + it.vintage : ''}`;
     document.getElementById('postWineChip').innerHTML =
-      `<div class="composer-wine-chip">🍷 ${postWineName}<button aria-label="ワインを外す" onclick="removePostWine()">✕</button></div>`;
+      `<div class="composer-wine-chip">🍷 ${postWineName}<button aria-label="${t('aria_remove_wine')}" onclick="removePostWine()">✕</button></div>`;
   }
   closeWinePicker();
 }
@@ -3023,7 +3695,7 @@ let postToPersons = false;
 function connectedPersonCount() { return persons.filter(p => p.lineConnected).length; }
 function onPostPersonToggle() {
   postToPersons = document.getElementById('postToPersons').checked;
-  document.getElementById('postPersonCount').textContent = '+' + (postToPersons ? connectedPersonCount() : 0) + '名';
+  document.getElementById('postPersonCount').textContent = tfmt('plus_n', { n: postToPersons ? connectedPersonCount() : 0 });
   updateFooter();
 }
 
@@ -3068,7 +3740,7 @@ function invitePerson(id) {
   p.invited = true;
   persistPersonEdits();
   renderPersons();
-  showToast('招待リンクをコピーしました 📋');
+  showToast(t('toast_invite_copied'));
 }
 applyPersonEdits();
 
@@ -3080,14 +3752,14 @@ function renderPersons() {
       <div class="mc-icon">${p.icon}</div>
       <div class="mc-info">
         <div class="mc-name">${p.name}</div>
-        <div class="mc-meta">📍 ${p.area} · ${p.note}${p.lineConnected ? ' &nbsp;·&nbsp; 💬 LINE連携済' : ''}</div>
+        <div class="mc-meta">📍 ${dispArea(p.area)} · ${dispNote(p.note)}${p.lineConnected ? ' &nbsp;·&nbsp; ' + t('line_linked_inline') : ''}</div>
       </div>
       <div class="mc-right">
         ${p.lineConnected
-          ? '<span class="line-badge">💬 連携済</span>'
+          ? '<span class="line-badge">' + t('badge_linked') + '</span>'
           : (p.invited
-              ? '<span style="font-size:11px;font-weight:700;color:var(--text-sub);">招待済み</span>'
-              : `<button onclick="invitePerson('${p.id}')" style="font-size:11px;font-weight:700;background:var(--burgundy-pale);color:var(--burgundy);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-family:inherit;">招待する</button>`)}
+              ? '<span style="font-size:11px;font-weight:700;color:var(--text-sub);">' + t('invited_done') + '</span>'
+              : `<button onclick="invitePerson('${p.id}')" style="font-size:11px;font-weight:700;background:var(--burgundy-pale);color:var(--burgundy);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-family:inherit;">${t('btn_invite')}</button>`)}
       </div>
     </div>`).join('');
 }
@@ -3106,7 +3778,7 @@ function setMode(mode) {
   } else if (mode === 'prev') {
     selectedIds = new Set(prevList.filter(id => !stores.find(s=>s.id===id)?.excluded));
     hint.style.display = 'flex';
-    hint.textContent = `📋 前回配信（${fmtPrevDate()}）の宛先 ${prevList.length}店舗を引き継いでいます`;
+    hint.textContent = tfmt('hint_prev', { date: fmtPrevDate(), n: prevList.length });
   } else {
     hint.style.display = 'none';
   }
@@ -3145,8 +3817,8 @@ function updateFooter() {
   document.getElementById('sfSendBtn').disabled   = total === 0;
   const lineTotal = allLineIds.length;
   document.getElementById('sfSub').textContent = personCount
-    ? `店舗${storeCount} ＋ 個人${personCount}名`
-    : `全${stores.length}店舗中 LINE連携済み${lineTotal}`;
+    ? tfmt('sf_sub_mixed', { s: storeCount, p: personCount })
+    : tfmt('sf_sub_all', { a: stores.length, b: lineTotal });
   document.getElementById('mc-custom').textContent = storeCount;
 }
 
@@ -3171,7 +3843,7 @@ function renderStoreList() {
   const filtered = getFilteredStores();
 
   if (filtered.length === 0) {
-    list.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text-sub);font-size:13px;">店舗が見つかりません</div>`;
+    list.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text-sub);font-size:13px;">${t('no_stores_found')}</div>`;
     return;
   }
 
@@ -3182,15 +3854,15 @@ function renderStoreList() {
 
     let lastSentHtml = '';
     if (noLine) {
-      lastSentHtml = `<span class="line-badge no">LINE未連携</span>`;
+      lastSentHtml = `<span class="line-badge no">${t('badge_no_line')}</span>`;
     } else if (isExcluded) {
-      lastSentHtml = `<span class="excluded-badge">🚫 除外中</span>`;
+      lastSentHtml = `<span class="excluded-badge">${t('badge_excluded')}</span>`;
     } else if (s.lastSent === PREV_SENT_DATE) {
-      lastSentHtml = `<span class="last-sent-badge recent">前回送信済</span>`;
+      lastSentHtml = `<span class="last-sent-badge recent">${t('badge_sent_prev')}</span>`;
     } else if (s.lastSent) {
       lastSentHtml = `<span class="last-sent-badge">${s.lastSent.slice(5).replace('-','/')}</span>`;
     } else {
-      lastSentHtml = `<span class="last-sent-badge">未配信</span>`;
+      lastSentHtml = `<span class="last-sent-badge">${t('badge_never')}</span>`;
     }
 
     const newBadge = s.isNew ? `<span class="new-badge">NEW</span>` : '';
@@ -3200,13 +3872,13 @@ function renderStoreList() {
       <div class="sr-icon">${s.icon}</div>
       <div class="sr-info">
         <div class="sr-name">${s.name} ${newBadge}</div>
-        <div class="sr-meta">📍 ${s.area} &nbsp;·&nbsp; ${s.type}${s.note ? ` &nbsp;·&nbsp; 📝 ${s.note}` : ''}</div>
+        <div class="sr-meta">📍 ${dispArea(s.area)} &nbsp;·&nbsp; ${dispType(s.type)}${s.note ? ` &nbsp;·&nbsp; 📝 ${s.note}` : ''}</div>
       </div>
       <div class="sr-right">
-        <span class="line-badge${noLine?' no':''}">💬 ${noLine?'未連携':'LINE連携'}</span>
+        <span class="line-badge${noLine?' no':''}">${noLine ? t('badge_not_linked') : t('badge_line')}</span>
         ${lastSentHtml}
       </div>
-      <button class="sr-menu-btn" aria-label="この顧客の操作メニュー" onclick="openCtxMenu('${s.id}')">⋯</button>
+      <button class="sr-menu-btn" aria-label="${t('aria_store_menu')}" onclick="openCtxMenu('${s.id}')">⋯</button>
     </div>`;
   }).join('');
 
@@ -3236,14 +3908,14 @@ let areaIdx = 0, typeIdx = 0;
 function cycleAreaFilter(btn) {
   areaIdx = (areaIdx + 1) % areas.length;
   areaFilter = areas[areaIdx];
-  btn.textContent = areaFilter ? `${areaFilter} ✕` : 'エリア ▾';
+  btn.textContent = areaFilter ? `${dispArea(areaFilter)} ✕` : t('filter_area');
   btn.classList.toggle('active', !!areaFilter);
   renderStoreList();
 }
 function cycleTypeFilter(btn) {
   typeIdx = (typeIdx + 1) % types.length;
   typeFilter = types[typeIdx];
-  btn.textContent = typeFilter ? `${typeFilter} ✕` : '業種 ▾';
+  btn.textContent = typeFilter ? `${dispType(typeFilter)} ✕` : t('filter_type');
   btn.classList.toggle('active', !!typeFilter);
   renderStoreList();
 }
@@ -3260,9 +3932,9 @@ function openCtxMenu(id) {
   const s = stores.find(x => x.id === id);
   document.getElementById('ctxStoreName').textContent = s.name;
   document.getElementById('ctxSelectIcon').textContent  = selectedIds.has(id) ? '☑️' : '🔲';
-  document.getElementById('ctxSelectLabel').textContent = selectedIds.has(id) ? '選択を外す' : '配信リストに追加';
+  document.getElementById('ctxSelectLabel').textContent = selectedIds.has(id) ? t('ctx_deselect') : t('ctx_add');
   document.getElementById('ctxExcludeIcon').textContent  = s.excluded ? '✅' : '🚫';
-  document.getElementById('ctxExcludeLabel').textContent = s.excluded ? '除外を解除する' : '今回の配信から除外する';
+  document.getElementById('ctxExcludeLabel').textContent = s.excluded ? t('ctx_unexclude') : t('ctx_exclude');
   document.getElementById('ctxMenuBg').classList.add('open');
 }
 function closeCtxMenu(e) {
@@ -3279,8 +3951,8 @@ function ctxExclude() {
   const s = stores.find(x => x.id === ctxTargetId);
   if (!s) return;
   s.excluded = !s.excluded;
-  if (s.excluded) { selectedIds.delete(s.id); showToast(`「${s.name}」を除外しました`); }
-  else            { showToast(`「${s.name}」の除外を解除しました`); }
+  if (s.excluded) { selectedIds.delete(s.id); showToast(tfmt('toast_excluded', { name: s.name })); }
+  else            { showToast(tfmt('toast_unexcluded', { name: s.name })); }
   persistStoreEdits();   // TODO(backend): Supabase UPDATE（上記 persistStoreEdits 内に記載）
   closeCtxMenu();
   renderStoreList();
@@ -3289,11 +3961,11 @@ function ctxNote() {
   const s = stores.find(x => x.id === ctxTargetId);
   closeCtxMenu();
   if (!s) return;
-  const v = prompt(`「${s.name}」のメモ`, s.note || '');
+  const v = prompt(tfmt('prompt_note', { name: s.name }), s.note || '');
   if (v === null) return;            // キャンセル
   s.note = v.trim();
   persistStoreEdits();               // TODO(backend): Supabase UPDATE（上記 persistStoreEdits 内に記載）
-  showToast(s.note ? 'メモを保存しました' : 'メモを削除しました');
+  showToast(s.note ? t('toast_note_saved') : t('toast_note_deleted'));
   renderStoreList();
 }
 function ctxRemove() {
@@ -3307,7 +3979,7 @@ function ctxRemove() {
   const i = stores.findIndex(x => x.id === s.id);
   if (i >= 0) stores.splice(i, 1);
   persistStoreEdits();               // TODO(backend): Supabase DELETE（上記 persistStoreEdits 内に記載）
-  showToast(`「${s.name}」を顧客リストから削除しました`);
+  showToast(tfmt('toast_store_removed', { name: s.name }));
   renderStoreList();
 }
 
@@ -3333,38 +4005,37 @@ function openConfirm() {
 
   if (broadcastType === 'post') {
     const txt = (document.getElementById('postText').value || '').trim();
-    if (!txt && !postPhotoData && !postWineName) { showToast('投稿内容を入力してください'); return; }
-    if (total === 0) { showToast('配信先を選んでください'); return; }
-    const preview = txt ? (txt.length > 60 ? txt.slice(0, 60) + '…' : txt) : '（写真・ワインのみの投稿）';
+    if (!txt && !postPhotoData && !postWineName) { showToast(t('toast_need_post')); return; }
+    if (total === 0) { showToast(t('toast_need_recipients')); return; }
+    const preview = txt ? (txt.length > 60 ? txt.slice(0, 60) + '…' : txt) : t('post_media_only');
     nameEl.textContent = '📣 ' + preview;
     const extras = [];
-    if (postPhotoData) extras.push('📷 写真添付');
+    if (postPhotoData) extras.push(t('extra_photo'));
     if (postWineName)  extras.push('🍷 ' + postWineName);
-    if (personCount)   extras.push(`🙋 個人客 ${personCount}名にも配信`);
-    metaEl.textContent = extras.length ? extras.join(' · ') : 'おすすめ・お知らせ投稿';
+    if (personCount)   extras.push(tfmt('extra_persons', { n: personCount }));
+    metaEl.textContent = extras.length ? extras.join(' · ') : t('post_type_label');
     // 履歴タイトル: 本文の先頭〜20文字（無ければ「おすすめ投稿」）
-    let histTitle = txt ? txt.replace(/\s+/g, ' ').slice(0, 20) : 'おすすめ投稿';
+    let histTitle = txt ? txt.replace(/\s+/g, ' ').slice(0, 20) : t('hist_post_title');
     const histNote = [];
-    if (postPhotoData) histNote.push('📷写真');
+    if (postPhotoData) histNote.push(t('hist_photo'));
     if (postWineName)  histNote.push('🍷' + postWineName);
     pendingBroadcast = {
       type: 'post', total, storeCount, personCount,
-      doneText: '投稿を配信しました',
+      doneText: t('done_post'),
       histTitle, histNote: histNote.join(' / '),
       icon: '📣', text: txt, photo: !!postPhotoData, wine: postWineName || ''
     };
   } else {
-    if (storeCount === 0) { showToast('配信先を選んでください'); return; }
+    if (storeCount === 0) { showToast(t('toast_need_recipients')); return; }
     ensureSelectedBroadcastEvent();
     const ev = selectedBroadcastEvent;
-    if (!ev) { showToast('配信できる自社イベントがありません'); return; }
-    const ms = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-    const metaStr = `${ms[ev.date.getMonth()]}${ev.date.getDate()}日(${BCAST_WD[ev.date.getDay()]}) ${ev.time} · ${ev.venue}`;
+    if (!ev) { showToast(t('toast_no_own_event')); return; }
+    const metaStr = `${fmtMDW(ev.date)} ${ev.time} · ${ev.venue}`;
     nameEl.textContent = '🍷 ' + ev.name;
     metaEl.textContent = metaStr;
     pendingBroadcast = {
       type: 'event', total: storeCount, storeCount, personCount: 0,
-      doneText: 'イベント案内を配信しました',
+      doneText: t('done_event'),
       histTitle: ev.name, histNote: '', icon: '🍷', eventId: ev.id
     };
   }
@@ -3380,14 +4051,14 @@ function startSending() {
   const overlay = document.getElementById('sendingOverlay');
   const fill    = document.getElementById('sendingFill');
   overlay.classList.add('open');
-  const unit = (pendingBroadcast && pendingBroadcast.type === 'post') ? '件' : '店舗';
+  const unit = (pendingBroadcast && pendingBroadcast.type === 'post') ? t('unit_post') : t('unit_store');
 
   let current = 0;
   const interval = setInterval(() => {
     current++;
     const pct = Math.round((current / total) * 100);
     document.getElementById('sendingCount').textContent = current;
-    document.getElementById('sendingLabel').textContent = `/ ${total}${unit}に送信中…`;
+    document.getElementById('sendingLabel').textContent = tfmt('sending_to', { total: total, unit: unit });
     fill.style.width = pct + '%';
     if (current >= total) {
       clearInterval(interval);
@@ -3399,13 +4070,13 @@ function startSending() {
   }, Math.max(60, Math.round(1800 / total)));
 }
 function showDone(total) {
-  const pb = pendingBroadcast || { type: 'event', histTitle: '配信', histNote: '', total };
+  const pb = pendingBroadcast || { type: 'event', histTitle: t('hist_generic'), histNote: '', total };
   const opened = Math.floor(total * 0.85);
   const rsvpd  = Math.floor(total * 0.28);
   // 完了オーバーレイ文言（タイプで出し分け）
-  document.querySelector('.done-title').textContent = pb.doneText || '配信完了！';
+  document.querySelector('.done-title').textContent = pb.doneText || t('done_title_default');
   document.querySelector('.done-label').textContent =
-    pb.type === 'post' ? '件のLINEを送信しました' : '店舗にLINEを送信しました';
+    pb.type === 'post' ? t('done_label_post') : t('done_label_store');
   document.getElementById('doneCount').textContent     = total;
   document.getElementById('doneSent').textContent      = total;
   document.getElementById('doneDelivered').textContent = opened;
@@ -3418,7 +4089,7 @@ function showDone(total) {
     type: pb.type,
     icon: pb.icon || (pb.type === 'post' ? '📣' : '🍷'),
     date: todayISO(),
-    event: pb.histTitle || (pb.type === 'post' ? 'おすすめ投稿' : '配信'),
+    event: pb.histTitle || (pb.type === 'post' ? t('hist_post_title') : t('hist_generic')),
     note: pb.histNote || '',
     sent: total, opened, rsvpd,
     recipients: Array.from(selectedIds)
@@ -3453,11 +4124,11 @@ function renderMembers() {
       <div class="mc-icon">${s.icon}</div>
       <div class="mc-info">
         <div class="mc-name">${s.name}</div>
-        <div class="mc-meta">📍 ${s.area} · ${s.type} &nbsp;·&nbsp; 💬 LINE連携済</div>
+        <div class="mc-meta">📍 ${dispArea(s.area)} · ${dispType(s.type)} &nbsp;·&nbsp; ${t('line_linked_inline')}</div>
       </div>
       <div class="mc-right">
         ${s.isNew ? '<span class="new-badge">NEW</span>' : ''}
-        ${s.lastSent ? `<span style="font-size:10px;color:var(--text-sub);">前回: ${s.lastSent.slice(5).replace('-','/')}</span>` : '<span style="font-size:10px;color:#aaa;">未配信</span>'}
+        ${s.lastSent ? `<span style="font-size:10px;color:var(--text-sub);">${tfmt('prev_label', { d: s.lastSent.slice(5).replace('-','/') })}</span>` : '<span style="font-size:10px;color:#aaa;">' + t('badge_never') + '</span>'}
       </div>
     </div>`).join('');
 
@@ -3466,10 +4137,10 @@ function renderMembers() {
       <div class="mc-icon">${s.icon}</div>
       <div class="mc-info">
         <div class="mc-name">${s.name}</div>
-        <div class="mc-meta">📍 ${s.area} · ${s.type}</div>
+        <div class="mc-meta">📍 ${dispArea(s.area)} · ${dispType(s.type)}</div>
       </div>
       <div class="mc-right">
-        <button onclick="showToast('招待リンクをコピーしました 📋')" style="font-size:11px;font-weight:700;background:var(--burgundy-pale);color:var(--burgundy);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-family:inherit;">招待する</button>
+        <button onclick="showToast(t('toast_invite_copied'))" style="font-size:11px;font-weight:700;background:var(--burgundy-pale);color:var(--burgundy);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-family:inherit;">${t('btn_invite')}</button>
       </div>
     </div>`).join('');
 }
@@ -3480,7 +4151,7 @@ function renderMembers() {
 function renderHistory() {
   const el = document.getElementById('historyList');
   if (!broadcastHistory.length) {
-    el.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">配信履歴はまだありません</div>`;
+    el.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">${t('no_history')}</div>`;
     return;
   }
   el.innerHTML = broadcastHistory.map(h => {
@@ -3490,18 +4161,18 @@ function renderHistory() {
     const openRate = h.sent ? Math.round(h.opened / h.sent * 100) + '%' : '—';
     return `<div class="history-card">
       <div class="hc-header">
-        <div class="hc-event">${icon} ${h.event}${h.note ? ` <span style="font-weight:400;color:var(--text-sub);font-size:11px;">${h.note}</span>` : ''}</div>
+        <div class="hc-event">${icon} ${dispEvent(h.event)}${h.note ? ` <span style="font-weight:400;color:var(--text-sub);font-size:11px;">${h.note}</span>` : ''}</div>
         <div class="hc-date">${h.date}</div>
       </div>
       <div class="hc-stats">
-        <div class="hc-stat"><strong>${h.sent}</strong>${h.type === 'post' ? '件に送信' : '店舗に送信'}</div>
-        <div class="hc-stat"><strong>${h.opened}</strong>既読</div>
+        <div class="hc-stat"><strong>${h.sent}</strong>${h.type === 'post' ? t('hist_sent_post') : t('hist_sent_store')}</div>
+        <div class="hc-stat"><strong>${h.opened}</strong>${t('hist_read')}</div>
         <div class="hc-stat"><strong>${rsvpVal}</strong>RSVP</div>
       </div>
       <div class="hc-open-rate">
-        📊 既読率 ${openRate} &nbsp;·&nbsp; RSVP率 ${rsvpRate}
+        ${tfmt('hist_rates', { o: openRate, r: rsvpRate })}
         &nbsp;&nbsp;
-        <span style="color:#9B1B4B;font-weight:700;cursor:pointer;" onclick="restorePrevList('${h.id}')">この宛先を再利用 →</span>
+        <span style="color:#9B1B4B;font-weight:700;cursor:pointer;" onclick="restorePrevList('${h.id}')">${t('hist_reuse')}</span>
       </div>
     </div>`;
   }).join('');
@@ -3517,7 +4188,7 @@ function restorePrevList(histId) {
   selectedIds = new Set(ids.filter(id => { const s = stores.find(x => x.id === id); return s && s.lineConnected && !s.excluded; }));
   switchPanel('broadcast');
   setBroadcastType('event');
-  showToast(`「${h.event}」の宛先 ${selectedIds.size}店舗を読み込みました`);
+  showToast(tfmt('toast_recipients_loaded', { name: dispEvent(h.event), n: selectedIds.size }));
   currentMode = 'custom';
   ['all','prev','custom'].forEach(m => document.getElementById('mtab-'+m).classList.toggle('active', m==='custom'));
   renderStoreList();
@@ -3567,9 +4238,9 @@ function saveCatalog(items) {
   } catch (e) {
     console.warn('[catalog] save失敗', e);
     if (e && (e.name === 'QuotaExceededError' || /quota/i.test(String(e.message || '')))) {
-      showToast('保存できませんでした（写真が大きすぎる可能性があります）');
+      showToast(t('toast_save_fail_photo'));
     } else {
-      showToast('保存できませんでした');
+      showToast(t('toast_save_fail'));
     }
     return false;
   }
@@ -3597,8 +4268,8 @@ function onCatPhoto(input) {
     catPhotoData = dataUrl;
     document.getElementById('catPhotoPreview').innerHTML =
       `<div class="cat-photo-preview-wrap">
-         <img class="cat-photo-preview" src="${catPhotoData}" alt="ワイン写真">
-         <button class="cat-photo-preview-del" aria-label="写真を削除" onclick="removeCatPhoto()">✕</button>
+         <img class="cat-photo-preview" src="${catPhotoData}" alt="${t('alt_wine_photo')}">
+         <button class="cat-photo-preview-del" aria-label="${t('aria_del_photo')}" onclick="removeCatPhoto()">✕</button>
        </div>`;
   });
   input.value = '';
@@ -3619,7 +4290,7 @@ function renderCatalog() {
   if (items.length === 0) {
     list.innerHTML = `<div style="text-align:center;padding:32px 16px;color:var(--text-sub);">
       <div style="font-size:36px;margin-bottom:12px;">📋</div>
-      カタログが空です。<br>上のフォームから取り扱いワインを追加してください。</div>`;
+      ${t('cat_empty_html')}</div>`;
     return;
   }
   list.innerHTML = items.map(it => `
@@ -3633,12 +4304,12 @@ function renderCatalog() {
         </div>
         <div class="cat-cright">
           <button class="cat-toggle ${it.available?'avail':'unavl'}" onclick="toggleCat('${it.id}')">
-            ${it.available ? '取り扱い中' : '停止中'}
+            ${it.available ? t('opt_avail') : t('cat_stopped')}
           </button>
           <button class="cat-del" onclick="deleteCat('${it.id}')">✕</button>
         </div>
       </div>
-      ${it.desc ? `<div class="cat-desc">${it.desc}</div>` : ''}
+      ${it.desc ? `<div class="cat-desc">${dispDesc(it.desc)}</div>` : ''}
     </div>`).join('');
 }
 
@@ -3650,7 +4321,7 @@ function addCatalogItem() {
   const price    = parseInt(document.getElementById('catPrice').value) || 0;
   const available= document.getElementById('catAvailSel').value === '1';
   const desc     = document.getElementById('catDesc').value.trim();
-  if (!name) { showToast('ワイン名を入力してください'); return; }
+  if (!name) { showToast(t('toast_need_wine_name')); return; }
   const myItems = loadCatalog().filter(i => i.importerId === IMP_INFO.id);
   const item = { id:'ic'+Date.now(), name, producer, vintage, region, price, available, desc };
   if (catPhotoData) item.photo = catPhotoData;
@@ -3659,7 +4330,7 @@ function addCatalogItem() {
   ['catName','catProducer','catVintage','catRegion','catPrice','catDesc'].forEach(id => document.getElementById(id).value = '');
   removeCatPhoto();
   renderCatalog();
-  showToast('✓ カタログに追加しました');
+  showToast(t('toast_cat_added'));
 }
 
 function toggleCat(id) {
@@ -3669,28 +4340,30 @@ function toggleCat(id) {
   it.available = !it.available;
   saveCatalog(myItems);
   renderCatalog();
-  showToast(it.available ? '✓ 取り扱い中に変更しました' : '取り扱い停止に変更しました');
+  showToast(it.available ? t('toast_cat_avail') : t('toast_cat_unavail'));
 }
 
 function deleteCat(id) {
   const myItems = loadCatalog().filter(i => i.importerId === IMP_INFO.id && i.id !== id);
   saveCatalog(myItems);
   renderCatalog();
-  showToast('削除しました');
+  showToast(t('toast_deleted'));
 }
 
 function exportCatalog() {
   const items = loadCatalog().filter(i => i.importerId === IMP_INFO.id);
-  if (!items.length) { showToast('カタログが空です'); return; }
-  const header = ['名前','生産者','ヴィンテージ','産地','参考価格','ステータス','説明'];
-  const rows = items.map(i => [i.name,i.producer,i.vintage,i.region,i.price,i.available?'取り扱い中':'停止',i.desc]
+  if (!items.length) { showToast(t('toast_cat_empty')); return; }
+  const header = LANG === 'en'
+    ? ['Name','Producer','Vintage','Region','Reference price','Status','Description']
+    : ['名前','生産者','ヴィンテージ','産地','参考価格','ステータス','説明'];
+  const rows = items.map(i => [i.name,i.producer,i.vintage,i.region,i.price,i.available?t('opt_avail'):t('cat_stopped'),LANG==='en'?dispDesc(i.desc):i.desc]
     .map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(','));
   const csv = '﻿' + [header.join(','), ...rows].join('\r\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
-  a.download = `${IMP_INFO.name}_取り扱いカタログ.csv`;
+  a.download = LANG === 'en' ? `${IMP_INFO.name}_catalog.csv` : `${IMP_INFO.name}_取り扱いカタログ.csv`;
   a.click();
-  showToast('カタログをCSVでダウンロードしました');
+  showToast(t('toast_cat_csv'));
 }
 
 function shareCatalogLine() {
@@ -3699,10 +4372,10 @@ function shareCatalogLine() {
   modal.style.cssText = 'position:fixed;inset:0;z-index:3000;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.5);';
   const lines = items.slice(0,5).map((it,i)=>`${i+1}. ${it.name} ${it.vintage}`).join('\n');
   modal.innerHTML = `<div style="background:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:24px 20px 36px;">
-    <div style="font-size:15px;font-weight:800;text-align:center;margin-bottom:14px;">LINEでカタログをシェア</div>
-    <div style="background:#e8faf0;border:1.5px solid #06C755;border-radius:12px;padding:14px;margin-bottom:16px;white-space:pre-line;font-size:12px;line-height:1.9;font-family:monospace;color:#1a3c2a;">📋 【${IMP_INFO.name} 取り扱いカタログ】\n取り扱い中ワイン（${items.length}本）\n\n${lines}${items.length>5?`\n…他${items.length-5}本`:''}\n\n詳細・ご注文はお気軽にお問い合わせください。\n\nhttps://sommelin.app/catalog/${IMP_INFO.id}</div>
-    <button onclick="this.closest('[style]').remove();showToast('💬 LINEでカタログを送信しました ✓');" style="width:100%;padding:14px;background:#06C755;color:#fff;font-size:15px;font-weight:800;border:none;border-radius:12px;cursor:pointer;margin-bottom:10px;">💬 LINEで送る</button>
-    <button onclick="this.closest('[style]').remove()" style="width:100%;padding:12px;background:#f5f3f0;color:#7A5A62;font-size:14px;font-weight:700;border:none;border-radius:12px;cursor:pointer;">キャンセル</button>
+    <div style="font-size:15px;font-weight:800;text-align:center;margin-bottom:14px;">${t('share_cat_title')}</div>
+    <div style="background:#e8faf0;border:1.5px solid #06C755;border-radius:12px;padding:14px;margin-bottom:16px;white-space:pre-line;font-size:12px;line-height:1.9;font-family:monospace;color:#1a3c2a;">${tfmt('cat_line_msg', { org: IMP_INFO.name, n: items.length, lines, more: items.length > 5 ? tfmt('more_n', { n: items.length - 5 }) : '', id: IMP_INFO.id })}</div>
+    <button onclick="this.closest('[style]').remove();showToast(t('toast_cat_shared'));" style="width:100%;padding:14px;background:#06C755;color:#fff;font-size:15px;font-weight:800;border:none;border-radius:12px;cursor:pointer;margin-bottom:10px;">${t('btn_line_send')}</button>
+    <button onclick="this.closest('[style]').remove()" style="width:100%;padding:12px;background:#f5f3f0;color:#7A5A62;font-size:14px;font-weight:700;border:none;border-radius:12px;cursor:pointer;">${t('btn_cancel')}</button>
   </div>`;
   document.body.appendChild(modal);
   modal.addEventListener('click', e => { if(e.target===modal) modal.remove(); });

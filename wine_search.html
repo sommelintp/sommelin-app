@@ -647,6 +647,10 @@ document.getElementById('searchInput').addEventListener('keydown', e => {
 });
 
 // ── ソムリン評価（バックエンドAPIと照合：総合評価＋コスパ） ──
+// AJ-5(2026-07-14): 英語UIではカタカナでなく欧文名を優先表示
+function dispWName(w){ return (LANG==='en' && w && w.nameEn) ? w.nameEn : (w && w.name) || ''; }
+function dispWProducer(w){ return (LANG==='en' && w && w.producerEn) ? w.producerEn : (w && w.producer) || ''; }
+
 // 2026-07-09: match_wines RPCの直叩き(anonキー)はバックエンド経由(/api/wine-search。
 // sanitize済み・total/cospaLevelのみ)に統一。SB_URL/SB_KEYは他の用途(店舗情報取得等・
 // sp/osuを含まない)でまだ使うため残す。
@@ -692,7 +696,7 @@ async function loadMaster(q){
     alts=rows.slice(1,3).map(w=>{
       const c=_cospa(w.cospaLevel);
       return `<div onclick="doSearch('${(w.name||'').replace(/'/g,"\\'")}')" style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;background:#faf7f8;border-radius:10px;margin-top:6px;cursor:pointer;">
-        <div style="min-width:0;"><div style="font-size:12px;font-weight:700;color:#2C1810;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(w.name||'')}</div><div style="font-size:10px;color:#999;">${escHtml([dispKuni(w.kuni),w.chiiki].filter(v=>v&&v!=='不明').join(' '))}</div></div>
+        <div style="min-width:0;"><div style="font-size:12px;font-weight:700;color:#2C1810;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(dispWName(w))}</div><div style="font-size:10px;color:#999;">${escHtml([dispKuni(w.kuni),w.chiiki].filter(v=>v&&v!=='不明').join(' '))}</div></div>
         <div style="text-align:right;white-space:nowrap;"><div style="font-size:11px;color:${c.bg};font-weight:800;">${c.st}</div><div style="margin-top:2px;">${window.WineDisplay?window.WineDisplay.starsHtml(w.starRating,{size:11}):''}</div></div>
       </div>`;
     }).join('');
@@ -706,8 +710,8 @@ async function loadMaster(q){
           ? `<img src="${escHtml(top.imageUrl)}" alt="${t('bottle_image_alt')}" style="flex-shrink:0;height:56px;width:auto;max-width:44px;object-fit:contain;border-radius:4px;">`
           : window.BottleSvg?`<div style="flex-shrink:0;line-height:0;">${window.BottleSvg.render(top,56)}</div>`:''}
         <div style="min-width:0;">
-          <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#2C1810;line-height:1.3;">${escHtml(top.name||'')}${escHtml(vint)}</div>
-          <div style="font-size:12px;color:#888;margin:3px 0 10px;">${escHtml(region)}${top.producer?(' / '+escHtml(top.producer)):''}</div>
+          <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#2C1810;line-height:1.3;">${escHtml(dispWName(top))}${escHtml(vint)}</div>
+          <div style="font-size:12px;color:#888;margin:3px 0 10px;">${escHtml(region)}${top.producer?(' / '+escHtml(dispWProducer(top))):''}</div>
         </div>
       </div>
       <div style="text-align:center;background:#faf7f8;border-radius:10px;padding:10px;margin-bottom:8px;">

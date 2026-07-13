@@ -3021,12 +3021,14 @@ const I18N = {
     wine_map_title: '📍 どこで飲める？買える？', wine_map_where: '📍 {n} はどこで？', this_wine: 'このワイン',
     map_legend: '<span style="color:#9B1B4B;">●</span> レストラン（飲める）　<span style="color:#C9973A;">●</span> ワインショップ（買える）',
     sightings_empty_title: 'まだ目撃情報がありません',
+    search_online_head: 'ネットで探す', search_on_rakuten: '🛒 楽天市場で検索', search_on_web: '🌐 Webで検索',
+    word_buy_query: 'ワイン 購入', search_online_note: '外部サイトの検索結果が開きます（在庫・銘柄の一致は保証されません）',
     sightings_empty_desc: 'お店でワインリストをスカウターで撮って記録すると、<br>「ここで飲める・買える」がみんなに共有されます',
     cat_shop_e: '🍷 ワインショップ', cat_rest_e: '🍽️ レストラン',
     bottle_price_n: 'ボトル ¥{n}', word_glass: 'グラス', word_bottle: 'ボトル', word_other: 'その他',
     pin_buy: '🍷 買える', pin_drink: '🍽️ 飲める',
     generic_load_err: '読み込めませんでした（通信環境をご確認ください）', load_err_short: '読み込めませんでした',
-    community_rating: 'みんなの評価 <strong>{a}</strong>（{n}件）', badge_cospa: 'コスパ良好', badge_fivestar: '🏅 ソムリン五つ星',
+    community_rating: 'みんなの評価 <strong>{a}</strong>（{n}件）', badge_cospa: 'コスパ良好', badge_fivestar: '🏅 五つ星',
     alt_bottle: 'ボトル画像', ref_price: '参考価格 <strong>{p}</strong>', btn_where: '📍 どこで飲める？買える？',
     rank_footer_note: '星が付いているワインはすべてソムリンのおすすめです。星の数は同価格帯での稀少度を表します',
     rank_load_err: 'ランキングを読み込めませんでした（通信環境をご確認ください）',
@@ -3202,12 +3204,14 @@ const I18N = {
     wine_map_title: '📍 Where to drink or buy?', wine_map_where: '📍 Where to find {n}?', this_wine: 'this wine',
     map_legend: '<span style="color:#9B1B4B;">●</span> Restaurant (drink)　<span style="color:#C9973A;">●</span> Wine shop (buy)',
     sightings_empty_title: 'No sightings yet',
+    search_online_head: 'Search online', search_on_rakuten: '🛒 Search on Rakuten', search_on_web: '🌐 Search the web',
+    word_buy_query: 'wine buy', search_online_note: 'Opens external search results (availability and exact match not guaranteed)',
     sightings_empty_desc: 'Snap wine lists with the Scouter to share<br>where this wine can be enjoyed or bought',
     cat_shop_e: '🍷 Wine Shop', cat_rest_e: '🍽️ Restaurant',
     bottle_price_n: 'Bottle ¥{n}', word_glass: 'Glass', word_bottle: 'Bottle', word_other: 'Other',
     pin_buy: '🍷 Buy here', pin_drink: '🍽️ Drink here',
     generic_load_err: 'Could not load (check your connection)', load_err_short: 'Could not load',
-    community_rating: 'Community <strong>{a}</strong> ({n} reviews)', badge_cospa: 'Great Value', badge_fivestar: '🏅 Sommelin 5-Star',
+    community_rating: 'Community <strong>{a}</strong> ({n} reviews)', badge_cospa: 'Great Value', badge_fivestar: '🏅 5-Star',
     alt_bottle: 'Bottle photo', ref_price: 'Ref. price <strong>{p}</strong>', btn_where: '📍 Where to drink or buy?',
     rank_footer_note: 'Every starred wine is a Sommelin pick. The number of stars shows rarity within its price range',
     rank_load_err: 'Could not load the ranking (check your connection)',
@@ -3364,13 +3368,10 @@ function applyI18n() {
 function setLang(l) {
   LANG = l;
   try { localStorage.setItem('somm_lang', l); } catch (e) {}
-  applyI18n();
-  // 言語に依存する動的描画を再実行（存在すれば）
-  try { renderRankBandChips(); } catch (e) {}
-  try { renderRealVisits(); } catch (e) {}
-  try { initMypageIdentity(); } catch (e) {}
-  try { initMypageXp(); } catch (e) {}
   if (window.sommLog) sommLog('lang_switch', { lang: l });
+  // AJ-6(2026-07-14): 個別の再描画関数を列挙する方式は漏れが出る（ランキング一覧などが
+  // 旧言語のまま残る実害があった）ため、保存してからページ全体を再読込して全描画をやり直す
+  location.reload();
 }
 applyI18n();
 
@@ -3990,11 +3991,23 @@ async function openWineMap(wineId, wineName) {
     const items = (d.items || []);
     const mappable = items.filter(it => it.lat != null && it.lng != null);
     if (!items.length) {
+      // AJ-7(2026-07-14): 結果ゼロで終わらせない。最低限ネット検索への導線を必ず出す
+      const q = encodeURIComponent(wineName || '');
       body.innerHTML = `
-        <div style="text-align:center;padding:24px 12px;">
+        <div style="text-align:center;padding:18px 12px 8px;">
           <div style="font-size:34px;">🔍</div>
           <div style="font-size:13px;font-weight:700;color:var(--text);margin-top:6px;">${t('sightings_empty_title')}</div>
           <div style="font-size:11px;color:var(--text-sub);margin-top:6px;line-height:1.7;">${t('sightings_empty_desc')}</div>
+        </div>
+        <div style="padding:0 4px 8px;">
+          <div style="font-size:11px;font-weight:700;color:var(--text-sub);margin:8px 0 6px;">${t('search_online_head')}</div>
+          <a href="https://search.rakuten.co.jp/search/mall/${q}/" target="_blank" rel="noopener"
+             onclick="if(window.sommLog)sommLog('wine_map_fallback',{via:'rakuten'})"
+             style="display:flex;align-items:center;justify-content:center;gap:6px;background:#BF0000;color:#fff;border-radius:10px;padding:11px;font-size:13px;font-weight:800;text-decoration:none;">${t('search_on_rakuten')}</a>
+          <a href="https://www.google.com/search?q=${q}%20${encodeURIComponent(t('word_buy_query'))}" target="_blank" rel="noopener"
+             onclick="if(window.sommLog)sommLog('wine_map_fallback',{via:'google'})"
+             style="display:flex;align-items:center;justify-content:center;gap:6px;background:#fff;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:11px;font-size:13px;font-weight:700;text-decoration:none;margin-top:8px;">${t('search_on_web')}</a>
+          <div style="font-size:10px;color:var(--text-sub);text-align:center;margin-top:6px;">${t('search_online_note')}</div>
         </div>`;
       return;
     }
@@ -4158,6 +4171,9 @@ async function loadTopWines() {
     const escR = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     box.innerHTML = d.items.map((it, i) => {
       const w = it.wine || {};
+      // AJ-5: 英語UIではカタカナでなく欧文名（wine_catalog.name_en/producer_en）を優先
+      const dispName = (LANG === 'en' && w.nameEn) ? w.nameEn : w.name;
+      const dispProducer = (LANG === 'en' && w.producerEn) ? w.producerEn : w.producer;
       const badge = i===0 ? 'r1' : i===1 ? 'r2' : i===2 ? 'r3' : 'rn';
       const flag = (COUNTRY_FLAGS[w.kuni] && COUNTRY_FLAGS[w.kuni][0]) || '';
       const region = [dispKuni(w.kuni), w.chiiki].filter(v => v && v !== '不明').join(' ');
@@ -4168,7 +4184,7 @@ async function loadTopWines() {
       const cospaBadge = it.goodValue ? '<span class="s-badge-cospa">' + t('badge_cospa') + '</span>' : '';
       const fiveStarBadge = it.starRating === 5 ? '<span class="s-badge-fivestar">' + t('badge_fivestar') + '</span>' : '';
       const producerLink = w.producer
-        ? ` / <a href="producer.html?p=${encodeURIComponent(w.producer)}" style="color:inherit;text-decoration:underline;text-decoration-color:var(--border);">${escR(w.producer)}</a>`
+        ? ` / <a href="producer.html?p=${encodeURIComponent(w.producer)}" style="color:inherit;text-decoration:underline;text-decoration-color:var(--border);">${escR(dispProducer)}</a>`
         : '';
       const starsHtml = window.WineDisplay
         ? window.WineDisplay.starsHtml(it.starRating, { size: 16, showLabel: it.starRating !== 5, source: it.ratingSource })
@@ -4183,7 +4199,7 @@ async function loadTopWines() {
             : window.BottleSvg ? `<div style="line-height:0;">${window.BottleSvg.render(w,72)}</div>` : ''}
         </div>
         <div class="rank-wine-info">
-          <div class="rank-wine-name">${escR(w.name)}${w.vintage && w.vintage!=='NV' ? ' ' + escR(w.vintage) : ''}</div>
+          <div class="rank-wine-name">${escR(dispName)}${w.vintage && w.vintage!=='NV' ? ' ' + escR(w.vintage) : ''}</div>
           <div class="rank-wine-region">${flag} ${escR(region)}${producerLink}</div>
           <div class="rank-wine-stats" style="margin-top:4px;align-items:center;">${starsHtml}${fiveStarBadge}</div>
           <div class="rank-wine-stats" style="margin-top:4px;">
@@ -5150,11 +5166,18 @@ function openWineHistory() {
         const region = [dispKuni(it.kuni), it.chiiki].filter(v => v && v !== '不明').join(' ');
         const sub = [escR(it.producer), escR(region)].filter(Boolean).join(' ・ ');
         const date = it.ts ? new Date(it.ts).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ja-JP') : '';
+        // AJ-3: 本人が撮影した写真があればサムネイル表示（署名付きURL・1時間有効）
+        const thumb = it.imageUrl
+          ? `<img src="${escR(it.imageUrl)}" alt="" loading="lazy" style="flex-shrink:0;width:44px;height:58px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">`
+          : '';
         return `
-        <div style="padding:10px 0;border-bottom:1px solid var(--border);">
-          <div style="font-size:14px;font-weight:700;color:var(--text);">${escR(it.name) || t('unknown_name')}${it.vintage ? ' ' + escR(it.vintage) : ''}</div>
-          <div style="font-size:12px;color:var(--text-sub);margin-top:2px;">${sub}</div>
-          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">${date}</div>
+        <div style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+          ${thumb}
+          <div style="min-width:0;flex:1;">
+            <div style="font-size:14px;font-weight:700;color:var(--text);">${escR(it.name) || t('unknown_name')}${it.vintage ? ' ' + escR(it.vintage) : ''}</div>
+            <div style="font-size:12px;color:var(--text-sub);margin-top:2px;">${sub}</div>
+            <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">${date}</div>
+          </div>
         </div>`;
       }).join('');
     })

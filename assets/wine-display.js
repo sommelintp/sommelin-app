@@ -9,9 +9,11 @@
    公開API: window.WineDisplay = { starsHtml, flagOf, ratingLabel }
    ═════════════════════════════════════════════════════════════ */
 (function(){
-  const RATING_LABELS = { sommelin_v1: 'ソムリン' };
+  // AJ-10(2026-07-14): オーナー判断で星バッジ・星ラベルにブランド名を冠するのをやめた。
+  // 星の横には何も出さない（称号は星の数だけで語る）。sourceごとの出し分けは将来復活可。
+  const RATING_LABELS = {};
   function ratingLabel(source){
-    return RATING_LABELS[source] || '称号';
+    return RATING_LABELS[source] || '';
   }
 
   // U-3: prototype.htmlのCOUNTRY_FLAGS（12ヶ国）をこちらに一本化。
@@ -41,7 +43,8 @@
         <path d="M12 2.5l2.9 6.5 7.1.6-5.4 4.7 1.7 7-6.3-4-6.3 4 1.7-7L2 9.6l7.1-.6z" fill="${gold}"/>
       </svg>`;
     }
-    const label = opts.showLabel ? `<span style="font-size:${Math.round(size*0.72)}px;color:var(--text-sub,#999);margin-left:4px;">${ratingLabel(opts.source)}</span>` : '';
+    const labelText = opts.showLabel ? ratingLabel(opts.source) : '';
+    const label = labelText ? `<span style="font-size:${Math.round(size*0.72)}px;color:var(--text-sub,#999);margin-left:4px;">${labelText}</span>` : '';
     return `<span style="display:inline-flex;align-items:center;gap:${gap}px;">${stars}${label}</span>`;
   }
 

@@ -72,7 +72,7 @@ body{
 .aTop-sp{width:36px;flex-shrink:0;}
 
 /* bottom controls（下ナビ分だけ底上げ。2026-07-08: スカウター使用中に他画面へ移動できなくなる不具合対応） */
-.aBot{position:absolute;bottom:74px;left:0;right:0;z-index:30;padding:14px 0 12px;
+.aBot{position:absolute;bottom:calc(62px + env(safe-area-inset-bottom));left:0;right:0;z-index:30;padding:14px 0 12px;
   background:linear-gradient(0deg,rgba(0,0,0,.8),rgba(0,0,0,.45) 60%,transparent);
   display:flex;flex-direction:column;align-items:center;gap:12px;}
 
@@ -112,7 +112,9 @@ body{
 .mark .bsub{display:block;font-size:9px;font-weight:700;}
 .mark.pinned{border-color:#8b5cf6;}
 .mark .pinsub{display:block;font-size:9px;font-weight:700;color:#c4b5fd;}
-#frozenBar{position:absolute;left:0;right:0;bottom:0;z-index:35;padding:14px 16px 34px;display:none;
+/* AJ-1(2026-07-14): 下ナビ(.scouter-nav 約62px+セーフエリア)が常時最前面(z600)のため、
+   下端に張り付くUIはナビの高さぶん底上げしないとボタンが裏に潜って押せなくなる */
+#frozenBar{position:absolute;left:0;right:0;bottom:0;z-index:35;padding:14px 16px calc(76px + env(safe-area-inset-bottom));display:none;
   background:linear-gradient(0deg,rgba(0,0,0,.85),rgba(0,0,0,.5) 70%,transparent);}
 #frozenBar .fs{font-size:12px;color:rgba(255,255,255,.88);text-align:center;margin-bottom:10px;font-weight:700;line-height:1.5;}
 #frozenBar .fb1{width:100%;padding:14px;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;
@@ -129,7 +131,7 @@ body{
 #backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:80;opacity:0;pointer-events:none;transition:opacity .3s;}
 #backdrop.on{opacity:1;pointer-events:all;}
 #sheet{position:fixed;bottom:0;left:50%;max-width:430px;width:100%;transform:translateX(-50%) translateY(108%);
-  background:#fff;border-radius:22px 22px 0 0;z-index:90;padding-bottom:34px;color:#2C1810;
+  background:#fff;border-radius:22px 22px 0 0;z-index:90;padding-bottom:calc(76px + env(safe-area-inset-bottom));color:#2C1810;
   transition:transform .36s cubic-bezier(.34,1.56,.64,1);max-height:90dvh;overflow-y:auto;}
 #sheet.on{transform:translateX(-50%) translateY(0);}
 /* 裏ラベル撮影（AE-2） */
@@ -412,7 +414,7 @@ const I18N = {
     like_btn: '❤️ 気に入った！（推す）',
     oshi_rate_title: 'このワイン、何点でしたか？',
     oshi_rate_sub: '10点満点・0.1刻み。あなたの「気に入ったワインリスト」に保存されます',
-    oshi_save: '❤️ この評価で保存',
+    oshi_save: '❤️ この評価で保存', oshi_saving: '保存中…',
     oshi_back: '戻る',
     oshi_saved: '気に入ったワインに保存しました🍷',
     oshi_fail: '保存に失敗しました。通信環境をご確認ください',
@@ -588,7 +590,7 @@ const I18N = {
     like_btn: '❤️ I love this wine!',
     oshi_rate_title: 'How would you rate this wine?',
     oshi_rate_sub: 'Out of 10, in 0.1 steps. Saved to your "wines I loved" list.',
-    oshi_save: '❤️ Save my rating',
+    oshi_save: '❤️ Save my rating', oshi_saving: 'Saving…',
     oshi_back: 'Back',
     oshi_saved: 'Saved to your favorite wines 🍷',
     oshi_fail: 'Failed to save. Please check your connection.',
@@ -1199,13 +1201,23 @@ function oshiPaintScore(){
 }
 
 // Step2: 保存（蓄積は伝える/伝えないに関係なく必ず行う）
+// AJ-2: /api/wine-likeはIG検索で最大4秒待つため、応答待ちの連打で多重登録された実害あり。
+// ボタン無効化＋in-flightフラグの二重ガード（サーバー側にも24h冪等ガードあり）
+let oshiSaving=false;
 async function oshiSave(){
-  const b=curOshiBottle; if(!b) return;
+  const b=curOshiBottle; if(!b || oshiSaving) return;
   const w=b.match&&b.match.wine;
+  oshiSaving=true;
+  const saveBtn=document.querySelector('#sheetBody .sh-main');
+  if(saveBtn){ saveBtn.disabled=true; saveBtn.style.opacity='.55'; saveBtn.textContent=t('oshi_saving'); }
   try{
+    // AJ-3: 撮影画像＋ボトル枠も送る（バックエンドが切り抜いて飲んだワイン履歴のサムネイルに使う）
+    const frozenSrc=(document.getElementById('frozenImg')||{}).src||'';
+    const scanImage=frozenSrc.startsWith('data:')?frozenSrc:null;
     const r=await fetch(API_BASE+'/api/wine-like',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({userId:UID, wineId:w?w.id:null, catalogId:w?w.catalog_id:null, identification:b.identification||null, rating:oshiRating})});
+      body:JSON.stringify({userId:UID, wineId:w?w.id:null, catalogId:w?w.catalog_id:null, identification:b.identification||null, rating:oshiRating,
+        image:scanImage, box:(scanImage&&b.box)||null})});
     if(!r.ok) throw new Error('save failed');
     const d=await r.json();
     oshiLikeId=d.likeId||null; oshiHandle=d.producerInstagram||null;
@@ -1213,7 +1225,10 @@ async function oshiSave(){
     if(window.sommLog) sommLog('oshi_like',{wineId:w?w.id:null, rating:oshiRating, hasHandle:!!oshiHandle});
     toast(t('oshi_saved'));
     oshiAskShare();
-  }catch(e){ toast(t('oshi_fail')); }
+  }catch(e){
+    toast(t('oshi_fail'));
+    if(saveBtn){ saveBtn.disabled=false; saveBtn.style.opacity=''; saveBtn.textContent=t('oshi_save'); }
+  }finally{ oshiSaving=false; }
 }
 
 // Step3: 「みんなに伝えますか？」→ ①アプリ内フィルター ②Instagram、どちらも独立して選べる
