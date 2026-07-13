@@ -2572,10 +2572,10 @@
       <span style="font-size:11px;color:#16a34a;font-weight:600;margin-left:auto;margin-right:8px;" data-i18n="free_plan">無料プラン</span>
       <span class="mypage-menu-arrow">›</span>
     </div>
-    <div class="mypage-menu-item" onclick="showToastLike(t('toast_integrations'))" style="cursor:pointer;">
+    <div class="mypage-menu-item" onclick="openIntegrations()" style="cursor:pointer;">
       <span class="mypage-menu-icon">🔗</span>
       <span class="mypage-menu-text" data-i18n="menu_integrations">連携サービス</span>
-      <span style="font-size:11px;color:var(--text-sub);margin-left:auto;margin-right:8px;" data-i18n="coming_soon">準備中</span>
+      <span id="integrationsStatusEl" style="font-size:11px;color:var(--text-sub);margin-left:auto;margin-right:8px;" data-i18n="ig_not_linked">未連携</span>
       <span class="mypage-menu-arrow">›</span>
     </div>
     <a class="mypage-menu-item" href="mailto:domaine.bouchon@gmail.com?subject=%E3%82%BD%E3%83%A0%E3%83%AA%E3%83%B3%E3%82%A2%E3%83%97%E3%83%AA%20%E3%81%8A%E5%95%8F%E3%81%84%E5%90%88%E3%82%8F%E3%81%9B" style="text-decoration:none;color:inherit;">
@@ -2718,6 +2718,62 @@
       <input type="text" id="profileHandleInput" maxlength="20" placeholder="例: taro_wine" data-i18n-ph="ph_handle" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1px solid var(--border);font-size:14px;font-family:inherit;margin-bottom:6px;">
       <button id="profileHandleSaveBtn" onclick="saveProfileHandle()" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--burgundy);background:#fff;color:var(--burgundy);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;" data-i18n="btn_set_handle">IDを設定する</button>
       <div id="profileHandleMsg" style="font-size:12px;color:var(--text-sub);margin-top:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 連携サービス（AF-4・2026-07-13追加）: 本人のInstagramを自己申告で登録。
+     推しカードでの生産者タグ付け・固定ハイライト運用のための土台（sommelin-ig-oshi-flow） -->
+<div class="modal-overlay" id="integrationsModal" onclick="if(event.target===this)closeIntegrations()">
+  <div class="modal" id="integrationsContent">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-wine-name" data-i18n="ig_modal_title">🔗 連携サービス</div>
+    </div>
+    <div class="modal-section" style="padding-top:0;">
+      <label style="display:block;font-size:12.5px;color:var(--text-sub);margin-bottom:6px;" data-i18n="ig_label">Instagram</label>
+      <p style="font-size:12px;color:var(--text-sub);line-height:1.6;margin-bottom:10px;" data-i18n="ig_desc">気に入ったワインの「推しカード」をシェアする時、あなたのInstagramユーザー名を使って生産者にタグ付けできるようになります。</p>
+
+      <div id="igConnectedBox" style="display:none;padding:12px;border-radius:12px;background:#fdf6ec;border:1px solid var(--gold,#C9973A);margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;" id="igConnectedHandle">—</div>
+        <button onclick="disconnectInstagram()" style="margin-top:8px;padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;" data-i18n="ig_disconnect">連携を解除</button>
+      </div>
+
+      <div id="igFormBox">
+        <input type="text" id="igHandleInput" maxlength="30" placeholder="@ユーザー名" data-i18n-ph="ig_ph" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1px solid var(--border);font-size:14px;font-family:inherit;margin-bottom:8px;">
+        <button onclick="saveInstagramHandle()" style="width:100%;padding:10px;border-radius:10px;border:none;background:var(--burgundy);color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;" data-i18n="ig_save">連携する</button>
+      </div>
+      <div id="igMsg" style="font-size:12px;color:var(--text-sub);margin-top:8px;"></div>
+
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--text);">
+          <span>💬 LINE</span>
+          <span style="font-size:11px;font-weight:600;color:var(--text-sub);" data-i18n="ig_line_note">（業務店・インポーター向け機能）</span>
+        </div>
+        <p style="font-size:11.5px;color:var(--text-sub);line-height:1.6;margin-top:4px;" data-i18n="ig_line_desc">LINE通知連携は店舗・インポーター管理画面から設定できます。</p>
+      </div>
+
+      <button onclick="closeIntegrations()" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#fff;color:var(--text);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;margin-top:16px;" data-i18n="btn_close">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- 初回連携時のハイライト運用ガイド（1回だけ表示） -->
+<div class="modal-overlay" id="igHighlightGuideModal" onclick="if(event.target===this)closeIgHighlightGuide()">
+  <div class="modal" id="igHighlightGuideContent">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-wine-name" data-i18n="ig_guide_title">🎉 連携できました！</div>
+    </div>
+    <div class="modal-section" style="padding-top:0;">
+      <p style="font-size:13px;line-height:1.8;color:var(--text);white-space:pre-line;" data-i18n="ig_guide_body">これで、お気に入りのワインを推しカードでシェアする時に生産者をタグ付けできます。
+
+ストーリーでシェアした後、Instagramの「ハイライト」に追加すると、あなたが応援してきたワインの記録がプロフィールにずっと残ります。
+
+① ストーリーを投稿
+② 自分のプロフィールで、そのストーリーの「ハイライトに追加」をタップ
+③「ソムリン推し」という名前で1つ作っておくと、次からも同じハイライトに追加されていきます</p>
+      <button onclick="closeIgHighlightGuide()" style="width:100%;padding:10px;border-radius:10px;border:none;background:var(--burgundy);color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;margin-top:14px;" data-i18n="ig_guide_ok">わかった</button>
     </div>
   </div>
 </div>
@@ -2988,6 +3044,17 @@ const I18N = {
     share_text: 'ソムリンで一緒にワインを楽しもう🍷 ',
     settings_header: '設定', menu_subscription: 'サブスクリプション', free_plan: '無料プラン',
     menu_integrations: '連携サービス', coming_soon: '準備中', toast_integrations: '連携サービスは準備中です（近日公開）',
+    ig_not_linked: '未連携', ig_modal_title: '🔗 連携サービス',
+    ig_label: 'Instagram', ig_desc: '気に入ったワインの「推しカード」をシェアする時、あなたのInstagramユーザー名を使って生産者にタグ付けできるようになります。',
+    ig_ph: '@ユーザー名', ig_save: '連携する', ig_disconnect: '連携を解除',
+    ig_line_note: '（業務店・インポーター向け機能）', ig_line_desc: 'LINE通知連携は店舗・インポーター管理画面から設定できます。',
+    ig_login_required: 'ログインすると連携できます。マイページの「ログイン / 新規登録」からどうぞ。',
+    ig_invalid: 'Instagramのユーザー名を入力してください。', ig_saving: '保存中…', ig_fail: '通信エラーが発生しました。',
+    ig_connected_toast: '📷 Instagramと連携しました', ig_disconnected_toast: '連携を解除しました',
+    ig_disconnect_confirm: 'Instagram連携を解除しますか？',
+    ig_guide_title: '🎉 連携できました！',
+    ig_guide_body: 'これで、お気に入りのワインを推しカードでシェアする時に生産者をタグ付けできます。\n\nストーリーでシェアした後、Instagramの「ハイライト」に追加すると、あなたが応援してきたワインの記録がプロフィールにずっと残ります。\n\n① ストーリーを投稿\n② 自分のプロフィールで、そのストーリーの「ハイライトに追加」をタップ\n③「ソムリン推し」という名前で1つ作っておくと、次からも同じハイライトに追加されていきます',
+    ig_guide_ok: 'わかった',
     menu_help: 'ヘルプ・お問い合わせ', menu_add_biz: '業務店として登録する', menu_login: 'ログイン / 新規登録', menu_logout: 'ログアウト',
     confirm_logout: 'ログアウトしますか？',
     xp_next: '次のレベルまであと{n}XP', xp_max: '最高レベルです🎉',
@@ -3158,6 +3225,17 @@ const I18N = {
     share_text: 'Join me on Sommelin and enjoy wine together 🍷 ',
     settings_header: 'Settings', menu_subscription: 'Subscription', free_plan: 'Free Plan',
     menu_integrations: 'Linked Services', coming_soon: 'Coming soon', toast_integrations: 'Linked services are coming soon',
+    ig_not_linked: 'Not linked', ig_modal_title: '🔗 Linked Services',
+    ig_label: 'Instagram', ig_desc: 'Link your Instagram username so you can tag the producer when you share an "oshi card" for a wine you love.',
+    ig_ph: '@username', ig_save: 'Connect', ig_disconnect: 'Disconnect',
+    ig_line_note: '(For shops & importers)', ig_line_desc: 'LINE notifications are set up from the shop/importer dashboard.',
+    ig_login_required: 'Log in to connect Instagram. Go to "Log in / Sign up" in My Page.',
+    ig_invalid: 'Please enter your Instagram username.', ig_saving: 'Saving…', ig_fail: 'A network error occurred.',
+    ig_connected_toast: '📷 Instagram connected', ig_disconnected_toast: 'Disconnected',
+    ig_disconnect_confirm: 'Disconnect Instagram?',
+    ig_guide_title: '🎉 Connected!',
+    ig_guide_body: 'Now you can tag the producer when you share an oshi card for a wine you love.\n\nAfter posting a Story, add it to your Instagram "Highlights" so the wines you\'ve championed stay on your profile.\n\n① Post a Story\n② On your profile, tap "Add to Highlight" on that Story\n③ Create one highlight named "Sommelin Picks" — future shares can keep adding to the same one',
+    ig_guide_ok: 'Got it',
     menu_help: 'Help & Contact', menu_add_biz: 'Register as a Business', menu_login: 'Log In / Sign Up', menu_logout: 'Log Out',
     confirm_logout: 'Log out?',
     xp_next: '{n} XP to the next level', xp_max: 'Max level reached 🎉',
@@ -5009,7 +5087,7 @@ function syncAccountFromServer(){
       throw 0;
     })
     .then(function(user){
-      return fetch(ACC_SB_URL + '/rest/v1/profiles?id=eq.' + user.id + '&select=role,roles,display_name', { headers: { apikey: ACC_SB_KEY, Authorization: 'Bearer ' + s.access_token } })
+      return fetch(ACC_SB_URL + '/rest/v1/profiles?id=eq.' + user.id + '&select=role,roles,display_name,instagram', { headers: { apikey: ACC_SB_KEY, Authorization: 'Bearer ' + s.access_token } })
         .then(function(r){ return r.ok ? r.json() : []; })
         .then(function(rows){
           var role = (rows && rows[0] && rows[0].role) || (user.user_metadata && user.user_metadata.role) || 'individual';
@@ -5024,6 +5102,8 @@ function syncAccountFromServer(){
           } catch(e){}
           applyAccountUI();
           initMypageIdentity();
+          igCurrentHandle = (rows && rows[0] && rows[0].instagram) || null;
+          if (typeof renderIgConnectedState === 'function') renderIgConnectedState();
         });
     })
     .catch(function(){ applyAccountUI(); });
@@ -5082,6 +5162,87 @@ function openWineHistory() {
 }
 
 // ── プロフィール編集（2026-07-08追加: ニックネーム＋一度だけ設定できるID） ──
+// ── 連携サービス（AF-4・2026-07-13）: 本人のInstagramユーザー名を自己申告で登録 ──
+// バックエンド /api/account/instagram はSupabaseログイン必須（accSession）。
+// 匿名端末IDのCHAT_UID2とは別軸（ログインしていないとInstagram連携は使えない）。
+let igCurrentHandle = null;
+function closeIntegrations() {
+  document.getElementById('integrationsModal').classList.remove('open');
+}
+function openIntegrations() {
+  const session = accSession();
+  document.getElementById('integrationsModal').classList.add('open');
+  document.getElementById('igMsg').textContent = '';
+  document.getElementById('igHandleInput').value = '';
+  if (!session || !session.access_token) {
+    document.getElementById('igFormBox').style.display = 'none';
+    document.getElementById('igConnectedBox').style.display = 'none';
+    document.getElementById('igMsg').textContent = t('ig_login_required');
+    return;
+  }
+  document.getElementById('igFormBox').style.display = 'block';
+  fetch(ACC_SB_URL + '/rest/v1/profiles?id=eq.' + session.user.id + '&select=instagram', {
+    headers: { apikey: ACC_SB_KEY, Authorization: 'Bearer ' + session.access_token }
+  }).then(r => r.ok ? r.json() : []).then(rows => {
+    igCurrentHandle = (rows && rows[0] && rows[0].instagram) || null;
+    renderIgConnectedState();
+  }).catch(() => {});
+}
+function renderIgConnectedState() {
+  const box = document.getElementById('igConnectedBox');
+  const form = document.getElementById('igFormBox');
+  const el = document.getElementById('integrationsStatusEl');
+  if (igCurrentHandle) {
+    box.style.display = 'block'; form.style.display = 'none';
+    document.getElementById('igConnectedHandle').textContent = '📷 @' + igCurrentHandle;
+    if (el) { el.textContent = '@' + igCurrentHandle; el.style.color = '#16a34a'; }
+  } else {
+    box.style.display = 'none'; form.style.display = 'block';
+    if (el) { el.textContent = t('ig_not_linked'); el.style.color = ''; }
+  }
+}
+function saveInstagramHandle() {
+  const session = accSession();
+  const raw = document.getElementById('igHandleInput').value.trim();
+  const msgEl = document.getElementById('igMsg');
+  if (!session || !session.access_token) { msgEl.textContent = t('ig_login_required'); return; }
+  if (!raw) { msgEl.textContent = t('ig_invalid'); return; }
+  msgEl.textContent = t('ig_saving');
+  fetch(CHAT_API_BASE + '/api/account/instagram', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+    body: JSON.stringify({ handle: raw }),
+  })
+    .then(r => r.json().then(d => ({ ok: r.ok, d })))
+    .then(({ ok, d }) => {
+      if (ok) {
+        igCurrentHandle = d.instagram;
+        renderIgConnectedState();
+        msgEl.textContent = '';
+        showToastLike(t('ig_connected_toast'));
+        if (window.sommLog) sommLog('ig_connect', {});
+        if (!localStorage.getItem('sommelin_ig_guide_seen')) {
+          try { localStorage.setItem('sommelin_ig_guide_seen', '1'); } catch (e) {}
+          setTimeout(() => { closeIntegrations(); document.getElementById('igHighlightGuideModal').classList.add('open'); }, 400);
+        }
+      } else {
+        msgEl.textContent = (d && d.message) || t('ig_invalid');
+      }
+    }).catch(() => { msgEl.textContent = t('ig_fail'); });
+}
+function disconnectInstagram() {
+  const session = accSession();
+  if (!session || !session.access_token) return;
+  if (!confirm(t('ig_disconnect_confirm'))) return;
+  fetch(CHAT_API_BASE + '/api/account/instagram', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+    body: JSON.stringify({ handle: null }),
+  }).then(() => { igCurrentHandle = null; renderIgConnectedState(); showToastLike(t('ig_disconnected_toast')); })
+    .catch(() => {});
+}
+function closeIgHighlightGuide() {
+  document.getElementById('igHighlightGuideModal').classList.remove('open');
+}
+
 function closeProfileEdit() {
   document.getElementById('profileEditModal').classList.remove('open');
 }
