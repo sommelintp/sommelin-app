@@ -723,24 +723,36 @@
     line-height: 1;
   }
 
+  /* 「今日」の視認性強化（2026-07-13）: セル全体に金のリング＋番号は大きめの濃い円で、
+     has-event（薄ピンク背景）と重なっても埋もれないようにする */
+  .cal-day.today {
+    box-shadow: inset 0 0 0 2px var(--gold, #C9973A);
+    border-radius: 10px;
+  }
+
   .cal-day.today .cal-day-num {
     background: var(--burgundy);
     color: white;
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
+    font-weight: 800;
+    font-size: 14px;
+    box-shadow: 0 2px 5px rgba(155,27,75,.45);
   }
 
   .cal-day.other-month .cal-day-num { color: #ccc; }
   .cal-day.sunday .cal-day-num { color: #c0392b; }
   .cal-day.saturday .cal-day-num { color: #2980b9; }
+  .cal-day.today.sunday .cal-day-num,
+  .cal-day.today.saturday .cal-day-num { color: white; }
 
   .cal-day.has-event { background: var(--burgundy-pale); }
   .cal-day.has-event.selected { background: #f0d8e2; }
+  .cal-day.today.has-event { background: #fdf2e9; }
 
   .cal-event-dots {
     display: flex;

@@ -4379,15 +4379,9 @@ function initRoleSwitcher() {
     btn.onclick = () => { location.href = 'importer_admin.html'; };
     (row || el.parentNode).appendChild(btn);
   }
-  // 2026-07-08追加: 個人向けアプリ（スカウター・マイセラー等）にも簡単に切り替えられるように
-  if (!document.getElementById('roleSwitchIndividualBtn')) {
-    const ibtn = document.createElement('button');
-    ibtn.id = 'roleSwitchIndividualBtn';
-    ibtn.textContent = '⇄ 🍷 個人として使う';
-    ibtn.style.cssText = 'background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:14px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;';
-    ibtn.onclick = () => { try { localStorage.setItem('sommelin_role', 'individual'); } catch (e) {} location.href = 'prototype.html'; };
-    (row || el.parentNode).appendChild(ibtn);
-  }
+  // 2026-07-13削除: ヘッダー右上の「🍷 個人モード」ボタン（1399行目）と機能重複していた上、
+  // localStorageのsommelin_roleを'individual'に書き換える副作用があり、業務切替ボタン消失の
+  // 原因になり得た（AF-1節参照）。個人モードへの導線はヘッダーの1本に統一する。
 }
 initRoleSwitcher();
 initHeaderIdentity();
