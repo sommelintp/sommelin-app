@@ -2164,6 +2164,21 @@
 </div>
 
 <!-- ==================== 試飲会 RSVP モーダル ==================== -->
+<!-- 試飲会 詳細モーダル（2026-07-13: セル/カードタップで詳細とURLを必ず見られるように） -->
+<div class="modal-bg" id="evDetailModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div id="evDetailBody"></div>
+  </div>
+</div>
+
+<!-- 同日に複数の試飲会がある日のリスト -->
+<div class="modal-bg" id="dayEventsModalA" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div style="font-weight:800;font-size:15px;margin-bottom:8px;" id="dayEventsTitleA"></div>
+    <div id="dayEventsListA"></div>
+  </div>
+</div>
+
 <div class="modal-bg" id="rsvpModalBg" onclick="if(event.target===this)closeRsvpModal()">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
@@ -2470,6 +2485,9 @@ async function loadRealEvents() {
         organizer: '',
         importerEmail: '',
         venue: e.venue_name || e.venue_address || '会場未定',
+        venueAddress: e.venue_address || '',
+        cost: e.cost,
+        description: e.description || '',
         registrationUrl: e.registration_url || '',
         isNew: false, isOnline: online, dotClass: online ? 'online' : '',
         wines: [], rsvpd: false,
@@ -2645,7 +2663,8 @@ function renderAdminCalendar() {
     // 圧縮セルに収まるようドットは4個まで（5件以上の日は4個目で頭打ち表示）
     const dots = evs.slice(0, 4).map(e => `<div class="cal-dot-admin ${e.dotClass}"></div>`).join('');
     cell.innerHTML = `<span class="cal-num">${d}</span>${dots ? `<div class="cal-dots">${dots}</div>` : ''}`;
-    if (evs.length) cell.onclick = () => highlightEvent(evs[0].id);
+    // 2026-07-13: セルタップで詳細モーダルへ（従来はリストへスクロールするだけで詳細が見られなかった）
+    if (evs.length) cell.onclick = () => openAdminCalDay(d);
     grid.appendChild(cell);
   }
 
@@ -2726,7 +2745,7 @@ function renderAdminEventList() {
       lastMonthKey = monthKey;
     }
     html += `
-      <div class="ev-admin-card ${ev.isNew ? 'new-event' : ''}" id="evcard-${ev.id}">
+      <div class="ev-admin-card ${ev.isNew ? 'new-event' : ''}" id="evcard-${ev.id}" onclick="openAdminEventDetail('${ev.id}')">
         <div class="ev-date-col">
           <div class="ev-date-m">${ms[ev.date.getMonth()]}</div>
           <div class="ev-date-d">${ev.date.getDate()}</div>
@@ -2751,6 +2770,72 @@ function highlightEvent(id) {
   }
 }
 
+// ── 試飲会 詳細モーダル（2026-07-13オーナー要望: セルを押したら詳細＋URLが見える）──
+let evDetailCurrentId = null;
+function evEsc(s) { return (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+function openAdminEventDetail(id) {
+  const ev = adminEvents.find(e => e.id === id);
+  if (!ev) return;
+  evDetailCurrentId = id;
+  const ds = ['日','月','火','水','木','金','土'];
+  const dateStr = `${ev.date.getFullYear()}年${ev.date.getMonth() + 1}月${ev.date.getDate()}日（${ds[ev.date.getDay()]}）`;
+  const costStr = ev.cost == null ? '' : (ev.cost === 0 ? '無料' : '¥' + Number(ev.cost).toLocaleString('ja-JP'));
+  document.getElementById('evDetailBody').innerHTML = `
+    <div style="font-size:16px;font-weight:800;line-height:1.4;margin-bottom:4px;">${evEsc(ev.name)}</div>
+    <span class="ev-type-tag ${ev.type}">${ev.typeLabel}${ev.isOnline ? '・オンライン' : ''}</span>
+    <div style="margin-top:10px;font-size:13px;line-height:1.9;">
+      <div>📅 ${dateStr}</div>
+      <div>⏰ ${evEsc(ev.time)}</div>
+      <div>📍 ${evEsc(ev.venue)}${ev.venueAddress && ev.venueAddress !== ev.venue ? `<div style="font-size:11.5px;color:var(--text-sub);margin-left:22px;">${evEsc(ev.venueAddress)}</div>` : ''}</div>
+      ${costStr ? `<div>💴 ${costStr}</div>` : ''}
+    </div>
+    ${ev.description ? `
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:1px;margin-top:12px;">詳細</div>
+      <div style="font-size:12.5px;line-height:1.7;white-space:pre-line;max-height:180px;overflow-y:auto;background:var(--bg);border-radius:10px;padding:10px 12px;margin-top:4px;">${evEsc(ev.description)}</div>` : ''}
+    ${ev.registrationUrl ? `
+      <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:1px;margin-top:12px;">申込みページURL</div>
+      <a href="${evEsc(ev.registrationUrl)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--burgundy);word-break:break-all;text-decoration:underline;line-height:1.6;">${evEsc(ev.registrationUrl)}</a>` : `
+      <div style="font-size:11.5px;color:var(--text-sub);margin-top:12px;">申込みリンク未登録（詳細内の連絡先へ）</div>`}
+    <div style="margin-top:12px;" id="evDetailActions">${adminRsvpActionHtml(ev)}</div>
+    <div class="modal-actions" style="margin-top:14px;">
+      <button class="btn-ghost" onclick="document.getElementById('evDetailModal').classList.remove('open')">閉じる</button>
+    </div>`;
+  document.getElementById('evDetailModal').classList.add('open');
+}
+
+// 詳細モーダルが開いたままRSVP操作をした時に、モーダル内の表示も追従させる
+function refreshEvDetailIfOpen(id) {
+  if (evDetailCurrentId === id && document.getElementById('evDetailModal').classList.contains('open')) {
+    openAdminEventDetail(id);
+  }
+}
+
+// 日セルタップ: 1件なら直接詳細、複数ならその日のリストを出す
+function openAdminCalDay(dayNum) {
+  const dayEvents = adminEvents.filter(e =>
+    e.date.getFullYear() === adminCalYear &&
+    e.date.getMonth() === adminCalMonth &&
+    e.date.getDate() === dayNum
+  ).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+  if (!dayEvents.length) return;
+  if (dayEvents.length === 1) { openAdminEventDetail(dayEvents[0].id); return; }
+  document.getElementById('dayEventsTitleA').textContent = `${adminCalMonth + 1}月${dayNum}日の試飲会（${dayEvents.length}件）`;
+  document.getElementById('dayEventsListA').innerHTML = dayEvents.map(ev => {
+    const done = rsvpStateOfId(ev.id) === 'done';
+    return `
+    <div onclick="document.getElementById('dayEventsModalA').classList.remove('open');openAdminEventDetail('${ev.id}')"
+         style="display:flex;gap:10px;align-items:center;padding:11px 4px;border-bottom:1px solid var(--border);cursor:pointer;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${evEsc(ev.name)}</div>
+        <div style="font-size:11px;color:var(--text-sub);">⏰ ${evEsc(ev.time)}${done ? ' <span class="ev-rsvp-chip">✅ 申込済</span>' : ''}</div>
+      </div>
+      <span style="color:var(--text-sub);">›</span>
+    </div>`;
+  }).join('');
+  document.getElementById('dayEventsModalA').classList.add('open');
+}
+
 function rsvpAdminEvent(id) {
   // 実データの申込URL（主催者のフォーム/サイト）を開く。
   // 2026-07-13: 「開いたら即・申込済みロック」を廃止（誤操作で詰む＋完了は本人にしか分からない）。
@@ -2761,6 +2846,7 @@ function rsvpAdminEvent(id) {
     window.open(ev.registrationUrl, '_blank');
     if (rsvpStateOfId(ev.id) !== 'done') setRsvpStateA(ev.id, 'opened');
     renderAdminEventList();
+    refreshEvDetailIfOpen(ev.id);
   } else {
     showToast('申込みリンク未登録のイベントです。イベント詳細内の連絡先へご連絡ください');
   }
@@ -2768,16 +2854,19 @@ function rsvpAdminEvent(id) {
 function adminRsvpDone(id) {
   setRsvpStateA(id, 'done');
   renderAdminCalendar(); // リストも中で再描画される
+  refreshEvDetailIfOpen(id);
   showToast('✅ 申込み済みとして記録しました');
 }
 function adminRsvpLater(id) {
   setRsvpStateA(id, null); // 「まだ」なら状態を消す（次回開いた時にまた聞かない）
   renderAdminEventList();
+  refreshEvDetailIfOpen(id);
 }
 function adminRsvpClear(id) {
   if (!confirm('申込み済みの記録を解除しますか？')) return;
   setRsvpStateA(id, null);
   renderAdminCalendar();
+  refreshEvDetailIfOpen(id);
 }
 
 // ============================================================
