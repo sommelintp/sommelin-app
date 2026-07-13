@@ -36,6 +36,8 @@ body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg)
 .wbadge{ font-size:10px; font-weight:700; background:#FFF3D6; color:#8a6d1f; padding:2px 8px; border-radius:12px; }
 .wherebtn{ border:1px solid var(--border); background:var(--bg); border-radius:20px; padding:5px 10px;
   font-size:11px; font-weight:700; color:var(--burgundy); cursor:pointer; font-family:inherit; }
+.wcommunity-row{ margin-top:6px; }
+.wcommunity{ font-size:11px; color:var(--text-sub); }
 .wherebox{ display:none; border-top:1px solid var(--border); margin-top:10px; padding-top:8px; }
 .wherebox.show{ display:block; }
 .whererow{ font-size:12px; padding:5px 0; color:var(--text); }
@@ -125,6 +127,9 @@ async function load() {
       // AJ-8(2026-07-14): カード全体をタップ可能に。詳細は既存のワイン検索画面
       // （星・詳細情報・楽天リンク・取扱店まで揃っている）に任せる
       const stars = (w.starRating != null && window.WineDisplay) ? window.WineDisplay.starsHtml(w.starRating, { size: 13 }) : '';
+      // AJ-11(2026-07-14): フォロワー機能はまだ無いため「みんなの評価」（全ユーザー平均・3件未満は非表示=no-lie）から。
+      const community = w.communityCount >= 3
+        ? `<span class="wcommunity">👥 みんなの評価 ${w.communityAvg.toFixed(1)}（${w.communityCount}件）</span>` : '';
       const detailUrl = 'wine_search.html?q=' + encodeURIComponent(w.name || '');
       return `<div class="wcard" onclick="if(window.sommLog)sommLog('producer_wine_tap',{n:'${esc(w.name||'').replace(/'/g,'')}'});location.href='${detailUrl}'" style="cursor:pointer;">
         <div class="wname">${esc(w.name)}${w.vintage && w.vintage!=='NV' ? ' ' + esc(w.vintage) : ''} <span style="float:right;color:var(--text-sub);font-weight:400;">›</span></div>
@@ -135,6 +140,7 @@ async function load() {
           ${badge}
           ${w.id != null ? `<button class="wherebtn" onclick="event.stopPropagation();toggleWhere(${w.id}, this)">📍 どこで飲める？</button>` : ''}
         </div>
+        ${community ? `<div class="wcommunity-row">${community}</div>` : ''}
         ${w.id != null ? `<div class="wherebox" id="where-${w.id}" onclick="event.stopPropagation()"></div>` : ''}
       </div>`;
     }).join('');
