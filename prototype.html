@@ -2543,9 +2543,10 @@
       <span style="font-size:11px;color:#16a34a;font-weight:600;margin-left:auto;margin-right:8px;">無料プラン</span>
       <span class="mypage-menu-arrow">›</span>
     </div>
-    <div class="mypage-menu-item">
+    <div class="mypage-menu-item" onclick="showToastLike('連携サービスは準備中です（近日公開）')" style="cursor:pointer;">
       <span class="mypage-menu-icon">🔗</span>
       <span class="mypage-menu-text">連携サービス</span>
+      <span style="font-size:11px;color:var(--text-sub);margin-left:auto;margin-right:8px;">準備中</span>
       <span class="mypage-menu-arrow">›</span>
     </div>
     <a class="mypage-menu-item" href="mailto:domaine.bouchon@gmail.com?subject=%E3%82%BD%E3%83%A0%E3%83%AA%E3%83%B3%E3%82%A2%E3%83%97%E3%83%AA%20%E3%81%8A%E5%95%8F%E3%81%84%E5%90%88%E3%82%8F%E3%81%9B" style="text-decoration:none;color:inherit;">
@@ -2558,6 +2559,17 @@
       <span class="mypage-menu-text">業務店として登録する</span>
       <span class="mypage-menu-arrow">›</span>
     </a>
+    <div class="mypage-menu-item" id="loginRow" onclick="location.href='login.html'" style="cursor:pointer;display:none;">
+      <span class="mypage-menu-icon">🔑</span>
+      <span class="mypage-menu-text">ログイン / 新規登録</span>
+      <span class="mypage-menu-arrow">›</span>
+    </div>
+    <div class="mypage-menu-item" id="logoutRow" onclick="sommelinLogout()" style="cursor:pointer;display:none;">
+      <span class="mypage-menu-icon">⏻</span>
+      <span class="mypage-menu-text">ログアウト</span>
+      <span id="accountEmailEl" style="font-size:11px;color:var(--text-sub);margin-left:auto;margin-right:8px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      <span class="mypage-menu-arrow">›</span>
+    </div>
   </div>
 
   <div style="text-align:center;padding:20px;color:var(--text-sub);font-size:12px;">
@@ -4377,28 +4389,93 @@ async function shareMypageInvite() {
 }
 initMypageInvite();
 
-// 業務モード切り替えボタン（2026-07-08追加: 業務店ロールなら管理画面への導線を出す）
-(function initBizModeBtn(){
-  var role = null; try { role = localStorage.getItem('sommelin_role'); } catch(e){}
-  var BIZ_HOME = { store:'restaurant_admin.html', retailer:'restaurant_admin.html', importer:'importer_admin.html', admin:'importer_admin.html' };
-  var home = role && BIZ_HOME[role];
-  if (!home) return;
-  var btn = document.getElementById('bizModeBtn');
-  if (!btn) return;
-  btn.onclick = function(){ location.href = home; };
-  btn.style.display = 'flex';
-})();
+// ── アカウント同期＋業務導線（AF-1・2026-07-13） ──
+// 業務管理画面と同じく「サーバー(profiles)が正」の方針に統一。localStorageは即描画用の
+// キャッシュに降格し、ページを開くたびにサーバーの値で自己修復する。
+// 旧実装はlocalStorage.sommelin_role（単数）だけを信じていたため、後から業務ロールを
+// 追加したアカウントで切替ボタンが消える不具合があった（オーナー実機で発生・2026-07-12）。
+var ACC_SB_URL = 'https://gkhdpzfmqraliwaiubwl.supabase.co';
+var ACC_SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+var BIZ_HOME = { store:'restaurant_admin.html', retailer:'restaurant_admin.html', importer:'importer_admin.html', admin:'importer_admin.html' };
+function accSession(){ try { return JSON.parse(localStorage.getItem('sommelin_session') || 'null'); } catch(e){ return null; } }
 
-// 「業務店として登録する」導線（2026-07-08追加: ログイン済み＆業務ロール未登録の時だけ表示）
-(function initAddBizRoleLink(){
-  const link = document.getElementById('addBizRoleLink');
-  if (!link) return;
-  let session = null; try { session = JSON.parse(localStorage.getItem('sommelin_session') || 'null'); } catch(e){}
-  if (!session || !session.access_token) return; // 未ログインなら出さない
-  let roles = []; try { roles = JSON.parse(localStorage.getItem('sommelin_roles') || '[]'); } catch(e){}
-  const hasBiz = roles.some(r => ['store','retailer','importer'].includes(r));
-  if (!hasBiz) link.style.display = 'flex';
-})();
+function applyAccountUI(){
+  var role = null; try { role = localStorage.getItem('sommelin_role'); } catch(e){}
+  var roles = []; try { roles = JSON.parse(localStorage.getItem('sommelin_roles') || '[]'); } catch(e){}
+  if (role && roles.indexOf(role) === -1) roles.push(role);
+  var session = accSession();
+  var email = session && session.user && session.user.email;
+
+  // 業務モード切替: 主ロールが個人でも、業務ロールを1つでも持っていれば表示する
+  var bizRole = (role && BIZ_HOME[role]) ? role : roles.filter(function(r){ return BIZ_HOME[r]; })[0];
+  var btn = document.getElementById('bizModeBtn');
+  if (btn) {
+    if (bizRole) { btn.onclick = function(){ location.href = BIZ_HOME[bizRole]; }; btn.style.display = 'flex'; }
+    else { btn.style.display = 'none'; }
+  }
+  // 業務店として登録する: ログイン済み＆業務ロールなしの時だけ
+  var link = document.getElementById('addBizRoleLink');
+  if (link) link.style.display = (email && !bizRole) ? 'flex' : 'none';
+  // ログイン/ログアウト行（設定メニュー）
+  var outRow = document.getElementById('logoutRow'), inRow = document.getElementById('loginRow'), mailEl = document.getElementById('accountEmailEl');
+  if (outRow) outRow.style.display = email ? 'flex' : 'none';
+  if (inRow) inRow.style.display = email ? 'none' : 'flex';
+  if (mailEl) mailEl.textContent = email || '';
+}
+
+function syncAccountFromServer(){
+  var s = accSession();
+  if (!s || !s.access_token) { applyAccountUI(); return; }
+  fetch(ACC_SB_URL + '/auth/v1/user', { headers: { apikey: ACC_SB_KEY, Authorization: 'Bearer ' + s.access_token } })
+    .then(function(r){
+      if (r.ok) return r.json();
+      // 失効時はリフレッシュを1回だけ試す。それでもダメでも強制ログアウトはしない
+      // （個人ページは匿名でも使える設計のため。業務管理画面の入口ガードとは方針が違う）
+      if (s.refresh_token) {
+        return fetch(ACC_SB_URL + '/auth/v1/token?grant_type=refresh_token', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ACC_SB_KEY }, body: JSON.stringify({ refresh_token: s.refresh_token }) })
+          .then(function(rr){ if (!rr.ok) throw 0; return rr.json(); })
+          .then(function(ns){ try { localStorage.setItem('sommelin_session', JSON.stringify(ns)); } catch(e){} s = ns;
+            return fetch(ACC_SB_URL + '/auth/v1/user', { headers: { apikey: ACC_SB_KEY, Authorization: 'Bearer ' + ns.access_token } }).then(function(r2){ if (!r2.ok) throw 0; return r2.json(); }); });
+      }
+      throw 0;
+    })
+    .then(function(user){
+      return fetch(ACC_SB_URL + '/rest/v1/profiles?id=eq.' + user.id + '&select=role,roles,display_name', { headers: { apikey: ACC_SB_KEY, Authorization: 'Bearer ' + s.access_token } })
+        .then(function(r){ return r.ok ? r.json() : []; })
+        .then(function(rows){
+          var role = (rows && rows[0] && rows[0].role) || (user.user_metadata && user.user_metadata.role) || 'individual';
+          var roles = (rows && rows[0] && rows[0].roles) || [role];
+          if (roles.indexOf(role) === -1) roles.push(role);
+          var dn = rows && rows[0] && rows[0].display_name;
+          try {
+            localStorage.setItem('sommelin_role', role);
+            localStorage.setItem('sommelin_roles', JSON.stringify(roles));
+            // サーバーに登録名があり端末にニックネームが無ければ補完（別端末で「ゲスト」になる問題の緩和）
+            if (dn && !localStorage.getItem('sommelin_nickname')) localStorage.setItem('sommelin_nickname', dn);
+          } catch(e){}
+          applyAccountUI();
+          initMypageIdentity();
+        });
+    })
+    .catch(function(){ applyAccountUI(); });
+}
+applyAccountUI();        // まずローカルキャッシュで即描画
+syncAccountFromServer(); // サーバーの正で自己修復
+
+function sommelinLogout(){
+  if (!confirm('ログアウトしますか？')) return;
+  var s = accSession();
+  if (s && s.access_token) {
+    fetch(ACC_SB_URL + '/auth/v1/logout', { method: 'POST', headers: { apikey: ACC_SB_KEY, Authorization: 'Bearer ' + s.access_token } }).catch(function(){});
+  }
+  try {
+    localStorage.removeItem('sommelin_session');
+    localStorage.removeItem('sommelin_role');
+    localStorage.removeItem('sommelin_roles');
+    localStorage.removeItem('sommelin_profile');
+  } catch(e){}
+  location.href = 'login.html';
+}
 
 // ── 飲んだワイン履歴モーダル（2026-07-08: マイページの本数タップに反応させる） ──
 function closeWineHistory() {
