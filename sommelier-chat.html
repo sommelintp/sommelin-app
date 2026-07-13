@@ -212,6 +212,8 @@
     content: '人気'; display: block; font-size: 8px; color: var(--gold);
     font-weight: 800; margin-bottom: 4px; letter-spacing: 0.1em;
   }
+  /* i18n: htmlのlang属性で::beforeの文言を切替（JSからCSS contentは書き換えられないため） */
+  html[lang="en"] .plan-card.popular::before { content: 'POPULAR'; }
   .plan-name { color: #fff; font-size: 11px; font-weight: 700; margin-bottom: 2px; }
   .plan-price { color: var(--gold); font-size: 13px; font-weight: 800; }
   .plan-limit { color: rgba(255,255,255,0.6); font-size: 9px; margin-top: 2px; }
@@ -341,32 +343,32 @@
 
 <!-- HEADER -->
 <div class="chat-header">
-  <a href="prototype.html" title="ホームへ" style="text-decoration:none;color:inherit;font-size:24px;line-height:1;margin-right:4px;display:flex;align-items:center;">‹</a>
+  <a href="prototype.html" data-i18n-title="back_home_title" title="ホームへ" style="text-decoration:none;color:inherit;font-size:24px;line-height:1;margin-right:4px;display:flex;align-items:center;">‹</a>
   <div class="header-avatar">🍷</div>
   <div class="header-info">
-    <div class="header-name">ソムリンAI</div>
+    <div class="header-name" data-i18n="header_name">ソムリンAI</div>
     <div class="header-status">
-      <span class="dot"></span><span id="headerStatus">オンライン</span>
+      <span class="dot"></span><span id="headerStatus" data-i18n="status_online">オンライン</span>
     </div>
   </div>
   <div class="usage-badge" onclick="openModal()">
     <div class="usage-count" id="usageDisplay">5</div>
-    <div class="usage-label">残り回数</div>
+    <div class="usage-label" data-i18n="usage_label">残り回数</div>
   </div>
 </div>
 
 <!-- DB INFO BAR -->
 <div class="db-bar" id="dbBar">
-  ワインデータ <span class="db-bar-count" id="dbCount">読み込み中…</span>
+  <span data-i18n="db_label">ワインデータ</span> <span class="db-bar-count" id="dbCount" data-i18n="db_loading">読み込み中…</span>
 </div>
 
 <!-- MESSAGES -->
 <div class="messages-wrap" id="msgWrap">
-  <div class="date-chip">今日</div>
+  <div class="date-chip" data-i18n="date_today">今日</div>
   <div class="msg-bot">
     <div class="msg-bot-avatar">🍷</div>
     <div class="msg-bot-body">
-      <div class="bot-bubble bot-bubble--intro">こんにちは！私はソムリンAIです 🍷
+      <div class="bot-bubble bot-bubble--intro" data-i18n="intro_message">こんにちは！私はソムリンAIです 🍷
 
 ソムリエ認定を受けた知識と豊富なワインデータをもとに、お店に最適なワインをご提案します。
 
@@ -378,11 +380,11 @@
 など、お気軽にどうぞ！</div>
       <div class="msg-time" id="initTime"></div>
       <div class="quick-chips">
-        <div class="chip" onclick="sendChip('赤ワインのおすすめを教えて')">🍷 赤ワイン</div>
-        <div class="chip" onclick="sendChip('白ワインのおすすめを教えて')">🥂 白ワイン</div>
-        <div class="chip" onclick="sendChip('スパークリングワインを教えて')">🍾 スパークリング</div>
-        <div class="chip" onclick="sendChip('¥3,000以下でコスパの良いワインを教えて')">💰 コスパ重視</div>
-        <div class="chip" onclick="sendChip('フランスのワインを教えて')">🇫🇷 フランス</div>
+        <div class="chip" onclick="sendChip(t('chip_red_q'))" data-i18n="chip_red">🍷 赤ワイン</div>
+        <div class="chip" onclick="sendChip(t('chip_white_q'))" data-i18n="chip_white">🥂 白ワイン</div>
+        <div class="chip" onclick="sendChip(t('chip_sparkling_q'))" data-i18n="chip_sparkling">🍾 スパークリング</div>
+        <div class="chip" onclick="sendChip(t('chip_value_q'))" data-i18n="chip_value">💰 コスパ重視</div>
+        <div class="chip" onclick="sendChip(t('chip_france_q'))" data-i18n="chip_france">🇫🇷 フランス</div>
       </div>
     </div>
   </div>
@@ -391,24 +393,24 @@
 <!-- INPUT AREA -->
 <div class="input-area">
   <div class="suggestions-row">
-    <div class="suggestion-pill" onclick="sendChip('魚料理に合うワインを教えて')">🐟 魚料理に合う</div>
-    <div class="suggestion-pill" onclick="sendChip('肉料理に合うワインを教えて')">🥩 肉料理に合う</div>
-    <div class="suggestion-pill" onclick="sendChip('¥5,000以上のプレミアムワインを教えて')">⭐ プレミアム</div>
-    <div class="suggestion-pill" onclick="sendChip('ブルゴーニュのワインを教えて')">🇫🇷 ブルゴーニュ</div>
-    <div class="suggestion-pill" onclick="sendChip('カリフォルニアのワインを教えて')">🌴 カリフォルニア</div>
-    <div class="suggestion-pill" onclick="sendChip('ナパヴァレーのワインを教えて')">🍇 ナパヴァレー</div>
-    <div class="suggestion-pill" onclick="sendChip('ドイツのリースリングを教えて')">🇩🇪 リースリング</div>
-    <div class="suggestion-pill" onclick="sendChip('ロゼワインを教えて')">🌸 ロゼ</div>
+    <div class="suggestion-pill" onclick="sendChip(t('pill_fish_q'))" data-i18n="pill_fish">🐟 魚料理に合う</div>
+    <div class="suggestion-pill" onclick="sendChip(t('pill_meat_q'))" data-i18n="pill_meat">🥩 肉料理に合う</div>
+    <div class="suggestion-pill" onclick="sendChip(t('pill_premium_q'))" data-i18n="pill_premium">⭐ プレミアム</div>
+    <div class="suggestion-pill" onclick="sendChip(t('pill_bourgogne_q'))" data-i18n="pill_bourgogne">🇫🇷 ブルゴーニュ</div>
+    <div class="suggestion-pill" onclick="sendChip(t('pill_california_q'))" data-i18n="pill_california">🌴 カリフォルニア</div>
+    <div class="suggestion-pill" onclick="sendChip(t('pill_napa_q'))" data-i18n="pill_napa">🍇 ナパヴァレー</div>
+    <div class="suggestion-pill" onclick="sendChip(t('pill_riesling_q'))" data-i18n="pill_riesling">🇩🇪 リースリング</div>
+    <div class="suggestion-pill" onclick="sendChip(t('pill_rose_q'))" data-i18n="pill_rose">🌸 ロゼ</div>
   </div>
   <div class="photo-preview-row" id="photoPreviewRow">
     <img id="photoPreviewImg" src="" alt="">
     <button class="photo-preview-remove" onclick="removePendingPhoto()">✕</button>
-    <span style="font-size:11px;color:var(--text-sub);">この写真について聞けます</span>
+    <span style="font-size:11px;color:var(--text-sub);" data-i18n="photo_hint">この写真について聞けます</span>
   </div>
   <div class="input-row">
     <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoSelect(event)">
-    <button class="attach-btn" onclick="document.getElementById('photoInput').click()" title="写真を送る">📷</button>
-    <textarea class="msg-input" id="msgInput" placeholder="ワインについて何でも聞いてください…" rows="1"
+    <button class="attach-btn" onclick="document.getElementById('photoInput').click()" data-i18n-title="attach_title" title="写真を送る">📷</button>
+    <textarea class="msg-input" id="msgInput" data-i18n-ph="input_placeholder" placeholder="ワインについて何でも聞いてください…" rows="1"
       oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
     <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
   </div>
@@ -416,39 +418,212 @@
 
 <!-- 常時表示の下ナビ（scouter.html/prototype.htmlと同じ4タブ） -->
 <nav class="chat-nav">
-  <a href="prototype.html"><svg class="ic"><use href="assets/sommelin-icons.svg#i-home"></use></svg>ホーム</a>
-  <a href="prototype.html?tab=ranking&advanced=1"><svg class="ic"><use href="assets/sommelin-icons.svg#i-search"></use></svg>探す</a>
-  <a href="scouter.html"><svg class="ic"><use href="assets/sommelin-icons.svg#i-camera"></use></svg>記録</a>
-  <a href="sommelier-chat.html" class="on"><svg class="ic"><use href="assets/sommelin-icons.svg#i-chat"></use></svg>相談</a>
+  <a href="prototype.html"><svg class="ic"><use href="assets/sommelin-icons.svg#i-home"></use></svg><span data-i18n="nav_home">ホーム</span></a>
+  <a href="prototype.html?tab=ranking&advanced=1"><svg class="ic"><use href="assets/sommelin-icons.svg#i-search"></use></svg><span data-i18n="nav_search">探す</span></a>
+  <a href="scouter.html"><svg class="ic"><use href="assets/sommelin-icons.svg#i-camera"></use></svg><span data-i18n="nav_record">記録</span></a>
+  <a href="sommelier-chat.html" class="on"><svg class="ic"><use href="assets/sommelin-icons.svg#i-chat"></use></svg><span data-i18n="nav_chat">相談</span></a>
 </nav>
 
 <!-- UPGRADE MODAL -->
 <div class="modal-overlay" id="upgradeModal" onclick="closeModalOutside(event)">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <div class="modal-title">料金プラン</div>
-    <div class="modal-sub">AIソムリエの利用プランについて</div>
+    <div class="modal-title" data-i18n="modal_title">料金プラン</div>
+    <div class="modal-sub" data-i18n="modal_sub">AIソムリエの利用プランについて</div>
     <div class="modal-plan-list">
       <div class="modal-plan">
         <div class="modal-plan-icon">🆓</div>
         <div class="modal-plan-info">
-          <div class="modal-plan-name">フリープラン</div>
-          <div class="modal-plan-desc">AIチャット 月5回まで（毎月1日リセット）</div>
+          <div class="modal-plan-name" data-i18n="plan_free_name">フリープラン</div>
+          <div class="modal-plan-desc" data-i18n="plan_free_desc">AIチャット 月5回まで（毎月1日リセット）</div>
         </div>
-        <div class="modal-plan-price">¥0<span>/ 月</span></div>
+        <div class="modal-plan-price" data-i18n-html="plan_free_price">¥0<span>/ 月</span></div>
       </div>
       <div class="modal-plan">
         <div class="modal-plan-icon">👑</div>
         <div class="modal-plan-info">
-          <div class="modal-plan-name">プレミアム <span class="popular-tag">準備中</span></div>
-          <div class="modal-plan-desc">AIチャット無制限。価格・開始時期は決まり次第お知らせします</div>
+          <div class="modal-plan-name" data-i18n-html="plan_premium_name">プレミアム <span class="popular-tag">準備中</span></div>
+          <div class="modal-plan-desc" data-i18n="plan_premium_desc">AIチャット無制限。価格・開始時期は決まり次第お知らせします</div>
         </div>
-        <div class="modal-plan-price">近日<span>公開</span></div>
+        <div class="modal-plan-price" data-i18n-html="plan_premium_price">近日<span>公開</span></div>
       </div>
     </div>
-    <button class="btn-modal-close" onclick="closeModal()">閉じる</button>
+    <button class="btn-modal-close" onclick="closeModal()" data-i18n="modal_close">閉じる</button>
   </div>
 </div>
+
+<script>
+/* ===== 多言語対応（i18n）。scouter.htmlと同方式：I18N辞書＋LANG＋t()＋data-i18n属性。
+   将来 fr/it 等も I18N に言語を1つ足すだけで拡張できる構造 ===== */
+const I18N = {
+  ja: {
+    page_title: 'ソムリンAI — ワインソムリエ',
+    back_home_title: 'ホームへ',
+    header_name: 'ソムリンAI',
+    status_online: 'オンライン',
+    usage_label: '残り回数',
+    db_label: 'ワインデータ',
+    db_loading: '読み込み中…',
+    date_today: '今日',
+    intro_message: 'こんにちは！私はソムリンAIです 🍷\n\nソムリエ認定を受けた知識と豊富なワインデータをもとに、お店に最適なワインをご提案します。\n\nたとえば：\n・「魚料理に合う白ワインを3本」\n・「¥3,000以下のスパークリング」\n・「ブルゴーニュのピノ・ノワール」\n\nなど、お気軽にどうぞ！',
+    chip_red: '🍷 赤ワイン',
+    chip_red_q: '赤ワインのおすすめを教えて',
+    chip_white: '🥂 白ワイン',
+    chip_white_q: '白ワインのおすすめを教えて',
+    chip_sparkling: '🍾 スパークリング',
+    chip_sparkling_q: 'スパークリングワインを教えて',
+    chip_value: '💰 コスパ重視',
+    chip_value_q: '¥3,000以下でコスパの良いワインを教えて',
+    chip_france: '🇫🇷 フランス',
+    chip_france_q: 'フランスのワインを教えて',
+    pill_fish: '🐟 魚料理に合う',
+    pill_fish_q: '魚料理に合うワインを教えて',
+    pill_meat: '🥩 肉料理に合う',
+    pill_meat_q: '肉料理に合うワインを教えて',
+    pill_premium: '⭐ プレミアム',
+    pill_premium_q: '¥5,000以上のプレミアムワインを教えて',
+    pill_bourgogne: '🇫🇷 ブルゴーニュ',
+    pill_bourgogne_q: 'ブルゴーニュのワインを教えて',
+    pill_california: '🌴 カリフォルニア',
+    pill_california_q: 'カリフォルニアのワインを教えて',
+    pill_napa: '🍇 ナパヴァレー',
+    pill_napa_q: 'ナパヴァレーのワインを教えて',
+    pill_riesling: '🇩🇪 リースリング',
+    pill_riesling_q: 'ドイツのリースリングを教えて',
+    pill_rose: '🌸 ロゼ',
+    pill_rose_q: 'ロゼワインを教えて',
+    photo_hint: 'この写真について聞けます',
+    attach_title: '写真を送る',
+    input_placeholder: 'ワインについて何でも聞いてください…',
+    nav_home: 'ホーム',
+    nav_search: '探す',
+    nav_record: '記録',
+    nav_chat: '相談',
+    modal_title: '料金プラン',
+    modal_sub: 'AIソムリエの利用プランについて',
+    plan_free_name: 'フリープラン',
+    plan_free_desc: 'AIチャット 月5回まで（毎月1日リセット）',
+    plan_free_price: '¥0<span>/ 月</span>',
+    plan_premium_name: 'プレミアム <span class="popular-tag">準備中</span>',
+    plan_premium_desc: 'AIチャット無制限。価格・開始時期は決まり次第お知らせします',
+    plan_premium_price: '近日<span>公開</span>',
+    modal_close: '閉じる',
+    cat_short_red: '赤',
+    cat_short_white: '白',
+    cat_short_sparkling: '泡',
+    cat_short_rose: 'ロゼ',
+    db_count: '{n}本 ({cats})',
+    status_online_full: 'オンライン — {n}本 更新:{date}',
+    db_error: '⚠️ データ読み込みエラー',
+    photo_default_q: 'この写真のワインについて教えて',
+    err_rate_limit: '少し混み合っています。しばらくしてからもう一度どうぞ 🙏',
+    err_photo: '写真がうまく読み込めませんでした。別の写真でもう一度お試しください 🙏',
+    err_generic: 'ごめんなさい、うまく応答できませんでした。通信環境を確認してもう一度お試しください 🙏',
+    quota_zero: '⚠️ 今月の残り回数が0になりました',
+    quota_low: '📊 今月あと{n}回利用できます',
+    cat_red: '赤',
+    cat_white: '白',
+    cat_sparkling: 'スパークリング',
+    cat_rose: 'ロゼ',
+    rank_1: '⭐ No.1おすすめ',
+    rank_2: '✨ No.2',
+    rank_3: '👍 No.3',
+    banner_title: '✨ 今月の無料枠（{n}回）を使い切りました',
+    banner_body: '無料枠は毎月1日にリセットされます。回数無制限の有料プランは現在準備中です。<br>それまでの間、ワイン探しには「スカウター」（回数制限なし）をぜひどうぞ 🍷',
+    banner_btn: '📷 スカウターでワインを探す →',
+  },
+  en: {
+    page_title: 'Sommelin AI — Wine Sommelier',
+    back_home_title: 'Back to Home',
+    header_name: 'Sommelin AI',
+    status_online: 'Online',
+    usage_label: 'chats left',
+    db_label: 'Wine data',
+    db_loading: 'Loading…',
+    date_today: 'Today',
+    intro_message: 'Hello! I\'m Sommelin AI 🍷\n\nDrawing on certified sommelier knowledge and a rich wine database, I\'ll suggest the perfect wines for you.\n\nFor example:\n- "3 white wines that go with fish"\n- "Sparkling wine under ¥3,000"\n- "Pinot Noir from Burgundy"\n\nAsk me anything!',
+    chip_red: '🍷 Red',
+    chip_red_q: 'Recommend some red wines',
+    chip_white: '🥂 White',
+    chip_white_q: 'Recommend some white wines',
+    chip_sparkling: '🍾 Sparkling',
+    chip_sparkling_q: 'Show me some sparkling wines',
+    chip_value: '💰 Best value',
+    chip_value_q: 'Show me good-value wines under ¥3,000',
+    chip_france: '🇫🇷 France',
+    chip_france_q: 'Show me French wines',
+    pill_fish: '🐟 Goes with fish',
+    pill_fish_q: 'Which wines go well with fish?',
+    pill_meat: '🥩 Goes with meat',
+    pill_meat_q: 'Which wines go well with meat?',
+    pill_premium: '⭐ Premium',
+    pill_premium_q: 'Show me premium wines over ¥5,000',
+    pill_bourgogne: '🇫🇷 Burgundy',
+    pill_bourgogne_q: 'Show me wines from Burgundy',
+    pill_california: '🌴 California',
+    pill_california_q: 'Show me wines from California',
+    pill_napa: '🍇 Napa Valley',
+    pill_napa_q: 'Show me wines from Napa Valley',
+    pill_riesling: '🇩🇪 Riesling',
+    pill_riesling_q: 'Show me German Riesling',
+    pill_rose: '🌸 Rosé',
+    pill_rose_q: 'Show me rosé wines',
+    photo_hint: 'You can ask about this photo',
+    attach_title: 'Send a photo',
+    input_placeholder: 'Ask me anything about wine…',
+    nav_home: 'Home',
+    nav_search: 'Search',
+    nav_record: 'Scan',
+    nav_chat: 'Chat',
+    modal_title: 'Plans & Pricing',
+    modal_sub: 'About AI sommelier plans',
+    plan_free_name: 'Free Plan',
+    plan_free_desc: 'AI chat up to 5 times a month (resets on the 1st)',
+    plan_free_price: '¥0<span>/ mo</span>',
+    plan_premium_name: 'Premium <span class="popular-tag">In prep</span>',
+    plan_premium_desc: 'Unlimited AI chat. Pricing and launch date to be announced.',
+    plan_premium_price: 'Coming<span>soon</span>',
+    modal_close: 'Close',
+    cat_short_red: 'Red ',
+    cat_short_white: 'White ',
+    cat_short_sparkling: 'Spk ',
+    cat_short_rose: 'Rosé ',
+    db_count: '{n} wines ({cats})',
+    status_online_full: 'Online — {n} wines, updated {date}',
+    db_error: '⚠️ Failed to load data',
+    photo_default_q: 'Tell me about the wine in this photo',
+    err_rate_limit: 'We\'re a bit busy right now. Please try again in a moment 🙏',
+    err_photo: 'We couldn\'t read that photo. Please try another one 🙏',
+    err_generic: 'Sorry, something went wrong. Please check your connection and try again 🙏',
+    quota_zero: '⚠️ You\'ve used up this month\'s free chats',
+    quota_low: '📊 {n} chats left this month',
+    cat_red: 'Red',
+    cat_white: 'White',
+    cat_sparkling: 'Sparkling',
+    cat_rose: 'Rosé',
+    rank_1: '⭐ Top pick',
+    rank_2: '✨ No.2',
+    rank_3: '👍 No.3',
+    banner_title: '✨ You\'ve used all {n} free chats this month',
+    banner_body: 'Free chats reset on the 1st of each month. An unlimited paid plan is in the works.<br>In the meantime, try the Scouter (no usage limit) to find wines 🍷',
+    banner_btn: '📷 Find wines with Scouter →',
+  },
+};
+let LANG = (() => { try { return localStorage.getItem('somm_lang') || (navigator.language && navigator.language.startsWith('ja') ? 'ja' : 'en'); } catch (e) { return 'ja'; } })();
+function t(key) {
+  const d = I18N[LANG] || I18N.ja;
+  return (d && d[key] != null) ? d[key] : (I18N.ja[key] != null ? I18N.ja[key] : key);
+}
+function applyI18n() {
+  document.documentElement.lang = LANG;
+  document.title = t('page_title');
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
+}
+document.addEventListener('DOMContentLoaded', applyI18n);
+</script>
 
 <script>
 /* ===== STATE ===== */
@@ -549,15 +724,15 @@ window.addEventListener('load', () => {
     const stats = typeof wineStats !== 'undefined' ? wineStats : null;
     const total = wineDB.length;
     const cats = wineDB.reduce((a, w) => { a[w.cat] = (a[w.cat]||0)+1; return a; }, {});
-    const catStr = Object.entries({red:'赤',white:'白',sparkling:'泡',rose:'ロゼ'})
+    const catStr = Object.entries({red:t('cat_short_red'),white:t('cat_short_white'),sparkling:t('cat_short_sparkling'),rose:t('cat_short_rose')})
       .filter(([k]) => cats[k])
       .map(([k,v]) => `${v}${cats[k]}`)
       .join(' / ');
-    document.getElementById('dbCount').textContent = `${total}本 (${catStr})`;
+    document.getElementById('dbCount').textContent = t('db_count').replace('{n}', total).replace('{cats}', catStr);
     const updatedAt = stats?.updatedAt || '---';
-    document.getElementById('headerStatus').textContent = `オンライン — ${total}本 更新:${updatedAt}`;
+    document.getElementById('headerStatus').textContent = t('status_online_full').replace('{n}', total).replace('{date}', updatedAt);
   } else {
-    document.getElementById('dbCount').textContent = '⚠️ データ読み込みエラー';
+    document.getElementById('dbCount').textContent = t('db_error');
     document.getElementById('dbCount').style.color = '#FF5A5F';
   }
 });
@@ -595,7 +770,7 @@ async function sendMessage() {
   let text = input.value.trim();
   const photo = pendingPhoto;
   if ((!text && !photo) || isBotTyping) return;
-  if (!text && photo) text = 'この写真のワインについて教えて';
+  if (!text && photo) text = t('photo_default_q');
 
   if (!quota.premium && quota.remaining === 0) { addUpgradeBanner(); return; }
 
@@ -610,7 +785,7 @@ async function sendMessage() {
   isBotTyping = true;
 
   try {
-    const body = { messages: chatHistory.slice(-8), userId: CHAT_UID };
+    const body = { messages: chatHistory.slice(-8), userId: CHAT_UID, locale: LANG === 'en' ? 'en-US' : 'ja-JP' };
     if (photo) body.image = photo;
     const token = await getAnonAccessToken();
     const r = await fetch(CHAT_API + '/api/chat', {
@@ -619,7 +794,7 @@ async function sendMessage() {
       body: JSON.stringify(body)
     });
     hideTyping();
-    if (r.status === 429) { addBotMessage({ text: '少し混み合っています。しばらくしてからもう一度どうぞ 🙏' }); return; }
+    if (r.status === 429) { addBotMessage({ text: t('err_rate_limit') }); return; }
     if (r.status === 403) {
       // サーバー側の月次上限（正）に到達
       try { const d = await r.json(); if (d.quota) quota = d.quota; } catch (e) {}
@@ -629,7 +804,7 @@ async function sendMessage() {
       return;
     }
     if (r.status === 400 || r.status === 413) {
-      addBotMessage({ text: '写真がうまく読み込めませんでした。別の写真でもう一度お試しください 🙏' });
+      addBotMessage({ text: t('err_photo') });
       return;
     }
     if (!r.ok) throw 0;
@@ -639,7 +814,7 @@ async function sendMessage() {
     addBotMessage({ text: d.reply });
   } catch (e) {
     hideTyping();
-    addBotMessage({ text: 'ごめんなさい、うまく応答できませんでした。通信環境を確認してもう一度お試しください 🙏' });
+    addBotMessage({ text: t('err_generic') });
   } finally {
     isBotTyping = false;
   }
@@ -669,8 +844,8 @@ function addBotMessage({ text, wines, chips }) {
 
   let limitNote = '';
   if (!quota.premium && quota.remaining !== null) {
-    if (quota.remaining === 0) limitNote = `<div style="margin-top:8px;font-size:11px;color:#FF5A5F;font-weight:600;">⚠️ 今月の残り回数が0になりました</div>`;
-    else if (quota.remaining <= 2) limitNote = `<div style="margin-top:8px;font-size:11px;color:var(--gold);font-weight:600;">📊 今月あと${quota.remaining}回利用できます</div>`;
+    if (quota.remaining === 0) limitNote = `<div style="margin-top:8px;font-size:11px;color:#FF5A5F;font-weight:600;">${t('quota_zero')}</div>`;
+    else if (quota.remaining <= 2) limitNote = `<div style="margin-top:8px;font-size:11px;color:var(--gold);font-weight:600;">${t('quota_low').replace('{n}', quota.remaining)}</div>`;
   }
 
   msgEl.innerHTML = `
@@ -686,9 +861,9 @@ function addBotMessage({ text, wines, chips }) {
 }
 
 function wineCardHtml(w, rank) {
-  const catLabel = {red:'赤',white:'白',sparkling:'スパークリング',rose:'ロゼ'};
+  const catLabel = {red:t('cat_red'),white:t('cat_white'),sparkling:t('cat_sparkling'),rose:t('cat_rose')};
   const catIcon  = {red:'🍷',white:'🥂',sparkling:'🍾',rose:'🌸'};
-  const rankLabel = rank === 0 ? '⭐ No.1おすすめ' : rank === 1 ? '✨ No.2' : rank === 2 ? '👍 No.3' : '';
+  const rankLabel = rank === 0 ? t('rank_1') : rank === 1 ? t('rank_2') : rank === 2 ? t('rank_3') : '';
   return `
     <div class="wine-card cat-${w.cat}">
       <div class="wine-icon">${catIcon[w.cat]||'🍷'}</div>
@@ -717,9 +892,9 @@ function addUpgradeBanner() {
     <div class="msg-bot-avatar">🍷</div>
     <div class="msg-bot-body">
       <div class="upgrade-banner">
-        <h3>✨ 今月の無料枠（${FREE_LIMIT}回）を使い切りました</h3>
-        <p>無料枠は毎月1日にリセットされます。回数無制限の有料プランは現在準備中です。<br>それまでの間、ワイン探しには「スカウター」（回数制限なし）をぜひどうぞ 🍷</p>
-        <button class="btn-upgrade" onclick="location.href='scouter.html'">📷 スカウターでワインを探す →</button>
+        <h3>${t('banner_title').replace('{n}', FREE_LIMIT)}</h3>
+        <p>${t('banner_body')}</p>
+        <button class="btn-upgrade" onclick="location.href='scouter.html'">${t('banner_btn')}</button>
       </div>
       <div class="msg-time">${nowTime()}</div>
     </div>`;
@@ -748,101 +923,6 @@ function hideTyping() {
   document.getElementById('sendBtn').disabled = false;
   const el = document.getElementById('typingEl');
   if (el) el.remove();
-}
-
-/* ===== AI RESPONSE ENGINE ===== */
-function generateResponse(query) {
-  const q = query.toLowerCase();
-  const db = (typeof wineDB !== 'undefined') ? wineDB : [];
-
-  // カテゴリ検出
-  let catFilter = null;
-  if (/赤|レッド|カベルネ|メルロ|ピノ.ノワール|シラー|ジンファン|シラズ/.test(q)) catFilter = 'red';
-  else if (/白|ホワイト|シャルドネ|ソーヴィニヨン|リースリング|ピノ.グリ|アルバリーニョ|ゲヴュルツ/.test(q)) catFilter = 'white';
-  else if (/スパークリング|発泡|泡|シャンパン|クレマン|ゼクト|プロセッコ/.test(q)) catFilter = 'sparkling';
-  else if (/ロゼ/.test(q)) catFilter = 'rose';
-
-  // 産地検出
-  let regionFilter = null;
-  if (/ブルゴーニュ|bourgogne|givry|pommard|chambertin/.test(q)) regionFilter = 'ブルゴーニュ';
-  else if (/ナパ|napa/.test(q)) regionFilter = 'ナパ';
-  else if (/カリフォルニア|california/.test(q)) regionFilter = 'カリフォルニア';
-  else if (/ソノマ/.test(q)) regionFilter = 'ソノマ';
-  else if (/ドイツ|ラインガウ/.test(q)) regionFilter = 'ドイツ';
-  else if (/フランス|france/.test(q)) regionFilter = 'フランス';
-  else if (/ジュラ/.test(q)) regionFilter = 'ジュラ';
-  else if (/イタリア/.test(q)) regionFilter = 'イタリア';
-
-  // 価格フィルター
-  let maxPrice = null, minPrice = null;
-  const mMax = q.match(/(\d[\d,]+)\s*(?:円|¥)?\s*以下/);
-  const mMin = q.match(/(\d[\d,]+)\s*(?:円|¥)?\s*以上/);
-  if (mMax) maxPrice = parseInt(mMax[1].replace(/,/g,''));
-  if (mMin) minPrice = parseInt(mMin[1].replace(/,/g,''));
-
-  const isFish    = /魚|シーフード|海鮮|白身|刺身|寿司|カキ|牡蠣|貝/.test(q);
-  const isMeat    = /肉|ステーキ|牛|豚|ラム|赤身|焼き肉/.test(q);
-  const isCheap   = /安い|コスパ|お手頃|リーズナブル|手頃/.test(q);
-  const isPremium = /プレミアム|高級|スペシャル|特別|グランクリュ|一番|最高/.test(q);
-
-  if (isFish && !catFilter) catFilter = 'white';
-  if (isMeat && !catFilter) catFilter = 'red';
-  if (isCheap && !maxPrice) maxPrice = 3000;
-  if (isPremium && !minPrice) minPrice = 5000;
-
-  let pool = [...db];
-  if (catFilter) pool = pool.filter(w => w.cat === catFilter);
-  if (regionFilter) pool = pool.filter(w => w.region.includes(regionFilter));
-  if (maxPrice) pool = pool.filter(w => w.price <= maxPrice);
-  if (minPrice) pool = pool.filter(w => w.price >= minPrice);
-
-  if (isCheap) pool.sort((a,b) => a.price - b.price);
-  else if (isPremium) pool.sort((a,b) => b.price - a.price);
-  else pool.sort(() => Math.random() - 0.5);
-
-  if (pool.length === 0) {
-    pool = catFilter ? db.filter(w => w.cat === catFilter) : [...db];
-    pool.sort(() => Math.random() - 0.5);
-  }
-
-  const topWines = pool.slice(0, 3);
-  const text = buildResponseText(query, catFilter, regionFilter, topWines, {isFish, isMeat, isCheap, isPremium, maxPrice, minPrice, total: db.length});
-  const chips = buildFollowupChips(catFilter, regionFilter);
-
-  return { text, wines: topWines, chips };
-}
-
-function buildResponseText(query, cat, region, wines, ctx) {
-  const catName = {red:'赤ワイン',white:'白ワイン',sparkling:'スパークリングワイン',rose:'ロゼワイン'};
-  if (ctx.isFish && cat === 'white')
-    return `魚料理には爽やかな白ワインが相性抜群です🐟\n\n酸味がしっかりしたシャルドネやソーヴィニヨン・ブランは、魚の脂を洗い流して口の中をリフレッシュしてくれます。\n\n今ある在庫からおすすめを3本ご提案します：`;
-  if (ctx.isMeat && cat === 'red')
-    return `肉料理にはタンニンのしっかりした赤ワインが最高のパートナーです🥩\n\nカベルネ・ソーヴィニヨンのタンニンが肉の旨味を引き立て、余韻に心地よい渋みが残ります。\n\nこちらの3本をおすすめします：`;
-  if (ctx.isCheap) {
-    const label = ctx.maxPrice ? `¥${ctx.maxPrice.toLocaleString()}以下` : '¥3,000以下';
-    return `コスパ重視でお探しですね！${label}の中から、品質と価格のバランスが優れた3本を厳選しました💰\n\n価格は抑えつつも、しっかりした味わいのものを選んでいます：`;
-  }
-  if (ctx.isPremium)
-    return `プレミアムラインからご提案です👑\n\nいずれも生産者のこだわりと品質が際立つ、特別な一本です。接待や記念日にも自信を持ってお出しいただけます：`;
-  if (region === 'ブルゴーニュ')
-    return `ブルゴーニュはピノ・ノワールの聖地です🇫🇷\n\n繊細な果実味と上品な酸が特徴で、和食とも相性が良いのが魅力。Domaine Mouton、Domaine Georges、Alex Gambalなど実力派が揃っています：`;
-  if (region === 'ドイツ')
-    return `ドイツ・ラインガウの名門、Schloss Reinhartshausenのワインです🇩🇪\n\nリースリングの繊細な甘みと酸のバランスが絶品。食前酒としても人気があります：`;
-  if (cat) {
-    const total = (typeof wineDB !== 'undefined') ? wineDB.filter(w => w.cat === cat).length : 0;
-    if (region) return `${catName[cat]||cat}（${region}）を${total}本の中からご提案します🍷\n\n特に品質と人気のバランスが良い3本を選びました：`;
-    return `${catName[cat]||cat}を${total}本の中からおすすめを厳選しました🍷\n\nそれぞれ個性が異なるので、食事のシーンや好みに合わせてお選びください：`;
-  }
-  const total = ctx.total || 0;
-  return `ソムリンAIがあなたのご要望を分析しました🍷\n\n${total}本のデータから、ご質問の内容に合うワインを3本ご提案します：`;
-}
-
-function buildFollowupChips(cat, region) {
-  if (cat === 'red')       return ['もっと赤ワインを見る', '¥3,000以下の赤ワインを教えて', '肉料理に合う赤ワインは？'];
-  if (cat === 'white')     return ['もっと白ワインを見る', '魚料理に合う白ワインを教えて', 'ブルゴーニュの白は？'];
-  if (cat === 'sparkling') return ['もっとスパークリングを見る', '¥5,000以下のスパークリング', 'フランスのクレマンを教えて'];
-  if (cat === 'rose')      return ['もっとロゼを見る', '¥2,000以下のロゼ', 'スパークリングロゼも見せて'];
-  return ['おすすめ赤ワインは？', '¥3,000以下でコスパの良いものを', 'ブルゴーニュのワインを見せて'];
 }
 
 /* ===== UTILS ===== */

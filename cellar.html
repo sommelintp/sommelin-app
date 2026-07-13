@@ -385,8 +385,8 @@ body {
   <div class="header-left">
     <button class="header-back" onclick="location.href='prototype.html'">‹</button>
     <div>
-      <div class="header-title">マイセラー</div>
-      <div class="header-sub" id="cellarHeaderName">ゲスト</div>
+      <div class="header-title" data-i18n="header_title">マイセラー</div>
+      <div class="header-sub" id="cellarHeaderName" data-i18n="header_guest">ゲスト</div>
     </div>
   </div>
   <div class="header-add" onclick="openAddModal()">＋</div>
@@ -394,9 +394,9 @@ body {
 
 <!-- TABS -->
 <div class="tabs">
-  <button class="tab-btn active" id="tab-cellar"  onclick="switchTab('cellar')">🍾 セラー</button>
-  <button class="tab-btn"        id="tab-journal" onclick="switchTab('journal')">📖 記録</button>
-  <button class="tab-btn"        id="tab-stats"   onclick="switchTab('stats')">📊 レポート</button>
+  <button class="tab-btn active" id="tab-cellar"  onclick="switchTab('cellar')" data-i18n="tab_cellar">🍾 セラー</button>
+  <button class="tab-btn"        id="tab-journal" onclick="switchTab('journal')" data-i18n="tab_journal">📖 記録</button>
+  <button class="tab-btn"        id="tab-stats"   onclick="switchTab('stats')" data-i18n="tab_stats">📊 レポート</button>
 </div>
 
 <!-- ===== CELLAR PANEL ===== -->
@@ -405,12 +405,12 @@ body {
   <div class="summary-row" id="summaryRow"></div>
   <!-- Filters -->
   <div class="filter-row">
-    <div class="filter-chip active" onclick="filterCat('all',this)">すべて</div>
-    <div class="filter-chip" onclick="filterCat('sparkling',this)">🥂 泡</div>
-    <div class="filter-chip" onclick="filterCat('white',this)">🍾 白</div>
-    <div class="filter-chip" onclick="filterCat('red',this)">🍷 赤</div>
-    <div class="filter-chip" onclick="filterCat('rose',this)">🌸 ロゼ</div>
-    <div class="filter-chip" onclick="filterCat('orange',this)">🟠 橙</div>
+    <div class="filter-chip active" onclick="filterCat('all',this)" data-i18n="filter_all">すべて</div>
+    <div class="filter-chip" onclick="filterCat('sparkling',this)" data-i18n="cat_chip_sparkling">🥂 泡</div>
+    <div class="filter-chip" onclick="filterCat('white',this)" data-i18n="cat_chip_white">🍾 白</div>
+    <div class="filter-chip" onclick="filterCat('red',this)" data-i18n="cat_chip_red">🍷 赤</div>
+    <div class="filter-chip" onclick="filterCat('rose',this)" data-i18n="cat_chip_rose">🌸 ロゼ</div>
+    <div class="filter-chip" onclick="filterCat('orange',this)" data-i18n="cat_chip_orange">🟠 橙</div>
   </div>
   <div class="wine-list" id="cellarList"></div>
 </div>
@@ -426,31 +426,31 @@ body {
 
     <!-- カテゴリ内訳 -->
     <div class="stat-card">
-      <div class="stat-card-title">カテゴリ内訳</div>
+      <div class="stat-card-title" data-i18n="stat_cat_breakdown">カテゴリ内訳</div>
       <div class="cat-breakdown" id="catBreakdown"></div>
     </div>
 
     <!-- 産地ランキング -->
     <div class="stat-card">
-      <div class="stat-card-title">よく飲む産地 TOP5</div>
+      <div class="stat-card-title" data-i18n="stat_region_top5">よく飲む産地 TOP5</div>
       <div class="stat-chart" id="regionChart"></div>
     </div>
 
     <!-- 品種ランキング -->
     <div class="stat-card">
-      <div class="stat-card-title">よく飲む品種 TOP5</div>
+      <div class="stat-card-title" data-i18n="stat_grape_top5">よく飲む品種 TOP5</div>
       <div class="stat-chart" id="grapeChart"></div>
     </div>
 
     <!-- 評価分布 -->
     <div class="stat-card">
-      <div class="stat-card-title">評価の分布</div>
+      <div class="stat-card-title" data-i18n="stat_rating_dist">評価の分布</div>
       <div class="rating-chart" id="ratingChart"></div>
     </div>
 
     <!-- 購入記録 -->
     <div class="stat-card">
-      <div class="stat-card-title">購入サマリー</div>
+      <div class="stat-card-title" data-i18n="stat_purchase_summary">購入サマリー</div>
       <div id="spendingBlock"></div>
     </div>
 
@@ -459,10 +459,10 @@ body {
 
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
-  <a href="prototype.html" class="nav-btn"><span class="icon">🏠</span><span class="label">ホーム</span></a>
-  <a href="wine_search.html" class="nav-btn"><span class="icon">🔍</span><span class="label">検索</span></a>
-  <button class="nav-btn active" onclick=""><span class="icon">🏺</span><span class="label">セラー</span></button>
-  <a href="prototype.html" class="nav-btn"><span class="icon">👤</span><span class="label">マイページ</span></a>
+  <a href="prototype.html" class="nav-btn"><span class="icon">🏠</span><span class="label" data-i18n="nav_home">ホーム</span></a>
+  <a href="wine_search.html" class="nav-btn"><span class="icon">🔍</span><span class="label" data-i18n="nav_search">検索</span></a>
+  <button class="nav-btn active" onclick=""><span class="icon">🏺</span><span class="label" data-i18n="nav_cellar">セラー</span></button>
+  <a href="prototype.html" class="nav-btn"><span class="icon">👤</span><span class="label" data-i18n="nav_mypage">マイページ</span></a>
 </nav>
 
 <!-- ===== ADD MODAL ===== -->
@@ -470,57 +470,57 @@ body {
   <div class="modal" id="addModal">
     <div class="modal-handle"></div>
     <div class="modal-head">
-      <h3>ワインを追加</h3>
+      <h3 data-i18n="add_title">ワインを追加</h3>
       <button class="modal-close-btn" onclick="closeAddModal()">✕</button>
     </div>
     <div class="modal-body-pad">
       <!-- Camera -->
       <div class="camera-area" onclick="simulateScan()">
         <div class="icon">📷</div>
-        <div class="label">ラベルをスキャン</div>
-        <div class="sub">カメラでボトルを撮影して自動入力</div>
+        <div class="label" data-i18n="scan_label">ラベルをスキャン</div>
+        <div class="sub" data-i18n="scan_sub">カメラでボトルを撮影して自動入力</div>
       </div>
       <!-- Category -->
-      <div class="field-label">カテゴリ</div>
+      <div class="field-label" data-i18n="field_category">カテゴリ</div>
       <div class="cat-chips">
-        <div class="cat-chip active" onclick="selectCat(this,'sparkling')">🥂 泡</div>
-        <div class="cat-chip"       onclick="selectCat(this,'white')">🍾 白</div>
-        <div class="cat-chip"       onclick="selectCat(this,'red')">🍷 赤</div>
-        <div class="cat-chip"       onclick="selectCat(this,'rose')">🌸 ロゼ</div>
-        <div class="cat-chip"       onclick="selectCat(this,'orange')">🟠 橙</div>
+        <div class="cat-chip active" onclick="selectCat(this,'sparkling')" data-i18n="cat_chip_sparkling">🥂 泡</div>
+        <div class="cat-chip"       onclick="selectCat(this,'white')" data-i18n="cat_chip_white">🍾 白</div>
+        <div class="cat-chip"       onclick="selectCat(this,'red')" data-i18n="cat_chip_red">🍷 赤</div>
+        <div class="cat-chip"       onclick="selectCat(this,'rose')" data-i18n="cat_chip_rose">🌸 ロゼ</div>
+        <div class="cat-chip"       onclick="selectCat(this,'orange')" data-i18n="cat_chip_orange">🟠 橙</div>
       </div>
       <!-- Fields -->
-      <div class="field-label">ワイン名</div>
-      <input class="field-input" id="f-name" placeholder="例: Gevrey-Chambertin">
-      <div class="field-label">生産者</div>
-      <input class="field-input" id="f-producer" placeholder="例: Rossignol-Trapet">
+      <div class="field-label" data-i18n="field_name">ワイン名</div>
+      <input class="field-input" id="f-name" data-i18n-ph="ph_name" placeholder="例: Gevrey-Chambertin">
+      <div class="field-label" data-i18n="field_producer">生産者</div>
+      <input class="field-input" id="f-producer" data-i18n-ph="ph_producer" placeholder="例: Rossignol-Trapet">
       <div class="field-row">
         <div>
-          <div class="field-label">ヴィンテージ</div>
+          <div class="field-label" data-i18n="field_vintage">ヴィンテージ</div>
           <input class="field-input" id="f-vintage" placeholder="2020">
         </div>
         <div>
-          <div class="field-label">本数</div>
+          <div class="field-label" data-i18n="field_bottles">本数</div>
           <input class="field-input" id="f-bottles" type="number" min="1" value="1">
         </div>
       </div>
-      <div class="field-label">産地</div>
-      <input class="field-input" id="f-region" placeholder="例: ブルゴーニュ, フランス">
-      <div class="field-label">品種</div>
-      <input class="field-input" id="f-grapes" placeholder="例: ピノ・ノワール">
+      <div class="field-label" data-i18n="field_region">産地</div>
+      <input class="field-input" id="f-region" data-i18n-ph="ph_region" placeholder="例: ブルゴーニュ, フランス">
+      <div class="field-label" data-i18n="field_grapes">品種</div>
+      <input class="field-input" id="f-grapes" data-i18n-ph="ph_grapes" placeholder="例: ピノ・ノワール">
       <div class="field-row">
         <div>
-          <div class="field-label">購入価格（¥）</div>
+          <div class="field-label" data-i18n="field_price">購入価格（¥）</div>
           <input class="field-input" id="f-price" type="number" placeholder="8800">
         </div>
         <div>
-          <div class="field-label">購入日</div>
+          <div class="field-label" data-i18n="field_date">購入日</div>
           <input class="field-input" id="f-date" type="date">
         </div>
       </div>
-      <div class="field-label">メモ</div>
-      <input class="field-input" id="f-note" placeholder="購入場所・試飲メモなど">
-      <button class="save-btn" onclick="saveWine()">セラーに追加</button>
+      <div class="field-label" data-i18n="field_note">メモ</div>
+      <input class="field-input" id="f-note" data-i18n-ph="ph_note" placeholder="購入場所・試飲メモなど">
+      <button class="save-btn" onclick="saveWine()" data-i18n="save_btn">セラーに追加</button>
     </div>
   </div>
 </div>
@@ -538,13 +538,205 @@ body {
 <div class="toast" id="toast"></div>
 
 <script>
+/* ===== 多言語対応（i18n）。scouter.htmlと同方式・somm_lang共有。言語切替UIはホームのマイページ側 ===== */
+const I18N = {
+  ja: {
+    header_title: 'マイセラー',
+    header_guest: 'ゲスト',
+    tab_cellar: '🍾 セラー',
+    tab_journal: '📖 記録',
+    tab_stats: '📊 レポート',
+    filter_all: 'すべて',
+    cat_chip_sparkling: '🥂 泡',
+    cat_chip_white: '🍾 白',
+    cat_chip_red: '🍷 赤',
+    cat_chip_rose: '🌸 ロゼ',
+    cat_chip_orange: '🟠 橙',
+    stat_cat_breakdown: 'カテゴリ内訳',
+    stat_region_top5: 'よく飲む産地 TOP5',
+    stat_grape_top5: 'よく飲む品種 TOP5',
+    stat_rating_dist: '評価の分布',
+    stat_purchase_summary: '購入サマリー',
+    nav_home: 'ホーム',
+    nav_search: '検索',
+    nav_cellar: 'セラー',
+    nav_mypage: 'マイページ',
+    add_title: 'ワインを追加',
+    scan_label: 'ラベルをスキャン',
+    scan_sub: 'カメラでボトルを撮影して自動入力',
+    field_category: 'カテゴリ',
+    field_name: 'ワイン名',
+    field_producer: '生産者',
+    field_vintage: 'ヴィンテージ',
+    field_bottles: '本数',
+    field_region: '産地',
+    field_grapes: '品種',
+    field_price: '購入価格（¥）',
+    field_date: '購入日',
+    field_note: 'メモ',
+    ph_name: '例: Gevrey-Chambertin',
+    ph_producer: '例: Rossignol-Trapet',
+    ph_region: '例: ブルゴーニュ, フランス',
+    ph_grapes: '例: ピノ・ノワール',
+    ph_note: '購入場所・試飲メモなど',
+    save_btn: 'セラーに追加',
+    cat_sparkling: 'スパークリング',
+    cat_white: '白ワイン',
+    cat_red: '赤ワイン',
+    cat_rose: 'ロゼ',
+    cat_orange: 'オレンジ',
+    catshort_sparkling: '泡',
+    catshort_white: '白',
+    catshort_red: '赤',
+    catshort_rose: 'ロゼ',
+    catshort_orange: 'オレンジ',
+    unnamed: '（名称未設定）',
+    summary_total: '総本数',
+    summary_wines: '銘柄数',
+    summary_cats: 'カテゴリ',
+    summary_avg: '平均単価',
+    fmt_avg_price: '¥{man}万',
+    fmt_stock: '🍾 {n}本',
+    pub_on: '🌐 公開中（タップで非公開に）',
+    pub_off: '🔒 非公開（タップで公開）',
+    empty_cat: 'このカテゴリのワインはありません',
+    weekdays: '日,月,火,水,木,金,土',
+    months: '1月,2月,3月,4月,5月,6月,7月,8月,9月,10月,11月,12月',
+    fmt_date_md: '{m}月{d}日 ({w})',
+    fmt_n_bottles: '{n}本',
+    spend_year: '2026年 合計',
+    spend_value: 'セラー時価総額',
+    spend_wines: '銘柄数',
+    fmt_n_kinds: '{n}種類',
+    spend_recorded: '記録した本数',
+    toast_last: '🍷 最後の1本を飲みました！',
+    toast_plus1: '＋1本 追加',
+    toast_minus1: '−1本 消費',
+    scan_analyzing: '解析中...',
+    scan_analyzing_sub: 'AIがラベルを読み取っています',
+    scan_done: '✅ スキャン完了！',
+    scan_done_sub: '情報を自動入力しました。確認して保存してください。',
+    toast_label_got: '🍷 ラベル情報を取得しました',
+    toast_added: '🍾 セラーに追加しました！',
+    detail_vintage: 'ヴィンテージ',
+    detail_region: '産地',
+    detail_grapes: '品種',
+    detail_stock: '在庫本数',
+    detail_price: '購入価格',
+    detail_date: '購入日',
+    detail_note: 'メモ',
+    drink_one: '🍷 1本飲む',
+  },
+  en: {
+    header_title: 'My Cellar',
+    header_guest: 'Guest',
+    tab_cellar: '🍾 Cellar',
+    tab_journal: '📖 Journal',
+    tab_stats: '📊 Report',
+    filter_all: 'All',
+    cat_chip_sparkling: '🥂 Sparkling',
+    cat_chip_white: '🍾 White',
+    cat_chip_red: '🍷 Red',
+    cat_chip_rose: '🌸 Rosé',
+    cat_chip_orange: '🟠 Orange',
+    stat_cat_breakdown: 'By Category',
+    stat_region_top5: 'Top 5 Regions',
+    stat_grape_top5: 'Top 5 Grapes',
+    stat_rating_dist: 'Rating Distribution',
+    stat_purchase_summary: 'Purchase Summary',
+    nav_home: 'Home',
+    nav_search: 'Search',
+    nav_cellar: 'Cellar',
+    nav_mypage: 'My Page',
+    add_title: 'Add a Wine',
+    scan_label: 'Scan the label',
+    scan_sub: 'Photograph the bottle to auto-fill',
+    field_category: 'Category',
+    field_name: 'Wine name',
+    field_producer: 'Producer',
+    field_vintage: 'Vintage',
+    field_bottles: 'Bottles',
+    field_region: 'Region',
+    field_grapes: 'Grapes',
+    field_price: 'Purchase price (¥)',
+    field_date: 'Purchase date',
+    field_note: 'Notes',
+    ph_name: 'e.g. Gevrey-Chambertin',
+    ph_producer: 'e.g. Rossignol-Trapet',
+    ph_region: 'e.g. Burgundy, France',
+    ph_grapes: 'e.g. Pinot Noir',
+    ph_note: 'Where you bought it, tasting notes, etc.',
+    save_btn: 'Add to Cellar',
+    cat_sparkling: 'Sparkling',
+    cat_white: 'White',
+    cat_red: 'Red',
+    cat_rose: 'Rosé',
+    cat_orange: 'Orange',
+    catshort_sparkling: 'Sparkling',
+    catshort_white: 'White',
+    catshort_red: 'Red',
+    catshort_rose: 'Rosé',
+    catshort_orange: 'Orange',
+    unnamed: '(Untitled)',
+    summary_total: 'Bottles',
+    summary_wines: 'Wines',
+    summary_cats: 'Categories',
+    summary_avg: 'Avg. price',
+    fmt_avg_price: '¥{yen}',
+    fmt_stock: '🍾 {n}',
+    pub_on: '🌐 Public (tap to hide)',
+    pub_off: '🔒 Private (tap to share)',
+    empty_cat: 'No wines in this category',
+    weekdays: 'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
+    months: 'Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec',
+    fmt_date_md: '{mon} {d} ({w})',
+    fmt_n_bottles: '{n}',
+    spend_year: '2026 total',
+    spend_value: 'Cellar value',
+    spend_wines: 'Wines',
+    fmt_n_kinds: '{n}',
+    spend_recorded: 'Bottles logged',
+    toast_last: '🍷 That was the last bottle!',
+    toast_plus1: '+1 bottle added',
+    toast_minus1: '−1 bottle used',
+    scan_analyzing: 'Analyzing...',
+    scan_analyzing_sub: 'AI is reading the label',
+    scan_done: '✅ Scan complete!',
+    scan_done_sub: 'Details filled in automatically. Please check and save.',
+    toast_label_got: '🍷 Label info captured',
+    toast_added: '🍾 Added to your cellar!',
+    detail_vintage: 'Vintage',
+    detail_region: 'Region',
+    detail_grapes: 'Grapes',
+    detail_stock: 'In stock',
+    detail_price: 'Purchase price',
+    detail_date: 'Purchase date',
+    detail_note: 'Notes',
+    drink_one: '🍷 Drink one',
+  },
+};
+let LANG = (() => { try { return localStorage.getItem('somm_lang') || (navigator.language && navigator.language.startsWith('ja') ? 'ja' : 'en'); } catch (e) { return 'ja'; } })();
+function t(key, vars) {
+  const d = I18N[LANG] || I18N.ja;
+  let s = (d && d[key] != null) ? d[key] : (I18N.ja[key] != null ? I18N.ja[key] : key);
+  if (vars) { for (const k in vars) { s = s.split('{' + k + '}').join(String(vars[k])); } }
+  return s;
+}
+function applyI18n() {
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+}
+applyI18n();
+
 // ── DATA ──
 const catCfg = {
-  sparkling: { emoji:'🥂', label:'スパークリング', color:'#e8c547', bg:'#fefbe8' },
-  white:     { emoji:'🍾', label:'白ワイン',       color:'#b8c84a', bg:'#f8fce8' },
-  red:       { emoji:'🍷', label:'赤ワイン',       color:'#9B1B4B', bg:'#f9f0f3' },
-  rose:      { emoji:'🌸', label:'ロゼ',           color:'#F4A0B0', bg:'#fef0f2' },
-  orange:    { emoji:'🟠', label:'オレンジ',       color:'#E07830', bg:'#fef3e8' },
+  sparkling: { emoji:'🥂', label:t('cat_sparkling'), color:'#e8c547', bg:'#fefbe8' },
+  white:     { emoji:'🍾', label:t('cat_white'),     color:'#b8c84a', bg:'#f8fce8' },
+  red:       { emoji:'🍷', label:t('cat_red'),       color:'#9B1B4B', bg:'#f9f0f3' },
+  rose:      { emoji:'🌸', label:t('cat_rose'),      color:'#F4A0B0', bg:'#fef0f2' },
+  orange:    { emoji:'🟠', label:t('cat_orange'),    color:'#E07830', bg:'#fef3e8' },
 };
 
 let currentCat = 'all';
@@ -602,7 +794,7 @@ async function loadCellarFromServer(){
       const rowId = it.client_row_id || it.id;
       byRowId[rowId] = {
         id: isNaN(Number(rowId)) ? rowId : Number(rowId),
-        cat: it.cat || 'red', name: it.name || '（名称未設定）', producer: it.producer || '—',
+        cat: it.cat || 'red', name: it.name || t('unnamed'), producer: it.producer || '—',
         vintage: it.vintage || '—', region: it.region || '—', grapes: '—',
         bottles: it.bottles != null ? it.bottles : 1, price: 0,
         date: (it.updated_at||'').split('T')[0] || '', note: it.note || '', hasLabel:false,
@@ -634,19 +826,19 @@ function renderSummary() {
   document.getElementById('summaryRow').innerHTML = `
     <div class="summary-item">
       <div class="summary-val">${total}</div>
-      <div class="summary-label">総本数</div>
+      <div class="summary-label">${t('summary_total')}</div>
     </div>
     <div class="summary-item">
       <div class="summary-val">${cellar.length}</div>
-      <div class="summary-label">銘柄数</div>
+      <div class="summary-label">${t('summary_wines')}</div>
     </div>
     <div class="summary-item">
       <div class="summary-val">${cats}</div>
-      <div class="summary-label">カテゴリ</div>
+      <div class="summary-label">${t('summary_cats')}</div>
     </div>
     <div class="summary-item">
-      <div class="summary-val">¥${(avgPrice/10000).toFixed(1)}万</div>
-      <div class="summary-label">平均単価</div>
+      <div class="summary-val">${t('fmt_avg_price', { man: (avgPrice/10000).toFixed(1), yen: avgPrice.toLocaleString() })}</div>
+      <div class="summary-label">${t('summary_avg')}</div>
     </div>`;
 }
 
@@ -671,15 +863,15 @@ function renderCellar() {
               <div class="cellar-purchase">¥${w.price.toLocaleString()}</div>
               <div class="cellar-stock">
                 <button class="stock-minus" onclick="event.stopPropagation();changeStock(${w.id},-1)">−</button>
-                <div class="stock-badge">🍾 ${w.bottles}本</div>
+                <div class="stock-badge">${t('fmt_stock', { n: w.bottles })}</div>
                 <button class="stock-plus"  onclick="event.stopPropagation();changeStock(${w.id},+1)">＋</button>
               </div>
             </div>
-            <button onclick="event.stopPropagation();toggleCellarPublic(${w.id})" style="margin-top:8px;width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);background:${w.isPublic?'#fff4e8':'#fff'};color:${w.isPublic?'#b8730a':'#8a7a7d'};font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">${w.isPublic ? '🌐 公開中（タップで非公開に）' : '🔒 非公開（タップで公開）'}</button>
+            <button onclick="event.stopPropagation();toggleCellarPublic(${w.id})" style="margin-top:8px;width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);background:${w.isPublic?'#fff4e8':'#fff'};color:${w.isPublic?'#b8730a':'#8a7a7d'};font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">${w.isPublic ? t('pub_on') : t('pub_off')}</button>
           </div>
         </div>
       </div>`;
-  }).join('') || '<div class="empty-state" style="padding:40px 20px;text-align:center;color:var(--text-sub);">このカテゴリのワインはありません</div>';
+  }).join('') || `<div class="empty-state" style="padding:40px 20px;text-align:center;color:var(--text-sub);">${t('empty_cat')}</div>`;
 }
 
 function renderJournal() {
@@ -692,7 +884,12 @@ function renderJournal() {
   let html = '';
   Object.keys(grouped).sort((a,b) => b.localeCompare(a)).forEach(date => {
     const d = new Date(date);
-    const label = `${d.getMonth()+1}月${d.getDate()}日 (${['日','月','火','水','木','金','土'][d.getDay()]})`;
+    const label = t('fmt_date_md', {
+      m: d.getMonth()+1,
+      d: d.getDate(),
+      mon: t('months').split(',')[d.getMonth()],
+      w: t('weekdays').split(',')[d.getDay()],
+    });
     html += `<div class="journal-date-header">${label}</div>`;
     grouped[date].forEach(j => {
       const cfg = catCfg[j.cat];
@@ -723,7 +920,7 @@ function renderStats() {
     return `<div class="cat-item">
       <div class="cat-item-icon" style="background:${cfg.bg}">${cfg.emoji}</div>
       <div class="cat-item-count">${total}</div>
-      <div class="cat-item-label">${cfg.label.replace('ワイン','').replace('スパークリング','泡')}</div>
+      <div class="cat-item-label">${t('catshort_' + cat)}</div>
     </div>`;
   }).join('');
 
@@ -738,7 +935,7 @@ function renderStats() {
     <div class="bar-row">
       <div class="bar-label">${r}</div>
       <div class="bar-track"><div class="bar-fill" style="width:${c/maxR*100}%;background:var(--burgundy)"></div></div>
-      <div class="bar-count">${c}本</div>
+      <div class="bar-count">${t('fmt_n_bottles', { n: c })}</div>
     </div>`).join('');
 
   // grape chart
@@ -754,7 +951,7 @@ function renderStats() {
     <div class="bar-row">
       <div class="bar-label">${g}</div>
       <div class="bar-track"><div class="bar-fill" style="width:${c/maxG*100}%;background:var(--gold)"></div></div>
-      <div class="bar-count">${c}本</div>
+      <div class="bar-count">${t('fmt_n_bottles', { n: c })}</div>
     </div>`).join('');
 
   // rating
@@ -773,20 +970,20 @@ function renderStats() {
   const thisYear = cellar.filter(w=>w.date.startsWith('2026')).reduce((s,w)=>s+w.price,0);
   document.getElementById('spendingBlock').innerHTML = `
     <div class="spending-row">
-      <span class="spending-label">2026年 合計</span>
+      <span class="spending-label">${t('spend_year')}</span>
       <span class="spending-val highlight">¥${thisYear.toLocaleString()}</span>
     </div>
     <div class="spending-row">
-      <span class="spending-label">セラー時価総額</span>
+      <span class="spending-label">${t('spend_value')}</span>
       <span class="spending-val">¥${totalSpend.toLocaleString()}</span>
     </div>
     <div class="spending-row">
-      <span class="spending-label">銘柄数</span>
-      <span class="spending-val">${cellar.length}種類</span>
+      <span class="spending-label">${t('spend_wines')}</span>
+      <span class="spending-val">${t('fmt_n_kinds', { n: cellar.length })}</span>
     </div>
     <div class="spending-row">
-      <span class="spending-label">記録した本数</span>
-      <span class="spending-val">${journal.length}本</span>
+      <span class="spending-label">${t('spend_recorded')}</span>
+      <span class="spending-val">${t('fmt_n_bottles', { n: journal.length })}</span>
     </div>`;
 }
 
@@ -812,10 +1009,10 @@ function changeStock(id, delta) {
   if (newVal < 0) return;
   w.bottles = newVal;
   if (newVal === 0) {
-    showToast('🍷 最後の1本を飲みました！');
+    showToast(t('toast_last'));
     cellar = cellar.filter(x => x.id !== id);
   } else {
-    showToast(delta > 0 ? '＋1本 追加' : '−1本 消費');
+    showToast(delta > 0 ? t('toast_plus1') : t('toast_minus1'));
   }
   saveCellar();
   syncWineToServer(w);
@@ -844,8 +1041,8 @@ function selectCat(el, cat) {
 function simulateScan() {
   const scanMsg = document.querySelector('.camera-area .label');
   const scanSub = document.querySelector('.camera-area .sub');
-  scanMsg.textContent = '解析中...';
-  scanSub.textContent = 'AIがラベルを読み取っています';
+  scanMsg.textContent = t('scan_analyzing');
+  scanSub.textContent = t('scan_analyzing_sub');
   setTimeout(() => {
     document.getElementById('f-name').value = 'Chambolle-Musigny';
     document.getElementById('f-producer').value = 'Domaine Mugnier';
@@ -858,9 +1055,9 @@ function simulateScan() {
     selectedCatForAdd = 'red';
     document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
     document.querySelector('.cat-chip:nth-child(4)').classList.add('active');
-    scanMsg.textContent = '✅ スキャン完了！';
-    scanSub.textContent = '情報を自動入力しました。確認して保存してください。';
-    showToast('🍷 ラベル情報を取得しました');
+    scanMsg.textContent = t('scan_done');
+    scanSub.textContent = t('scan_done_sub');
+    showToast(t('toast_label_got'));
   }, 1600);
 }
 function saveWine() {
@@ -888,12 +1085,12 @@ function saveWine() {
   ['f-name','f-producer','f-vintage','f-region','f-grapes','f-note'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-bottles').value = '1';
   document.getElementById('f-price').value = '';
-  document.querySelector('.camera-area .label').textContent = 'ラベルをスキャン';
-  document.querySelector('.camera-area .sub').textContent = 'カメラでボトルを撮影して自動入力';
+  document.querySelector('.camera-area .label').textContent = t('scan_label');
+  document.querySelector('.camera-area .sub').textContent = t('scan_sub');
   closeAddModal();
   renderSummary();
   renderCellar();
-  showToast('🍾 セラーに追加しました！');
+  showToast(t('toast_added'));
 }
 
 // ── DETAIL MODAL ──
@@ -912,16 +1109,16 @@ function openDetail(id) {
       <div style="font-size:13px;color:var(--text-sub);">${w.producer}</div>
     </div>
     <div class="detail-section">
-      <div class="detail-row"><span class="detail-label">ヴィンテージ</span><span class="detail-val">${w.vintage}</span></div>
-      <div class="detail-row"><span class="detail-label">産地</span><span class="detail-val">${w.region}</span></div>
-      <div class="detail-row"><span class="detail-label">品種</span><span class="detail-val">${w.grapes}</span></div>
-      <div class="detail-row"><span class="detail-label">在庫本数</span><span class="detail-val" style="color:var(--burgundy);font-size:16px;">🍾 ${w.bottles}本</span></div>
-      <div class="detail-row"><span class="detail-label">購入価格</span><span class="detail-val">¥${w.price.toLocaleString()}</span></div>
-      <div class="detail-row"><span class="detail-label">購入日</span><span class="detail-val">${w.date}</span></div>
-      ${w.note ? `<div class="detail-row"><span class="detail-label">メモ</span><span class="detail-val" style="font-size:12px;">${w.note}</span></div>` : ''}
+      <div class="detail-row"><span class="detail-label">${t('detail_vintage')}</span><span class="detail-val">${w.vintage}</span></div>
+      <div class="detail-row"><span class="detail-label">${t('detail_region')}</span><span class="detail-val">${w.region}</span></div>
+      <div class="detail-row"><span class="detail-label">${t('detail_grapes')}</span><span class="detail-val">${w.grapes}</span></div>
+      <div class="detail-row"><span class="detail-label">${t('detail_stock')}</span><span class="detail-val" style="color:var(--burgundy);font-size:16px;">${t('fmt_stock', { n: w.bottles })}</span></div>
+      <div class="detail-row"><span class="detail-label">${t('detail_price')}</span><span class="detail-val">¥${w.price.toLocaleString()}</span></div>
+      <div class="detail-row"><span class="detail-label">${t('detail_date')}</span><span class="detail-val">${w.date}</span></div>
+      ${w.note ? `<div class="detail-row"><span class="detail-label">${t('detail_note')}</span><span class="detail-val" style="font-size:12px;">${w.note}</span></div>` : ''}
     </div>
     <div class="detail-section">
-      <button class="drink-btn" onclick="drinkOne(${w.id})">🍷 1本飲む</button>
+      <button class="drink-btn" onclick="drinkOne(${w.id})">${t('drink_one')}</button>
     </div>`;
   document.getElementById('detailModalBg').classList.add('open');
   document.body.style.overflow = 'hidden';

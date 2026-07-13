@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>ソムリン スカウター — 撮るだけでワインがわかる</title>
+<title data-i18n="doc_title">ソムリン スカウター — 撮るだけでワインがわかる</title>
 <meta name="robots" content="noindex">
 
 <!-- PWA / iOS -->
@@ -301,11 +301,11 @@ body{
   <div id="marks"></div>
   <div id="frozenBar">
     <div class="fs" id="frozenSum">—</div>
-    <button class="fb2" id="frozenPlaceBtn" style="display:none;" onclick="openPlacePicker()">📍 このお店を記録する</button>
-    <button class="fb1" onclick="resumeLive()">↺ 撮り直す</button>
+    <button class="fb2" id="frozenPlaceBtn" style="display:none;" data-i18n="place_record_cta" onclick="openPlacePicker()">📍 このお店を記録する</button>
+    <button class="fb1" data-i18n="resume_btn" onclick="resumeLive()">↺ 撮り直す</button>
   </div>
 
-  <div id="status" class="gone"><div class="st-ring"></div><div class="st-txt" id="stTxt">準備中…</div></div>
+  <div id="status" class="gone"><div class="st-ring"></div><div class="st-txt" id="stTxt" data-i18n="status_preparing">準備中…</div></div>
 
   <div id="err">
     <div class="e1" id="errT" data-i18n="err_title">カメラを起動できません</div>
@@ -315,6 +315,8 @@ body{
 
   <div class="aTop">
     <a href="prototype.html" title="ホーム">‹</a>
+    <!-- titleは applyI18n() 内で t('nav_home') に更新される -->
+
     <div class="aTop-title"><div class="t1" data-i18n="scouter_title">スカウター</div><div class="t2" id="subTxt" data-i18n="sub_default">ラベルを枠に入れて撮影</div></div>
     <div class="aTop-sp"></div>
   </div>
@@ -360,10 +362,10 @@ body{
 
 <!-- 常時表示の下ナビ（2026-07-08追加: スカウター使用中に他画面へ移動できなくなる不具合対応） -->
 <nav class="scouter-nav">
-  <a href="prototype.html"><svg class="ic"><use href="assets/sommelin-icons.svg#i-home"></use></svg>ホーム</a>
-  <a href="prototype.html?tab=ranking&advanced=1"><svg class="ic"><use href="assets/sommelin-icons.svg#i-search"></use></svg>探す</a>
-  <a href="scouter.html" class="on"><svg class="ic"><use href="assets/sommelin-icons.svg#i-camera"></use></svg>記録</a>
-  <a href="sommelier-chat.html"><svg class="ic"><use href="assets/sommelin-icons.svg#i-chat"></use></svg>相談</a>
+  <a href="prototype.html"><svg class="ic"><use href="assets/sommelin-icons.svg#i-home"></use></svg><span data-i18n="nav_home">ホーム</span></a>
+  <a href="prototype.html?tab=ranking&advanced=1"><svg class="ic"><use href="assets/sommelin-icons.svg#i-search"></use></svg><span data-i18n="nav_search">探す</span></a>
+  <a href="scouter.html" class="on"><svg class="ic"><use href="assets/sommelin-icons.svg#i-camera"></use></svg><span data-i18n="nav_record">記録</span></a>
+  <a href="sommelier-chat.html"><svg class="ic"><use href="assets/sommelin-icons.svg#i-chat"></use></svg><span data-i18n="nav_chat">相談</span></a>
 </nav>
 
 <script>
@@ -443,6 +445,107 @@ const I18N = {
     oshi_hint_nohandle: 'キャプションはコピー済み。投稿に貼り付けてシェアしてください',
     oshi_cap_copied: 'キャプションをコピーしました',
     oshi_share_unsupported: 'この端末では直接共有できません。画像を長押しで保存してInstagramに投稿してください',
+    nav_home: 'ホーム',
+    nav_search: '探す',
+    nav_record: '記録',
+    nav_chat: '相談',
+    doc_title: 'ソムリン スカウター — 撮るだけでワインがわかる',
+    place_record_cta: '📍 このお店を記録する',
+    resume_btn: '↺ 撮り直す',
+    status_preparing: '準備中…',
+    cospa_top_lbl: '圧倒的コスパ',
+    cospa_top_sub: '価格以上の評価。かなりお得',
+    cospa_good_lbl: '高コスパ',
+    cospa_good_sub: '価格に対して評価が高い',
+    cospa_std_lbl: '標準的',
+    cospa_std_sub: '価格相応の評価です',
+    filter_default_name: 'フィルター',
+    best_in_group: 'この中でおすすめ',
+    label_unlisted: '未登録',
+    scan_summary: '{n}本を検出 ・ 評価あり {k}本{f}｜マーカーをタップで詳細',
+    scan_fits_part: ' ・ ❤️好み {n}本',
+    place_recorded: '📍 {n} として記録済み',
+    pick_top: '👑 ソムリンのおすすめ',
+    pick_normal: '✨ ソムリンおすすめ',
+    filter_ribbon: '📌 {icon} {name}に掲載{rating}',
+    rating_paren: '（★{n}）',
+    match_pill_confirm: '🍷 ソムリン照合 ・ 要確認',
+    match_pill_done: '🍷 ソムリン照合済み',
+    ref_price_label: '参考価格',
+    sommelin_rating_label: 'ソムリン評価',
+    buy_search_label: '🔍 購入先を探す',
+    close_label: '閉じる',
+    this_wine_label: 'このワイン',
+    id_ok_unlisted_pill: '🔎 特定OK ・ ソムリンDB未登録',
+    no_data_meta: 'まだソムリンの評価データにありません。<b>推測のスコアは表示しません。</b>スキャンは記録済みです。',
+    buy_search_web_label: '🔍 ネットで探す',
+    back_reading: '📸 裏ラベルを読み取り中…',
+    back_import_prefix: '🚢 輸入: ',
+    back_alcohol_prefix: 'アルコール ',
+    back_grape_prefix: '品種 ',
+    back_recorded_generic: '裏ラベルを記録しました',
+    back_recorded_title: '✅ 裏ラベル記録済み',
+    back_cta_label: '📸 裏ラベルも撮る',
+    back_hint: '輸入元・品種などの詳しい情報がわかります（任意）',
+    back_read_failed: '裏ラベルが読み取れませんでした',
+    back_catch_failed: '読み取りに失敗しました。もう一度お試しください',
+    back_xp_gained: '🎉 +{n} XP を獲得！',
+    similar_heading: '近い系統のおすすめ（ソムリン実データ）',
+    ig_notify_confirmed: '✓ @{n} にお知らせが届きます',
+    change_label: '変更',
+    ig_confirm_q: 'この生産者のInstagramはこちらですか？',
+    ig_view_profile: '@{n} のプロフィールを見る ↗',
+    ig_yes: 'はい、合っています',
+    ig_no: '違う',
+    ig_manual_entry: '自分で入力する',
+    ig_searching: '🔍 生産者のInstagramを探しています…',
+    ig_manual_when_found: '見つかったら自分で入力する',
+    ig_not_found: 'この生産者のInstagramは見つかりませんでした',
+    ig_manual_if_known: '知っていたら入力する',
+    ig_manual_placeholder: '@なし、または instagram.com/... のURL',
+    save_label: '保存',
+    store_notify_suffix: '・@{n}にお知らせが届きます',
+    store_where_q: '📍 どこで飲みましたか？（任意）',
+    store_search_placeholder: 'お店の名前で検索',
+    store_ig_placeholder: 'お店のInstagramが分かれば（任意）',
+    backend_unset_title: 'バックエンド未設定',
+    backend_unset_desc: 'Cloud RunのURLが未設定です。<br>scouter.html の API_BASE を設定するか、<br><code>?api=https://…run.app</code> を付けて開いてください。',
+    list_not_found: 'ワインリストが見つかりませんでした',
+    list_unreadable: '銘柄を読み取れませんでした。近づいて撮り直してください',
+    by_glass_suffix: '（グラス）',
+    sommelin_pick_top: '👑 ソムリン推し',
+    sommelin_pick_normal: '✨ おすすめ',
+    price_delta_template: '参考価格より{sign}{n}%',
+    list_place_recorded: '📍 <b>{n}</b> のリストとして記録済み。ご協力ありがとうございます 🍷',
+    place_record_note: '（みんなのワイン地図に協力・匿名）',
+    list_summary: '📋 ワインリスト ・ {p}ページ ・ {c}銘柄（評価済み {k}）',
+    taste_prompt: '❤️ <a href="taste.html" style="color:var(--burgundy);font-weight:800">好みのワインを登録</a>すると、このリストで「あなたに合う1本」が分かるようになります。',
+    this_list_recommend_heading: 'このリストのおすすめ',
+    all_items_heading: 'すべての銘柄（読み取り順）',
+    data_note: '評価はソムリンの実データがある銘柄のみ表示しています。',
+    next_page_btn: '📷 次のページを撮る',
+    clear_btn: '🗑 クリア',
+    back_to_list_btn: '← リストに戻る',
+    where_store_q: '📍 どこのお店ですか？',
+    store_pick_desc: 'お店を選ぶと「この店にはこのワインがある」という情報がソムリンに貯まり、みんなの「どこで飲める？」に役立ちます。記録は匿名です。',
+    searching_nearby: '現在地から近くのお店を探しています…',
+    manual_store_prompt: '見つからない場合は店名を入力',
+    store_name_placeholder: 'お店の名前',
+    record_btn: '記録',
+    geoloc_unsupported: '位置情報が使えない端末です。店名を入力してください。',
+    no_nearby_stores: '近くのお店が見つかりませんでした。店名を入力してください。',
+    nearby_stores_heading: '近くのお店（タップで選択）',
+    approx_distance: '約{n}m',
+    search_failed_manual: '検索に失敗しました。店名を入力してください。',
+    geoloc_failed: '位置情報を取得できませんでした。店名を入力してください。',
+    search_query_suffix: ' ワイン',
+    caption_store_ig: '📍 @{n} で',
+    caption_store_name: '📍 {n} にて',
+    caption_my_rating: '私の評価 {n}/10 ⭐',
+    caption_thanks_handle: '@{n} 美味しかったです。ごちそうさまでした🙏',
+    caption_thanks_plain: '美味しかったです。ごちそうさまでした🙏',
+    caption_hashtags: '#Sommelin #ソムリン #ワイン好きと繋がりたい #wine',
+    err_generic: '問題が発生しました。もう一度お試しください',
   },
   en: {
     perm_title: 'Sommelin Scouter',
@@ -518,6 +621,107 @@ const I18N = {
     oshi_hint_nohandle: 'Caption copied. Paste it into your post and share.',
     oshi_cap_copied: 'Caption copied',
     oshi_share_unsupported: 'Direct share is not available here. Long-press the image to save it, then post on Instagram.',
+    nav_home: 'Home',
+    nav_search: 'Search',
+    nav_record: 'Scan',
+    nav_chat: 'Chat',
+    doc_title: 'Sommelin Scouter — identify wine from a photo',
+    place_record_cta: '📍 Record this venue',
+    resume_btn: '↺ Retake',
+    status_preparing: 'Getting ready…',
+    cospa_top_lbl: 'Exceptional value',
+    cospa_top_sub: 'Rated well above its price — a great deal',
+    cospa_good_lbl: 'Great value',
+    cospa_good_sub: 'Rated highly for its price',
+    cospa_std_lbl: 'Standard',
+    cospa_std_sub: 'Rated in line with its price',
+    filter_default_name: 'Filter',
+    best_in_group: 'Top pick here',
+    label_unlisted: 'Not listed',
+    scan_summary: '{n} bottles detected · {k} rated{f} | Tap a marker for details',
+    scan_fits_part: ' · ❤️ {n} match your taste',
+    place_recorded: '📍 Recorded as {n}',
+    pick_top: '👑 Sommelin\'s top pick',
+    pick_normal: '✨ Sommelin pick',
+    filter_ribbon: '📌 {icon} Featured in {name}{rating}',
+    rating_paren: ' (★{n})',
+    match_pill_confirm: '🍷 Sommelin match · needs confirmation',
+    match_pill_done: '🍷 Sommelin match confirmed',
+    ref_price_label: 'Reference price',
+    sommelin_rating_label: 'Sommelin rating',
+    buy_search_label: '🔍 Find where to buy',
+    close_label: 'Close',
+    this_wine_label: 'this wine',
+    id_ok_unlisted_pill: '🔎 Identified · not yet in Sommelin DB',
+    no_data_meta: 'No Sommelin rating data yet for this wine. <b>We never show a guessed score.</b> Your scan has been recorded.',
+    buy_search_web_label: '🔍 Search online',
+    back_reading: '📸 Reading the back label…',
+    back_import_prefix: '🚢 Importer: ',
+    back_alcohol_prefix: 'Alcohol ',
+    back_grape_prefix: 'Grape ',
+    back_recorded_generic: 'Back label recorded',
+    back_recorded_title: '✅ Back label recorded',
+    back_cta_label: '📸 Scan the back label too',
+    back_hint: 'Get importer, grape variety and more detail (optional)',
+    back_read_failed: 'Could not read the back label',
+    back_catch_failed: 'Reading failed. Please try again.',
+    back_xp_gained: '🎉 +{n} XP earned!',
+    similar_heading: 'Similar wines you might like (real Sommelin data)',
+    ig_notify_confirmed: '✓ @{n} will be notified',
+    change_label: 'Change',
+    ig_confirm_q: 'Is this the producer\'s Instagram?',
+    ig_view_profile: 'View @{n}\'s profile ↗',
+    ig_yes: 'Yes, that\'s right',
+    ig_no: 'No',
+    ig_manual_entry: 'Enter it myself',
+    ig_searching: '🔍 Looking up the producer\'s Instagram…',
+    ig_manual_when_found: 'Enter it myself once found',
+    ig_not_found: 'Could not find this producer\'s Instagram',
+    ig_manual_if_known: 'Enter it if you know it',
+    ig_manual_placeholder: '@handle, or an instagram.com/... URL',
+    save_label: 'Save',
+    store_notify_suffix: ' · @{n} will be notified',
+    store_where_q: '📍 Where did you have this? (optional)',
+    store_search_placeholder: 'Search by venue name',
+    store_ig_placeholder: 'Venue\'s Instagram, if known (optional)',
+    backend_unset_title: 'Backend not configured',
+    backend_unset_desc: 'The Cloud Run URL is not set.<br>Set API_BASE in scouter.html, or<br>open with <code>?api=https://…run.app</code>.',
+    list_not_found: 'No wine list was found',
+    list_unreadable: 'Could not read the list. Try moving closer and reshoot.',
+    by_glass_suffix: ' (by the glass)',
+    sommelin_pick_top: '👑 Sommelin pick',
+    sommelin_pick_normal: '✨ Recommended',
+    price_delta_template: '{sign}{n}% vs reference price',
+    list_place_recorded: '📍 Recorded as <b>{n}</b>\'s list. Thank you for your help! 🍷',
+    place_record_note: '(helps everyone\'s wine map · anonymous)',
+    list_summary: '📋 Wine list · {p} page(s) · {c} wines ({k} rated)',
+    taste_prompt: '❤️ <a href="taste.html" style="color:var(--burgundy);font-weight:800">Save your taste profile</a> to see "the one for you" in this list.',
+    this_list_recommend_heading: 'Recommended from this list',
+    all_items_heading: 'All wines (scan order)',
+    data_note: 'Only wines with real Sommelin data are rated here.',
+    next_page_btn: '📷 Scan next page',
+    clear_btn: '🗑 Clear',
+    back_to_list_btn: '← Back to list',
+    where_store_q: '📍 Which venue is this?',
+    store_pick_desc: 'Picking a venue helps Sommelin learn "this wine is available here", powering everyone\'s "where can I find it?" search. Recorded anonymously.',
+    searching_nearby: 'Finding nearby venues from your location…',
+    manual_store_prompt: 'Can\'t find it? Enter the venue name',
+    store_name_placeholder: 'Venue name',
+    record_btn: 'Record',
+    geoloc_unsupported: 'Location isn\'t available on this device. Please enter the venue name.',
+    no_nearby_stores: 'No nearby venues found. Please enter the venue name.',
+    nearby_stores_heading: 'Nearby venues (tap to select)',
+    approx_distance: '~{n}m away',
+    search_failed_manual: 'Search failed. Please enter the venue name.',
+    geoloc_failed: 'Could not get your location. Please enter the venue name.',
+    search_query_suffix: ' wine',
+    caption_store_ig: '📍 at @{n}',
+    caption_store_name: '📍 at {n}',
+    caption_my_rating: 'My rating: {n}/10 ⭐',
+    caption_thanks_handle: '@{n} This was delicious. Thank you! 🙏',
+    caption_thanks_plain: 'This was delicious. Thank you! 🙏',
+    caption_hashtags: '#sommelin #winelover',
+    err_generic: 'Something went wrong. Please try again.',
   },
 };
 let LANG = (() => { try { return localStorage.getItem('somm_lang') || (navigator.language && navigator.language.startsWith('ja') ? 'ja' : 'en'); } catch (e) { return 'ja'; } })();
@@ -525,10 +729,28 @@ function t(key) {
   const d = I18N[LANG] || I18N.ja;
   return (d && d[key] != null) ? d[key] : (I18N.ja[key] != null ? I18N.ja[key] : key);
 }
+// サーバーが返す message は日本語固定のため、英語モードではそのまま出さず汎用メッセージにフォールバック
+function svrMsg(d, fallbackKey) {
+  if (LANG === 'en') return t('err_generic');
+  return (d && d.message) || t(fallbackKey);
+}
+// 国名（w.kuni）の日→英変換。マップにない値やja表示時はそのまま返す（地域名chiikiは対象外）
+const KUNI_EN = {
+  'フランス':'France','イタリア':'Italy','スペイン':'Spain','アメリカ':'USA','ドイツ':'Germany',
+  'オーストラリア':'Australia','チリ':'Chile','アルゼンチン':'Argentina','日本':'Japan',
+  'ニュージーランド':'New Zealand','ポルトガル':'Portugal','オーストリア':'Austria',
+  '南アフリカ':'South Africa','ハンガリー':'Hungary','ギリシャ':'Greece','ジョージア':'Georgia',
+};
+function dispKuni(k) {
+  if (LANG === 'en' && k && KUNI_EN[k]) return KUNI_EN[k];
+  return k;
+}
 function applyI18n() {
   document.documentElement.lang = LANG;
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+  const homeLink = document.querySelector('.aTop a[title]');
+  if (homeLink) homeLink.title = t('nav_home');
   const btn = document.getElementById('langBtn');
   if (btn) btn.textContent = LANG === 'ja' ? '🌐 EN' : '🌐 日本語';
 }
@@ -568,9 +790,9 @@ async function logAction(ev){
 // カテゴリ値cospaLevel('top'|'good'|null。chat/wine_lookupと共通の分類)から表示を作る。
 // 2026-07-11 V-1: 星型はstarRating専用。コスパ判定はアイコン+テキストで表す
 function cospa(level){
-  if(level==='top')  return {stars:'🏆', lbl:'圧倒的コスパ', sub:'価格以上の評価。かなりお得', bg:'#1e8449'};
-  if(level==='good') return {stars:'👍',  lbl:'高コスパ',   sub:'価格に対して評価が高い',   bg:'#27ae60'};
-  return                    {stars:'',   lbl:'標準的',     sub:'価格相応の評価です',       bg:'#8a6d3b'};
+  if(level==='top')  return {stars:'🏆', lbl:t('cospa_top_lbl'), sub:t('cospa_top_sub'), bg:'#1e8449'};
+  if(level==='good') return {stars:'👍',  lbl:t('cospa_good_lbl'), sub:t('cospa_good_sub'), bg:'#27ae60'};
+  return                    {stars:'',   lbl:t('cospa_std_lbl'), sub:t('cospa_std_sub'), bg:'#8a6d3b'};
 }
 function fmtPrice(p){ if(p==null||isNaN(p)) return '—'; return '¥'+Math.round(p).toLocaleString('ja-JP'); }
 // 評価は「探す」タブ・チャットと同じtotal(5点満点)に統一（旧fmtSPはSP=10点満点を表示していた）
@@ -675,7 +897,7 @@ async function identifyShelf(dataUrl){
     const r=await fetch(API_BASE+'/api/identify-shelf',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ image:dataUrl, userId:UID, locale:'ja-JP' })
+      body: JSON.stringify({ image:dataUrl, userId:UID, locale: (LANG==='en'?'en-US':'ja-JP') })
     });
     if(r.status===429){ toast(t('toast_rate_limit')); resumeLive(); return; }
     if(!r.ok) throw new Error('http '+r.status);
@@ -713,7 +935,7 @@ function resumeLive(){
   document.getElementById('frozenBar').style.display='none';
   document.querySelector('.aBot').style.display='flex';
   showStatus(false);
-  setSub(MODE==='list'?'リストモード':'撮るだけで全ボトル評価');
+  setSub(MODE==='list'?t('sub_list'):t('sub_bottle'));
 }
 
 // ベスト判定: 好み度＋コスパ＋総合評価（既知＝実データのボトルのみ対象）
@@ -751,9 +973,9 @@ function renderMarks(res){
       if(fit) cls+=' fit';
       if(pinned) cls+=' pinned';
       html=(fit?'❤️':'')+fmtTotal(w.total)+'<span style="font-size:0.65em;opacity:.85;">/5</span>';
-      if(pinned) html='📌 '+html+`<span class="pinsub">${esc(b.filterMatches[0].name||'フィルター')}</span>`;
-      if(i===best){ cls+=' best'; html='👑 '+html+'<span class="bsub">この中でおすすめ</span>'; }
-    }else if(b.match.status==='unlisted'){ html='未登録'; }
+      if(pinned) html='📌 '+html+`<span class="pinsub">${esc(b.filterMatches[0].name||t('filter_default_name'))}</span>`;
+      if(i===best){ cls+=' best'; html='👑 '+html+`<span class="bsub">${t('best_in_group')}</span>`; }
+    }else if(b.match.status==='unlisted'){ html=t('label_unlisted'); }
     else { cls+=' unread'; html='?'; }
     el.className=cls; el.innerHTML=html;
     el.style.left=(ox+b.box.cx*dw)+'px';
@@ -763,12 +985,13 @@ function renderMarks(res){
   });
 
   const s=res.summary||{};
+  const fitsPart = s.fits ? t('scan_fits_part').replace('{n}', s.fits) : '';
   document.getElementById('frozenSum').textContent=
-    `${s.total||res.bottles.length}本を検出 ・ 評価あり ${s.known||0}本${s.fits?` ・ ❤️好み ${s.fits}本`:''}｜マーカーをタップで詳細`;
+    t('scan_summary').replace('{n}', s.total||res.bottles.length).replace('{k}', s.known||0).replace('{f}', fitsPart);
   document.getElementById('frozenBar').style.display='block';
   const placeBtn=document.getElementById('frozenPlaceBtn');
-  if(shelfPlace){ placeBtn.style.display='block'; placeBtn.disabled=true; placeBtn.textContent=`📍 ${shelfPlace.name} として記録済み`; }
-  else if((s.known||0)>0){ placeBtn.style.display='block'; placeBtn.disabled=false; placeBtn.textContent='📍 このお店を記録する'; }
+  if(shelfPlace){ placeBtn.style.display='block'; placeBtn.disabled=true; placeBtn.textContent=t('place_recorded').replace('{n}', shelfPlace.name); }
+  else if((s.known||0)>0){ placeBtn.style.display='block'; placeBtn.disabled=false; placeBtn.textContent=t('place_record_cta'); }
   else { placeBtn.style.display='none'; }
   setSub(t('sub_tap_detail'));
 }
@@ -792,21 +1015,23 @@ function renderShelfCard(b){
     const cp=cospa(w.cospaLevel);
     const lowConf=(b.match.matchScore||0)<0.75;
     const pick=b.sommelin && b.sommelin.isPick
-      ? `<div class="pick-ribbon">${b.sommelin.level==='top'?'👑 ソムリンのおすすめ':'✨ ソムリンおすすめ'}<span style="font-weight:600">｜${esc(b.sommelin.reason||'')}</span></div>` : '';
-    const filterRibbons=(b.filterMatches||[]).map(fm=>
-      `<div class="pick-ribbon" style="background:#8b5cf6;color:#fff">📌 ${esc(fm.emoji||'🍷')} ${esc(fm.name||'フィルター')}に掲載${fm.rating?`（★${fm.rating}）`:''}</div>`
-    ).join('');
+      ? `<div class="pick-ribbon">${b.sommelin.level==='top'?t('pick_top'):t('pick_normal')}<span style="font-weight:600">｜${esc(b.sommelin.reason||'')}</span></div>` : '';
+    const filterRibbons=(b.filterMatches||[]).map(fm=>{
+      const ratingStr = fm.rating ? t('rating_paren').replace('{n}', fm.rating) : '';
+      const ribbonText = t('filter_ribbon').replace('{icon}', esc(fm.emoji||'🍷')).replace('{name}', esc(fm.name||t('filter_default_name'))).replace('{rating}', ratingStr);
+      return `<div class="pick-ribbon" style="background:#8b5cf6;color:#fff">${ribbonText}</div>`;
+    }).join('');
     inner=`
-      <div class="sh-pill" style="background:var(--burgundy)">🍷 ソムリン照合${lowConf?' ・ 要確認':'済み'}</div>
+      <div class="sh-pill" style="background:var(--burgundy)">${lowConf?t('match_pill_confirm'):t('match_pill_done')}</div>
       <div class="sh-name">${esc(w.name||'—')}${w.vintage&&w.vintage!=='NV'?` <span class="sh-vintage-badge">${esc(w.vintage)}</span>`:''}</div>
       <div class="sh-producer">${esc(w.producer||'')}</div>
-      <div class="sh-region">${esc([w.kuni,w.chiiki].filter(v=>v&&v!=='不明').join(' '))}</div>
+      <div class="sh-region">${esc([dispKuni(w.kuni),w.chiiki].filter(v=>v&&v!=='不明').join(' '))}</div>
       <div class="cospa-badge" style="background:${cp.bg}">
         <div class="stars">${cp.stars}</div><div class="lbl">${cp.lbl}</div><div class="sub">${cp.sub}</div>
       </div>
       <div class="sh-grid">
-        <div class="sh-cell"><div class="v">${fmtPrice(w.price)}</div><div class="l">参考価格${w.sizeNote?`<br>（${esc(w.sizeNote)}）`:''}</div></div>
-        <div class="sh-cell"><div class="v sh-refscore">${window.WineDisplay?window.WineDisplay.starsHtml(w.starRating,{size:15}):''}</div><div class="l">ソムリン評価</div></div>
+        <div class="sh-cell"><div class="v">${fmtPrice(w.price)}</div><div class="l">${t('ref_price_label')}${w.sizeNote?`<br>（${esc(w.sizeNote)}）`:''}</div></div>
+        <div class="sh-cell"><div class="v sh-refscore">${window.WineDisplay?window.WineDisplay.starsHtml(w.starRating,{size:15}):''}</div><div class="l">${t('sommelin_rating_label')}</div></div>
       </div>
       ${w.styleNote?`<div class="style-note">🏅 ${esc(w.styleNote)}</div>`:''}
       ${w.vintageNote?`<div class="vintage-note">${esc(w.vintageNote)}</div>`:''}
@@ -817,23 +1042,23 @@ function renderShelfCard(b){
       <div id="simBox"></div>
       <button class="sh-like" onclick="oshiStart()">${t('like_btn')}</button>
       <div class="sh-btns">
-        <button class="sh-main" onclick="buy('${escAttr(w.name||'')}', ${w.id})">🔍 購入先を探す</button>
-        <button class="sh-sub" onclick="closeSheet()">閉じる</button>
+        <button class="sh-main" onclick="buy('${escAttr(w.name||'')}', ${w.id})">${t('buy_search_label')}</button>
+        <button class="sh-sub" onclick="closeSheet()">${t('close_label')}</button>
       </div>`;
   } else {
-    const title=[id.producer,id.wine].filter(Boolean).join(' ') || 'このワイン';
+    const title=[id.producer,id.wine].filter(Boolean).join(' ') || t('this_wine_label');
     inner=`
-      <div class="sh-pill" style="background:#555">🔎 特定OK ・ ソムリンDB未登録</div>
+      <div class="sh-pill" style="background:#555">${t('id_ok_unlisted_pill')}</div>
       <div class="sh-name">${esc(trunc(title,40))}${id.vintage?'　'+esc(id.vintage):''}</div>
       <div class="sh-region">${esc([id.country,id.region].filter(Boolean).join(' / '))}${id.grape&&id.grape.length?'　/　'+esc(id.grape.join(', ')):''}</div>
       ${fitRibbon(b)}
-      <div class="sh-meta">まだソムリンの評価データにありません。<b>推測のスコアは表示しません。</b>スキャンは記録済みです。</div>
+      <div class="sh-meta">${t('no_data_meta')}</div>
       ${backBlock(b)}
       <div id="simBox"></div>
       <button class="sh-like" onclick="oshiStart()">${t('like_btn')}</button>
       <div class="sh-btns">
-        <button class="sh-main" onclick="buy('${escAttr(title)}')">🔍 ネットで探す</button>
-        <button class="sh-sub" onclick="closeSheet()">閉じる</button>
+        <button class="sh-main" onclick="buy('${escAttr(title)}')">${t('buy_search_web_label')}</button>
+        <button class="sh-sub" onclick="closeSheet()">${t('close_label')}</button>
       </div>`;
   }
   document.getElementById('sheetBody').innerHTML=inner;
@@ -844,20 +1069,20 @@ function renderShelfCard(b){
 // XP値はサーバー(XP_RULES.back_label)が正。CTAの「+10 XP」表記はサーバー変更時に要追随。
 function backBlock(b){
   if(b._backPending){
-    return `<div class="back-box"><div class="back-hint">📸 裏ラベルを読み取り中…</div></div>`;
+    return `<div class="back-box"><div class="back-hint">${t('back_reading')}</div></div>`;
   }
   if(b._back){
     const bk=b._back;
     const rows=[];
-    if(bk.importer) rows.push(`🚢 輸入: <b>${esc(bk.importer)}</b>`);
-    if(bk.alcohol!=null) rows.push(`アルコール ${esc(String(bk.alcohol))}%`);
-    if(bk.grape&&bk.grape.length) rows.push(`品種 ${esc(bk.grape.join(', '))}`);
-    if(!rows.length) rows.push('裏ラベルを記録しました');
-    return `<div class="back-box done"><div class="back-title">✅ 裏ラベル記録済み</div><div class="back-rows">${rows.map(r=>`<div>${r}</div>`).join('')}</div></div>`;
+    if(bk.importer) rows.push(`${t('back_import_prefix')}<b>${esc(bk.importer)}</b>`);
+    if(bk.alcohol!=null) rows.push(`${t('back_alcohol_prefix')}${esc(String(bk.alcohol))}%`);
+    if(bk.grape&&bk.grape.length) rows.push(`${t('back_grape_prefix')}${esc(bk.grape.join(', '))}`);
+    if(!rows.length) rows.push(t('back_recorded_generic'));
+    return `<div class="back-box done"><div class="back-title">${t('back_recorded_title')}</div><div class="back-rows">${rows.map(r=>`<div>${r}</div>`).join('')}</div></div>`;
   }
   return `<div class="back-box">
-    <button class="back-cta" onclick="backStart()">📸 裏ラベルも撮る <span class="back-xp">+10 XP</span></button>
-    <div class="back-hint">輸入元・品種などの詳しい情報がわかります（任意）</div>
+    <button class="back-cta" onclick="backStart()">${t('back_cta_label')} <span class="back-xp">+10 XP</span></button>
+    <div class="back-hint">${t('back_hint')}</div>
   </div>`;
 }
 
@@ -888,17 +1113,17 @@ async function identifyBack(b, dataUrl){
     const r=await fetch(API_BASE+'/api/identify-back',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ image:dataUrl, userId:UID, scanId: shelfRes&&shelfRes.scanId||null, catalogId: w&&w.catalogId||null, locale:'ja-JP' })
+      body: JSON.stringify({ image:dataUrl, userId:UID, scanId: shelfRes&&shelfRes.scanId||null, catalogId: w&&w.catalogId||null, locale: (LANG==='en'?'en-US':'ja-JP') })
     });
-    if(r.status===429||r.status===403){ const d=await r.json().catch(()=>({})); toast(d.message||t('toast_rate_limit')); return; }
+    if(r.status===429||r.status===403){ const d=await r.json().catch(()=>({})); toast(svrMsg(d,'toast_rate_limit')); return; }
     if(!r.ok) throw new Error('http '+r.status);
     const d=await r.json();
-    if(!d.ok){ toast(d.message||'裏ラベルが読み取れませんでした'); return; }
+    if(!d.ok){ toast(svrMsg(d,'back_read_failed')); return; }
     b._back=d.back;
-    if(d.xpAwarded) toast(`🎉 +${d.xpAwarded} XP を獲得！`);
+    if(d.xpAwarded) toast(t('back_xp_gained').replace('{n}', d.xpAwarded));
     if(window.sommLog) sommLog('back_label',{importer:d.back&&d.back.importer||null});
   }catch(e){
-    toast('読み取りに失敗しました。もう一度お試しください');
+    toast(t('back_catch_failed'));
   }finally{
     b._backPending=false; renderShelfCard(b);
   }
@@ -915,9 +1140,9 @@ async function loadSimilar(b){
     const d=await r.json();
     const box=document.getElementById('simBox');
     if(!box || !d.items || !d.items.length) return;
-    box.innerHTML='<div class="cand-h">近い系統のおすすめ（ソムリン実データ）</div>'+d.items.map(x=>{
+    box.innerHTML=`<div class="cand-h">${t('similar_heading')}</div>`+d.items.map(x=>{
       return `<div class="cand-row" onclick="buy('${escAttr(x.name||'')}', ${x.id})">
-        <div><div class="cn">${esc(trunc(x.name||'',26))}</div><div class="cr">${esc([x.kuni,x.chiiki].filter(v=>v&&v!=='不明').join(' '))}　${fmtPrice(x.price)}</div></div>
+        <div><div class="cn">${esc(trunc(x.name||'',26))}</div><div class="cr">${esc([dispKuni(x.kuni),x.chiiki].filter(v=>v&&v!=='不明').join(' '))}　${fmtPrice(x.price)}</div></div>
         <div class="cc">${window.WineDisplay?window.WineDisplay.starsHtml(x.starRating,{size:11}):''}</div></div>`;
     }).join('');
   }catch(e){}
@@ -1080,36 +1305,36 @@ function oshiCardSetup(){
 function oshiIgBlockHtml(){
   if(oshiIgStatus==='active' && oshiHandle){
     return `<div class="oshi-ig-block">
-      <div class="oshi-ig-row"><span>✓ @${esc(oshiHandle)} にお知らせが届きます</span>
-        <button class="oshi-ig-link" style="padding:0" onclick="oshiIgManualOpen=true;oshiRenderIgBlock()">変更</button></div>
+      <div class="oshi-ig-row"><span>${t('ig_notify_confirmed').replace('{n}', esc(oshiHandle))}</span>
+        <button class="oshi-ig-link" style="padding:0" onclick="oshiIgManualOpen=true;oshiRenderIgBlock()">${t('change_label')}</button></div>
       ${oshiIgManualOpen?oshiIgManualInputHtml():''}
     </div>`;
   }
   if(oshiIgStatus==='pending' && oshiIgSuggestion && oshiIgSuggestion.handle){
     const h=oshiIgSuggestion.handle;
     return `<div class="oshi-ig-block">
-      <div class="oshi-ig-q">この生産者のInstagramはこちらですか？</div>
-      <a class="oshi-ig-profile" href="https://instagram.com/${escAttr(h)}" target="_blank" rel="noopener">@${esc(h)} のプロフィールを見る ↗</a>
+      <div class="oshi-ig-q">${t('ig_confirm_q')}</div>
+      <a class="oshi-ig-profile" href="https://instagram.com/${escAttr(h)}" target="_blank" rel="noopener">${t('ig_view_profile').replace('{n}', esc(h))}</a>
       <div class="oshi-ig-actions">
-        <button class="oshi-ig-yes" onclick="oshiConfirmIg('${escAttr(h)}')">はい、合っています</button>
-        <button class="oshi-ig-no" onclick="oshiRejectIg('${escAttr(h)}')">違う</button>
+        <button class="oshi-ig-yes" onclick="oshiConfirmIg('${escAttr(h)}')">${t('ig_yes')}</button>
+        <button class="oshi-ig-no" onclick="oshiRejectIg('${escAttr(h)}')">${t('ig_no')}</button>
       </div>
-      ${oshiIgManualOpen?oshiIgManualInputHtml():`<button class="oshi-ig-link" onclick="oshiIgManualOpen=true;oshiRenderIgBlock()">自分で入力する</button>`}
+      ${oshiIgManualOpen?oshiIgManualInputHtml():`<button class="oshi-ig-link" onclick="oshiIgManualOpen=true;oshiRenderIgBlock()">${t('ig_manual_entry')}</button>`}
     </div>`;
   }
   if(oshiIgStatus==='searching'){
-    return `<div class="oshi-ig-block"><div class="oshi-ig-q">🔍 生産者のInstagramを探しています…</div>
-      ${oshiIgManualOpen?oshiIgManualInputHtml():`<button class="oshi-ig-link" onclick="oshiIgManualOpen=true;oshiRenderIgBlock()">見つかったら自分で入力する</button>`}
+    return `<div class="oshi-ig-block"><div class="oshi-ig-q">${t('ig_searching')}</div>
+      ${oshiIgManualOpen?oshiIgManualInputHtml():`<button class="oshi-ig-link" onclick="oshiIgManualOpen=true;oshiRenderIgBlock()">${t('ig_manual_when_found')}</button>`}
     </div>`;
   }
-  return `<div class="oshi-ig-block"><div class="oshi-ig-q">この生産者のInstagramは見つかりませんでした</div>
-    ${oshiIgManualOpen?oshiIgManualInputHtml():`<button class="oshi-ig-link" onclick="oshiIgManualOpen=true;oshiRenderIgBlock()">知っていたら入力する</button>`}
+  return `<div class="oshi-ig-block"><div class="oshi-ig-q">${t('ig_not_found')}</div>
+    ${oshiIgManualOpen?oshiIgManualInputHtml():`<button class="oshi-ig-link" onclick="oshiIgManualOpen=true;oshiRenderIgBlock()">${t('ig_manual_if_known')}</button>`}
   </div>`;
 }
 function oshiIgManualInputHtml(){
   return `<div class="oshi-ig-manual">
-    <input type="text" id="oshiIgManualInput" placeholder="@なし、または instagram.com/... のURL">
-    <button class="oshi-ig-yes" style="flex:none;padding:9px 14px;" onclick="oshiSubmitManualIg()">保存</button>
+    <input type="text" id="oshiIgManualInput" placeholder="${escAttr(t('ig_manual_placeholder'))}">
+    <button class="oshi-ig-yes" style="flex:none;padding:9px 14px;" onclick="oshiSubmitManualIg()">${t('save_label')}</button>
   </div>`;
 }
 function oshiRenderIgBlock(){
@@ -1170,15 +1395,15 @@ function oshiStoreBlockHtml(){
   if(oshiStoreSelected){
     const s=oshiStoreSelected;
     return `<div class="oshi-ig-block">
-      <div class="oshi-ig-row"><span>📍 ${esc(s.name)}${s.ig?`・@${esc(s.ig)}にお知らせが届きます`:''}</span>
-        <button class="oshi-ig-link" style="padding:0" onclick="oshiStoreClear()">変更</button></div>
+      <div class="oshi-ig-row"><span>📍 ${esc(s.name)}${s.ig?t('store_notify_suffix').replace('{n}', esc(s.ig)):''}</span>
+        <button class="oshi-ig-link" style="padding:0" onclick="oshiStoreClear()">${t('change_label')}</button></div>
     </div>`;
   }
   return `<div class="oshi-ig-block">
-    <div class="oshi-ig-q">📍 どこで飲みましたか？（任意）</div>
-    <input type="text" id="oshiStoreNameInput" class="oshi-store-input" placeholder="お店の名前で検索" value="${escAttr(oshiStoreQuery)}" oninput="oshiStoreOnInput(this.value)">
+    <div class="oshi-ig-q">${t('store_where_q')}</div>
+    <input type="text" id="oshiStoreNameInput" class="oshi-store-input" placeholder="${escAttr(t('store_search_placeholder'))}" value="${escAttr(oshiStoreQuery)}" oninput="oshiStoreOnInput(this.value)">
     <div id="oshiStoreResults">${oshiStoreResultsHtml()}</div>
-    <input type="text" id="oshiStoreIgInput" class="oshi-store-input" placeholder="お店のInstagramが分かれば（任意）">
+    <input type="text" id="oshiStoreIgInput" class="oshi-store-input" placeholder="${escAttr(t('store_ig_placeholder'))}">
   </div>`;
 }
 function oshiStoreResultsHtml(){
@@ -1294,12 +1519,12 @@ function oshiBuildCaption(info){
   L.push(`🍷 ${info.name}${info.vintage&&info.vintage!=='NV'?' '+info.vintage:''}`);
   if(info.producer) L.push(`👨‍🌾 ${info.producer}`);
   const store=oshiStoreResolved;
-  if(store) L.push(store.ig ? `📍 @${store.ig} で` : `📍 ${store.name} にて`);
-  if(oshiShowScore) L.push(`私の評価 ${oshiRating.toFixed(1)}/10 ⭐`);
-  if(oshiHandle) L.push(`@${oshiHandle} 美味しかったです。ごちそうさまでした🙏`);
-  else L.push('美味しかったです。ごちそうさまでした🙏');
+  if(store) L.push(store.ig ? t('caption_store_ig').replace('{n}', store.ig) : t('caption_store_name').replace('{n}', store.name));
+  if(oshiShowScore) L.push(t('caption_my_rating').replace('{n}', oshiRating.toFixed(1)));
+  if(oshiHandle) L.push(t('caption_thanks_handle').replace('{n}', oshiHandle));
+  else L.push(t('caption_thanks_plain'));
   L.push('');
-  const tags=['#Sommelin','#ソムリン','#ワイン好きと繋がりたい','#wine'];
+  const tags=t('caption_hashtags').split(' ');
   if(store && !store.ig){ const sh=oshiHashtag(store.name); if(sh) tags.unshift(sh); }
   if(!oshiHandle){ const ph=oshiHashtag(info.producer); if(ph) tags.unshift(ph); }
   if(OSHI_OFFICIAL_IG) tags.unshift('@'+OSHI_OFFICIAL_IG);
@@ -1333,8 +1558,8 @@ function oshiCloseOverlay(){
 
 function showApiUnset(){
   const el=document.getElementById('err');
-  document.getElementById('errT').textContent='バックエンド未設定';
-  document.getElementById('errD').innerHTML='Cloud RunのURLが未設定です。<br>scouter.html の API_BASE を設定するか、<br><code>?api=https://…run.app</code> を付けて開いてください。';
+  document.getElementById('errT').textContent=t('backend_unset_title');
+  document.getElementById('errD').innerHTML=t('backend_unset_desc');
   el.classList.add('on');
   setTimeout(()=>el.classList.remove('on'), 6000);
 }
@@ -1349,14 +1574,14 @@ async function identifyList(dataUrl){
     const r=await fetch(API_BASE+'/api/identify-list',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ image:dataUrl, userId:UID, locale:'ja-JP' })
+      body: JSON.stringify({ image:dataUrl, userId:UID, locale: (LANG==='en'?'en-US':'ja-JP') })
     });
     if(r.status===429){ showStatus(false); toast(t('toast_rate_limit')); return; }
     if(!r.ok) throw new Error('http '+r.status);
     const res=await r.json();
     showStatus(false);
     if(!res.items || !res.items.length){
-      toast(res.isWineList===false?'ワインリストが見つかりませんでした':'銘柄を読み取れませんでした。近づいて撮り直してください');
+      toast(res.isWineList===false?t('list_not_found'):t('list_unreadable'));
       return;
     }
     listPages++;
@@ -1386,16 +1611,16 @@ function liRow(it, hit){
   const inp=it.input||{}; const w=it.match&&it.match.wine;
   const name=(w?w.name:null)||inp.name||inp.rawText||'—';
   const meta=[];
-  if(inp.listPrice) meta.push('¥'+Number(inp.listPrice).toLocaleString('ja-JP')+(inp.byGlass?'（グラス）':''));
-  if(w) meta.push([w.kuni,w.chiiki].filter(v=>v&&v!=='不明').join(' '));
+  if(inp.listPrice) meta.push('¥'+Number(inp.listPrice).toLocaleString('ja-JP')+(inp.byGlass?t('by_glass_suffix'):''));
+  if(w) meta.push([dispKuni(w.kuni),w.chiiki].filter(v=>v&&v!=='不明').join(' '));
   else if(inp.country) meta.push(inp.country);
   const badges=[];
   if(it.personalFit && it.personalFit.label && it.personalFit.score>=40) badges.push(`<span class="b1">❤️ ${esc(it.personalFit.label)}</span>`);
-  if(it.sommelin && it.sommelin.isPick) badges.push(`<span class="b2">${it.sommelin.level==='top'?'👑 ソムリン推し':'✨ おすすめ'}</span>`);
-  if(it.priceDelta!=null && Math.abs(it.priceDelta)>=15) badges.push(`<span class="b3">参考価格より${it.priceDelta>0?'+':''}${it.priceDelta}%</span>`);
+  if(it.sommelin && it.sommelin.isPick) badges.push(`<span class="b2">${it.sommelin.level==='top'?t('sommelin_pick_top'):t('sommelin_pick_normal')}</span>`);
+  if(it.priceDelta!=null && Math.abs(it.priceDelta)>=15) badges.push(`<span class="b3">${t('price_delta_template').replace('{sign}',it.priceDelta>0?'+':'').replace('{n}',it.priceDelta)}</span>`);
   const right=w
     ? (window.WineDisplay?window.WineDisplay.starsHtml(w.starRating,{size:11}):'')
-    : `<span class="un">未登録</span>`;
+    : `<span class="un">${t('label_unlisted')}</span>`;
   return `<div class="li-row${hit?' hit':''}">
     <div><div class="ln">${esc(trunc(name,34))}</div>
          ${meta.length?`<div class="lr">${esc(meta.join('　'))}</div>`:''}
@@ -1407,19 +1632,19 @@ function renderListSheet(){
   const known=listItems.filter(i=>i.match&&i.match.status==='known').length;
   const top=[...listItems].filter(i=>liScore(i)>0).sort((a,b)=>liScore(b)-liScore(a)).slice(0,3);
   const placeHtml = listPlace
-    ? `<div class="sh-meta">📍 <b>${esc(listPlace.name)}</b> のリストとして記録済み。ご協力ありがとうございます 🍷</div>`
-    : `<div class="sh-btns" style="margin-bottom:10px"><button class="sh-sub" style="flex:1;text-align:left" onclick="openPlacePicker()">📍 このお店を記録する<span style="font-weight:500;color:#999">（みんなのワイン地図に協力・匿名）</span></button></div>`;
+    ? `<div class="sh-meta">${t('list_place_recorded').replace('{n}', esc(listPlace.name))}</div>`
+    : `<div class="sh-btns" style="margin-bottom:10px"><button class="sh-sub" style="flex:1;text-align:left" onclick="openPlacePicker()">${t('place_record_cta')}<span style="font-weight:500;color:#999">${t('place_record_note')}</span></button></div>`;
   document.getElementById('sheetBody').innerHTML=`
-    <div class="sh-pill" style="background:var(--burgundy)">📋 ワインリスト ・ ${listPages}ページ ・ ${listItems.length}銘柄（評価済み ${known}）</div>
+    <div class="sh-pill" style="background:var(--burgundy)">${t('list_summary').replace('{p}',listPages).replace('{c}',listItems.length).replace('{k}',known)}</div>
     ${placeHtml}
-    ${listHasTaste?'':`<div class="sh-meta">❤️ <a href="taste.html" style="color:var(--burgundy);font-weight:800">好みのワインを登録</a>すると、このリストで「あなたに合う1本」が分かるようになります。</div>`}
-    ${top.length?`<div class="cand-h">このリストのおすすめ</div>${top.map(it=>liRow(it,true)).join('')}`:''}
-    <div class="cand-h">すべての銘柄（読み取り順）</div>
+    ${listHasTaste?'':`<div class="sh-meta">${t('taste_prompt')}</div>`}
+    ${top.length?`<div class="cand-h">${t('this_list_recommend_heading')}</div>${top.map(it=>liRow(it,true)).join('')}`:''}
+    <div class="cand-h">${t('all_items_heading')}</div>
     ${listItems.map(it=>liRow(it, false)).join('')}
-    <div class="sh-meta">評価はソムリンの実データがある銘柄のみ表示しています。</div>
+    <div class="sh-meta">${t('data_note')}</div>
     <div class="sh-btns">
-      <button class="sh-main" onclick="closeSheet()">📷 次のページを撮る</button>
-      <button class="sh-sub" onclick="listItems=[];listPages=0;listPlace=null;lastListScanId=null;closeSheet();toast(t('toast_list_cleared'))">🗑 クリア</button>
+      <button class="sh-main" onclick="closeSheet()">${t('next_page_btn')}</button>
+      <button class="sh-sub" onclick="listItems=[];listPages=0;listPlace=null;lastListScanId=null;closeSheet();toast(t('toast_list_cleared'))">${t('clear_btn')}</button>
     </div>`;
 }
 
@@ -1430,21 +1655,21 @@ let _ppItems=[], _ppLoc=null, _ppMode='list';
 function openPlacePicker(){
   _ppMode = MODE==='list' ? 'list' : 'bottle';
   const backBtn = _ppMode==='list'
-    ? `<button class="sh-sub" style="flex:1" onclick="renderListSheet()">← リストに戻る</button>`
-    : `<button class="sh-sub" style="flex:1" onclick="closeSheet()">閉じる</button>`;
+    ? `<button class="sh-sub" style="flex:1" onclick="renderListSheet()">${t('back_to_list_btn')}</button>`
+    : `<button class="sh-sub" style="flex:1" onclick="closeSheet()">${t('close_label')}</button>`;
   document.getElementById('sheetBody').innerHTML=`
-    <div class="sh-pill" style="background:var(--burgundy)">📍 どこのお店ですか？</div>
-    <div class="sh-meta">お店を選ぶと「この店にはこのワインがある」という情報がソムリンに貯まり、みんなの「どこで飲める？」に役立ちます。記録は匿名です。</div>
-    <div id="ppBody"><div class="cand-h">現在地から近くのお店を探しています…</div></div>
-    <div class="cand-h">見つからない場合は店名を入力</div>
+    <div class="sh-pill" style="background:var(--burgundy)">${t('where_store_q')}</div>
+    <div class="sh-meta">${t('store_pick_desc')}</div>
+    <div id="ppBody"><div class="cand-h">${t('searching_nearby')}</div></div>
+    <div class="cand-h">${t('manual_store_prompt')}</div>
     <div style="display:flex;gap:8px;margin:0 16px 12px;">
-      <input id="ppManual" placeholder="お店の名前" style="flex:1;padding:12px;border:1px solid #ddd;border-radius:10px;font-size:14px;min-width:0;">
-      <button class="sh-sub" onclick="reportPlaceManual()">記録</button>
+      <input id="ppManual" placeholder="${escAttr(t('store_name_placeholder'))}" style="flex:1;padding:12px;border:1px solid #ddd;border-radius:10px;font-size:14px;min-width:0;">
+      <button class="sh-sub" onclick="reportPlaceManual()">${t('record_btn')}</button>
     </div>
     <div class="sh-btns">${backBtn}</div>`;
   openSheet();
   if(!navigator.geolocation){
-    document.getElementById('ppBody').innerHTML='<div class="cand-h">位置情報が使えない端末です。店名を入力してください。</div>';
+    document.getElementById('ppBody').innerHTML=`<div class="cand-h">${t('geoloc_unsupported')}</div>`;
     return;
   }
   navigator.geolocation.getCurrentPosition(async pos=>{
@@ -1454,21 +1679,21 @@ function openPlacePicker(){
       const d=await r.json();
       const box=document.getElementById('ppBody'); if(!box) return;
       if(!d.items || !d.items.length){
-        box.innerHTML='<div class="cand-h">近くのお店が見つかりませんでした。店名を入力してください。</div>';
+        box.innerHTML=`<div class="cand-h">${t('no_nearby_stores')}</div>`;
         return;
       }
       _ppItems=d.items;
-      box.innerHTML='<div class="cand-h">近くのお店（タップで選択）</div>'+d.items.map((p,i)=>`
+      box.innerHTML=`<div class="cand-h">${t('nearby_stores_heading')}</div>`+d.items.map((p,i)=>`
         <div class="cand-row" onclick="reportPlacePick(${i})">
-          <div><div class="cn">${esc(p.name)}</div><div class="cr">約${p.dist}m</div></div>
+          <div><div class="cn">${esc(p.name)}</div><div class="cr">${t('approx_distance').replace('{n}',p.dist)}</div></div>
           <div class="cc">›</div></div>`).join('');
     }catch(e){
       const box=document.getElementById('ppBody');
-      if(box) box.innerHTML='<div class="cand-h">検索に失敗しました。店名を入力してください。</div>';
+      if(box) box.innerHTML=`<div class="cand-h">${t('search_failed_manual')}</div>`;
     }
   }, err=>{
     const box=document.getElementById('ppBody');
-    if(box) box.innerHTML='<div class="cand-h">位置情報を取得できませんでした。店名を入力してください。</div>';
+    if(box) box.innerHTML=`<div class="cand-h">${t('geoloc_failed')}</div>`;
   }, { timeout:8000, maximumAge:60000 });
 }
 
@@ -1538,7 +1763,7 @@ function fitRibbon(res){
 function buy(name, wineId){
   logAction({ resolved_wine_id: wineId||null, resolve_method: wineId?'vision':'vision_unlisted',
               action:'buy', lens_id:'sommelin', locale:'ja' });
-  const q=encodeURIComponent((name||'').trim()+' ワイン');
+  const q=encodeURIComponent((name||'').trim()+t('search_query_suffix'));
   window.location.href='wine_search.html?q='+q;
 }
 

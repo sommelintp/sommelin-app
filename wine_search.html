@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ワイン検索 — ソムリン</title>
+  <title data-i18n="page_title">ワイン検索 — ソムリン</title>
 <meta name="robots" content="noindex">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -352,13 +352,7 @@
 <div class="quick-area">
   <div class="quick-label">POPULAR SEARCHES</div>
   <div class="quick-row" id="quickRow">
-    <button class="quick-chip" onclick="doSearch('シャトー・マルゴー')">シャトー・マルゴー</button>
-    <button class="quick-chip" onclick="doSearch('バローロ')">バローロ</button>
-    <button class="quick-chip" onclick="doSearch('ドン・ペリニヨン')">ドン・ペリニヨン</button>
-    <button class="quick-chip" onclick="doSearch('Opus One')">Opus One</button>
-    <button class="quick-chip" onclick="doSearch('プイィ・フュメ')">プイィ・フュメ</button>
-    <button class="quick-chip" onclick="doSearch('コート・デュ・ローヌ')">コート・デュ・ローヌ</button>
-    <button class="quick-chip" onclick="doSearch('カベルネ・ソーヴィニヨン')">カベルネ・ソーヴィニヨン</button>
+    <!-- JS renders localized chips: renderQuickChips() in the second <script> block -->
   </div>
 </div>
 
@@ -369,16 +363,17 @@
 
 <!-- 常時表示の下ナビ（scouter.html等と同じ4タブ） -->
 <nav class="search-nav">
-  <a href="prototype.html"><svg class="ic"><use href="assets/sommelin-icons.svg#i-home"></use></svg>ホーム</a>
-  <a href="prototype.html?tab=ranking&advanced=1" class="on"><svg class="ic"><use href="assets/sommelin-icons.svg#i-search"></use></svg>探す</a>
-  <a href="scouter.html"><svg class="ic"><use href="assets/sommelin-icons.svg#i-camera"></use></svg>記録</a>
-  <a href="sommelier-chat.html"><svg class="ic"><use href="assets/sommelin-icons.svg#i-chat"></use></svg>相談</a>
+  <a href="prototype.html"><svg class="ic"><use href="assets/sommelin-icons.svg#i-home"></use></svg><span data-i18n="nav_home">ホーム</span></a>
+  <a href="prototype.html?tab=ranking&advanced=1" class="on"><svg class="ic"><use href="assets/sommelin-icons.svg#i-search"></use></svg><span data-i18n="nav_search">探す</span></a>
+  <a href="scouter.html"><svg class="ic"><use href="assets/sommelin-icons.svg#i-camera"></use></svg><span data-i18n="nav_record">記録</span></a>
+  <a href="sommelier-chat.html"><svg class="ic"><use href="assets/sommelin-icons.svg#i-chat"></use></svg><span data-i18n="nav_chat">相談</span></a>
 </nav>
 
 <script>
 /* ===== 多言語対応（i18n）。将来 fr/it 等も I18N に言語を1つ足すだけで拡張できる構造 ===== */
 const I18N = {
   ja: {
+    page_title: 'ワイン検索 — ソムリン',
     hero_label: 'ワイン検索',
     hero_title: '飲みたいワインを<br>どこで買う？どこで飲む？',
     hero_sub: 'ワイン名・生産者・産地を入力すると<br>購入先・飲めるお店が見つかります',
@@ -387,8 +382,72 @@ const I18N = {
     browse_cta_title: '価格・産地・ブドウ品種で探す',
     browse_cta_desc: '予算やタイプを指定して、コスパの良いワインを一覧で見つけられます',
     ex_label: 'このワインを探してみる',
+    nav_home: 'ホーム',
+    nav_search: '探す',
+    nav_record: '記録',
+    nav_chat: '相談',
+    chip_chateau_margaux: 'シャトー・マルゴー',
+    chip_barolo: 'バローロ',
+    chip_dom_perignon: 'ドン・ペリニヨン',
+    chip_opus_one: 'Opus One',
+    chip_pouilly_fume: 'プイィ・フュメ',
+    chip_cotes_du_rhone: 'コート・デュ・ローヌ',
+    chip_cabernet_sauvignon: 'カベルネ・ソーヴィニヨン',
+    store_rakuten_name: '楽天市場',
+    store_rakuten_sub: '楽天ポイント最大10倍 · 送料無料対象あり',
+    store_amazon_name: 'Amazon',
+    store_amazon_sub: 'Prime対象は翌日お届け · 最安値比較あり',
+    store_enoteca_name: 'エノテカ オンライン',
+    store_enoteca_sub: 'ソムリエ厳選 · ギフト包装対応',
+    store_wbs_name: 'ワインバザール',
+    store_wbs_sub: '豊富な品揃え · 1本から購入OK',
+    ex_meta_sassicaia: 'Sassicaia · イタリア トスカーナ · 赤ワイン',
+    ex_meta_mouton: 'Ch.Mouton Rothschild · フランス ボルドー · 赤',
+    ex_meta_krug: 'Krug Grande Cuvée · フランス シャンパーニュ',
+    ex_meta_batard: 'Bâtard-Montrachet · フランス ブルゴーニュ · 白',
+    ex_meta_amarone: 'Amarone · イタリア ヴェネト · 赤ワイン',
+    ex_meta_provence: 'Provence Rosé · フランス · ロゼワイン',
+    cospa_top: '圧倒的コスパ',
+    cospa_good: '高コスパ',
+    cospa_std: '標準的',
+    tech_details: '詳細情報',
+    checking_rating: 'ソムリン評価を照合中…',
+    rating_cospa_head: 'ソムリン評価（コスパ）',
+    bottle_image_alt: 'ボトル画像',
+    ref_price: '参考価格',
+    view_on_rakuten: '🛍️ 楽天市場でこの商品を見る',
+    affiliate_link_label: '提携リンク',
+    vintage_size_note: 'ヴィンテージ・容量はリンク先でご確認ください',
+    results_for_open: '「',
+    results_for_close: '」の検索結果',
+    results_clear: '✕ クリア',
+    online_purchase_head: 'ネットで購入',
+    affiliate_badge: 'アフィリエイト',
+    partner_pill: '提携',
+    view_arrow: '見る →',
+    aff_notice_title: '💡 アフィリエイトリンクについて',
+    aff_notice_body: '楽天市場・Amazonのリンクはアフィリエイトリンクです。このリンク経由でご購入いただくと、手数料がソムリンの運営費になります（お客様のお支払い金額に変化はありません）。',
+    nearby_stores_head: '近くのお店で買う・飲む',
+    checking_stock: 'お店の在庫を確認中…',
+    store_coming_open: '「',
+    store_coming_close: '」を取り扱うお店を募集中',
+    store_coming_desc: 'ワインショップ・レストランが在庫情報を<br>登録することで、ここに表示されます。',
+    store_register_btn: '🏪 店舗として登録する',
+    register_note: '※ 登録は無料です。掲載後はソムリンユーザーへ公開されます。',
+    lstore_count_open: '📍 ',
+    lstore_count_close: '軒で取り扱いを確認',
+    registered_store: '🏪 登録店舗',
+    inquiry_btn: '問い合わせ',
+    type_bottle_glass: 'ボトル/グラス',
+    type_glass: 'グラス',
+    type_bottle: 'ボトル',
+    inquiry_modal_open: '📞 ',
+    inquiry_modal_close: ' に問い合わせ',
+    inquiry_modal_body: 'ご来店予約・在庫確認のお問い合わせを\nLINEまたは電話でお受けしています。\n\n🍷 ソムリンから問い合わせ機能は\n近日公開予定です！',
+    close_btn: '閉じる',
   },
   en: {
+    page_title: 'Wine Search — Sommelin',
     hero_label: 'Wine Search',
     hero_title: 'Find the wine you want —<br>where to buy, where to drink',
     hero_sub: 'Enter a wine name, producer, or region<br>to find where to buy or drink it',
@@ -397,6 +456,69 @@ const I18N = {
     browse_cta_title: 'Browse by price, region, or grape',
     browse_cta_desc: 'Set a budget or style to find good-value wines from a full list',
     ex_label: 'Try searching for these',
+    nav_home: 'Home',
+    nav_search: 'Search',
+    nav_record: 'Record',
+    nav_chat: 'Consult',
+    chip_chateau_margaux: 'Château Margaux',
+    chip_barolo: 'Barolo',
+    chip_dom_perignon: 'Dom Pérignon',
+    chip_opus_one: 'Opus One',
+    chip_pouilly_fume: 'Pouilly-Fumé',
+    chip_cotes_du_rhone: 'Côtes du Rhône',
+    chip_cabernet_sauvignon: 'Cabernet Sauvignon',
+    store_rakuten_name: 'Rakuten Ichiba',
+    store_rakuten_sub: 'Up to 10x Rakuten points · Free shipping on eligible items',
+    store_amazon_name: 'Amazon',
+    store_amazon_sub: 'Next-day delivery with Prime · Price comparison available',
+    store_enoteca_name: 'Enoteca Online',
+    store_enoteca_sub: 'Sommelier-selected · Gift wrapping available',
+    store_wbs_name: 'Wine Bazaar',
+    store_wbs_sub: 'Wide selection · Buy from just 1 bottle',
+    ex_meta_sassicaia: 'Sassicaia · Tuscany, Italy · Red wine',
+    ex_meta_mouton: 'Ch. Mouton Rothschild · Bordeaux, France · Red',
+    ex_meta_krug: 'Krug Grande Cuvée · Champagne, France',
+    ex_meta_batard: 'Bâtard-Montrachet · Burgundy, France · White',
+    ex_meta_amarone: 'Amarone · Veneto, Italy · Red wine',
+    ex_meta_provence: 'Provence Rosé · France · Rosé wine',
+    cospa_top: 'Best value',
+    cospa_good: 'Great value',
+    cospa_std: 'Standard',
+    tech_details: 'Details',
+    checking_rating: 'Checking Sommelin rating…',
+    rating_cospa_head: 'Sommelin Rating (Value)',
+    bottle_image_alt: 'Bottle image',
+    ref_price: 'Reference price',
+    view_on_rakuten: '🛍️ View this item on Rakuten Ichiba',
+    affiliate_link_label: 'Affiliate link',
+    vintage_size_note: 'Please check the vintage and size on the linked page',
+    results_for_open: 'Results for "',
+    results_for_close: '"',
+    results_clear: '✕ Clear',
+    online_purchase_head: 'Buy online',
+    affiliate_badge: 'Affiliate',
+    partner_pill: 'Partner',
+    view_arrow: 'View →',
+    aff_notice_title: '💡 About affiliate links',
+    aff_notice_body: 'Links to Rakuten Ichiba and Amazon are affiliate links. Purchases made through these links generate a commission that helps fund Sommelin\'s operations, at no extra cost to you.',
+    nearby_stores_head: 'Buy or drink nearby',
+    checking_stock: 'Checking store stock…',
+    store_coming_open: 'Looking for stores that carry "',
+    store_coming_close: '"',
+    store_coming_desc: 'Wine shops and restaurants that register<br>their stock will appear here.',
+    store_register_btn: '🏪 Register your store',
+    register_note: '* Registration is free. Once listed, it will be visible to Sommelin users.',
+    lstore_count_open: '📍 Available at ',
+    lstore_count_close: ' stores',
+    registered_store: '🏪 Registered store',
+    inquiry_btn: 'Inquire',
+    type_bottle_glass: 'Bottle/Glass',
+    type_glass: 'Glass',
+    type_bottle: 'Bottle',
+    inquiry_modal_open: '📞 Contact ',
+    inquiry_modal_close: '',
+    inquiry_modal_body: 'We accept inquiries about reservations and\nstock availability via LINE or phone.\n\n🍷 In-app inquiries on Sommelin are\ncoming soon!',
+    close_btn: 'Close',
   },
 };
 let LANG = (() => { try { return localStorage.getItem('somm_lang') || (navigator.language && navigator.language.startsWith('ja') ? 'ja' : 'en'); } catch (e) { return 'ja'; } })();
@@ -411,7 +533,9 @@ function applyI18n() {
   document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
   const btn = document.getElementById('langBtn');
   if (btn) btn.textContent = LANG === 'ja' ? '🌐 EN' : '🌐 日本語';
+  if (typeof renderQuickChips === 'function') renderQuickChips();
   if (typeof renderInitial === 'function' && !currentQuery) renderInitial();
+  else if (typeof renderResults === 'function' && currentQuery) renderResults(currentQuery);
 }
 function setLang(l) {
   LANG = l;
@@ -426,26 +550,63 @@ applyI18n(); // 静的な見出し・ボタン文言を反映（renderInitialの
 <script src="assets/wine-display.js"></script>
 <script>
 // ================================================================
+// dispKuni: 国名の日本語→英語表示ヘルパー（EN表示時のみ変換。DB値は日本語のまま）
+// ================================================================
+const KUNI_EN = {
+  'フランス':'France', 'イタリア':'Italy', 'スペイン':'Spain', 'アメリカ':'USA', 'ドイツ':'Germany',
+  'オーストラリア':'Australia', 'チリ':'Chile', 'アルゼンチン':'Argentina', '日本':'Japan',
+  'ニュージーランド':'New Zealand', 'ポルトガル':'Portugal', 'オーストリア':'Austria',
+  '南アフリカ':'South Africa', 'ハンガリー':'Hungary', 'ギリシャ':'Greece', 'ジョージア':'Georgia',
+};
+function dispKuni(k) {
+  if (LANG !== 'en' || !k) return k;
+  return KUNI_EN[k] || k;
+}
+// 検索クエリに付与する「ワイン」語（EC検索精度向上用）。ENでは' wine'
+function wineWord() { return LANG === 'en' ? ' wine' : ' ワイン'; }
+
+// ================================================================
+// QUICK SUGGESTION CHIPS（検索クエリはja/en共通の原語のまま。表示ラベルのみローカライズ）
+// ================================================================
+const QUICK_CHIPS = [
+  { q: 'シャトー・マルゴー', key: 'chip_chateau_margaux' },
+  { q: 'バローロ', key: 'chip_barolo' },
+  { q: 'ドン・ペリニヨン', key: 'chip_dom_perignon' },
+  { q: 'Opus One', key: 'chip_opus_one' },
+  { q: 'プイィ・フュメ', key: 'chip_pouilly_fume' },
+  { q: 'コート・デュ・ローヌ', key: 'chip_cotes_du_rhone' },
+  { q: 'カベルネ・ソーヴィニヨン', key: 'chip_cabernet_sauvignon' },
+];
+function renderQuickChips() {
+  const row = document.getElementById('quickRow');
+  if (!row) return;
+  row.innerHTML = QUICK_CHIPS.map(c =>
+    `<button class="quick-chip" onclick="doSearch('${c.q.replace(/'/g, "\\'")}')">${escHtml(t(c.key))}</button>`
+  ).join('');
+}
+renderQuickChips();
+
+// ================================================================
 // ONLINE STORES
 // ================================================================
 const STORES = [
   {
-    id: 'rakuten', name: '楽天市場', sub: '楽天ポイント最大10倍 · 送料無料対象あり',
+    id: 'rakuten', nameKey: 'store_rakuten_name', subKey: 'store_rakuten_sub',
     emoji: '🛍️', color: '#BF0000', affiliate: true,
-    url: q => `https://hb.afl.rakuten.co.jp/ichiba/54fd9c11.81f2fbf7.54fd9c12.f3705f45/?pc=${encodeURIComponent('https://search.rakuten.co.jp/search/mall/' + encodeURIComponent(q + ' ワイン') + '/100433/')}`
+    url: q => `https://hb.afl.rakuten.co.jp/ichiba/54fd9c11.81f2fbf7.54fd9c12.f3705f45/?pc=${encodeURIComponent('https://search.rakuten.co.jp/search/mall/' + encodeURIComponent(q + wineWord()) + '/100433/')}`
   },
   {
-    id: 'amazon', name: 'Amazon', sub: 'Prime対象は翌日お届け · 最安値比較あり',
+    id: 'amazon', nameKey: 'store_amazon_name', subKey: 'store_amazon_sub',
     emoji: '📦', color: '#FF9900', affiliate: true,
-    url: q => `https://www.amazon.co.jp/s?k=${encodeURIComponent(q + ' ワイン')}&tag=sommelin0f-22`
+    url: q => `https://www.amazon.co.jp/s?k=${encodeURIComponent(q + wineWord())}&tag=sommelin0f-22`
   },
   {
-    id: 'enoteca', name: 'エノテカ オンライン', sub: 'ソムリエ厳選 · ギフト包装対応',
+    id: 'enoteca', nameKey: 'store_enoteca_name', subKey: 'store_enoteca_sub',
     emoji: '🍾', color: '#9B1B4B', affiliate: false,
     url: q => `https://www.enoteca.co.jp/search/?keyword=${encodeURIComponent(q)}`
   },
   {
-    id: 'wbs', name: 'ワインバザール', sub: '豊富な品揃え · 1本から購入OK',
+    id: 'wbs', nameKey: 'store_wbs_name', subKey: 'store_wbs_sub',
     emoji: '🏪', color: '#2E7D32', affiliate: false,
     url: q => `https://winebazaar.jp/search?q=${encodeURIComponent(q)}`
   },
@@ -453,14 +614,15 @@ const STORES = [
 
 // ================================================================
 // EXAMPLE WINES (デモ用 — DBとは無関係)
+// name（銘柄名）は固有名詞なのでja/en共通。metaのみローカライズ
 // ================================================================
 const EXAMPLES = [
-  { emoji:'🍷', name:'サッシカイア 2018',         meta:'Sassicaia · イタリア トスカーナ · 赤ワイン',         q:'Sassicaia 2018' },
-  { emoji:'🥂', name:'シャトー・ムートン・ロートシルト', meta:'Ch.Mouton Rothschild · フランス ボルドー · 赤', q:'Château Mouton Rothschild' },
-  { emoji:'✨', name:'クリュッグ グランド・キュヴェ',   meta:'Krug Grande Cuvée · フランス シャンパーニュ',      q:'Krug Grande Cuvée' },
-  { emoji:'🥂', name:'バタール・モンラッシェ',         meta:'Bâtard-Montrachet · フランス ブルゴーニュ · 白', q:'Bâtard-Montrachet' },
-  { emoji:'🍷', name:'アマローネ・デッラ・ヴァルポリチェッラ', meta:'Amarone · イタリア ヴェネト · 赤ワイン',   q:'Amarone della Valpolicella' },
-  { emoji:'🌸', name:'プロヴァンス・ロゼ',            meta:'Provence Rosé · フランス · ロゼワイン',            q:'Provence Rosé ワイン' },
+  { emoji:'🍷', name:'サッシカイア 2018',         metaKey:'ex_meta_sassicaia', q:'Sassicaia 2018' },
+  { emoji:'🥂', name:'シャトー・ムートン・ロートシルト', metaKey:'ex_meta_mouton', q:'Château Mouton Rothschild' },
+  { emoji:'✨', name:'クリュッグ グランド・キュヴェ',   metaKey:'ex_meta_krug',      q:'Krug Grande Cuvée' },
+  { emoji:'🥂', name:'バタール・モンラッシェ',         metaKey:'ex_meta_batard', q:'Bâtard-Montrachet' },
+  { emoji:'🍷', name:'アマローネ・デッラ・ヴァルポリチェッラ', metaKey:'ex_meta_amarone',   q:'Amarone della Valpolicella' },
+  { emoji:'🌸', name:'プロヴァンス・ロゼ',            metaKey:'ex_meta_provence',            q:'Provence Rosé ワイン' },
 ];
 
 // ================================================================
@@ -493,9 +655,9 @@ const SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
 const API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
 // 2026-07-11 V-1: コスパ判定は星型でなくアイコン+テキストで表す（星＝5点満点評価はstarRating専用）
 function _cospa(level){
-  if(level==='top')  return {st:'🏆',lbl:'圧倒的コスパ',bg:'#1e8449'};
-  if(level==='good') return {st:'👍', lbl:'高コスパ',  bg:'#27ae60'};
-  return                    {st:'',  lbl:'標準的',    bg:'#8a6d3b'};
+  if(level==='top')  return {st:'🏆',lbl:t('cospa_top'),bg:'#1e8449'};
+  if(level==='good') return {st:'👍', lbl:t('cospa_good'),  bg:'#27ae60'};
+  return                    {st:'',  lbl:t('cospa_std'),    bg:'#8a6d3b'};
 }
 function _p(p){ return (p==null||isNaN(p))?'—':('¥'+Math.round(p).toLocaleString('ja-JP')); }
 // AB節: DBさん投入の技術情報（土壌・醸造・度数・気候・ドサージュ）。あるものだけ折りたたみで出す。
@@ -508,13 +670,13 @@ function techDetailsHtml(details){
       ${d.note?`<div style="font-size:9.5px;color:#aaa;margin-top:2px;">${escHtml(d.note)}</div>`:''}
     </div>`).join('');
   return `<details style="margin-top:10px;background:#faf7f8;border-radius:10px;padding:8px 12px;">
-    <summary style="font-size:11.5px;font-weight:800;color:#8a6a1a;cursor:pointer;list-style:none;">詳細情報</summary>
+    <summary style="font-size:11.5px;font-weight:800;color:#8a6a1a;cursor:pointer;list-style:none;">${t('tech_details')}</summary>
     <div style="margin-top:2px;">${rows}</div>
   </details>`;
 }
 async function loadMaster(q){
   const el=document.getElementById('masterSec'); if(!el) return;
-  el.innerHTML='<div style="padding:10px 4px;color:#999;font-size:12px;">ソムリン評価を照合中…</div>';
+  el.innerHTML=`<div style="padding:10px 4px;color:#999;font-size:12px;">${t('checking_rating')}</div>`;
   let rows=[];
   try{
     const r=await fetch(API_BASE+'/api/wine-search?q='+encodeURIComponent(q)+'&lim=5');
@@ -523,25 +685,25 @@ async function loadMaster(q){
   if(!rows||!rows.length){ el.innerHTML=''; return; }   // 見つからなければ非表示（外部リンクは残す）
   const top=rows[0];
   const cp=_cospa(top.cospaLevel);
-  const region=[top.kuni,top.chiiki].filter(v=>v&&v!=='不明').join(' ');
+  const region=[dispKuni(top.kuni),top.chiiki].filter(v=>v&&v!=='不明').join(' ');
   const vint=(top.vintage&&top.vintage!=='NV')?(' '+top.vintage):'';
   let alts='';
   if(rows.length>1){
     alts=rows.slice(1,3).map(w=>{
       const c=_cospa(w.cospaLevel);
       return `<div onclick="doSearch('${(w.name||'').replace(/'/g,"\\'")}')" style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;background:#faf7f8;border-radius:10px;margin-top:6px;cursor:pointer;">
-        <div style="min-width:0;"><div style="font-size:12px;font-weight:700;color:#2C1810;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(w.name||'')}</div><div style="font-size:10px;color:#999;">${escHtml([w.kuni,w.chiiki].filter(v=>v&&v!=='不明').join(' '))}</div></div>
+        <div style="min-width:0;"><div style="font-size:12px;font-weight:700;color:#2C1810;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(w.name||'')}</div><div style="font-size:10px;color:#999;">${escHtml([dispKuni(w.kuni),w.chiiki].filter(v=>v&&v!=='不明').join(' '))}</div></div>
         <div style="text-align:right;white-space:nowrap;"><div style="font-size:11px;color:${c.bg};font-weight:800;">${c.st}</div><div style="margin-top:2px;">${window.WineDisplay?window.WineDisplay.starsHtml(w.starRating,{size:11}):''}</div></div>
       </div>`;
     }).join('');
   }
   el.innerHTML=`
-    <div class="sec-head">ソムリン評価（コスパ）<span class="sec-badge" style="background:#9B1B4B18;color:#9B1B4B;">master</span></div>
+    <div class="sec-head">${t('rating_cospa_head')}<span class="sec-badge" style="background:#9B1B4B18;color:#9B1B4B;">master</span></div>
     <div class="label-rule" style="margin:0 0 10px;"></div>
     <div style="background:#fff;border:1px solid #f0e6ea;border-radius:14px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.04);">
       <div style="display:flex;gap:10px;align-items:flex-start;">
         ${top.imageUrl
-          ? `<img src="${escHtml(top.imageUrl)}" alt="ボトル画像" style="flex-shrink:0;height:56px;width:auto;max-width:44px;object-fit:contain;border-radius:4px;">`
+          ? `<img src="${escHtml(top.imageUrl)}" alt="${t('bottle_image_alt')}" style="flex-shrink:0;height:56px;width:auto;max-width:44px;object-fit:contain;border-radius:4px;">`
           : window.BottleSvg?`<div style="flex-shrink:0;line-height:0;">${window.BottleSvg.render(top,56)}</div>`:''}
         <div style="min-width:0;">
           <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#2C1810;line-height:1.3;">${escHtml(top.name||'')}${escHtml(vint)}</div>
@@ -554,14 +716,14 @@ async function loadMaster(q){
       <div style="display:flex;gap:10px;align-items:stretch;">
         <div style="flex:1;text-align:center;background:#faf7f8;border-radius:10px;padding:10px;">
           <div style="font-size:18px;font-weight:900;color:#2C1810;line-height:1.2;">${_p(top.price)}</div>
-          <div style="font-size:10px;color:#999;margin-top:3px;">参考価格${top.sizeNote?`<br>（${escHtml(top.sizeNote)}）`:''}</div>
+          <div style="font-size:10px;color:#999;margin-top:3px;">${t('ref_price')}${top.sizeNote?`<br>（${escHtml(top.sizeNote)}）`:''}</div>
         </div>
         <div style="flex:1.2;text-align:center;background:${cp.bg};color:#fff;border-radius:10px;padding:10px;">
           <div style="font-size:15px;line-height:1.1;">${cp.st}</div>
           <div style="font-size:11px;font-weight:800;margin-top:3px;">${cp.lbl}</div>
         </div>
       </div>
-      ${top.rakutenLink?`<a href="${escHtml(top.rakutenLink.url)}" target="_blank" rel="noopener" onclick="if(window.sommLog)sommLog('rakuten_click',{name:'${(top.name||'').replace(/'/g,'').slice(0,40)}'})" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;background:#BF0000;color:#fff;border-radius:10px;padding:11px;font-size:13px;font-weight:800;text-decoration:none;">🛍️ 楽天市場でこの商品を見る${top.rakutenLink.price?`（${_p(top.rakutenLink.price)}〜）`:''}</a><div style="font-size:9.5px;color:#aaa;text-align:center;margin-top:3px;">提携リンク${top.rakutenLink.shopName?`・${escHtml(top.rakutenLink.shopName)}`:''}｜ヴィンテージ・容量はリンク先でご確認ください</div>`:''}
+      ${top.rakutenLink?`<a href="${escHtml(top.rakutenLink.url)}" target="_blank" rel="noopener" onclick="if(window.sommLog)sommLog('rakuten_click',{name:'${(top.name||'').replace(/'/g,'').slice(0,40)}'})" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;background:#BF0000;color:#fff;border-radius:10px;padding:11px;font-size:13px;font-weight:800;text-decoration:none;">${t('view_on_rakuten')}${top.rakutenLink.price?`（${_p(top.rakutenLink.price)}〜）`:''}</a><div style="font-size:9.5px;color:#aaa;text-align:center;margin-top:3px;">${t('affiliate_link_label')}${top.rakutenLink.shopName?`・${escHtml(top.rakutenLink.shopName)}`:''}｜${t('vintage_size_note')}</div>`:''}
       ${top.styleNote?`<div style="margin-top:10px;border:1.5px solid #C9973A;color:#8a6a1a;border-radius:10px;padding:7px 12px;font-size:11.5px;font-weight:700;text-align:center;">🏅 ${escHtml(top.styleNote)}</div>`:''}
       ${top.cospaNote?`<div style="margin-top:6px;color:#888;font-size:11px;text-align:center;">${escHtml(top.cospaNote)}</div>`:''}
       ${top.vintageNote?`<div style="margin-top:6px;color:#888;font-size:11px;text-align:center;line-height:1.5;">${escHtml(top.vintageNote)}</div>`:''}
@@ -608,7 +770,7 @@ function renderInitial() {
             <span class="ex-cat">${e.emoji}</span>
             <div class="ex-info">
               <div class="ex-name">${e.name}</div>
-              <div class="ex-meta">${e.meta}</div>
+              <div class="ex-meta">${t(e.metaKey)}</div>
             </div>
             <span class="ex-arrow">›</span>
           </div>
@@ -621,46 +783,46 @@ function renderInitial() {
 function renderResults(q) {
   document.getElementById('content').innerHTML = `
     <div class="results-header">
-      <div class="results-query">「<span>${escHtml(q)}</span>」の検索結果</div>
-      <button class="results-clear" onclick="clearResults()">✕ クリア</button>
+      <div class="results-query">${t('results_for_open')}<span>${escHtml(q)}</span>${t('results_for_close')}</div>
+      <button class="results-clear" onclick="clearResults()">${t('results_clear')}</button>
     </div>
 
     <div id="masterSec"></div>
 
     <!-- ONLINE PURCHASE -->
     <div class="sec-head">
-      ネットで購入
-      <span class="sec-badge">アフィリエイト</span>
+      ${t('online_purchase_head')}
+      <span class="sec-badge">${t('affiliate_badge')}</span>
     </div>
     ${STORES.map(s => `
       <div class="ol-card">
         <div class="ol-logo" style="background:${s.color}15">${s.emoji}</div>
         <div class="ol-info">
           <div class="ol-name">
-            ${s.name}
-            ${s.affiliate ? `<span class="aff-pill" style="background:${s.color}18;color:${s.color}">提携</span>` : ''}
+            ${t(s.nameKey)}
+            ${s.affiliate ? `<span class="aff-pill" style="background:${s.color}18;color:${s.color}">${t('partner_pill')}</span>` : ''}
           </div>
-          <div class="ol-sub">${s.sub}</div>
+          <div class="ol-sub">${t(s.subKey)}</div>
         </div>
         <button class="ol-btn" style="background:${s.color}"
           onclick="window.open('${s.url(q)}', '_blank')">
-          見る →
+          ${t('view_arrow')}
         </button>
       </div>
     `).join('')}
 
     <div class="aff-notice">
-      <strong>💡 アフィリエイトリンクについて</strong>
-      楽天市場・Amazonのリンクはアフィリエイトリンクです。このリンク経由でご購入いただくと、手数料がソムリンの運営費になります（お客様のお支払い金額に変化はありません）。
+      <strong>${t('aff_notice_title')}</strong>
+      ${t('aff_notice_body')}
     </div>
 
     <hr class="sec-divider">
 
     <!-- REAL STORES（実データ: 公開店舗の restaurant_wines を検索） -->
     <div class="sec-head">
-      近くのお店で買う・飲む
+      ${t('nearby_stores_head')}
     </div>
-    <div id="localStores"><div style="text-align:center;padding:24px;color:#999;font-size:13px;">お店の在庫を確認中…</div></div>
+    <div id="localStores"><div style="text-align:center;padding:24px;color:#999;font-size:13px;">${t('checking_stock')}</div></div>
   `;
   loadMaster(q);
   loadLocalStores(q);
@@ -683,12 +845,12 @@ function matchWine(wineName, query) {
 function emptyStoreHtml(q) {
   return `<div class="store-coming">
     <div class="store-coming-emoji">🗺️</div>
-    <h3>「${escHtml(q)}」を取り扱うお店を募集中</h3>
-    <p>ワインショップ・レストランが在庫情報を<br>登録することで、ここに表示されます。</p>
+    <h3>${t('store_coming_open')}${escHtml(q)}${t('store_coming_close')}</h3>
+    <p>${t('store_coming_desc')}</p>
     <button class="store-register-btn" onclick="location.href='restaurant_admin.html'">
-      🏪 店舗として登録する
+      ${t('store_register_btn')}
     </button>
-    <div class="register-note">※ 登録は無料です。掲載後はソムリンユーザーへ公開されます。</div>
+    <div class="register-note">${t('register_note')}</div>
   </div>`;
 }
 
@@ -696,8 +858,8 @@ async function loadLocalStores(q) {
   const box = document.getElementById('localStores');
   if (!box) return;
   try {
-    // クエリ整形（scouterからの「◯◯ ワイン」形式にも対応）
-    const clean = (q || '').replace(/ワイン/g, ' ').trim();
+    // クエリ整形（scouterからの「◯◯ ワイン」形式・EN「◯◯ wine」形式の両方に対応）
+    const clean = (q || '').replace(/ワイン|\bwine\b/gi, ' ').trim();
     const tokens = clean.split(/\s+/).filter(t => t.length >= 2);
     const key = tokens.sort((a, b) => b.length - a.length)[0] || clean;
     if (!key) { box.innerHTML = emptyStoreHtml(q); return; }
@@ -727,19 +889,19 @@ async function loadLocalStores(q) {
     const stores = Object.entries(byStore);
     if (!stores.length) { box.innerHTML = emptyStoreHtml(q); return; }
 
-    let html = `<div class="lstore-count">📍 ${stores.length}軒で取り扱いを確認</div>`;
+    let html = `<div class="lstore-count">${t('lstore_count_open')}${stores.length}${t('lstore_count_close')}</div>`;
     stores.forEach(([oid, store]) => {
       html += `<div class="lstore-card">
         <div class="lstore-head">
           <div>
             <div class="lstore-name">${escHtml(store.name)}</div>
-            <div class="lstore-meta">🏪 登録店舗${store.addr ? '　📍 ' + escHtml(store.addr) : ''}</div>
+            <div class="lstore-meta">${t('registered_store')}${store.addr ? '　📍 ' + escHtml(store.addr) : ''}</div>
           </div>
-          <button class="lstore-inquiry" onclick="inquireStore('${oid}','${escHtml(store.name)}')">問い合わせ</button>
+          <button class="lstore-inquiry" onclick="inquireStore('${oid}','${escHtml(store.name)}')">${t('inquiry_btn')}</button>
         </div>
         ${store.wines.map(w => {
           const price = w.price_bottle || w.price_glass || 0;
-          const t = (w.price_bottle && w.price_glass) ? 'ボトル/グラス' : (w.price_glass ? 'グラス' : 'ボトル');
+          const priceType = (w.price_bottle && w.price_glass) ? t('type_bottle_glass') : (w.price_glass ? t('type_glass') : t('type_bottle'));
           return `
         <div class="lstore-wine">
           <div class="lstore-wine-info">
@@ -748,7 +910,7 @@ async function loadLocalStores(q) {
           </div>
           <div class="lstore-wine-right">
             <div class="lstore-price">¥${price.toLocaleString()}</div>
-            <div class="lstore-type">${t}</div>
+            <div class="lstore-type">${priceType}</div>
           </div>
         </div>`;
         }).join('')}
@@ -759,7 +921,7 @@ async function loadLocalStores(q) {
 }
 
 function inquireStore(sid, storeName) {
-  showQuickModal(`📞 ${storeName} に問い合わせ`, `ご来店予約・在庫確認のお問い合わせを\nLINEまたは電話でお受けしています。\n\n🍷 ソムリンから問い合わせ機能は\n近日公開予定です！`);
+  showQuickModal(`${t('inquiry_modal_open')}${storeName}${t('inquiry_modal_close')}`, t('inquiry_modal_body'));
 }
 function showQuickModal(title, msg) {
   const m = document.createElement('div');
@@ -767,7 +929,7 @@ function showQuickModal(title, msg) {
   m.innerHTML = `<div style="background:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:24px 20px 36px;">
     <div style="font-size:15px;font-weight:800;color:#2C1810;margin-bottom:8px;">${title}</div>
     <div style="font-size:13px;color:#555;line-height:1.75;white-space:pre-line;margin-bottom:20px;">${msg}</div>
-    <button onclick="this.closest('[style]').remove()" style="width:100%;padding:14px;background:#9B1B4B;color:#fff;font-size:14px;font-weight:800;border:none;border-radius:14px;cursor:pointer;">閉じる</button>
+    <button onclick="this.closest('[style]').remove()" style="width:100%;padding:14px;background:#9B1B4B;color:#fff;font-size:14px;font-weight:800;border:none;border-radius:14px;cursor:pointer;">${t('close_btn')}</button>
   </div>`;
   document.body.appendChild(m);
   m.addEventListener('click', e => { if(e.target===m) m.remove(); });

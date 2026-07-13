@@ -1871,14 +1871,14 @@
   </div>
   <div class="tabs-row">
     <div class="tabs">
-      <button class="tab active" onclick="filterWines('all', this)">すべて</button>
-      <button class="tab" onclick="filterWines('sparkling', this)">🥂 泡</button>
-      <button class="tab" onclick="filterWines('red', this)">🍷 赤</button>
-      <button class="tab" onclick="filterWines('white', this)">🤍 白</button>
-      <button class="tab" onclick="filterWines('rose', this)">🌸 ロゼ</button>
-      <button class="tab" onclick="filterWines('orange', this)">🍊 オレンジ</button>
+      <button class="tab active" onclick="filterWines('all', this)" data-i18n="tab_all">すべて</button>
+      <button class="tab" onclick="filterWines('sparkling', this)" data-i18n="tab_sparkling">🥂 泡</button>
+      <button class="tab" onclick="filterWines('red', this)" data-i18n="tab_red">🍷 赤</button>
+      <button class="tab" onclick="filterWines('white', this)" data-i18n="tab_white">🤍 白</button>
+      <button class="tab" onclick="filterWines('rose', this)" data-i18n="tab_rose">🌸 ロゼ</button>
+      <button class="tab" onclick="filterWines('orange', this)" data-i18n="tab_orange">🍊 オレンジ</button>
     </div>
-    <button class="view-toggle" id="viewToggle" onclick="toggleView()" title="表示切替">
+    <button class="view-toggle" id="viewToggle" onclick="toggleView()" title="表示切替" data-i18n-title="view_toggle">
       <svg id="viewToggleIcon" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.8" stroke-linecap="round">
         <rect x="2" y="2" width="7" height="7" rx="1.5"/>
         <rect x="11" y="2" width="7" height="7" rx="1.5"/>
@@ -1907,7 +1907,7 @@
       <circle cx="20" cy="37" r="2" fill="#AA1122"/>
     </svg>
   </div>
-  <div class="sommelier-message">
+  <div class="sommelier-message" data-i18n-html="somm_banner">
     <strong>ソムリン君</strong>より<br>
     今夜は何かお料理に合わせますか？<br>お気軽に聞いてください 🍷
   </div>
@@ -1916,7 +1916,7 @@
 <!-- WINE LIST -->
 <div class="wine-list" id="wineList">
 
-  <div class="section-title">スパークリング</div>
+  <div class="section-title" data-i18n="sec_sparkling">スパークリング</div>
 
   <div class="wine-card" data-category="sparkling" onclick="openWine(0)">
     <div class="wine-card-header">
@@ -1926,20 +1926,20 @@
         <div class="price-bottle">¥14,000 / btl</div>
       </div>
     </div>
-    <div class="wine-meta">🇫🇷 シャンパーニュ — シャルドネ 100%</div>
-    <div class="wine-note">繊細な泡と白桃、シトラスのアロマ。ミネラルの余韻が長く続く上品なシャンパーニュ。</div>
+    <div class="wine-meta" data-i18n="w0_meta">🇫🇷 シャンパーニュ — シャルドネ 100%</div>
+    <div class="wine-note" data-i18n="w0_note">繊細な泡と白桃、シトラスのアロマ。ミネラルの余韻が長く続く上品なシャンパーニュ。</div>
     <div class="wine-footer">
       <div class="mariage-tags">
-        <span class="mariage-tag">牡蠣</span>
-        <span class="mariage-tag">魚介</span>
-        <span class="mariage-tag">カルパッチョ</span>
+        <span class="mariage-tag" data-i18n="tag_oyster">牡蠣</span>
+        <span class="mariage-tag" data-i18n="tag_seafood">魚介</span>
+        <span class="mariage-tag" data-i18n="tag_carpaccio">カルパッチョ</span>
       </div>
-      <div class="mariage-star">💫 48件</div>
+      <div class="mariage-star" data-i18n-tpl="mariage_n" data-i18n-n="48">💫 48件</div>
     </div>
-    <div class="wine-badge"><span class="badge badge-popular">人気 No.1</span></div>
+    <div class="wine-badge"><span class="badge badge-popular" data-i18n="badge_popular">人気 No.1</span></div>
   </div>
 
-  <div class="section-title">白ワイン</div>
+  <div class="section-title" data-i18n="sec_white">白ワイン</div>
 
   <div class="wine-card" data-category="white" onclick="openWine(1)">
     <div class="wine-card-header">
@@ -1949,17 +1949,17 @@
         <div class="price-bottle">¥9,800 / btl</div>
       </div>
     </div>
-    <div class="wine-meta">🇫🇷 ブルゴーニュ — シャルドネ</div>
-    <div class="wine-note">鋭いミネラルと洗練された酸。石灰岩の土壌が生む独特のテロワールを感じる一本。</div>
+    <div class="wine-meta" data-i18n="w1_meta">🇫🇷 ブルゴーニュ — シャルドネ</div>
+    <div class="wine-note" data-i18n="w1_note">鋭いミネラルと洗練された酸。石灰岩の土壌が生む独特のテロワールを感じる一本。</div>
     <div class="wine-footer">
       <div class="mariage-tags">
-        <span class="mariage-tag">白身魚</span>
-        <span class="mariage-tag">帆立</span>
-        <span class="mariage-tag">山羊チーズ</span>
+        <span class="mariage-tag" data-i18n="tag_whitefish">白身魚</span>
+        <span class="mariage-tag" data-i18n="tag_scallop">帆立</span>
+        <span class="mariage-tag" data-i18n="tag_goatcheese">山羊チーズ</span>
       </div>
-      <div class="mariage-star">💫 31件</div>
+      <div class="mariage-star" data-i18n-tpl="mariage_n" data-i18n-n="31">💫 31件</div>
     </div>
-    <div class="wine-badge"><span class="badge badge-staff">スタッフ推薦</span></div>
+    <div class="wine-badge"><span class="badge badge-staff" data-i18n="badge_staff">スタッフ推薦</span></div>
   </div>
 
   <div class="wine-card" data-category="white" onclick="openWine(2)">
@@ -1970,18 +1970,18 @@
         <div class="price-bottle">¥8,200 / btl</div>
       </div>
     </div>
-    <div class="wine-meta">🇫🇷 ロワール — ソーヴィニョン・ブラン</div>
-    <div class="wine-note">フレッシュなグレープフルーツと草原の香り。キリッとした酸味が食欲を刺激する。</div>
+    <div class="wine-meta" data-i18n="w2_meta">🇫🇷 ロワール — ソーヴィニョン・ブラン</div>
+    <div class="wine-note" data-i18n="w2_note">フレッシュなグレープフルーツと草原の香り。キリッとした酸味が食欲を刺激する。</div>
     <div class="wine-footer">
       <div class="mariage-tags">
-        <span class="mariage-tag">ヤギチーズ</span>
-        <span class="mariage-tag">サラダ</span>
+        <span class="mariage-tag" data-i18n="tag_goatcheese2">ヤギチーズ</span>
+        <span class="mariage-tag" data-i18n="tag_salad">サラダ</span>
       </div>
-      <div class="mariage-star">💫 19件</div>
+      <div class="mariage-star" data-i18n-tpl="mariage_n" data-i18n-n="19">💫 19件</div>
     </div>
   </div>
 
-  <div class="section-title">赤ワイン</div>
+  <div class="section-title" data-i18n="sec_red">赤ワイン</div>
 
   <div class="wine-card" data-category="red" onclick="openWine(3)">
     <div class="wine-card-header">
@@ -1991,15 +1991,15 @@
         <div class="price-bottle">¥11,000 / btl</div>
       </div>
     </div>
-    <div class="wine-meta">🇮🇹 ピエモンテ — ネッビオーロ</div>
-    <div class="wine-note">「ワインの王様」バローロ。バラとタールの複雑な香りに、しっかりとしたタンニンと長い余韻。</div>
+    <div class="wine-meta" data-i18n="w3_meta">🇮🇹 ピエモンテ — ネッビオーロ</div>
+    <div class="wine-note" data-i18n="w3_note">「ワインの王様」バローロ。バラとタールの複雑な香りに、しっかりとしたタンニンと長い余韻。</div>
     <div class="wine-footer">
       <div class="mariage-tags">
-        <span class="mariage-tag">ビステッカ</span>
-        <span class="mariage-tag">トリュフ</span>
-        <span class="mariage-tag">熟成チーズ</span>
+        <span class="mariage-tag" data-i18n="tag_bistecca">ビステッカ</span>
+        <span class="mariage-tag" data-i18n="tag_truffle">トリュフ</span>
+        <span class="mariage-tag" data-i18n="tag_agedcheese">熟成チーズ</span>
       </div>
-      <div class="mariage-star">💫 55件</div>
+      <div class="mariage-star" data-i18n-tpl="mariage_n" data-i18n-n="55">💫 55件</div>
     </div>
     <div class="wine-badge"><span class="badge badge-new">NEW</span></div>
   </div>
@@ -2012,20 +2012,20 @@
         <div class="price-bottle">¥16,000 / btl</div>
       </div>
     </div>
-    <div class="wine-meta">🇫🇷 ブルゴーニュ — ピノ・ノワール</div>
-    <div class="wine-note">ヴォルネイらしいエレガントさ。赤いベリーと土のニュアンス、シルクのようなテクスチャー。</div>
+    <div class="wine-meta" data-i18n="w4_meta">🇫🇷 ブルゴーニュ — ピノ・ノワール</div>
+    <div class="wine-note" data-i18n="w4_note">ヴォルネイらしいエレガントさ。赤いベリーと土のニュアンス、シルクのようなテクスチャー。</div>
     <div class="wine-footer">
       <div class="mariage-tags">
-        <span class="mariage-tag">鴨</span>
-        <span class="mariage-tag">仔羊</span>
-        <span class="mariage-tag">松茸</span>
+        <span class="mariage-tag" data-i18n="tag_duck">鴨</span>
+        <span class="mariage-tag" data-i18n="tag_lamb">仔羊</span>
+        <span class="mariage-tag" data-i18n="tag_matsutake">松茸</span>
       </div>
-      <div class="mariage-star">💫 38件</div>
+      <div class="mariage-star" data-i18n-tpl="mariage_n" data-i18n-n="38">💫 38件</div>
     </div>
-    <div class="wine-badge"><span class="badge badge-staff">スタッフ推薦</span></div>
+    <div class="wine-badge"><span class="badge badge-staff" data-i18n="badge_staff">スタッフ推薦</span></div>
   </div>
 
-  <div class="section-title">自然派</div>
+  <div class="section-title" data-i18n="sec_natural">自然派</div>
 
   <div class="wine-card" data-category="natural" onclick="openWine(5)">
     <div class="wine-card-header">
@@ -2035,14 +2035,14 @@
         <div class="price-bottle">¥6,000 / btl</div>
       </div>
     </div>
-    <div class="wine-meta">🇫🇷 ロワール — 自然派ロゼ泡</div>
-    <div class="wine-note">いちごのような果実感と自然な微炭酸。ナチュラルワインらしい生き生きとした味わい。</div>
+    <div class="wine-meta" data-i18n="w5_meta">🇫🇷 ロワール — 自然派ロゼ泡</div>
+    <div class="wine-note" data-i18n="w5_note">いちごのような果実感と自然な微炭酸。ナチュラルワインらしい生き生きとした味わい。</div>
     <div class="wine-footer">
       <div class="mariage-tags">
-        <span class="mariage-tag">前菜全般</span>
-        <span class="mariage-tag">冷製パスタ</span>
+        <span class="mariage-tag" data-i18n="tag_appetizers">前菜全般</span>
+        <span class="mariage-tag" data-i18n="tag_coldpasta">冷製パスタ</span>
       </div>
-      <div class="mariage-star">💫 22件</div>
+      <div class="mariage-star" data-i18n-tpl="mariage_n" data-i18n-n="22">💫 22件</div>
     </div>
   </div>
 
@@ -2054,20 +2054,20 @@
         <div class="price-bottle">¥7,500 / btl</div>
       </div>
     </div>
-    <div class="wine-meta">🇫🇷 ボージョレ — ガメイ</div>
-    <div class="wine-note">フルーリーの優雅さ。スミレと赤い果実のアロマ、滑らかな口当たり。</div>
+    <div class="wine-meta" data-i18n="w6_meta">🇫🇷 ボージョレ — ガメイ</div>
+    <div class="wine-note" data-i18n="w6_note">フルーリーの優雅さ。スミレと赤い果実のアロマ、滑らかな口当たり。</div>
     <div class="wine-footer">
       <div class="mariage-tags">
-        <span class="mariage-tag">鶏肉</span>
-        <span class="mariage-tag">魚</span>
+        <span class="mariage-tag" data-i18n="tag_chicken">鶏肉</span>
+        <span class="mariage-tag" data-i18n="tag_fish">魚</span>
       </div>
     </div>
     <div class="sold-out-overlay">
-      <span class="sold-out-text">本日は売り切れ</span>
+      <span class="sold-out-text" data-i18n="sold_out">本日は売り切れ</span>
     </div>
   </div>
 
-  <div class="section-title">ロゼ</div>
+  <div class="section-title" data-i18n="sec_rose">ロゼ</div>
 
   <div class="wine-card" data-category="rose" onclick="openWine(7)">
     <div class="wine-card-header">
@@ -2077,20 +2077,20 @@
         <div class="price-bottle">¥7,800 / btl</div>
       </div>
     </div>
-    <div class="wine-meta">🇫🇷 プロヴァンス — ムールヴェードル他</div>
-    <div class="wine-note">プロヴァンスを代表するロゼの名手。深みのあるサーモンピンク、イチゴとプロヴァンスハーブの香り。</div>
+    <div class="wine-meta" data-i18n="w7_meta">🇫🇷 プロヴァンス — ムールヴェードル他</div>
+    <div class="wine-note" data-i18n="w7_note">プロヴァンスを代表するロゼの名手。深みのあるサーモンピンク、イチゴとプロヴァンスハーブの香り。</div>
     <div class="wine-footer">
       <div class="mariage-tags">
-        <span class="mariage-tag">グリル料理</span>
-        <span class="mariage-tag">地中海料理</span>
-        <span class="mariage-tag">ブーイヤベース</span>
+        <span class="mariage-tag" data-i18n="tag_grill">グリル料理</span>
+        <span class="mariage-tag" data-i18n="tag_mediterranean">地中海料理</span>
+        <span class="mariage-tag" data-i18n="tag_bouillabaisse">ブーイヤベース</span>
       </div>
-      <div class="mariage-star">💫 27件</div>
+      <div class="mariage-star" data-i18n-tpl="mariage_n" data-i18n-n="27">💫 27件</div>
     </div>
-    <div class="wine-badge"><span class="badge badge-staff">スタッフ推薦</span></div>
+    <div class="wine-badge"><span class="badge badge-staff" data-i18n="badge_staff">スタッフ推薦</span></div>
   </div>
 
-  <div class="section-title">オレンジワイン</div>
+  <div class="section-title" data-i18n="sec_orange">オレンジワイン</div>
 
   <div class="wine-card" data-category="orange" onclick="openWine(8)">
     <div class="wine-card-header">
@@ -2100,15 +2100,15 @@
         <div class="price-bottle">¥9,500 / btl</div>
       </div>
     </div>
-    <div class="wine-meta">🇮🇹 フリウリ — ピノ・グリージョ</div>
-    <div class="wine-note">スロヴェニア国境のカルスト台地産。アンフォラで醸造した琥珀色の自然派。アプリコット・スパイス・ほんのりタンニン。</div>
+    <div class="wine-meta" data-i18n="w8_meta">🇮🇹 フリウリ — ピノ・グリージョ</div>
+    <div class="wine-note" data-i18n="w8_note">スロヴェニア国境のカルスト台地産。アンフォラで醸造した琥珀色の自然派。アプリコット・スパイス・ほんのりタンニン。</div>
     <div class="wine-footer">
       <div class="mariage-tags">
-        <span class="mariage-tag">和食全般</span>
-        <span class="mariage-tag">発酵食品</span>
-        <span class="mariage-tag">スパイス料理</span>
+        <span class="mariage-tag" data-i18n="tag_washoku">和食全般</span>
+        <span class="mariage-tag" data-i18n="tag_fermented">発酵食品</span>
+        <span class="mariage-tag" data-i18n="tag_spice">スパイス料理</span>
       </div>
-      <div class="mariage-star">💫 14件</div>
+      <div class="mariage-star" data-i18n-tpl="mariage_n" data-i18n-n="14">💫 14件</div>
     </div>
     <div class="wine-badge"><span class="badge badge-new">NEW</span></div>
   </div>
@@ -2121,15 +2121,15 @@
         <div class="price-bottle">¥8,200 / btl</div>
       </div>
     </div>
-    <div class="wine-meta">🇬🇪 ジョージア — ムツヴァネ</div>
-    <div class="wine-note">クヴェヴリ（素焼き壺）で醸造するジョージアの伝統的なアンバーワイン。蜂蜜・ドライフルーツ・タンニン感。</div>
+    <div class="wine-meta" data-i18n="w9_meta">🇬🇪 ジョージア — ムツヴァネ</div>
+    <div class="wine-note" data-i18n="w9_note">クヴェヴリ（素焼き壺）で醸造するジョージアの伝統的なアンバーワイン。蜂蜜・ドライフルーツ・タンニン感。</div>
     <div class="wine-footer">
       <div class="mariage-tags">
-        <span class="mariage-tag">チャーキュトリー</span>
-        <span class="mariage-tag">味噌料理</span>
-        <span class="mariage-tag">羊のチーズ</span>
+        <span class="mariage-tag" data-i18n="tag_charcuterie">チャーキュトリー</span>
+        <span class="mariage-tag" data-i18n="tag_miso">味噌料理</span>
+        <span class="mariage-tag" data-i18n="tag_sheepcheese">羊のチーズ</span>
       </div>
-      <div class="mariage-star">💫 9件</div>
+      <div class="mariage-star" data-i18n-tpl="mariage_n" data-i18n-n="9">💫 9件</div>
     </div>
   </div>
 
@@ -2143,7 +2143,7 @@
 
   <!-- Calendar Header -->
   <div class="cal-header">
-    <div class="cal-mode-badge">🏪 スタッフモード</div>
+    <div class="cal-mode-badge" data-i18n="cal_staff_mode">🏪 スタッフモード</div>
     <div class="cal-month-nav">
       <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
       <span class="cal-month-label" id="calMonthLabel"></span>
@@ -2154,7 +2154,7 @@
   <!-- Calendar Grid -->
   <div class="cal-grid-wrap">
     <div class="cal-dow-row">
-      <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
+      <span data-i18n="dow0">日</span><span data-i18n="dow1">月</span><span data-i18n="dow2">火</span><span data-i18n="dow3">水</span><span data-i18n="dow4">木</span><span data-i18n="dow5">金</span><span data-i18n="dow6">土</span>
     </div>
     <div class="cal-grid" id="calGrid"></div>
   </div>
@@ -2162,12 +2162,12 @@
   <!-- LINE sync notice -->
   <div class="line-sync-bar">
     <span>💬</span>
-    <span>試飲会の案内はLINEでも届きます</span>
-    <span class="line-sync-new">新着2件</span>
+    <span data-i18n="line_sync">試飲会の案内はLINEでも届きます</span>
+    <span class="line-sync-new" data-i18n-tpl="line_new" data-i18n-n="2">新着2件</span>
   </div>
 
   <!-- Upcoming Events -->
-  <div class="cal-section-title">近日中の試飲会</div>
+  <div class="cal-section-title" data-i18n="cal_upcoming">近日中の試飲会</div>
   <div id="eventList"></div>
 
 </div>
@@ -2175,20 +2175,20 @@
 <!-- ===== ホーム(発見フィード) SCREEN ===== -->
 <div id="homeScreen" class="screen">
   <div class="screen-header">
-    <h2>ホーム</h2>
-    <p>気になる人・似た好みの人のワインをお届け</p>
+    <h2 data-i18n="home_title">ホーム</h2>
+    <p data-i18n="home_sub">気になる人・似た好みの人のワインをお届け</p>
   </div>
   <!-- マイセラー（2026-07-08追加: マイページからホームへ移動） -->
   <div style="margin:0 20px 16px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-      <div style="font-size:14px;font-weight:800;color:var(--text);font-family:var(--font-display);">マイセラー</div>
-      <a href="cellar.html" style="font-size:12px;color:var(--burgundy);font-weight:700;text-decoration:none;">すべて見る ›</a>
+      <div style="font-size:14px;font-weight:800;color:var(--text);font-family:var(--font-display);" data-i18n="my_cellar">マイセラー</div>
+      <a href="cellar.html" style="font-size:12px;color:var(--burgundy);font-weight:700;text-decoration:none;" data-i18n="see_all">すべて見る ›</a>
     </div>
     <div id="homeCellarPreview" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:2px;">
-      <div style="color:var(--text-sub);font-size:12.5px;">読み込み中…</div>
+      <div style="color:var(--text-sub);font-size:12.5px;" data-i18n="loading">読み込み中…</div>
     </div>
   </div>
-  <div id="homeFeedColdMsg" style="display:none;margin:0 20px 12px;padding:12px 14px;background:var(--burgundy-pale);border-radius:10px;font-size:12.5px;color:var(--text-sub);line-height:1.6;">
+  <div id="homeFeedColdMsg" style="display:none;margin:0 20px 12px;padding:12px 14px;background:var(--burgundy-pale);border-radius:10px;font-size:12.5px;color:var(--text-sub);line-height:1.6;" data-i18n-html="home_cold">
     まだフォロー中の人や紹介つながりがいません。まずは<a href="#" onclick="switchTab('mypage');return false;" style="color:var(--burgundy);font-weight:700;">お友達を招待</a>したり、気になる人をフォローすると、その人のおすすめが優先的に届くようになります。
   </div>
   <div id="homeFeedList" style="padding:0 20px 24px;"></div>
@@ -2197,20 +2197,20 @@
 <!-- ===== 履歴 SCREEN ===== -->
 <div id="historyScreen" class="screen">
   <div class="screen-header">
-    <h2>履歴</h2>
-    <p>訪問したお店とワインの記録</p>
+    <h2 data-i18n="hist_title">履歴</h2>
+    <p data-i18n="hist_sub">訪問したお店とワインの記録</p>
   </div>
 
   <!-- サブタブ -->
   <div class="hist-tabs">
-    <div class="hist-tab active" id="htab-shop" onclick="switchHistTab('shop')">🏪 お店</div>
-    <div class="hist-tab" id="htab-wine" onclick="switchHistTab('wine')">🍷 ワイン</div>
+    <div class="hist-tab active" id="htab-shop" onclick="switchHistTab('shop')" data-i18n="hist_tab_shop">🏪 お店</div>
+    <div class="hist-tab" id="htab-wine" onclick="switchHistTab('wine')" data-i18n="hist_tab_wine">🍷 ワイン</div>
   </div>
 
   <!-- お店タブコンテンツ -->
   <div id="histShopPane">
     <div class="hist-search">
-      <input type="text" placeholder="お店を検索..." oninput="filterHistoryRests(this.value)">
+      <input type="text" placeholder="お店を検索..." data-i18n-ph="ph_search_shop" oninput="filterHistoryRests(this.value)">
     </div>
 
     <!-- 実データ: 端末内の来店記録（QRでリストを開くと貯まる）。renderRealVisits が描画 -->
@@ -2233,15 +2233,15 @@
     <div class="wine-log-modal-name" id="wlmName">—</div>
     <div class="wine-log-modal-vintage" id="wlmVintage">—</div>
     <div class="wine-log-modal-row">
-      <span class="wine-log-modal-label">産地</span>
+      <span class="wine-log-modal-label" data-i18n="label_region">産地</span>
       <span class="wine-log-modal-value" id="wlmRegion">—</span>
     </div>
     <div class="wine-log-modal-row">
-      <span class="wine-log-modal-label">グラス価格</span>
+      <span class="wine-log-modal-label" data-i18n="label_glass_price">グラス価格</span>
       <span class="wine-log-modal-value" id="wlmPrice">—</span>
     </div>
     <div class="wine-log-modal-row" style="border-bottom:none;">
-      <span class="wine-log-modal-label">評価</span>
+      <span class="wine-log-modal-label" data-i18n="label_rating">評価</span>
       <span class="wine-log-modal-stars" id="wlmStars">—</span>
     </div>
     <div class="wine-log-modal-rest-card" id="wlmRestCard" onclick="goToRestFromModal()">
@@ -2252,7 +2252,7 @@
       </div>
       <span class="wine-log-modal-rest-arrow">›</span>
     </div>
-    <button class="wine-log-modal-close" onclick="closeWineLogModal()">閉じる</button>
+    <button class="wine-log-modal-close" onclick="closeWineLogModal()" data-i18n="btn_close">閉じる</button>
   </div>
 </div>
 
@@ -2261,27 +2261,27 @@
   <div class="hist-detail-header">
     <button class="hist-back-btn" onclick="closeHistoryDetail()">‹</button>
     <span class="hist-detail-title" id="hdRestName">-</span>
-    <button class="hist-view-list-btn" id="hdListBtn" onclick="openRestWineList()">リストを見る</button>
+    <button class="hist-view-list-btn" id="hdListBtn" onclick="openRestWineList()" data-i18n="btn_view_list">リストを見る</button>
   </div>
 
   <!-- 更新バナー（新しいリストがある場合のみ表示） -->
   <div class="hist-update-banner" id="hdUpdateBanner" style="display:none;">
-    <p>🆕 <strong>ワインリストが更新されました</strong><br>最新のリストを表示しますか？</p>
+    <p data-i18n-html="hd_update_msg">🆕 <strong>ワインリストが更新されました</strong><br>最新のリストを表示しますか？</p>
     <div class="hist-update-actions">
-      <button class="hist-update-yes" onclick="confirmListUpdate()">更新して見る</button>
-      <button class="hist-update-no" onclick="dismissListUpdate()">このまま</button>
+      <button class="hist-update-yes" onclick="confirmListUpdate()" data-i18n="btn_update_view">更新して見る</button>
+      <button class="hist-update-no" onclick="dismissListUpdate()" data-i18n="btn_keep">このまま</button>
     </div>
   </div>
 
   <!-- 非公開バナー -->
   <div class="hist-locked-notice" id="hdLockedNotice" style="display:none;">
     <div class="lock-icon">🔒</div>
-    <h3>このお店のリストは非公開です</h3>
-    <p>お店でQRコードをスキャンすると<br>最新のワインリストが確認できます</p>
+    <h3 data-i18n="hd_locked_title">このお店のリストは非公開です</h3>
+    <p data-i18n-html="hd_locked_desc">お店でQRコードをスキャンすると<br>最新のワインリストが確認できます</p>
   </div>
 
   <!-- 飲んだワインリスト -->
-  <div style="padding:12px 0 4px 16px;font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:1.2px;" id="hdWineHeader">飲んだワイン</div>
+  <div style="padding:12px 0 4px 16px;font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:1.2px;" id="hdWineHeader" data-i18n="hd_wines_header">飲んだワイン</div>
   <div id="hdWineList"></div>
 
   <div style="padding-bottom:30px;"></div>
@@ -2291,15 +2291,15 @@
 <div id="cameraScreen" class="screen">
   <div class="camera-hero">
     <div class="camera-hero-icon">📷</div>
-    <div class="camera-hero-text">写真を撮るだけ。<br>ソムリン君が瞬時に解析します。</div>
+    <div class="camera-hero-text" data-i18n-html="camera_hero">写真を撮るだけ。<br>ソムリン君が瞬時に解析します。</div>
   </div>
 
   <div class="camera-modes">
     <div class="camera-mode-card" onclick="startScan('winelist')">
       <div class="camera-mode-icon wine-list">📋</div>
       <div style="flex:1">
-        <div class="camera-mode-title">ワインリストを読み込む</div>
-        <div class="camera-mode-desc">お店のワインリストを撮影すると、あなたの好みに合ったワインをおすすめします</div>
+        <div class="camera-mode-title" data-i18n="cam_list_title">ワインリストを読み込む</div>
+        <div class="camera-mode-desc" data-i18n="cam_list_desc">お店のワインリストを撮影すると、あなたの好みに合ったワインをおすすめします</div>
       </div>
       <span class="camera-mode-arrow">›</span>
     </div>
@@ -2307,8 +2307,8 @@
     <div class="camera-mode-card" onclick="startScan('mariage')">
       <div class="camera-mode-icon mariage">🍽️</div>
       <div style="flex:1">
-        <div class="camera-mode-title">料理とのマリアージュ</div>
-        <div class="camera-mode-desc">メニューとワインリストを撮影すると、ベストなペアリングを提案します</div>
+        <div class="camera-mode-title" data-i18n="cam_mariage_title">料理とのマリアージュ</div>
+        <div class="camera-mode-desc" data-i18n="cam_mariage_desc">メニューとワインリストを撮影すると、ベストなペアリングを提案します</div>
       </div>
       <span class="camera-mode-arrow">›</span>
     </div>
@@ -2316,8 +2316,8 @@
     <a class="camera-mode-card" href="scouter.html" style="text-decoration:none;color:inherit;border:1.5px solid var(--burgundy);background:linear-gradient(135deg,#ffffff,#fbeef3);">
       <div class="camera-mode-icon" style="background:linear-gradient(135deg,#9B1B4B,#5C0E2A);color:#fff;">🍷</div>
       <div style="flex:1">
-        <div class="camera-mode-title">スカウター — かざしてコスパ<span style="font-size:9px;font-weight:800;color:#fff;background:var(--burgundy);padding:2px 7px;border-radius:10px;margin-left:6px;vertical-align:middle;">本番</span></div>
-        <div class="camera-mode-desc">ラベルやワインリストにかざすと、その場でSP評価とコスパ（おすすめ度）を表示します</div>
+        <div class="camera-mode-title"><span data-i18n="cam_scouter_title">スカウター — かざしてコスパ</span><span style="font-size:9px;font-weight:800;color:#fff;background:var(--burgundy);padding:2px 7px;border-radius:10px;margin-left:6px;vertical-align:middle;" data-i18n="cam_badge_live">本番</span></div>
+        <div class="camera-mode-desc" data-i18n="cam_scouter_desc">ラベルやワインリストにかざすと、その場でSP評価とコスパ（おすすめ度）を表示します</div>
       </div>
       <span class="camera-mode-arrow">›</span>
     </a>
@@ -2325,8 +2325,8 @@
     <div class="camera-mode-card" onclick="startScan('label')">
       <div class="camera-mode-icon label">🍾</div>
       <div style="flex:1">
-        <div class="camera-mode-title">ラベルを読み込む</div>
-        <div class="camera-mode-desc">ボトルのラベルを撮影してワイン情報を自動取得、Journal に記録します</div>
+        <div class="camera-mode-title" data-i18n="cam_label_title">ラベルを読み込む</div>
+        <div class="camera-mode-desc" data-i18n="cam_label_desc">ボトルのラベルを撮影してワイン情報を自動取得、Journal に記録します</div>
       </div>
       <span class="camera-mode-arrow">›</span>
     </div>
@@ -2336,7 +2336,7 @@
 
 <!-- SCAN OVERLAY -->
 <div class="scan-overlay" id="scanOverlay">
-  <div style="font-size:14px;opacity:0.7;margin-bottom:20px;" id="scanModeLabel">ワインリストを読み込み中</div>
+  <div style="font-size:14px;opacity:0.7;margin-bottom:20px;" id="scanModeLabel" data-i18n="scan_mode_list">ワインリストを読み込み中</div>
   <div class="scan-frame">
     <div class="scan-line"></div>
     <div class="scan-corner tl"></div>
@@ -2344,113 +2344,113 @@
     <div class="scan-corner bl"></div>
     <div class="scan-corner br"></div>
   </div>
-  <div class="scan-label" id="scanStatusLabel">📷 カメラを向けてください</div>
-  <button class="scan-cancel" onclick="closeScan()">キャンセル</button>
+  <div class="scan-label" id="scanStatusLabel" data-i18n="scan_point">📷 カメラを向けてください</div>
+  <button class="scan-cancel" onclick="closeScan()" data-i18n="btn_cancel">キャンセル</button>
 </div>
 
 <!-- ===== 探す SCREEN（2026-07-08: 旧ランキング画面を拡張。マイページの検索系機能をここに集約） ===== -->
 <div id="rankingScreen" class="screen">
   <div class="screen-header">
-    <h2>探す</h2>
-    <p>ワイン・お店・人をみつける</p>
+    <h2 data-i18n="search_title">探す</h2>
+    <p data-i18n="search_sub">ワイン・お店・人をみつける</p>
   </div>
   <div style="display:flex;gap:8px;padding:0 16px 12px;overflow-x:auto;">
-    <a href="wine_search.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;">ワイン検索</a>
-    <a href="reviewer_hub.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;">レビュアーを探す</a>
-    <a href="wine_social.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;">好みが近い人</a>
-    <a href="filter_market.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;">みんなのフィルター</a>
+    <a href="wine_search.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;" data-i18n="chip_wine_search">ワイン検索</a>
+    <a href="reviewer_hub.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;" data-i18n="chip_reviewers">レビュアーを探す</a>
+    <a href="wine_social.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;" data-i18n="chip_similar">好みが近い人</a>
+    <a href="filter_market.html" style="flex:none;text-decoration:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:var(--burgundy);background:var(--burgundy-pale,#f0dde3);border-radius:20px;padding:8px 14px;" data-i18n="chip_filters">みんなのフィルター</a>
   </div>
   <div class="ranking-tabs">
-    <div class="ranking-tab active" id="rtab-pop" onclick="switchRankingTab('pop')">おすすめ</div>
-    <div class="ranking-tab" id="rtab-store" onclick="switchRankingTab('store')">お店</div>
+    <div class="ranking-tab active" id="rtab-pop" onclick="switchRankingTab('pop')" data-i18n="rtab_pop">おすすめ</div>
+    <div class="ranking-tab" id="rtab-store" onclick="switchRankingTab('store')" data-i18n="rtab_store">お店</div>
   </div>
 
   <!-- ソート・絞り込み（2026-07-08追加、2026-07-12刷新: ワード検索＋価格帯を常時表示、種類は複数選択に） -->
   <div id="rankSortBar" style="padding:10px 16px 10px;">
     <div style="position:relative;margin-bottom:10px;">
       <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-sub);pointer-events:none;">🔍</span>
-      <input type="text" id="rankQuery" placeholder="ワイン名・生産者・産地で検索" oninput="onRankQueryInput()" style="width:100%;padding:9px 12px 9px 30px;border-radius:10px;border:1px solid var(--border);font-size:13px;font-family:inherit;">
+      <input type="text" id="rankQuery" placeholder="ワイン名・生産者・産地で検索" data-i18n-ph="ph_rank_query" oninput="onRankQueryInput()" style="width:100%;padding:9px 12px 9px 30px;border-radius:10px;border:1px solid var(--border);font-size:13px;font-family:inherit;">
     </div>
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
-      <label style="font-size:11.5px;color:var(--text-sub);width:44px;flex-shrink:0;">価格帯</label>
-      <input type="number" id="rankPriceMin" placeholder="下限" oninput="onRankPriceInput()" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
-      <span style="font-size:11.5px;color:var(--text-sub);">円 〜</span>
-      <input type="number" id="rankPriceMax" placeholder="上限" oninput="onRankPriceInput()" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
-      <span style="font-size:11.5px;color:var(--text-sub);">円</span>
+      <label style="font-size:11.5px;color:var(--text-sub);width:44px;flex-shrink:0;" data-i18n="label_price_range">価格帯</label>
+      <input type="number" id="rankPriceMin" placeholder="下限" data-i18n-ph="ph_min" oninput="onRankPriceInput()" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
+      <span style="font-size:11.5px;color:var(--text-sub);" data-i18n="unit_yen_from">円 〜</span>
+      <input type="number" id="rankPriceMax" placeholder="上限" data-i18n-ph="ph_max" oninput="onRankPriceInput()" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
+      <span style="font-size:11.5px;color:var(--text-sub);" data-i18n="unit_yen">円</span>
     </div>
     <div id="rankBandChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
-      <label class="rank-iro-chip"><input type="checkbox" value="赤" onchange="toggleRankIro(this)">🍷 赤</label>
-      <label class="rank-iro-chip"><input type="checkbox" value="白" onchange="toggleRankIro(this)">🥂 白</label>
-      <label class="rank-iro-chip"><input type="checkbox" value="ロゼ" onchange="toggleRankIro(this)">🌸 ロゼ</label>
-      <label class="rank-iro-chip"><input type="checkbox" value="オレンジ" onchange="toggleRankIro(this)">🟠 オレンジ</label>
-      <label class="rank-iro-chip"><input type="checkbox" value="泡" onchange="toggleRankIro(this)">🍾 泡</label>
+      <label class="rank-iro-chip"><input type="checkbox" value="赤" onchange="toggleRankIro(this)"><span data-i18n="chip_red">🍷 赤</span></label>
+      <label class="rank-iro-chip"><input type="checkbox" value="白" onchange="toggleRankIro(this)"><span data-i18n="chip_white">🥂 白</span></label>
+      <label class="rank-iro-chip"><input type="checkbox" value="ロゼ" onchange="toggleRankIro(this)"><span data-i18n="chip_rose">🌸 ロゼ</span></label>
+      <label class="rank-iro-chip"><input type="checkbox" value="オレンジ" onchange="toggleRankIro(this)"><span data-i18n="chip_orange">🟠 オレンジ</span></label>
+      <label class="rank-iro-chip"><input type="checkbox" value="泡" onchange="toggleRankIro(this)"><span data-i18n="chip_bubbles">🍾 泡</span></label>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <select id="rankKuniSelect" onchange="rankKuni=this.value;loadTopWines();" style="font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-family:inherit;color:var(--text);background:#fff;">
-        <option value="">すべての国</option>
+        <option value="" data-i18n="opt_all_countries">すべての国</option>
       </select>
-      <button onclick="toggleRankAdvanced()" style="font-size:12.5px;padding:6px 10px;border-radius:8px;border:1px solid var(--burgundy);background:#fff;color:var(--burgundy);font-weight:700;font-family:inherit;cursor:pointer;">詳細検索 ▾</button>
+      <button onclick="toggleRankAdvanced()" style="font-size:12.5px;padding:6px 10px;border-radius:8px;border:1px solid var(--burgundy);background:#fff;color:var(--burgundy);font-weight:700;font-family:inherit;cursor:pointer;" data-i18n="btn_advanced">詳細検索 ▾</button>
     </div>
   </div>
 
   <div id="rankAdvancedFilters" style="display:none;padding:0 16px 12px;">
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-      <label style="font-size:11.5px;color:var(--text-sub);width:64px;flex-shrink:0;">ヴィンテージ</label>
-      <input type="number" id="rankVintageMin" placeholder="下限" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
-      <span style="font-size:11.5px;color:var(--text-sub);">年 〜</span>
-      <input type="number" id="rankVintageMax" placeholder="上限" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
-      <span style="font-size:11.5px;color:var(--text-sub);">年</span>
+      <label style="font-size:11.5px;color:var(--text-sub);width:64px;flex-shrink:0;" data-i18n="label_vintage">ヴィンテージ</label>
+      <input type="number" id="rankVintageMin" placeholder="下限" data-i18n-ph="ph_min" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
+      <span style="font-size:11.5px;color:var(--text-sub);" data-i18n="unit_year_from">年 〜</span>
+      <input type="number" id="rankVintageMax" placeholder="上限" data-i18n-ph="ph_max" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
+      <span style="font-size:11.5px;color:var(--text-sub);" data-i18n="unit_year">年</span>
       <button onclick="setRankNV()" style="font-size:11px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text-sub);font-family:inherit;cursor:pointer;flex-shrink:0;">NV</button>
     </div>
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-      <label style="font-size:11.5px;color:var(--text-sub);width:64px;flex-shrink:0;">産地</label>
-      <input type="text" id="rankChiiki" placeholder="例: ボルドー、ナパ・ヴァレー" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
+      <label style="font-size:11.5px;color:var(--text-sub);width:64px;flex-shrink:0;" data-i18n="label_chiiki">産地</label>
+      <input type="text" id="rankChiiki" placeholder="例: ボルドー、ナパ・ヴァレー" data-i18n-ph="ph_chiiki" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
     </div>
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-      <label style="font-size:11.5px;color:var(--text-sub);width:64px;flex-shrink:0;">生産者</label>
-      <input type="text" id="rankProducer" placeholder="生産者名の一部でOK" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
+      <label style="font-size:11.5px;color:var(--text-sub);width:64px;flex-shrink:0;" data-i18n="label_producer">生産者</label>
+      <input type="text" id="rankProducer" placeholder="生産者名の一部でOK" data-i18n-ph="ph_producer" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
     </div>
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
-      <label style="font-size:11.5px;color:var(--text-sub);width:64px;flex-shrink:0;">葡萄品種</label>
-      <input type="text" id="rankGrape" placeholder="例: シャルドネ、カベルネ" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
+      <label style="font-size:11.5px;color:var(--text-sub);width:64px;flex-shrink:0;" data-i18n="label_grape">葡萄品種</label>
+      <input type="text" id="rankGrape" placeholder="例: シャルドネ、カベルネ" data-i18n-ph="ph_grape" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
     </div>
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
-      <label style="font-size:11.5px;color:var(--text-sub);width:64px;flex-shrink:0;">🍯 甘口</label>
+      <label style="font-size:11.5px;color:var(--text-sub);width:64px;flex-shrink:0;" data-i18n="label_sweet">🍯 甘口</label>
       <select id="rankSweet" style="width:0;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);font-size:12.5px;font-family:inherit;">
-        <option value="">指定なし</option>
-        <option value="any">すべての甘口</option>
-        <option value="貴腐">貴腐</option>
-        <option value="アイスワイン">アイスワイン</option>
-        <option value="レイトハーベスト">レイトハーベスト</option>
-        <option value="陰干し">陰干し</option>
-        <option value="酒精強化">酒精強化</option>
-        <option value="通常醸造">通常醸造</option>
+        <option value="" data-i18n="opt_none">指定なし</option>
+        <option value="any" data-i18n="opt_sweet_all">すべての甘口</option>
+        <option value="貴腐" data-i18n="opt_kifu">貴腐</option>
+        <option value="アイスワイン" data-i18n="opt_ice">アイスワイン</option>
+        <option value="レイトハーベスト" data-i18n="opt_late">レイトハーベスト</option>
+        <option value="陰干し" data-i18n="opt_dried">陰干し</option>
+        <option value="酒精強化" data-i18n="opt_fortified">酒精強化</option>
+        <option value="通常醸造" data-i18n="opt_normal">通常醸造</option>
       </select>
     </div>
     <div style="display:flex;gap:8px;">
-      <button onclick="applyRankAdvanced()" style="flex:1;padding:9px;border-radius:8px;border:none;background:var(--burgundy);color:#fff;font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;">絞り込む</button>
-      <button onclick="clearRankAdvanced()" style="flex:1;padding:9px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text-sub);font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;">クリア</button>
+      <button onclick="applyRankAdvanced()" style="flex:1;padding:9px;border-radius:8px;border:none;background:var(--burgundy);color:#fff;font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;" data-i18n="btn_apply_filter">絞り込む</button>
+      <button onclick="clearRankAdvanced()" style="flex:1;padding:9px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text-sub);font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;" data-i18n="btn_clear">クリア</button>
     </div>
   </div>
 
   <!-- おすすめ（実データ: /api/top-wines＝既定はコスパ順。loadTopWinesが描画） -->
   <div id="rankingPop" class="ranking-list">
-    <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>
+    <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;" data-i18n="loading">読み込み中…</div>
   </div>
 
   <!-- お店（実データ: /api/top-places＝リストのワインの質で店を採点。レストラン/ワインショップ切替＋地図。loadTopPlacesが描画） -->
   <div id="rankingStores" class="ranking-list" style="display:none;">
     <div class="ranking-tabs" style="border-bottom:none;margin:-4px 0 8px;">
-      <div class="ranking-tab active" id="rstab-restaurant" onclick="switchStoreCategory('restaurant')" style="font-size:12px;padding:8px;">🍽️ レストラン</div>
-      <div class="ranking-tab" id="rstab-shop" onclick="switchStoreCategory('shop')" style="font-size:12px;padding:8px;">🍷 ワインショップ</div>
+      <div class="ranking-tab active" id="rstab-restaurant" onclick="switchStoreCategory('restaurant')" style="font-size:12px;padding:8px;" data-i18n="tab_restaurant">🍽️ レストラン</div>
+      <div class="ranking-tab" id="rstab-shop" onclick="switchStoreCategory('shop')" style="font-size:12px;padding:8px;" data-i18n="tab_wineshop">🍷 ワインショップ</div>
     </div>
-    <button id="storeMapBtn" onclick="toggleStoreMap()" style="display:block;width:calc(100% - 8px);margin:0 4px 10px;background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:10px;font-size:13px;font-weight:700;color:var(--burgundy);cursor:pointer;font-family:inherit;">🗺️ 地図で見る</button>
+    <button id="storeMapBtn" onclick="toggleStoreMap()" style="display:block;width:calc(100% - 8px);margin:0 4px 10px;background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:10px;font-size:13px;font-weight:700;color:var(--burgundy);cursor:pointer;font-family:inherit;" data-i18n="btn_show_map">🗺️ 地図で見る</button>
     <div id="storeMapWrap" style="display:none;margin:0 4px 12px;border-radius:14px;overflow:hidden;border:1px solid var(--border);">
       <div id="storeMap" style="height:300px;"></div>
     </div>
     <div id="rankingStoresList">
-      <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>
+      <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;" data-i18n="loading">読み込み中…</div>
     </div>
   </div>
 
@@ -2458,12 +2458,12 @@
   <div id="wineMapModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2000;" onclick="if(event.target===this)closeWineMap()">
     <div style="position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:430px;background:var(--bg);border-radius:20px 20px 0 0;padding:16px;max-height:82vh;overflow:auto;">
       <div style="width:40px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 12px;"></div>
-      <div id="wineMapTitle" style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:2px;">📍 どこで飲める？買える？</div>
-      <div style="font-size:11px;color:var(--text-sub);margin-bottom:10px;"><span style="color:#9B1B4B;">●</span> レストラン（飲める）　<span style="color:#C9973A;">●</span> ワインショップ（買える）</div>
+      <div id="wineMapTitle" style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:2px;" data-i18n="wine_map_title">📍 どこで飲める？買える？</div>
+      <div style="font-size:11px;color:var(--text-sub);margin-bottom:10px;" data-i18n-html="map_legend"><span style="color:#9B1B4B;">●</span> レストラン（飲める）　<span style="color:#C9973A;">●</span> ワインショップ（買える）</div>
       <div id="wineMapBody">
-        <div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">探しています…</div>
+        <div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;" data-i18n="searching">探しています…</div>
       </div>
-      <button onclick="closeWineMap()" style="width:100%;margin-top:12px;background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:12px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;">閉じる</button>
+      <button onclick="closeWineMap()" style="width:100%;margin-top:12px;background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:12px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;" data-i18n="btn_close">閉じる</button>
     </div>
   </div>
 </div>
@@ -2474,12 +2474,12 @@
     <div class="mypage-avatar" id="mypageAvatarEl">🥚</div>
     <div>
       <div class="mypage-name" id="mypageNameEl">ゲスト</div>
-      <div class="mypage-cert" id="mypageCertEl">ソムリン会員</div>
+      <div class="mypage-cert" id="mypageCertEl" data-i18n="member">ソムリン会員</div>
     </div>
   </div>
   <div class="mypage-xp-wrap" style="padding:0 16px 14px;">
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
-      <span id="mypageXpTitle" style="font-size:13px;font-weight:800;color:var(--burgundy);">たまごソムリン</span>
+      <span id="mypageXpTitle" style="font-size:13px;font-weight:800;color:var(--burgundy);" data-i18n="lv1">たまごソムリン</span>
       <span id="mypageXpNum" style="font-size:11px;color:var(--text-sub);">0 XP</span>
     </div>
     <div style="background:var(--burgundy-pale,#f0dde3);border-radius:8px;height:8px;overflow:hidden;">
@@ -2490,21 +2490,21 @@
   <div class="mypage-stats">
     <div class="mypage-stat" onclick="openWineHistory()" style="cursor:pointer;">
       <div class="mypage-stat-value" id="mypageStatWines">—</div>
-      <div class="mypage-stat-label">飲んだワイン</div>
+      <div class="mypage-stat-label" data-i18n="stat_wines">飲んだワイン</div>
     </div>
     <div class="mypage-stat">
       <div class="mypage-stat-value" id="mypageStatShops">—</div>
-      <div class="mypage-stat-label">訪問店舗</div>
+      <div class="mypage-stat-label" data-i18n="stat_shops">訪問店舗</div>
     </div>
     <div class="mypage-stat">
       <div class="mypage-stat-value" id="mypageStatReviews">—</div>
-      <div class="mypage-stat-label">レビュー</div>
+      <div class="mypage-stat-label" data-i18n="stat_reviews">レビュー</div>
     </div>
   </div>
 
   <div class="mypage-section-header">MY TASTE PROFILE</div>
   <div class="mypage-taste-bar-wrap" id="mypageTasteWrap">
-    <div style="font-size:12.5px;color:var(--text-sub);line-height:1.6;">
+    <div style="font-size:12.5px;color:var(--text-sub);line-height:1.6;" data-i18n="taste_empty">
       好みの傾向はまだ計測できていません。スカウターで❤️気に入ったワインを3本以上登録すると、ここに表示されます。
     </div>
   </div>
@@ -2513,18 +2513,18 @@
        ワインを探す/レビュアー/好みが近い人/フィルター=探すタブに統合済み。マイセラーはホームへ移動。 -->
 
   <!-- お友達を招待（2026-07-08追加: onboarding.html完了後は招待ミッションに到達できなかった不具合対応） -->
-  <div class="mypage-section-header">🎁 お友達を招待</div>
+  <div class="mypage-section-header" data-i18n="invite_header">🎁 お友達を招待</div>
   <div style="margin:0 16px 20px;padding:16px;background:#fff;border:1px solid var(--border);border-radius:14px;">
-    <p style="font-size:12.5px;color:var(--text-sub);line-height:1.6;margin:0 0 12px;">このリンクから友達が登録すると、あなたにも友達にも特典が届きます。</p>
+    <p style="font-size:12.5px;color:var(--text-sub);line-height:1.6;margin:0 0 12px;" data-i18n="invite_desc">このリンクから友達が登録すると、あなたにも友達にも特典が届きます。</p>
     <div id="inviteQrWrap" style="display:flex;justify-content:center;margin-bottom:12px;"></div>
     <div style="display:flex;gap:6px;margin-bottom:10px;">
       <input type="text" id="mypageInviteLinkText" readonly style="flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-size:11.5px;color:var(--text-sub);background:var(--bg);font-family:inherit;" value="読み込み中…">
-      <button onclick="copyMypageInviteLink()" style="flex-shrink:0;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">コピー</button>
+      <button onclick="copyMypageInviteLink()" style="flex-shrink:0;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;" data-i18n="btn_copy">コピー</button>
     </div>
-    <button onclick="shareMypageInvite()" style="width:100%;padding:11px;border-radius:10px;border:none;background:var(--burgundy);color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">📤 招待リンクをシェア</button>
+    <button onclick="shareMypageInvite()" style="width:100%;padding:11px;border-radius:10px;border:none;background:var(--burgundy);color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;" data-i18n="btn_share_invite">📤 招待リンクをシェア</button>
   </div>
 
-  <div class="mypage-section-header">設定</div>
+  <div class="mypage-section-header" data-i18n="settings_header">設定</div>
   <div class="mypage-menu">
     <div class="mypage-menu-item" onclick="openProfileEdit()" style="cursor:pointer;">
       <span class="mypage-menu-icon">👤</span>
@@ -2539,34 +2539,34 @@
     </div>
     <div class="mypage-menu-item" onclick="openSubscriptionInfo()" style="cursor:pointer;">
       <span class="mypage-menu-icon">💳</span>
-      <span class="mypage-menu-text">サブスクリプション</span>
-      <span style="font-size:11px;color:#16a34a;font-weight:600;margin-left:auto;margin-right:8px;">無料プラン</span>
+      <span class="mypage-menu-text" data-i18n="menu_subscription">サブスクリプション</span>
+      <span style="font-size:11px;color:#16a34a;font-weight:600;margin-left:auto;margin-right:8px;" data-i18n="free_plan">無料プラン</span>
       <span class="mypage-menu-arrow">›</span>
     </div>
-    <div class="mypage-menu-item" onclick="showToastLike('連携サービスは準備中です（近日公開）')" style="cursor:pointer;">
+    <div class="mypage-menu-item" onclick="showToastLike(t('toast_integrations'))" style="cursor:pointer;">
       <span class="mypage-menu-icon">🔗</span>
-      <span class="mypage-menu-text">連携サービス</span>
-      <span style="font-size:11px;color:var(--text-sub);margin-left:auto;margin-right:8px;">準備中</span>
+      <span class="mypage-menu-text" data-i18n="menu_integrations">連携サービス</span>
+      <span style="font-size:11px;color:var(--text-sub);margin-left:auto;margin-right:8px;" data-i18n="coming_soon">準備中</span>
       <span class="mypage-menu-arrow">›</span>
     </div>
     <a class="mypage-menu-item" href="mailto:domaine.bouchon@gmail.com?subject=%E3%82%BD%E3%83%A0%E3%83%AA%E3%83%B3%E3%82%A2%E3%83%97%E3%83%AA%20%E3%81%8A%E5%95%8F%E3%81%84%E5%90%88%E3%82%8F%E3%81%9B" style="text-decoration:none;color:inherit;">
       <span class="mypage-menu-icon">❓</span>
-      <span class="mypage-menu-text">ヘルプ・お問い合わせ</span>
+      <span class="mypage-menu-text" data-i18n="menu_help">ヘルプ・お問い合わせ</span>
       <span class="mypage-menu-arrow">›</span>
     </a>
     <a class="mypage-menu-item" id="addBizRoleLink" href="login.html?addRole=1" style="display:none;text-decoration:none;color:inherit;">
       <span class="mypage-menu-icon">🏪</span>
-      <span class="mypage-menu-text">業務店として登録する</span>
+      <span class="mypage-menu-text" data-i18n="menu_add_biz">業務店として登録する</span>
       <span class="mypage-menu-arrow">›</span>
     </a>
     <div class="mypage-menu-item" id="loginRow" onclick="location.href='login.html'" style="cursor:pointer;display:none;">
       <span class="mypage-menu-icon">🔑</span>
-      <span class="mypage-menu-text">ログイン / 新規登録</span>
+      <span class="mypage-menu-text" data-i18n="menu_login">ログイン / 新規登録</span>
       <span class="mypage-menu-arrow">›</span>
     </div>
     <div class="mypage-menu-item" id="logoutRow" onclick="sommelinLogout()" style="cursor:pointer;display:none;">
       <span class="mypage-menu-icon">⏻</span>
-      <span class="mypage-menu-text">ログアウト</span>
+      <span class="mypage-menu-text" data-i18n="menu_logout">ログアウト</span>
       <span id="accountEmailEl" style="font-size:11px;color:var(--text-sub);margin-left:auto;margin-right:8px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
       <span class="mypage-menu-arrow">›</span>
     </div>
@@ -2587,22 +2587,22 @@
       <div class="modal-producer" id="evOrganizer"></div>
     </div>
     <div class="modal-section">
-      <div class="modal-section-title">日時・場所</div>
+      <div class="modal-section-title" data-i18n="ev_when_where">日時・場所</div>
       <div class="ev-info-row"><span>📅</span><span id="evDate"></span></div>
       <div class="ev-info-row"><span>⏰</span><span id="evTime"></span></div>
       <div class="ev-info-row"><span>📍</span><span id="evVenue"></span></div>
     </div>
     <div class="modal-section">
-      <div class="modal-section-title">フィーチャーワイン</div>
+      <div class="modal-section-title" data-i18n="ev_featured">フィーチャーワイン</div>
       <div id="evWines"></div>
     </div>
     <div class="modal-section">
-      <div class="modal-section-title">詳細</div>
+      <div class="modal-section-title" data-i18n="ev_details">詳細</div>
       <p style="font-size:13px;line-height:1.6;color:var(--text);white-space:pre-line;" id="evNote"></p>
     </div>
     <div style="padding:16px 20px 32px; display:flex; gap:10px;">
-      <button class="ev-btn-outline" onclick="closeEventModal({target:document.getElementById('eventModal')})">閉じる</button>
-      <button class="ev-btn-primary" id="evRsvpBtn" onclick="rsvpEvent()">参加を申し込む</button>
+      <button class="ev-btn-outline" onclick="closeEventModal({target:document.getElementById('eventModal')})" data-i18n="btn_close">閉じる</button>
+      <button class="ev-btn-primary" id="evRsvpBtn" onclick="rsvpEvent()" data-i18n="ev_rsvp">参加を申し込む</button>
     </div>
   </div>
 </div>
@@ -2628,9 +2628,9 @@
 </div>
 
 <!-- ハンバーガーメニュー（マイページ・履歴への入口。2026-07-08: 下ナビを4タブに整理したため常時表示のボタンに変更） -->
-<button id="hamburgerBtn" onclick="switchTab('mypage')" aria-label="メニュー" style="position:fixed;top:calc(env(safe-area-inset-top) + 14px);right:16px;z-index:160;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.92);border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg style="width:20px;height:20px;stroke:var(--text);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;"><use href="assets/sommelin-icons.svg#i-menu"></use></svg></button>
+<button id="hamburgerBtn" onclick="switchTab('mypage')" aria-label="メニュー" data-i18n-aria="aria_menu" style="position:fixed;top:calc(env(safe-area-inset-top) + 14px);right:16px;z-index:160;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.92);border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg style="width:20px;height:20px;stroke:var(--text);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;"><use href="assets/sommelin-icons.svg#i-menu"></use></svg></button>
 <!-- 業務モード切り替え（2026-07-08追加: 業務店アカウントでも個人機能を使えるようにする導線の逆方向） -->
-<button id="bizModeBtn" aria-label="業務モードに切り替え" title="業務モードに切り替え" style="display:none;position:fixed;top:calc(env(safe-area-inset-top) + 14px);right:64px;z-index:160;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.92);border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.12);font-size:17px;align-items:center;justify-content:center;cursor:pointer;">🏪</button>
+<button id="bizModeBtn" aria-label="業務モードに切り替え" title="業務モードに切り替え" data-i18n-aria="biz_mode" data-i18n-title="biz_mode" style="display:none;position:fixed;top:calc(env(safe-area-inset-top) + 14px);right:64px;z-index:160;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.92);border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.12);font-size:17px;align-items:center;justify-content:center;cursor:pointer;">🏪</button>
 
 <!-- WINE DETAIL MODAL -->
 <!-- 飲んだワイン履歴モーダル（2026-07-08追加: マイページの本数タップに反応がなかった不具合対応） -->
@@ -2638,11 +2638,11 @@
   <div class="modal" id="wineHistoryContent">
     <div class="modal-handle"></div>
     <div class="modal-header">
-      <div class="modal-wine-name">🍷 飲んだワイン</div>
+      <div class="modal-wine-name" data-i18n="wine_history_title">🍷 飲んだワイン</div>
       <div class="modal-producer" id="wineHistorySubtitle"></div>
     </div>
     <div class="modal-section" id="wineHistoryList" style="padding-top:0;">
-      <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>
+      <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;" data-i18n="loading">読み込み中…</div>
     </div>
   </div>
 </div>
@@ -2652,17 +2652,17 @@
   <div class="modal" id="profileEditContent">
     <div class="modal-handle"></div>
     <div class="modal-header">
-      <div class="modal-wine-name">👤 プロフィール編集</div>
+      <div class="modal-wine-name" data-i18n="profile_edit_title">👤 プロフィール編集</div>
     </div>
     <div class="modal-section" style="padding-top:0;">
-      <label style="display:block;font-size:12.5px;color:var(--text-sub);margin-bottom:6px;">ニックネーム</label>
-      <input type="text" id="profileNickInput" maxlength="20" placeholder="ニックネーム" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1px solid var(--border);font-size:14px;font-family:inherit;margin-bottom:6px;">
-      <button onclick="saveProfileNick()" style="width:100%;padding:10px;border-radius:10px;border:none;background:var(--burgundy);color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:20px;">ニックネームを保存</button>
+      <label style="display:block;font-size:12.5px;color:var(--text-sub);margin-bottom:6px;" data-i18n="label_nickname">ニックネーム</label>
+      <input type="text" id="profileNickInput" maxlength="20" placeholder="ニックネーム" data-i18n-ph="ph_nickname" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1px solid var(--border);font-size:14px;font-family:inherit;margin-bottom:6px;">
+      <button onclick="saveProfileNick()" style="width:100%;padding:10px;border-radius:10px;border:none;background:var(--burgundy);color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:20px;" data-i18n="btn_save_nick">ニックネームを保存</button>
 
-      <label style="display:block;font-size:12.5px;color:var(--text-sub);margin-bottom:6px;">ID（半角英数字・一度設定すると変更できません）</label>
+      <label style="display:block;font-size:12.5px;color:var(--text-sub);margin-bottom:6px;" data-i18n="label_handle">ID（半角英数字・一度設定すると変更できません）</label>
       <div id="profileHandleLocked" style="display:none;padding:10px 12px;border-radius:10px;background:var(--bg);font-size:14px;color:var(--text);margin-bottom:6px;"></div>
-      <input type="text" id="profileHandleInput" maxlength="20" placeholder="例: taro_wine" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1px solid var(--border);font-size:14px;font-family:inherit;margin-bottom:6px;">
-      <button id="profileHandleSaveBtn" onclick="saveProfileHandle()" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--burgundy);background:#fff;color:var(--burgundy);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">IDを設定する</button>
+      <input type="text" id="profileHandleInput" maxlength="20" placeholder="例: taro_wine" data-i18n-ph="ph_handle" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1px solid var(--border);font-size:14px;font-family:inherit;margin-bottom:6px;">
+      <button id="profileHandleSaveBtn" onclick="saveProfileHandle()" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--burgundy);background:#fff;color:var(--burgundy);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;" data-i18n="btn_set_handle">IDを設定する</button>
       <div id="profileHandleMsg" style="font-size:12px;color:var(--text-sub);margin-top:8px;"></div>
     </div>
   </div>
@@ -2673,17 +2673,17 @@
   <div class="modal" id="subscriptionContent">
     <div class="modal-handle"></div>
     <div class="modal-header">
-      <div class="modal-wine-name">💳 サブスクリプション</div>
-      <div class="modal-producer">現在: 無料プラン</div>
+      <div class="modal-wine-name" data-i18n="sub_title">💳 サブスクリプション</div>
+      <div class="modal-producer" data-i18n="sub_current">現在: 無料プラン</div>
     </div>
     <div class="modal-section" style="padding-top:0;">
-      <p style="font-size:13px;color:var(--text);line-height:1.7;">ソムリンは現在すべての機能を無料でご利用いただけます。今後、以下のような有料オプションを検討しています（現時点では未提供です）。</p>
+      <p style="font-size:13px;color:var(--text);line-height:1.7;" data-i18n="sub_desc">ソムリンは現在すべての機能を無料でご利用いただけます。今後、以下のような有料オプションを検討しています（現時点では未提供です）。</p>
       <ul style="font-size:13px;color:var(--text);line-height:1.9;padding-left:20px;margin:12px 0;">
-        <li>AIソムリエ相談の無制限利用（現在は月5回まで無料）</li>
-        <li>より詳細なテイスト分析・おすすめ精度の向上</li>
-        <li>マイセラーの本数上限の解放</li>
+        <li data-i18n="sub_li1">AIソムリエ相談の無制限利用（現在は月5回まで無料）</li>
+        <li data-i18n="sub_li2">より詳細なテイスト分析・おすすめ精度の向上</li>
+        <li data-i18n="sub_li3">マイセラーの本数上限の解放</li>
       </ul>
-      <button onclick="closeSubscriptionInfo()" style="width:100%;padding:10px;border-radius:10px;border:none;background:var(--burgundy);color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">閉じる</button>
+      <button onclick="closeSubscriptionInfo()" style="width:100%;padding:10px;border-radius:10px;border:none;background:var(--burgundy);color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;" data-i18n="btn_close">閉じる</button>
     </div>
   </div>
 </div>
@@ -2701,23 +2701,23 @@
       <p style="font-size:13px;color:var(--text);line-height:1.6;margin-top:12px;" id="modalNote"></p>
     </div>
     <div class="modal-section">
-      <div class="modal-section-title">MARIAGE — 相性の良い料理</div>
+      <div class="modal-section-title" data-i18n="mariage_section">MARIAGE — 相性の良い料理</div>
       <div class="mariage-list" id="modalMariage"></div>
     </div>
     <div class="feedback-section">
-      <div class="feedback-title">今夜このワインを飲んだ料理との相性は？</div>
+      <div class="feedback-title" data-i18n="fb_title">今夜このワインを飲んだ料理との相性は？</div>
       <div class="feedback-buttons">
         <button class="feedback-btn" onclick="giveFeedback(this,'no_match')">
-          <span class="fb-emoji">🚫</span>合わない
+          <span class="fb-emoji">🚫</span><span data-i18n="fb_no_match">合わない</span>
         </button>
         <button class="feedback-btn" onclick="giveFeedback(this,'neutral')">
-          <span class="fb-emoji">😐</span>無難
+          <span class="fb-emoji">😐</span><span data-i18n="fb_neutral">無難</span>
         </button>
         <button class="feedback-btn" onclick="giveFeedback(this,'match')">
-          <span class="fb-emoji">😊</span>合う
+          <span class="fb-emoji">😊</span><span data-i18n="fb_match">合う</span>
         </button>
         <button class="feedback-btn" onclick="giveFeedback(this,'mariage')">
-          <span class="fb-emoji">💫</span>マリアージュ
+          <span class="fb-emoji">💫</span><span data-i18n="fb_mariage">マリアージュ</span>
         </button>
       </div>
     </div>
@@ -2747,8 +2747,8 @@
       </svg>
     </div>
     <div>
-      <div class="chat-header-name">ソムリン君</div>
-      <div class="chat-header-status">Bistrot Lumièreのソムリエ</div>
+      <div class="chat-header-name" data-i18n="somurin_name">ソムリン君</div>
+      <div class="chat-header-status" data-i18n="chat_status">Bistrot Lumièreのソムリエ</div>
     </div>
     <button class="chat-close" onclick="toggleChat()">✕</button>
   </div>
@@ -2765,24 +2765,24 @@
           <path d="M20 29 Q26 24 32 27 Q34 30 31 32 Q27 34 23 31 Q21 28 20 29Z" fill="#5C1020"/>
         </svg>
       </div>
-      <div class="msg-bubble">いらっしゃい！今夜はどんな気分ですか？🍷</div>
+      <div class="msg-bubble" data-i18n="chat_welcome">いらっしゃい！今夜はどんな気分ですか？🍷</div>
     </div>
   </div>
   <div class="chat-quick-replies" id="quickReplies">
-    <button class="quick-reply" onclick="sendQuickReply(this, '今日は肉料理を食べます')">🥩 お肉の予定</button>
-    <button class="quick-reply" onclick="sendQuickReply(this, '魚介類が食べたいです')">🐟 魚介系で</button>
-    <button class="quick-reply" onclick="sendQuickReply(this, '泡系が飲みたいです')">🥂 まず泡から</button>
-    <button class="quick-reply" onclick="sendQuickReply(this, 'おすすめを教えてください')">✨ おすすめは？</button>
+    <button class="quick-reply" onclick="sendQuickReply(this, t('qr_meat_msg'))" data-i18n="qr_meat">🥩 お肉の予定</button>
+    <button class="quick-reply" onclick="sendQuickReply(this, t('qr_fish_msg'))" data-i18n="qr_fish">🐟 魚介系で</button>
+    <button class="quick-reply" onclick="sendQuickReply(this, t('qr_bubbles_msg'))" data-i18n="qr_bubbles">🥂 まず泡から</button>
+    <button class="quick-reply" onclick="sendQuickReply(this, t('qr_reco_msg'))" data-i18n="qr_reco">✨ おすすめは？</button>
   </div>
   <div class="chat-photo-preview" id="chatPhotoPreview">
     <img id="chatPhotoPreviewImg" src="" alt="">
     <button onclick="removeChatPendingPhoto()">✕</button>
-    <span style="font-size:11px;color:var(--text-sub);">この写真について聞けます</span>
+    <span style="font-size:11px;color:var(--text-sub);" data-i18n="photo_hint">この写真について聞けます</span>
   </div>
   <div class="chat-input-row">
     <input type="file" id="chatPhotoInput" accept="image/*" style="display:none" onchange="handleChatPhotoSelect(event)">
-    <button class="chat-attach" onclick="document.getElementById('chatPhotoInput').click()" title="写真を送る">📷</button>
-    <input class="chat-input" id="chatInput" placeholder="ソムリン君に聞く..." onkeypress="handleEnter(event)">
+    <button class="chat-attach" onclick="document.getElementById('chatPhotoInput').click()" title="写真を送る" data-i18n-title="title_send_photo">📷</button>
+    <input class="chat-input" id="chatInput" placeholder="ソムリン君に聞く..." data-i18n-ph="ph_chat" onkeypress="handleEnter(event)">
     <button class="chat-send" onclick="sendMessage()">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
@@ -2793,16 +2793,338 @@
 
 <script>
 /* ===== 多言語対応（i18n）。将来 fr/it 等も I18N に言語を1つ足すだけで拡張できる構造 =====
-   注: 現時点では主要ナビ・マイページ設定の一部のみ対応（履歴・ランキング等の画面本文は日本語のまま=今後の対応課題）。
-   jp-only クラスの要素（LINE連携など日本固有機能）は言語がja以外だと自動的に隠れる。 */
+   jp-only クラスの要素（LINE連携など日本固有機能）は言語がja以外だと自動的に隠れる。
+   使い方: data-i18n=textContent / data-i18n-html=innerHTML / data-i18n-ph=placeholder /
+         data-i18n-title=title / data-i18n-aria=aria-label / data-i18n-tpl+data-i18n-n={n}テンプレート。
+   JSからは t('key')、可変部は t('key').replace('{n}', v)。国名は dispKuni()、デモデータは dj()/djSource()。 */
 const I18N = {
   ja: {
-    nav_home: 'ホーム', nav_history: '履歴', nav_camera: '記録', nav_ranking: '探す', nav_search: '探す', nav_consult: '相談', nav_mypage: 'マイページ',
-    menu_notify: '通知設定', menu_profile: 'プロフィール編集',
+    // ナビ・共通
+    nav_home: 'ホーム', nav_camera: '記録', nav_search: '探す', nav_consult: '相談',
+    menu_profile: 'プロフィール編集',
+    loading: '読み込み中…', searching: '探しています…',
+    btn_close: '閉じる', btn_cancel: 'キャンセル', btn_copy: 'コピー',
+    aria_menu: 'メニュー', biz_mode: '業務モードに切り替え',
+    // 店舗リスト（タブ・バナー・カード）
+    tab_all: 'すべて', tab_sparkling: '🥂 泡', tab_red: '🍷 赤', tab_white: '🤍 白', tab_rose: '🌸 ロゼ', tab_orange: '🍊 オレンジ',
+    view_toggle: '表示切替',
+    somm_banner: '<strong>ソムリン君</strong>より<br>今夜は何かお料理に合わせますか？<br>お気軽に聞いてください 🍷',
+    sec_sparkling: 'スパークリング', sec_white: '白ワイン', sec_red: '赤ワイン', sec_natural: '自然派', sec_rose: 'ロゼ', sec_orange: 'オレンジワイン',
+    badge_popular: '人気 No.1', badge_staff: 'スタッフ推薦', sold_out: '本日は売り切れ',
+    mariage_n: '💫 {n}件',
+    tag_oyster: '牡蠣', tag_seafood: '魚介', tag_carpaccio: 'カルパッチョ', tag_whitefish: '白身魚', tag_scallop: '帆立',
+    tag_goatcheese: '山羊チーズ', tag_goatcheese2: 'ヤギチーズ', tag_salad: 'サラダ', tag_bistecca: 'ビステッカ', tag_truffle: 'トリュフ',
+    tag_agedcheese: '熟成チーズ', tag_duck: '鴨', tag_lamb: '仔羊', tag_matsutake: '松茸', tag_appetizers: '前菜全般',
+    tag_coldpasta: '冷製パスタ', tag_chicken: '鶏肉', tag_fish: '魚', tag_grill: 'グリル料理', tag_mediterranean: '地中海料理',
+    tag_bouillabaisse: 'ブーイヤベース', tag_washoku: '和食全般', tag_fermented: '発酵食品', tag_spice: 'スパイス料理',
+    tag_charcuterie: 'チャーキュトリー', tag_miso: '味噌料理', tag_sheepcheese: '羊のチーズ',
+    w0_meta: '🇫🇷 シャンパーニュ — シャルドネ 100%', w1_meta: '🇫🇷 ブルゴーニュ — シャルドネ', w2_meta: '🇫🇷 ロワール — ソーヴィニョン・ブラン',
+    w3_meta: '🇮🇹 ピエモンテ — ネッビオーロ', w4_meta: '🇫🇷 ブルゴーニュ — ピノ・ノワール', w5_meta: '🇫🇷 ロワール — 自然派ロゼ泡',
+    w6_meta: '🇫🇷 ボージョレ — ガメイ', w7_meta: '🇫🇷 プロヴァンス — ムールヴェードル他', w8_meta: '🇮🇹 フリウリ — ピノ・グリージョ',
+    w9_meta: '🇬🇪 ジョージア — ムツヴァネ',
+    w0_note: '繊細な泡と白桃、シトラスのアロマ。ミネラルの余韻が長く続く上品なシャンパーニュ。',
+    w1_note: '鋭いミネラルと洗練された酸。石灰岩の土壌が生む独特のテロワールを感じる一本。',
+    w2_note: 'フレッシュなグレープフルーツと草原の香り。キリッとした酸味が食欲を刺激する。',
+    w3_note: '「ワインの王様」バローロ。バラとタールの複雑な香りに、しっかりとしたタンニンと長い余韻。',
+    w4_note: 'ヴォルネイらしいエレガントさ。赤いベリーと土のニュアンス、シルクのようなテクスチャー。',
+    w5_note: 'いちごのような果実感と自然な微炭酸。ナチュラルワインらしい生き生きとした味わい。',
+    w6_note: 'フルーリーの優雅さ。スミレと赤い果実のアロマ、滑らかな口当たり。',
+    w7_note: 'プロヴァンスを代表するロゼの名手。深みのあるサーモンピンク、イチゴとプロヴァンスハーブの香り。',
+    w8_note: 'スロヴェニア国境のカルスト台地産。アンフォラで醸造した琥珀色の自然派。アプリコット・スパイス・ほんのりタンニン。',
+    w9_note: 'クヴェヴリ（素焼き壺）で醸造するジョージアの伝統的なアンバーワイン。蜂蜜・ドライフルーツ・タンニン感。',
+    // カレンダー・イベント
+    cal_staff_mode: '🏪 スタッフモード',
+    dow0: '日', dow1: '月', dow2: '火', dow3: '水', dow4: '木', dow5: '金', dow6: '土',
+    line_sync: '試飲会の案内はLINEでも届きます', line_new: '新着{n}件', cal_upcoming: '近日中の試飲会',
+    cal_month_label: '{y}年 {m}', dow_suffix: '{d}曜', ev_date_fmt: '{y}年{m}月{d}日（{w}）',
+    evtype_seminar: 'セミナー', evtype_fair: 'ワインフェア', evtype_tasting: '試飲会',
+    time_see_details: '時間は詳細参照', fee_free: '参加費: 無料', fee_n: '参加費: ¥{n}', no_title: '（タイトルなし）',
+    ev_when_where: '日時・場所', ev_featured: 'フィーチャーワイン', ev_details: '詳細', ev_rsvp: '参加を申し込む',
+    btn_rsvp_page: '申込みページへ →', btn_rsvp_contact: '申込みは詳細内の連絡先へ',
+    // ホーム
+    home_title: 'ホーム', home_sub: '気になる人・似た好みの人のワインをお届け',
+    my_cellar: 'マイセラー', see_all: 'すべて見る ›',
+    home_cold: 'まだフォロー中の人や紹介つながりがいません。まずは<a href="#" onclick="switchTab(\'mypage\');return false;" style="color:var(--burgundy);font-weight:700;">お友達を招待</a>したり、気になる人をフォローすると、その人のおすすめが優先的に届くようになります。',
+    cellar_empty: 'まだ登録がありません。タップして追加しましょう →', unnamed: '（名称未設定）',
+    bottles_e: '🍾 {n}本', pub_suffix: ' ・ 🌐 公開', feed_empty: 'まだ表示できるおすすめがありません',
+    // 履歴
+    hist_title: '履歴', hist_sub: '訪問したお店とワインの記録',
+    hist_tab_shop: '🏪 お店', hist_tab_wine: '🍷 ワイン', ph_search_shop: 'お店を検索...',
+    label_region: '産地', label_glass_price: 'グラス価格', label_rating: '評価',
+    btn_view_list: 'リストを見る', locked_private: '🔒 非公開',
+    hd_update_msg: '🆕 <strong>ワインリストが更新されました</strong><br>最新のリストを表示しますか？',
+    btn_update_view: '更新して見る', btn_keep: 'このまま',
+    hd_locked_title: 'このお店のリストは非公開です',
+    hd_locked_desc: 'お店でQRコードをスキャンすると<br>最新のワインリストが確認できます',
+    hd_wines_header: '飲んだワイン', glass_price_n: 'グラス ¥{n}',
+    today: '今日', yesterday: '昨日', days_ago: '{n}日前', weeks_ago: '{n}週間前', week_ago_one: '1週間前',
+    visits_empty_title: 'まだ来店記録がありません',
+    visits_empty_desc: 'お店のテーブルにあるQRコードを読み込んで<br>ワインリストを開くと、ここに記録されます 🍷',
+    wine_list_fallback: 'ワインリスト', last_visit_n: '最終訪問: <strong>{n}</strong>', views_count: '📖 リストを見た回数 {n}回',
+    visits_local_note: 'この記録はあなたの端末の中だけに保存されています 🔒',
+    wine_log_empty_title: 'まだワインの記録がありません', wine_log_empty_desc: 'マイセラーに登録したワインがここに表示されます',
+    btn_open_cellar: '🍾 マイセラーを開く', bottles_n: '{n}本', cellar_total: '計 {n}本 セラーに記録済み 🍷',
+    vintage_n: 'ヴィンテージ {n}', price_per_glass: '¥{n} / グラス',
+    list_updated_msg: '最新のワインリストに更新しました！新着が3本追加されています 🍷',
+    // カメラ
+    camera_hero: '写真を撮るだけ。<br>ソムリン君が瞬時に解析します。',
+    cam_list_title: 'ワインリストを読み込む', cam_list_desc: 'お店のワインリストを撮影すると、あなたの好みに合ったワインをおすすめします',
+    cam_mariage_title: '料理とのマリアージュ', cam_mariage_desc: 'メニューとワインリストを撮影すると、ベストなペアリングを提案します',
+    cam_scouter_title: 'スカウター — かざしてコスパ', cam_badge_live: '本番',
+    cam_scouter_desc: 'ラベルやワインリストにかざすと、その場でSP評価とコスパ（おすすめ度）を表示します',
+    cam_label_title: 'ラベルを読み込む', cam_label_desc: 'ボトルのラベルを撮影してワイン情報を自動取得、Journal に記録します',
+    scan_mode_list: 'ワインリストを読み込み中', scan_point: '📷 カメラを向けてください',
+    mariage_wip: '料理とのマリアージュ提案は準備中です。まずはワインリスト読み込みをお試しください 🍷',
+    // 探す
+    search_title: '探す', search_sub: 'ワイン・お店・人をみつける',
+    chip_wine_search: 'ワイン検索', chip_reviewers: 'レビュアーを探す', chip_similar: '好みが近い人', chip_filters: 'みんなのフィルター',
+    rtab_pop: 'おすすめ', rtab_store: 'お店',
+    ph_rank_query: 'ワイン名・生産者・産地で検索', label_price_range: '価格帯', ph_min: '下限', ph_max: '上限',
+    unit_yen_from: '円 〜', unit_yen: '円',
+    chip_red: '🍷 赤', chip_white: '🥂 白', chip_rose: '🌸 ロゼ', chip_orange: '🟠 オレンジ', chip_bubbles: '🍾 泡',
+    opt_all_countries: 'すべての国', btn_advanced: '詳細検索 ▾',
+    label_vintage: 'ヴィンテージ', unit_year_from: '年 〜', unit_year: '年',
+    label_chiiki: '産地', ph_chiiki: '例: ボルドー、ナパ・ヴァレー',
+    label_producer: '生産者', ph_producer: '生産者名の一部でOK',
+    label_grape: '葡萄品種', ph_grape: '例: シャルドネ、カベルネ',
+    label_sweet: '🍯 甘口', opt_none: '指定なし', opt_sweet_all: 'すべての甘口', opt_kifu: '貴腐', opt_ice: 'アイスワイン',
+    opt_late: 'レイトハーベスト', opt_dried: '陰干し', opt_fortified: '酒精強化', opt_normal: '通常醸造',
+    btn_apply_filter: '絞り込む', btn_clear: 'クリア',
+    band0: '〜2千円', band1: '2千〜5千円', band2: '5千〜1万円', band3: '1万〜3万円', band4: '3万円〜',
+    tab_restaurant: '🍽️ レストラン', tab_wineshop: '🍷 ワインショップ',
+    btn_show_map: '🗺️ 地図で見る', btn_list_only: '📃 リストだけ表示',
+    map_load_err: '地図を読み込めませんでした（通信環境をご確認ください）',
+    rank_pos: '{n}位', map_pin_stats: '評価 {s}点 ・ ⭐良いワイン{n}本', view_winelist_link: 'ワインリストを見る →',
+    places_load_err: 'お店ランキングを読み込めませんでした（通信環境をご確認ください）',
+    cat_restaurant: 'レストラン', cat_wineshop: 'ワインショップ',
+    places_empty_title: '{c}ランキングは準備中',
+    places_empty_desc: 'お店がワインリストを公開したり、<br>スカウターでみんながお店を記録すると、<br>いいワインを出すお店がここに並びます。',
+    src_official: '📖 公式リスト', src_crowd: '📍 街で発見', src_official_short: '📖 公式',
+    good_wines_n: '⭐ 良いワイン <strong>{n}</strong>本', list_n: '🍷 リスト {n}本', score_pt: '点',
+    places_footer: 'ワインリストの質（評価の信頼度加重平均）順。タップでお店のリスト・地図へ',
+    wine_map_title: '📍 どこで飲める？買える？', wine_map_where: '📍 {n} はどこで？', this_wine: 'このワイン',
+    map_legend: '<span style="color:#9B1B4B;">●</span> レストラン（飲める）　<span style="color:#C9973A;">●</span> ワインショップ（買える）',
+    sightings_empty_title: 'まだ目撃情報がありません',
+    sightings_empty_desc: 'お店でワインリストをスカウターで撮って記録すると、<br>「ここで飲める・買える」がみんなに共有されます',
+    cat_shop_e: '🍷 ワインショップ', cat_rest_e: '🍽️ レストラン',
+    bottle_price_n: 'ボトル ¥{n}', word_glass: 'グラス', word_bottle: 'ボトル', word_other: 'その他',
+    pin_buy: '🍷 買える', pin_drink: '🍽️ 飲める',
+    generic_load_err: '読み込めませんでした（通信環境をご確認ください）', load_err_short: '読み込めませんでした',
+    community_rating: 'みんなの評価 <strong>{a}</strong>（{n}件）', badge_cospa: 'コスパ良好', badge_fivestar: '🏅 ソムリン五つ星',
+    alt_bottle: 'ボトル画像', ref_price: '参考価格 <strong>{p}</strong>', btn_where: '📍 どこで飲める？買える？',
+    rank_footer_note: '星が付いているワインはすべてソムリンのおすすめです。星の数は同価格帯での稀少度を表します',
+    rank_load_err: 'ランキングを読み込めませんでした（通信環境をご確認ください）',
+    shop_list_unpublished: 'このお店のワインリストはまだ公開されていません 🍷',
+    // クラシックビュー
+    cls_sparkling: '泡・スパークリング', cls_white: '白ワイン', cls_rose: 'ロゼ', cls_orange: 'オレンジワイン', cls_red: '赤ワイン',
+    kinds_n: '{n}種', title_has_mariage: 'マリアージュあり',
+    // マイページ
+    guest: 'ゲスト', member: 'ソムリン会員', member_with: 'ソムリン会員 ・ {f} {l}', lv1: 'たまごソムリン',
+    stat_wines: '飲んだワイン', stat_shops: '訪問店舗', stat_reviews: 'レビュー',
+    taste_empty: '好みの傾向はまだ計測できていません。スカウターで❤️気に入ったワインを3本以上登録すると、ここに表示されます。',
+    invite_header: '🎁 お友達を招待', invite_desc: 'このリンクから友達が登録すると、あなたにも友達にも特典が届きます。',
+    btn_share_invite: '📤 招待リンクをシェア', invite_login_first: 'ログイン後に表示されます',
+    toast_link_copied: 'リンクをコピーしました', toast_invite_copied: '📤 招待リンクをコピーしました！',
+    share_text: 'ソムリンで一緒にワインを楽しもう🍷 ',
+    settings_header: '設定', menu_subscription: 'サブスクリプション', free_plan: '無料プラン',
+    menu_integrations: '連携サービス', coming_soon: '準備中', toast_integrations: '連携サービスは準備中です（近日公開）',
+    menu_help: 'ヘルプ・お問い合わせ', menu_add_biz: '業務店として登録する', menu_login: 'ログイン / 新規登録', menu_logout: 'ログアウト',
+    confirm_logout: 'ログアウトしますか？',
+    xp_next: '次のレベルまであと{n}XP', xp_max: '最高レベルです🎉',
+    wine_history_title: '🍷 飲んだワイン', recorded_n: '{n}本記録済み', no_records_yet: 'まだ記録がありません', unknown_name: '（名称不明）',
+    profile_edit_title: '👤 プロフィール編集', label_nickname: 'ニックネーム', ph_nickname: 'ニックネーム', btn_save_nick: 'ニックネームを保存',
+    label_handle: 'ID（半角英数字・一度設定すると変更できません）', ph_handle: '例: taro_wine', btn_set_handle: 'IDを設定する',
+    toast_nick_saved: 'ニックネームを保存しました',
+    handle_invalid: '半角英数字とアンダースコアで3〜20文字にしてください。', handle_set_err: '設定できませんでした。', network_err: '通信エラーが発生しました。',
+    sub_title: '💳 サブスクリプション', sub_current: '現在: 無料プラン',
+    sub_desc: 'ソムリンは現在すべての機能を無料でご利用いただけます。今後、以下のような有料オプションを検討しています（現時点では未提供です）。',
+    sub_li1: 'AIソムリエ相談の無制限利用（現在は月5回まで無料）', sub_li2: 'より詳細なテイスト分析・おすすめ精度の向上', sub_li3: 'マイセラーの本数上限の解放',
+    // ワイン詳細・フィードバック
+    mariage_section: 'MARIAGE — 相性の良い料理', fb_title: '今夜このワインを飲んだ料理との相性は？',
+    fb_no_match: '合わない', fb_neutral: '無難', fb_match: '合う', fb_mariage: 'マリアージュ',
+    fb_reply_no_match: 'そうでしたか…次はもっと合う組み合わせを探しますね。',
+    fb_reply_neutral: 'なるほど。もう少し冒険的な組み合わせもご提案できますよ！',
+    fb_reply_match: 'よかったです！記録しておきますね 😊',
+    fb_reply_mariage: '最高ですね！その組み合わせ、私も自信がありました 💫',
+    // チャット
+    somurin_name: 'ソムリン君', chat_status: 'Bistrot Lumièreのソムリエ',
+    chat_welcome: 'いらっしゃい！今夜はどんな気分ですか？🍷',
+    qr_meat: '🥩 お肉の予定', qr_meat_msg: '今日は肉料理を食べます',
+    qr_fish: '🐟 魚介系で', qr_fish_msg: '魚介類が食べたいです',
+    qr_bubbles: '🥂 まず泡から', qr_bubbles_msg: '泡系が飲みたいです',
+    qr_reco: '✨ おすすめは？', qr_reco_msg: 'おすすめを教えてください',
+    photo_hint: 'この写真について聞けます', title_send_photo: '写真を送る', ph_chat: 'ソムリン君に聞く...',
+    chat_thinking: '考え中… 🍷',
+    chat_busy: '少し混み合っています。しばらくしてからどうぞ 🙏',
+    chat_quota: '今月の無料チャット枠（5回）を使い切りました🙏 毎月1日にリセットされます。ワイン探しは回数制限のないスカウター📷をどうぞ！',
+    chat_photo_err: '写真がうまく読み込めませんでした。別の写真でもう一度お試しください 🙏',
+    chat_remaining: '📊 今月あと{n}回',
+    chat_fail: 'ごめんなさい、うまく応答できませんでした。通信環境をご確認ください 🙏',
+    chat_photo_default: 'この写真のワインについて教えて',
   },
   en: {
-    nav_home: 'Home', nav_history: 'History', nav_camera: 'Record', nav_ranking: 'Search', nav_search: 'Search', nav_consult: 'Chat', nav_mypage: 'My Page',
-    menu_notify: 'Notifications', menu_profile: 'Edit Profile',
+    // Nav / common
+    nav_home: 'Home', nav_camera: 'Record', nav_search: 'Search', nav_consult: 'Chat',
+    menu_profile: 'Edit Profile',
+    loading: 'Loading…', searching: 'Searching…',
+    btn_close: 'Close', btn_cancel: 'Cancel', btn_copy: 'Copy',
+    aria_menu: 'Menu', biz_mode: 'Switch to business mode',
+    // Wine list (tabs, banner, cards)
+    tab_all: 'All', tab_sparkling: '🥂 Sparkling', tab_red: '🍷 Red', tab_white: '🤍 White', tab_rose: '🌸 Rosé', tab_orange: '🍊 Orange',
+    view_toggle: 'Toggle view',
+    somm_banner: 'From <strong>Sommelin</strong><br>Pairing wine with a dish tonight?<br>Feel free to ask me 🍷',
+    sec_sparkling: 'Sparkling', sec_white: 'White Wine', sec_red: 'Red Wine', sec_natural: 'Natural Wine', sec_rose: 'Rosé', sec_orange: 'Orange Wine',
+    badge_popular: 'No.1 Popular', badge_staff: 'Staff Pick', sold_out: 'Sold Out Today',
+    mariage_n: '💫 {n}',
+    tag_oyster: 'Oysters', tag_seafood: 'Seafood', tag_carpaccio: 'Carpaccio', tag_whitefish: 'White fish', tag_scallop: 'Scallops',
+    tag_goatcheese: 'Goat cheese', tag_goatcheese2: 'Goat cheese', tag_salad: 'Salad', tag_bistecca: 'Bistecca', tag_truffle: 'Truffle',
+    tag_agedcheese: 'Aged cheese', tag_duck: 'Duck', tag_lamb: 'Lamb', tag_matsutake: 'Matsutake', tag_appetizers: 'Appetizers',
+    tag_coldpasta: 'Cold pasta', tag_chicken: 'Chicken', tag_fish: 'Fish', tag_grill: 'Grilled dishes', tag_mediterranean: 'Mediterranean',
+    tag_bouillabaisse: 'Bouillabaisse', tag_washoku: 'Japanese cuisine', tag_fermented: 'Fermented foods', tag_spice: 'Spiced dishes',
+    tag_charcuterie: 'Charcuterie', tag_miso: 'Miso dishes', tag_sheepcheese: 'Sheep cheese',
+    w0_meta: '🇫🇷 Champagne — Chardonnay 100%', w1_meta: '🇫🇷 Bourgogne — Chardonnay', w2_meta: '🇫🇷 Loire — Sauvignon Blanc',
+    w3_meta: '🇮🇹 Piedmont — Nebbiolo', w4_meta: '🇫🇷 Bourgogne — Pinot Noir', w5_meta: '🇫🇷 Loire — Natural sparkling rosé',
+    w6_meta: '🇫🇷 Beaujolais — Gamay', w7_meta: '🇫🇷 Provence — Mourvèdre & others', w8_meta: '🇮🇹 Friuli — Pinot Grigio',
+    w9_meta: '🇬🇪 Georgia — Mtsvane',
+    w0_note: 'Delicate bubbles with aromas of white peach and citrus. An elegant Champagne with a long, mineral finish.',
+    w1_note: 'Sharp minerality and refined acidity. A wine that expresses the unique terroir of its limestone soils.',
+    w2_note: 'Fresh grapefruit and meadow aromas. Crisp acidity that whets the appetite.',
+    w3_note: 'Barolo, the "king of wines." Complex aromas of rose and tar, with firm tannins and a long finish.',
+    w4_note: 'Elegance typical of Volnay. Red berries and earthy nuances with a silky texture.',
+    w5_note: 'Strawberry-like fruit and a gentle natural fizz. Lively flavors true to natural wine.',
+    w6_note: 'The grace of Fleurie. Aromas of violet and red fruit with a smooth palate.',
+    w7_note: 'A benchmark Provence rosé. Deep salmon pink, with strawberry and Provençal herb aromas.',
+    w8_note: 'From the Karst plateau near the Slovenian border. An amber natural wine made in amphora. Apricot, spice, and a touch of tannin.',
+    w9_note: 'A traditional Georgian amber wine made in qvevri (clay vessels). Honey, dried fruit, and grippy tannins.',
+    // Calendar / events
+    cal_staff_mode: '🏪 Staff Mode',
+    dow0: 'S', dow1: 'M', dow2: 'T', dow3: 'W', dow4: 'T', dow5: 'F', dow6: 'S',
+    line_sync: 'Tasting event news also arrives on LINE', line_new: '{n} new', cal_upcoming: 'Upcoming Tastings',
+    cal_month_label: '{m} {y}', dow_suffix: '{d}', ev_date_fmt: '{m}/{d}/{y} ({w})',
+    evtype_seminar: 'Seminar', evtype_fair: 'Wine Fair', evtype_tasting: 'Tasting',
+    time_see_details: 'See details for time', fee_free: 'Fee: Free', fee_n: 'Fee: ¥{n}', no_title: '(Untitled)',
+    ev_when_where: 'Date & Venue', ev_featured: 'Featured Wines', ev_details: 'Details', ev_rsvp: 'Sign Up',
+    btn_rsvp_page: 'Go to sign-up page →', btn_rsvp_contact: 'Sign up via contact info in details',
+    // Home
+    home_title: 'Home', home_sub: 'Wines from people you follow and people with similar taste',
+    my_cellar: 'My Cellar', see_all: 'See all ›',
+    home_cold: 'You are not following anyone yet and have no referral connections. <a href="#" onclick="switchTab(\'mypage\');return false;" style="color:var(--burgundy);font-weight:700;">Invite friends</a> or follow people you like, and their recommendations will arrive here first.',
+    cellar_empty: 'Nothing here yet. Tap to add wines →', unnamed: '(Unnamed)',
+    bottles_e: '🍾 {n}', pub_suffix: ' ・ 🌐 Public', feed_empty: 'No recommendations to show yet',
+    // History
+    hist_title: 'History', hist_sub: 'Your restaurant visits and wine records',
+    hist_tab_shop: '🏪 Places', hist_tab_wine: '🍷 Wines', ph_search_shop: 'Search places...',
+    label_region: 'Region', label_glass_price: 'Glass Price', label_rating: 'Rating',
+    btn_view_list: 'View List', locked_private: '🔒 Private',
+    hd_update_msg: '🆕 <strong>The wine list has been updated</strong><br>Show the latest list?',
+    btn_update_view: 'Show Latest', btn_keep: 'Keep This',
+    hd_locked_title: 'This list is private',
+    hd_locked_desc: 'Scan the QR code at the restaurant<br>to see the latest wine list',
+    hd_wines_header: 'WINES YOU HAD', glass_price_n: 'Glass ¥{n}',
+    today: 'Today', yesterday: 'Yesterday', days_ago: '{n} days ago', weeks_ago: '{n} weeks ago', week_ago_one: '1 week ago',
+    visits_empty_title: 'No visits recorded yet',
+    visits_empty_desc: 'Scan the QR code on the restaurant table<br>to open the wine list — your visit is recorded here 🍷',
+    wine_list_fallback: 'Wine List', last_visit_n: 'Last visit: <strong>{n}</strong>', views_count: '📖 Viewed the list {n} times',
+    visits_local_note: 'These records are stored only on your device 🔒',
+    wine_log_empty_title: 'No wines recorded yet', wine_log_empty_desc: 'Wines added to My Cellar will appear here',
+    btn_open_cellar: '🍾 Open My Cellar', bottles_n: '{n} btl', cellar_total: '{n} bottles recorded in your cellar 🍷',
+    vintage_n: 'Vintage {n}', price_per_glass: '¥{n} / glass',
+    list_updated_msg: 'Updated to the latest wine list! 3 new wines have been added 🍷',
+    // Camera
+    camera_hero: 'Just take a photo.<br>Sommelin analyzes it instantly.',
+    cam_list_title: 'Scan a Wine List', cam_list_desc: 'Photograph a restaurant wine list and get recommendations that match your taste',
+    cam_mariage_title: 'Food Pairing', cam_mariage_desc: 'Photograph the menu and wine list to get the best pairing suggestions',
+    cam_scouter_title: 'Scouter — Instant Value Check', cam_badge_live: 'LIVE',
+    cam_scouter_desc: 'Point it at a label or wine list to see SP scores and value ratings on the spot',
+    cam_label_title: 'Scan a Label', cam_label_desc: 'Photograph a bottle label to fetch wine info automatically and log it to your Journal',
+    scan_mode_list: 'Scanning wine list', scan_point: '📷 Point your camera',
+    mariage_wip: 'Food pairing suggestions are coming soon. Try scanning a wine list first 🍷',
+    // Search
+    search_title: 'Search', search_sub: 'Find wines, places, and people',
+    chip_wine_search: 'Wine Search', chip_reviewers: 'Find Reviewers', chip_similar: 'Similar Taste', chip_filters: 'Community Filters',
+    rtab_pop: 'Top Picks', rtab_store: 'Places',
+    ph_rank_query: 'Search by wine, producer, or region', label_price_range: 'Price', ph_min: 'Min', ph_max: 'Max',
+    unit_yen_from: '–', unit_yen: 'JPY',
+    chip_red: '🍷 Red', chip_white: '🥂 White', chip_rose: '🌸 Rosé', chip_orange: '🟠 Orange', chip_bubbles: '🍾 Sparkling',
+    opt_all_countries: 'All Countries', btn_advanced: 'Advanced ▾',
+    label_vintage: 'Vintage', unit_year_from: '–', unit_year: '',
+    label_chiiki: 'Region', ph_chiiki: 'e.g. Bordeaux, Napa Valley',
+    label_producer: 'Producer', ph_producer: 'Part of the name is fine',
+    label_grape: 'Grape', ph_grape: 'e.g. Chardonnay, Cabernet',
+    label_sweet: '🍯 Sweet', opt_none: 'Any', opt_sweet_all: 'All sweet wines', opt_kifu: 'Botrytis (noble rot)', opt_ice: 'Ice wine',
+    opt_late: 'Late harvest', opt_dried: 'Dried grapes (passito)', opt_fortified: 'Fortified', opt_normal: 'Standard vinification',
+    btn_apply_filter: 'Apply', btn_clear: 'Clear',
+    band0: 'Under ¥2K', band1: '¥2K–5K', band2: '¥5K–10K', band3: '¥10K–30K', band4: '¥30K+',
+    tab_restaurant: '🍽️ Restaurants', tab_wineshop: '🍷 Wine Shops',
+    btn_show_map: '🗺️ View on Map', btn_list_only: '📃 List only',
+    map_load_err: 'Could not load the map (check your connection)',
+    rank_pos: '#{n}', map_pin_stats: 'Score {s} ・ ⭐{n} good wines', view_winelist_link: 'View wine list →',
+    places_load_err: 'Could not load the place ranking (check your connection)',
+    cat_restaurant: 'Restaurant', cat_wineshop: 'Wine Shop',
+    places_empty_title: '{c} ranking coming soon',
+    places_empty_desc: 'As restaurants publish their wine lists<br>and people log places with the Scouter,<br>the best wine spots will appear here.',
+    src_official: '📖 Official list', src_crowd: '📍 Spotted in town', src_official_short: '📖 Official',
+    good_wines_n: '⭐ <strong>{n}</strong> good wines', list_n: '🍷 {n} on the list', score_pt: 'pts',
+    places_footer: 'Ranked by wine-list quality (confidence-weighted average of ratings). Tap for the list or map',
+    wine_map_title: '📍 Where to drink or buy?', wine_map_where: '📍 Where to find {n}?', this_wine: 'this wine',
+    map_legend: '<span style="color:#9B1B4B;">●</span> Restaurant (drink)　<span style="color:#C9973A;">●</span> Wine shop (buy)',
+    sightings_empty_title: 'No sightings yet',
+    sightings_empty_desc: 'Snap wine lists with the Scouter to share<br>where this wine can be enjoyed or bought',
+    cat_shop_e: '🍷 Wine Shop', cat_rest_e: '🍽️ Restaurant',
+    bottle_price_n: 'Bottle ¥{n}', word_glass: 'Glass', word_bottle: 'Bottle', word_other: 'Other',
+    pin_buy: '🍷 Buy here', pin_drink: '🍽️ Drink here',
+    generic_load_err: 'Could not load (check your connection)', load_err_short: 'Could not load',
+    community_rating: 'Community <strong>{a}</strong> ({n} reviews)', badge_cospa: 'Great Value', badge_fivestar: '🏅 Sommelin 5-Star',
+    alt_bottle: 'Bottle photo', ref_price: 'Ref. price <strong>{p}</strong>', btn_where: '📍 Where to drink or buy?',
+    rank_footer_note: 'Every starred wine is a Sommelin pick. The number of stars shows rarity within its price range',
+    rank_load_err: 'Could not load the ranking (check your connection)',
+    shop_list_unpublished: 'This restaurant has not published its wine list yet 🍷',
+    // Classic view
+    cls_sparkling: 'Sparkling', cls_white: 'White Wine', cls_rose: 'Rosé', cls_orange: 'Orange Wine', cls_red: 'Red Wine',
+    kinds_n: '{n} wines', title_has_mariage: 'Pairing available',
+    // My Page
+    guest: 'Guest', member: 'Sommelin Member', member_with: 'Sommelin Member ・ {f} {l}', lv1: 'Egg Sommelin',
+    stat_wines: 'Wines', stat_shops: 'Places Visited', stat_reviews: 'Reviews',
+    taste_empty: 'Your taste profile has not been measured yet. ❤️ three or more wines with the Scouter and it will appear here.',
+    invite_header: '🎁 Invite Friends', invite_desc: 'When a friend signs up via this link, you both receive a bonus.',
+    btn_share_invite: '📤 Share Invite Link', invite_login_first: 'Shown after you log in',
+    toast_link_copied: 'Link copied', toast_invite_copied: '📤 Invite link copied!',
+    share_text: 'Join me on Sommelin and enjoy wine together 🍷 ',
+    settings_header: 'Settings', menu_subscription: 'Subscription', free_plan: 'Free Plan',
+    menu_integrations: 'Linked Services', coming_soon: 'Coming soon', toast_integrations: 'Linked services are coming soon',
+    menu_help: 'Help & Contact', menu_add_biz: 'Register as a Business', menu_login: 'Log In / Sign Up', menu_logout: 'Log Out',
+    confirm_logout: 'Log out?',
+    xp_next: '{n} XP to the next level', xp_max: 'Max level reached 🎉',
+    wine_history_title: "🍷 Wines You've Had", recorded_n: '{n} recorded', no_records_yet: 'No records yet', unknown_name: '(Unknown wine)',
+    profile_edit_title: '👤 Edit Profile', label_nickname: 'Nickname', ph_nickname: 'Nickname', btn_save_nick: 'Save Nickname',
+    label_handle: 'ID (alphanumeric — cannot be changed once set)', ph_handle: 'e.g. taro_wine', btn_set_handle: 'Set ID',
+    toast_nick_saved: 'Nickname saved',
+    handle_invalid: 'Use 3–20 characters: letters, numbers, and underscores.', handle_set_err: 'Could not set the ID.', network_err: 'A network error occurred.',
+    sub_title: '💳 Subscription', sub_current: 'Current: Free Plan',
+    sub_desc: 'All Sommelin features are currently free. We are considering paid options like the following in the future (not offered yet).',
+    sub_li1: 'Unlimited AI sommelier chat (currently 5 free per month)', sub_li2: 'Deeper taste analysis and better recommendations', sub_li3: 'Higher bottle limit for My Cellar',
+    // Wine detail / feedback
+    mariage_section: 'MARIAGE — Perfect Pairings', fb_title: "How did this wine pair with tonight's dish?",
+    fb_no_match: 'No match', fb_neutral: 'So-so', fb_match: 'Good', fb_mariage: 'Mariage',
+    fb_reply_no_match: "I see… I'll look for a better match next time.",
+    fb_reply_neutral: 'Got it. I can suggest more adventurous pairings, too!',
+    fb_reply_match: "Wonderful! I'll make a note of it 😊",
+    fb_reply_mariage: 'Fantastic! I had a good feeling about that pairing 💫',
+    // Chat
+    somurin_name: 'Sommelin', chat_status: 'Sommelier at Bistrot Lumière',
+    chat_welcome: 'Welcome! What are you in the mood for tonight? 🍷',
+    qr_meat: '🥩 Meat tonight', qr_meat_msg: "I'm having meat today",
+    qr_fish: '🐟 Seafood', qr_fish_msg: 'I feel like seafood',
+    qr_bubbles: '🥂 Bubbles first', qr_bubbles_msg: "I'd like something sparkling",
+    qr_reco: '✨ Recommendations?', qr_reco_msg: 'What do you recommend?',
+    photo_hint: 'You can ask about this photo', title_send_photo: 'Send a photo', ph_chat: 'Ask Sommelin...',
+    chat_thinking: 'Thinking… 🍷',
+    chat_busy: "It's a bit busy right now. Please try again in a moment 🙏",
+    chat_quota: "You've used up this month's 5 free chats 🙏 The counter resets on the 1st. For wine searches, try the unlimited Scouter 📷!",
+    chat_photo_err: 'The photo could not be read. Please try another one 🙏',
+    chat_remaining: '📊 {n} left this month',
+    chat_fail: 'Sorry, something went wrong. Please check your connection 🙏',
+    chat_photo_default: 'Tell me about the wine in this photo',
   },
 };
 let LANG = (() => { try { return localStorage.getItem('somm_lang') || (navigator.language && navigator.language.startsWith('ja') ? 'ja' : 'en'); } catch (e) { return 'ja'; } })();
@@ -2810,17 +3132,100 @@ function t(key) {
   const d = I18N[LANG] || I18N.ja;
   return (d && d[key] != null) ? d[key] : (I18N.ja[key] != null ? I18N.ja[key] : key);
 }
+// 国名の日本語→英語表示（LANG==='en'の時だけ変換。DBの値は常に日本語のまま）
+const KUNI_EN = {
+  'フランス': 'France', 'イタリア': 'Italy', 'スペイン': 'Spain', 'アメリカ': 'USA', 'ドイツ': 'Germany',
+  'オーストラリア': 'Australia', 'チリ': 'Chile', 'アルゼンチン': 'Argentina', '日本': 'Japan',
+  'ニュージーランド': 'New Zealand', 'ポルトガル': 'Portugal', 'オーストリア': 'Austria',
+  '南アフリカ': 'South Africa', 'ハンガリー': 'Hungary', 'ギリシャ': 'Greece', 'ジョージア': 'Georgia',
+};
+function dispKuni(k) { return (LANG === 'en' && k && KUNI_EN[k]) ? KUNI_EN[k] : (k || ''); }
+// デモデータ（wineData/classicWines）の表示専用ハードコード文字列の英訳テーブル
+const DEMO_EN = {
+  '酸味': 'Acidity', '甘み': 'Sweetness', 'ボディ': 'Body', 'ミネラル': 'Minerality', 'タンニン': 'Tannin',
+  '余韻': 'Finish', '泡感': 'Effervescence', 'フルーティ': 'Fruity', 'スパイス': 'Spice',
+  '💫マリアージュ': '💫 Mariage', '😊 合う': '😊 Good match',
+  'スタッフ推薦': 'Staff pick', 'AI推薦': 'AI suggestion',
+  '牡蠣・生牡蠣': 'Oysters', 'カルパッチョ': 'Carpaccio', 'フォアグラ': 'Foie gras',
+  '白身魚のムニエル': 'White fish meunière', '帆立のポワレ': 'Seared scallops', '山羊チーズ': 'Goat cheese',
+  'ヤギチーズのサラダ': 'Goat cheese salad', 'アスパラガス料理': 'Asparagus dishes', 'シーフードパスタ': 'Seafood pasta',
+  'ビステッカ（赤身肉）': 'Bistecca (red meat)', 'トリュフのパスタ': 'Truffle pasta', '熟成チーズ': 'Aged cheese',
+  '鴨のロースト': 'Roast duck', '仔羊のグリル': 'Grilled lamb', '松茸のリゾット': 'Matsutake risotto',
+  '前菜の盛り合わせ': 'Assorted appetizers', '冷製パスタ': 'Cold pasta', '生ハムメロン': 'Prosciutto & melon',
+  'グリル料理': 'Grilled dishes', 'ブーイヤベース': 'Bouillabaisse', '地中海風サラダ': 'Mediterranean salad',
+  '和食全般': 'Japanese cuisine', '発酵食品・味噌': 'Fermented foods & miso', 'スパイス料理': 'Spiced dishes',
+  'チャーキュトリー': 'Charcuterie', '羊のチーズ': 'Sheep cheese', '味噌・醤油料理': 'Miso & soy dishes',
+  '🇫🇷 Billecart-Salmon — シャンパーニュ / シャルドネ 100%': '🇫🇷 Billecart-Salmon — Champagne / Chardonnay 100%',
+  '🇫🇷 Domaine Raveneau — ブルゴーニュ / シャルドネ': '🇫🇷 Domaine Raveneau — Bourgogne / Chardonnay',
+  '🇫🇷 Alphonse Mellot — ロワール / ソーヴィニョン・ブラン': '🇫🇷 Alphonse Mellot — Loire / Sauvignon Blanc',
+  '🇮🇹 Fontanafredda — ピエモンテ / ネッビオーロ': '🇮🇹 Fontanafredda — Piedmont / Nebbiolo',
+  "🇫🇷 Marquis d'Angerville — ブルゴーニュ / ピノ・ノワール": "🇫🇷 Marquis d'Angerville — Bourgogne / Pinot Noir",
+  '🇫🇷 La Grange Tiphaine — ロワール / 自然派ロゼ': '🇫🇷 La Grange Tiphaine — Loire / Natural rosé',
+  '🇫🇷 Château des Jacques — ボージョレ / ガメイ': '🇫🇷 Château des Jacques — Beaujolais / Gamay',
+  '🇫🇷 Domaine Tempier — プロヴァンス / ムールヴェードル他': '🇫🇷 Domaine Tempier — Provence / Mourvèdre & others',
+  '🇮🇹 Vodopivec — フリウリ / ピノ・グリージョ': '🇮🇹 Vodopivec — Friuli / Pinot Grigio',
+  "🇬🇪 Pheasant's Tears — ジョージア / ムツヴァネ": "🇬🇪 Pheasant's Tears — Georgia / Mtsvane",
+  '繊細な泡と白桃、シトラスのアロマ。ミネラルの余韻が長く続く上品なシャンパーニュ。15〜18℃でゆっくりと楽しんでいただけます。': 'Delicate bubbles with white peach and citrus aromas. An elegant Champagne with a long mineral finish. Best enjoyed slowly at 15–18°C.',
+  'シャブリのテロワールを体現する一本。鋭いミネラルと洗練された酸味。石灰岩の土壌が生む独特のニュアンスをお楽しみください。': 'A wine that embodies the terroir of Chablis. Sharp minerality and refined acidity, with the distinctive nuances of limestone soils.',
+  'フレッシュなグレープフルーツと草原の香り。キリッとした酸味が食欲を刺激する。冷たく冷やしてアペリティフにも最適。': 'Fresh grapefruit and meadow aromas. Crisp acidity that whets the appetite. Serve well chilled — perfect as an aperitif.',
+  '「ワインの王様」と称されるバローロ。バラとタール、甘草の複雑な香り。熟成したタンニンと圧倒的な余韻。デキャンタ推奨。': 'Barolo, called the "king of wines." Complex aromas of rose, tar, and licorice. Mature tannins and an overwhelming finish. Decanting recommended.',
+  'ヴォルネイの優美さを体現。赤いベリーと土、ほのかなスミレのアロマ。シルクのようなテクスチャーと上品な余韻が続く。': 'The embodiment of Volnay elegance. Red berries, earth, and a hint of violet. A silky texture and a refined, lingering finish.',
+  'ペティヤン・ナチュレル（自然発泡）。いちごと赤いベリーの果実感と、自然な微炭酸が心地よい。ナチュラルワイン初心者にも。': 'Pétillant naturel. Pleasant strawberry and red berry fruit with a gentle natural fizz. Great for natural wine beginners, too.',
+  '（本日は売り切れです）': '(Sold out today)',
+  'プロヴァンスを代表するロゼの名手。深みのあるサーモンピンクが美しい。イチゴとプロヴァンスのハーブ香、程よいボディ感が食事との相性を広げる。': 'A benchmark Provence rosé producer. Beautiful deep salmon pink. Strawberry and Provençal herbs, with a moderate body that pairs widely with food.',
+  'アンフォラ（素焼きの壺）で醸造した琥珀色のオレンジワイン。アプリコット・スパイス・ほんのりタンニン。複雑さと飲みやすさが共存する。': 'An amber orange wine made in amphora. Apricot, spice, and a touch of tannin. Complex yet easy to drink.',
+  'クヴェヴリ（素焼き壺）で醸造するジョージア伝統のアンバーワイン。蜂蜜・ドライフルーツ・スパイスの複雑な香りとしっかりしたタンニン感。': 'A traditional Georgian amber wine made in qvevri. Complex honey, dried fruit, and spice aromas with firm tannins.',
+  'シャンパーニュ / シャルドネ100%': 'Champagne / Chardonnay 100%',
+  'ブルゴーニュ / シャルドネ': 'Bourgogne / Chardonnay',
+  'ロワール / ソーヴィニョン・ブラン': 'Loire / Sauvignon Blanc',
+  'ピエモンテ / ネッビオーロ': 'Piedmont / Nebbiolo',
+  'ブルゴーニュ / ピノ・ノワール': 'Bourgogne / Pinot Noir',
+  'ロワール / 自然派': 'Loire / Natural',
+  'ボージョレ / ガメイ': 'Beaujolais / Gamay',
+  'プロヴァンス / ムールヴェードル他': 'Provence / Mourvèdre & others',
+  'フリウリ（伊）/ ピノ・グリージョ': 'Friuli (IT) / Pinot Grigio',
+  'ジョージア / ムツヴァネ': 'Georgia / Mtsvane',
+  'シャンパーニュ': 'Champagne', 'ブルゴーニュ': 'Bourgogne', 'ロワール': 'Loire', 'イタリア': 'Italy',
+  'プロヴァンス': 'Provence', 'ジョージア': 'Georgia', 'その他': 'Other',
+};
+function dj(v) { return (LANG === 'en' && v != null && DEMO_EN[v] != null) ? DEMO_EN[v] : v; }
+function djSource(v) {
+  if (LANG !== 'en' || !v) return v;
+  if (DEMO_EN[v] != null) return DEMO_EN[v];
+  const m = String(v).match(/^コミュニティ (\d+)件$/);
+  if (m) return 'Community ' + m[1];
+  return v;
+}
 function applyI18n() {
   document.documentElement.lang = LANG;
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+  document.querySelectorAll('[data-i18n-tpl]').forEach(el => { el.textContent = t(el.dataset.i18nTpl).replace('{n}', el.dataset.i18nN || ''); });
   document.querySelectorAll('.jp-only').forEach(el => { el.style.display = LANG === 'ja' ? '' : 'none'; });
   const v = document.getElementById('langMenuVal');
   if (v) v.textContent = LANG === 'ja' ? '日本語' : 'English';
+  // 国セレクトの表示名も言語に追従（値=DBの日本語はそのまま）
+  const sel = document.getElementById('rankKuniSelect');
+  if (sel && sel.dataset.filled) {
+    Array.from(sel.options).forEach(o => {
+      if (!o.value) { o.textContent = t('opt_all_countries'); return; }
+      const f = (typeof COUNTRY_FLAGS !== 'undefined' && COUNTRY_FLAGS[o.value]) ? COUNTRY_FLAGS[o.value][0] : '';
+      o.textContent = (f ? f + ' ' : '') + dispKuni(o.value);
+    });
+  }
 }
 function setLang(l) {
   LANG = l;
   try { localStorage.setItem('somm_lang', l); } catch (e) {}
   applyI18n();
+  // 言語に依存する動的描画を再実行（存在すれば）
+  try { renderRankBandChips(); } catch (e) {}
+  try { renderRealVisits(); } catch (e) {}
+  try { initMypageIdentity(); } catch (e) {}
+  try { initMypageXp(); } catch (e) {}
   if (window.sommLog) sommLog('lang_switch', { lang: l });
 }
 applyI18n();
@@ -2952,10 +3357,10 @@ function openHistoryDetail(key) {
   // リストを見るボタン
   const btn = document.getElementById('hdListBtn');
   if (r.isPrivate) {
-    btn.textContent = '🔒 非公開';
+    btn.textContent = t('locked_private');
     btn.disabled = true;
   } else {
-    btn.textContent = 'リストを見る';
+    btn.textContent = t('btn_view_list');
     btn.disabled = false;
   }
 
@@ -2967,7 +3372,7 @@ function openHistoryDetail(key) {
       <span class="hist-wine-emoji">${w.emoji}</span>
       <div class="hist-wine-info">
         <div class="hist-wine-name">${w.name} ${w.vintage}</div>
-        <div class="hist-wine-sub">${w.region} &nbsp;·&nbsp; グラス ¥${w.price.toLocaleString()}</div>
+        <div class="hist-wine-sub">${w.region} &nbsp;·&nbsp; ${t('glass_price_n').replace('{n}', w.price.toLocaleString())}</div>
       </div>
       <span class="hist-wine-stars">${'⭐'.repeat(w.rating)}</span>
     </div>`).join('');
@@ -2995,7 +3400,7 @@ function confirmListUpdate() {
     setTimeout(() => {
       closeHistoryDetail();
       switchTab('wine');
-      addChatMsg('somurin', '最新のワインリストに更新しました！新着が3本追加されています 🍷');
+      addChatMsg('somurin', t('list_updated_msg'));
       document.getElementById('chatWindow').classList.add('open');
     }, 200);
   }
@@ -3026,11 +3431,11 @@ function switchHistTab(tab) {
 // ── お店タブ（実データ: 端末内の来店記録 sommelin_visits） ──
 function fmtAgo(ts) {
   const d = Math.floor((Date.now() - ts) / 86400000);
-  if (d <= 0) return '今日';
-  if (d === 1) return '昨日';
-  if (d < 7) return d + '日前';
-  if (d < 30) return Math.floor(d / 7) + '週間前';
-  return new Date(ts).toLocaleDateString('ja-JP');
+  if (d <= 0) return t('today');
+  if (d === 1) return t('yesterday');
+  if (d < 7) return t('days_ago').replace('{n}', d);
+  if (d < 30) { const w = Math.floor(d / 7); return t(w === 1 ? 'week_ago_one' : 'weeks_ago').replace('{n}', w); }
+  return new Date(ts).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ja-JP');
 }
 
 // サーバー同期: 他端末で記録した来店もマージしてから描画する
@@ -3073,8 +3478,8 @@ function renderRealVisits() {
     container.innerHTML = `
       <div style="text-align:center;padding:48px 24px;color:var(--text-sub);">
         <div style="font-size:44px;margin-bottom:12px;">📍</div>
-        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;">まだ来店記録がありません</div>
-        <div style="font-size:12px;line-height:1.8;">お店のテーブルにあるQRコードを読み込んで<br>ワインリストを開くと、ここに記録されます 🍷</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;">${t('visits_empty_title')}</div>
+        <div style="font-size:12px;line-height:1.8;">${t('visits_empty_desc')}</div>
       </div>`;
     return;
   }
@@ -3082,16 +3487,16 @@ function renderRealVisits() {
     <div class="hist-rest-card" onclick="location.href='prototype.html?r=${encodeURIComponent(r.rid)}&nv=1'">
       <div class="hist-rest-icon">🍷</div>
       <div class="hist-rest-info">
-        <div class="hist-rest-name">${escH(r.name || 'ワインリスト')}</div>
-        <div class="hist-rest-meta">最終訪問: <strong>${fmtAgo(r.last)}</strong></div>
-        <div class="hist-rest-count">📖 リストを見た回数 ${r.count}回</div>
+        <div class="hist-rest-name">${escH(r.name || t('wine_list_fallback'))}</div>
+        <div class="hist-rest-meta">${t('last_visit_n').replace('{n}', fmtAgo(r.last))}</div>
+        <div class="hist-rest-count">${t('views_count').replace('{n}', r.count)}</div>
       </div>
       <div class="hist-rest-right">
         ${Date.now() - r.last < 86400000 ? '<span class="hist-new-badge">NEW</span>' : ''}
         <span class="hist-arrow">›</span>
       </div>
     </div>`).join('')
-    + `<div style="text-align:center;padding:24px 16px 0;color:var(--text-sub);font-size:12px;">この記録はあなたの端末の中だけに保存されています 🔒</div>`;
+    + `<div style="text-align:center;padding:24px 16px 0;color:var(--text-sub);font-size:12px;">${t('visits_local_note')}</div>`;
 }
 
 function escH(s) { return (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -3109,9 +3514,9 @@ function renderHistWineLog() {
     container.innerHTML = `
       <div style="text-align:center;padding:48px 24px;color:var(--text-sub);">
         <div style="font-size:44px;margin-bottom:12px;">🍷</div>
-        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;">まだワインの記録がありません</div>
-        <div style="font-size:12px;line-height:1.8;">マイセラーに登録したワインがここに表示されます</div>
-        <button onclick="location.href='cellar.html'" style="margin-top:16px;padding:12px 24px;background:var(--burgundy);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;">🍾 マイセラーを開く</button>
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;">${t('wine_log_empty_title')}</div>
+        <div style="font-size:12px;line-height:1.8;">${t('wine_log_empty_desc')}</div>
+        <button onclick="location.href='cellar.html'" style="margin-top:16px;padding:12px 24px;background:var(--burgundy);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;">${t('btn_open_cellar')}</button>
       </div>`;
     return;
   }
@@ -3123,9 +3528,9 @@ function renderHistWineLog() {
         <div class="hist-wine-sub">${escH(w.region || '')}${w.producer ? ' · ' + escH(w.producer) : ''}</div>
         ${w.note ? `<div class="hist-wine-log-rest">💬 ${escH(w.note)}</div>` : ''}
       </div>
-      <span class="hist-wine-stars" style="font-size:11px;color:var(--text-sub);">${w.bottles ? w.bottles + '本' : ''}</span>
+      <span class="hist-wine-stars" style="font-size:11px;color:var(--text-sub);">${w.bottles ? t('bottles_n').replace('{n}', w.bottles) : ''}</span>
     </div>`).join('')
-    + `<div style="text-align:center;padding:20px 16px 0;color:var(--text-sub);font-size:12px;">計 ${cellar.length}本 セラーに記録済み 🍷</div>`;
+    + `<div style="text-align:center;padding:20px 16px 0;color:var(--text-sub);font-size:12px;">${t('cellar_total').replace('{n}', cellar.length)}</div>`;
 }
 
 // ワインログ詳細モーダルを開く
@@ -3141,9 +3546,9 @@ function openWineLogDetail(i) {
 
   document.getElementById('wlmEmoji').textContent    = w.emoji;
   document.getElementById('wlmName').textContent     = w.name;
-  document.getElementById('wlmVintage').textContent  = w.vintage ? `ヴィンテージ ${w.vintage}` : 'NV';
+  document.getElementById('wlmVintage').textContent  = w.vintage ? t('vintage_n').replace('{n}', w.vintage) : 'NV';
   document.getElementById('wlmRegion').textContent   = w.region;
-  document.getElementById('wlmPrice').textContent    = `¥${w.price.toLocaleString()} / グラス`;
+  document.getElementById('wlmPrice').textContent    = t('price_per_glass').replace('{n}', w.price.toLocaleString());
   document.getElementById('wlmStars').textContent    = '⭐'.repeat(w.rating);
   document.getElementById('wlmRestIcon').textContent = w.restIcon;
   document.getElementById('wlmRestName').textContent = w.restName;
@@ -3168,7 +3573,7 @@ function goToRestFromModal() {
 function startScan(mode) {
   // シミュレーション廃止 → 本物のスカウター（scouter.html）へ
   if (mode === 'mariage') {
-    alert('料理とのマリアージュ提案は準備中です。まずはワインリスト読み込みをお試しください 🍷');
+    alert(t('mariage_wip'));
     return;
   }
   location.href = mode === 'winelist' ? 'scouter.html?mode=list' : 'scouter.html';
@@ -3311,7 +3716,7 @@ async function toggleStoreMap() {
   const wrap = document.getElementById('storeMapWrap');
   const btn = document.getElementById('storeMapBtn');
   wrap.style.display = storeMapVisible ? 'block' : 'none';
-  btn.textContent = storeMapVisible ? '📃 リストだけ表示' : '🗺️ 地図で見る';
+  btn.textContent = storeMapVisible ? t('btn_list_only') : t('btn_show_map');
   if (!storeMapVisible) return;
   if (window.sommLog) sommLog('store_map_view', { cat: storeCategory });
   try {
@@ -3320,7 +3725,7 @@ async function toggleStoreMap() {
     renderStoreMapPins();
     setTimeout(() => refreshMapSize(storeMap), 60);
   } catch (e) {
-    wrap.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sub);font-size:12px;">地図を読み込めませんでした（通信環境をご確認ください）</div>';
+    wrap.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sub);font-size:12px;">' + t('map_load_err') + '</div>';
   }
 }
 
@@ -3332,11 +3737,11 @@ function renderStoreMapPins() {
   const pts = [];
   items.forEach((it, i) => {
     const link = it.type === 'official'
-      ? `<a href="prototype.html?r=${encodeURIComponent(it.ownerId)}" style="color:#9B1B4B;font-weight:700;">ワインリストを見る →</a>`
+      ? `<a href="prototype.html?r=${encodeURIComponent(it.ownerId)}" style="color:#9B1B4B;font-weight:700;">${t('view_winelist_link')}</a>`
       : '';
     addMapPin(storeMap, it.lat, it.lng, it.category,
-      `<div style="font-size:13px;font-weight:700;">${i + 1}位 ${(it.name || '').replace(/</g, '&lt;')}</div>
-      <div style="font-size:12px;margin-top:2px;">評価 ${Number(it.score).toFixed(1)}点 ・ ⭐良いワイン${it.goodCount}本</div>${link}`);
+      `<div style="font-size:13px;font-weight:700;">${t('rank_pos').replace('{n}', i + 1)} ${(it.name || '').replace(/</g, '&lt;')}</div>
+      <div style="font-size:12px;margin-top:2px;">${t('map_pin_stats').replace('{s}', Number(it.score).toFixed(1)).replace('{n}', it.goodCount)}</div>${link}`);
     pts.push([it.lat, it.lng]);
   });
   fitMapPins(storeMap, pts);
@@ -3378,18 +3783,18 @@ function renderTopPlaces() {
   const box = document.getElementById('rankingStoresList');
   const escR = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   if (topPlacesData === null) {
-    box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">お店ランキングを読み込めませんでした（通信環境をご確認ください）</div>';
+    box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">' + t('places_load_err') + '</div>';
     return;
   }
   const items = topPlacesData.filter(it => (it.category || 'restaurant') === storeCategory);
-  const catLabel = storeCategory === 'shop' ? 'ワインショップ' : 'レストラン';
+  const catLabel = storeCategory === 'shop' ? t('cat_wineshop') : t('cat_restaurant');
   if (!items.length) {
     box.innerHTML = `
       <div style="text-align:center;padding:36px 20px;">
         <div style="font-size:40px;">🍷</div>
-        <div style="font-weight:700;color:var(--text);margin-top:8px;">${catLabel}ランキングは準備中</div>
+        <div style="font-weight:700;color:var(--text);margin-top:8px;">${t('places_empty_title').replace('{c}', catLabel)}</div>
         <div style="color:var(--text-sub);font-size:12px;margin-top:8px;line-height:1.7;">
-          お店がワインリストを公開したり、<br>スカウターでみんながお店を記録すると、<br>いいワインを出すお店がここに並びます。
+          ${t('places_empty_desc')}
         </div>
       </div>`;
     return;
@@ -3397,8 +3802,8 @@ function renderTopPlaces() {
   box.innerHTML = items.map((it, i) => {
     const badge = i===0 ? 'r1' : i===1 ? 'r2' : i===2 ? 'r3' : 'rn';
     const srcLabel = it.type === 'official'
-      ? '<span style="color:var(--gold);font-weight:700;">📖 公式リスト</span>'
-      : '<span style="color:var(--text-sub);">📍 街で発見</span>';
+      ? '<span style="color:var(--gold);font-weight:700;">' + t('src_official') + '</span>'
+      : '<span style="color:var(--text-sub);">' + t('src_crowd') + '</span>';
     const sub = it.type === 'official' ? (it.address || '') : '';
     const args = it.type === 'official'
       ? `'official','${escR(it.ownerId)}','${escR(it.name).replace(/'/g,"\\'")}'`
@@ -3411,17 +3816,17 @@ function renderTopPlaces() {
         <div class="rank-wine-region">${escR(sub)}</div>
         <div class="rank-wine-stats">
           <span class="rank-stat">${starsHtml(it.score)}</span>
-          <span class="rank-stat">⭐ 良いワイン <strong>${it.goodCount}</strong>本</span>
+          <span class="rank-stat">${t('good_wines_n').replace('{n}', it.goodCount)}</span>
         </div>
         <div class="rank-wine-stats" style="margin-top:2px;">
           <span class="rank-stat">${srcLabel}</span>
-          <span class="rank-stat">🍷 リスト ${it.listCount}本</span>
+          <span class="rank-stat">${t('list_n').replace('{n}', it.listCount)}</span>
         </div>
       </div>
-      <div class="rank-score">${Number(it.score).toFixed(1)}<small>点</small></div>
+      <div class="rank-score">${Number(it.score).toFixed(1)}<small>${t('score_pt')}</small></div>
     </div>`;
   }).join('')
-  + '<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;">ワインリストの質（評価の信頼度加重平均）順。タップでお店のリスト・地図へ</div>';
+  + '<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;">' + t('places_footer') + '</div>';
 }
 
 // ===== ワインの「どこで飲める？買える？」地図モーダル =====
@@ -3431,9 +3836,9 @@ async function openWineMap(wineId, wineName) {
   if (window.sommLog) sommLog('wine_map_view', { wineId });
   const modal = document.getElementById('wineMapModal');
   const body = document.getElementById('wineMapBody');
-  document.getElementById('wineMapTitle').textContent = '📍 ' + (wineName || 'このワイン') + ' はどこで？';
+  document.getElementById('wineMapTitle').textContent = t('wine_map_where').replace('{n}', wineName || t('this_wine'));
   modal.style.display = 'block';
-  body.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">探しています…</div>';
+  body.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">' + t('searching') + '</div>';
   try {
     const r = await fetch(CHAT_API_BASE + '/api/wine-places?wineId=' + encodeURIComponent(wineId));
     if (!r.ok) throw 0;
@@ -3444,8 +3849,8 @@ async function openWineMap(wineId, wineName) {
       body.innerHTML = `
         <div style="text-align:center;padding:24px 12px;">
           <div style="font-size:34px;">🔍</div>
-          <div style="font-size:13px;font-weight:700;color:var(--text);margin-top:6px;">まだ目撃情報がありません</div>
-          <div style="font-size:11px;color:var(--text-sub);margin-top:6px;line-height:1.7;">お店でワインリストをスカウターで撮って記録すると、<br>「ここで飲める・買える」がみんなに共有されます</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);margin-top:6px;">${t('sightings_empty_title')}</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:6px;line-height:1.7;">${t('sightings_empty_desc')}</div>
         </div>`;
       return;
     }
@@ -3453,10 +3858,10 @@ async function openWineMap(wineId, wineName) {
     let html = '';
     if (mappable.length) html += '<div style="border-radius:14px;overflow:hidden;border:1px solid var(--border);"><div id="wineMapCanvas" style="height:260px;"></div></div>';
     html += items.map(it => {
-      const catTxt = it.category === 'shop' ? '🍷 ワインショップ' : '🍽️ レストラン';
-      const price = it.priceBottle ? `ボトル ¥${Number(it.priceBottle).toLocaleString('ja-JP')}`
-                  : it.listPrice ? `${it.byGlass ? 'グラス' : 'ボトル'} ¥${Number(it.listPrice).toLocaleString('ja-JP')}` : '';
-      const src = it.source === 'official' ? '<span style="color:var(--gold);font-weight:700;">📖 公式</span>' : '<span style="color:var(--text-sub);">📍 街で発見</span>';
+      const catTxt = it.category === 'shop' ? t('cat_shop_e') : t('cat_rest_e');
+      const price = it.priceBottle ? t('bottle_price_n').replace('{n}', Number(it.priceBottle).toLocaleString('ja-JP'))
+                  : it.listPrice ? `${it.byGlass ? t('word_glass') : t('word_bottle')} ¥${Number(it.listPrice).toLocaleString('ja-JP')}` : '';
+      const src = it.source === 'official' ? '<span style="color:var(--gold);font-weight:700;">' + t('src_official_short') + '</span>' : '<span style="color:var(--text-sub);">' + t('src_crowd') + '</span>';
       const link = it.source === 'official' ? ` onclick="location.href='prototype.html?r=${encodeURIComponent(it.ownerId)}'" ` : '';
       return `<div ${link} style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-top:8px;${it.source==='official'?'cursor:pointer;':''}">
         <div style="font-size:13px;font-weight:700;color:var(--text);">${esc(it.name)}</div>
@@ -3472,14 +3877,14 @@ async function openWineMap(wineId, wineName) {
       mappable.forEach(it => {
         addMapPin(wineMap, it.lat, it.lng, it.category,
           `<div style="font-size:13px;font-weight:700;">${(it.name||'').replace(/</g,'&lt;')}</div>
-          <div style="font-size:11px;">${it.category === 'shop' ? '🍷 買える' : '🍽️ 飲める'}</div>`);
+          <div style="font-size:11px;">${it.category === 'shop' ? t('pin_buy') : t('pin_drink')}</div>`);
         pts.push([it.lat, it.lng]);
       });
       fitMapPins(wineMap, pts);
       setTimeout(() => refreshMapSize(wineMap), 60);
     }
   } catch (e) {
-    body.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">読み込めませんでした（通信環境をご確認ください）</div>';
+    body.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">' + t('generic_load_err') + '</div>';
   }
 }
 
@@ -3503,7 +3908,7 @@ function populateRankKuniOptions() {
   sel.dataset.filled = '1';
   Object.keys(COUNTRY_FLAGS).forEach(k => {
     const opt = document.createElement('option');
-    opt.value = k; opt.textContent = COUNTRY_FLAGS[k][0] + ' ' + k;
+    opt.value = k; opt.textContent = COUNTRY_FLAGS[k][0] + ' ' + dispKuni(k);
     sel.appendChild(opt);
   });
 }
@@ -3554,7 +3959,7 @@ function renderRankBandChips() {
   if (!box) return;
   box.innerHTML = RANK_BANDS.map((b, i) => {
     const active = rankPriceMin === b.min && rankPriceMax === b.max;
-    return `<button type="button" onclick="selectRankBand(${i})" class="rank-iro-chip" style="border:1px solid ${active ? 'var(--burgundy)' : 'var(--border)'};background:${active ? 'var(--burgundy-pale, #f0dde3)' : '#fff'};color:${active ? 'var(--burgundy)' : 'var(--text)'};font-weight:${active ? 700 : 400};cursor:pointer;">${b.label}</button>`;
+    return `<button type="button" onclick="selectRankBand(${i})" class="rank-iro-chip" style="border:1px solid ${active ? 'var(--burgundy)' : 'var(--border)'};background:${active ? 'var(--burgundy-pale, #f0dde3)' : '#fff'};color:${active ? 'var(--burgundy)' : 'var(--text)'};font-weight:${active ? 700 : 400};cursor:pointer;">${t('band' + i)}</button>`;
   }).join('');
 }
 function selectRankBand(i) {
@@ -3611,13 +4016,13 @@ async function loadTopWines() {
       const w = it.wine || {};
       const badge = i===0 ? 'r1' : i===1 ? 'r2' : i===2 ? 'r3' : 'rn';
       const flag = (COUNTRY_FLAGS[w.kuni] && COUNTRY_FLAGS[w.kuni][0]) || '';
-      const region = [w.kuni, w.chiiki].filter(v => v && v !== '不明').join(' ');
+      const region = [dispKuni(w.kuni), w.chiiki].filter(v => v && v !== '不明').join(' ');
       const price = w.price != null ? '¥' + Math.round(w.price).toLocaleString('ja-JP') : '—';
       const revTxt = it.communityCount > 0
-        ? `みんなの評価 <strong>${it.communityAvg ?? '—'}</strong>（${it.communityCount}件）`
+        ? t('community_rating').replace('{a}', it.communityAvg ?? '—').replace('{n}', it.communityCount)
         : null;
-      const cospaBadge = it.goodValue ? '<span class="s-badge-cospa">コスパ良好</span>' : '';
-      const fiveStarBadge = it.starRating === 5 ? '<span class="s-badge-fivestar">🏅 ソムリン五つ星</span>' : '';
+      const cospaBadge = it.goodValue ? '<span class="s-badge-cospa">' + t('badge_cospa') + '</span>' : '';
+      const fiveStarBadge = it.starRating === 5 ? '<span class="s-badge-fivestar">' + t('badge_fivestar') + '</span>' : '';
       const producerLink = w.producer
         ? ` / <a href="producer.html?p=${encodeURIComponent(w.producer)}" style="color:inherit;text-decoration:underline;text-decoration-color:var(--border);">${escR(w.producer)}</a>`
         : '';
@@ -3630,7 +4035,7 @@ async function loadTopWines() {
         <div class="rank-left">
           <div class="rank-badge ${badge}">${i+1}</div>
           ${w.imageUrl
-            ? `<img src="${escR(w.imageUrl)}" alt="ボトル画像" style="height:72px;width:auto;max-width:56px;object-fit:contain;border-radius:4px;">`
+            ? `<img src="${escR(w.imageUrl)}" alt="${t('alt_bottle')}" style="height:72px;width:auto;max-width:56px;object-fit:contain;border-radius:4px;">`
             : window.BottleSvg ? `<div style="line-height:0;">${window.BottleSvg.render(w,72)}</div>` : ''}
         </div>
         <div class="rank-wine-info">
@@ -3638,17 +4043,17 @@ async function loadTopWines() {
           <div class="rank-wine-region">${flag} ${escR(region)}${producerLink}</div>
           <div class="rank-wine-stats" style="margin-top:4px;align-items:center;">${starsHtml}${fiveStarBadge}</div>
           <div class="rank-wine-stats" style="margin-top:4px;">
-            <span class="rank-stat">参考価格 <strong>${price}</strong></span>
+            <span class="rank-stat">${t('ref_price').replace('{p}', price)}</span>
             ${cospaBadge}
           </div>
           ${revTxt ? `<div class="rank-wine-stats" style="margin-top:2px;"><span class="rank-stat">${revTxt}</span></div>` : ''}
-          <div style="margin-top:6px;"><button onclick="openWineMap(${it.wineId}, '${escR(w.name).replace(/'/g,"\\'")}')" style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--burgundy);cursor:pointer;font-family:inherit;">📍 どこで飲める？買える？</button></div>
+          <div style="margin-top:6px;"><button onclick="openWineMap(${it.wineId}, '${escR(w.name).replace(/'/g,"\\'")}')" style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--burgundy);cursor:pointer;font-family:inherit;">${t('btn_where')}</button></div>
         </div>
       </div>`;
     }).join('')
-    + '<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;line-height:1.6;">星が付いているワインはすべてソムリンのおすすめです。星の数は同価格帯での稀少度を表します</div>';
+    + '<div style="text-align:center;padding:14px 16px 4px;color:var(--text-sub);font-size:11px;line-height:1.6;">' + t('rank_footer_note') + '</div>';
   } catch (e) {
-    box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">ランキングを読み込めませんでした（通信環境をご確認ください）</div>';
+    box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">' + t('rank_load_err') + '</div>';
   }
 }
 
@@ -3679,15 +4084,15 @@ async function loadRealEvents() {
     tastingEvents = rows.map((e, i) => {
       const cls = classifyEvent(e.title, e.description);
       const time = (e.start_time || e.end_time)
-        ? [fmtHM(e.start_time), fmtHM(e.end_time)].filter(Boolean).join(' – ') : '時間は詳細参照';
-      const costTxt = e.cost == null ? '' : (e.cost === 0 ? '参加費: 無料' : '参加費: ¥' + Number(e.cost).toLocaleString('ja-JP'))
+        ? [fmtHM(e.start_time), fmtHM(e.end_time)].filter(Boolean).join(' – ') : t('time_see_details');
+      const costTxt = e.cost == null ? '' : (e.cost === 0 ? t('fee_free') : t('fee_n').replace('{n}', Number(e.cost).toLocaleString('ja-JP')))
         + (e.cost_notes ? '（' + e.cost_notes + '）' : '');
       return {
         id: i + 1,
         uuid: e.id,
         date: new Date(e.event_date + 'T00:00:00'),
         type: cls.type, typeLabel: cls.typeLabel, tag: cls.tag, dotClass: '',
-        name: e.title || '（タイトルなし）',
+        name: e.title || t('no_title'),
         organizer: costTxt,                                    // 参加費（実データ）を表示
         venue: [e.venue_name, e.venue_address].filter(Boolean).join('　'),
         time: time,
@@ -3717,7 +4122,7 @@ async function loadRestaurantList(rid) {
     if (!rw.ok) return;
     const rows = await rw.json();
     const st = rs.ok ? (await rs.json())[0] : null;
-    const shopName = (st && st.display_name) || 'ワインリスト';
+    const shopName = (st && st.display_name) || t('wine_list_fallback');
     document.querySelectorAll('.restaurant-name').forEach(el => el.textContent = shopName);
     if (window.sommLog) sommLog('store_list_view', { r: rid });
 
@@ -3743,7 +4148,7 @@ async function loadRestaurantList(rid) {
       cat: r.cat || 'red',
       name: r.name + (r.vintage && r.vintage !== 'NV' ? ' ' + r.vintage : ''),
       producer: [r.region, r.grapes].filter(Boolean).join(' / ') || r.producer || '',
-      region: r.region || 'その他',
+      region: r.region || t('word_other'),
       priceGlass: r.price_glass || 0,
       priceBottle: r.price_bottle || 0,
       hasMarriage: false,
@@ -3764,7 +4169,7 @@ async function loadRestaurantList(rid) {
     cl.style.display = 'block'; cl.classList.add('active');
     renderClassicList('all');
     if (!rows.length) {
-      cl.innerHTML = '<div style="text-align:center;padding:50px 20px;color:var(--text-sub);font-size:13px;">このお店のワインリストはまだ公開されていません 🍷</div>';
+      cl.innerHTML = '<div style="text-align:center;padding:50px 20px;color:var(--text-sub);font-size:13px;">' + t('shop_list_unpublished') + '</div>';
     }
   } catch (e) {}
 }
@@ -3775,8 +4180,10 @@ let selectedEventId = null;
 
 function renderCalendar() {
   const label = document.getElementById('calMonthLabel');
-  const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-  label.textContent = `${currentCalYear}年 ${months[currentCalMonth]}`;
+  const months = LANG === 'en'
+    ? ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    : ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  label.textContent = t('cal_month_label').replace('{y}', currentCalYear).replace('{m}', months[currentCalMonth]);
 
   const grid = document.getElementById('calGrid');
   const today = new Date();
@@ -3858,7 +4265,7 @@ function renderEventList() {
     .filter(ev => ev.date >= now || ev.date.toDateString() === now.toDateString())
     .sort((a,b) => a.date - b.date);
 
-  const dows = ['日','月','火','水','木','金','土'];
+  const dows = LANG === 'en' ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] : ['日','月','火','水','木','金','土'];
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
   container.innerHTML = upcoming.map(ev => {
@@ -3874,10 +4281,10 @@ function renderEventList() {
         <div class="event-date-badge">
           <div class="event-date-month">${m}</div>
           <div class="event-date-day">${d}</div>
-          <div class="event-date-dow">${dow}曜</div>
+          <div class="event-date-dow">${t('dow_suffix').replace('{d}', dow)}</div>
         </div>
         <div class="event-info">
-          <span class="event-type-tag ${ev.tag}">${ev.typeLabel}</span>
+          <span class="event-type-tag ${ev.tag}">${t('evtype_' + ev.type)}</span>
           ${ev.isNew ? '<span class="event-new-badge">NEW</span>' : ''}
           <div class="event-name">${ev.name}</div>
           <div class="event-meta">⏰ ${ev.time} &nbsp;|&nbsp; 📍 ${ev.venue.split(' ')[0]}</div>
@@ -3891,12 +4298,13 @@ function openEvent(id) {
   selectedEventId = id;
   const ev = tastingEvents.find(e => e.id === id);
   if (!ev) return;
-  const dows = ['日','月','火','水','木','金','土'];
-  document.getElementById('evType').textContent = ev.typeLabel.toUpperCase();
+  const dows = LANG === 'en' ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] : ['日','月','火','水','木','金','土'];
+  document.getElementById('evType').textContent = t('evtype_' + ev.type).toUpperCase();
   document.getElementById('evName').textContent = ev.name;
   document.getElementById('evOrganizer').textContent = ev.organizer;
-  document.getElementById('evDate').textContent =
-    `${ev.date.getFullYear()}年${ev.date.getMonth()+1}月${ev.date.getDate()}日（${dows[ev.date.getDay()]}）`;
+  document.getElementById('evDate').textContent = t('ev_date_fmt')
+    .replace('{y}', ev.date.getFullYear()).replace('{m}', ev.date.getMonth()+1)
+    .replace('{d}', ev.date.getDate()).replace('{w}', dows[ev.date.getDay()]);
   document.getElementById('evTime').textContent = ev.time;
   document.getElementById('evVenue').textContent = ev.venue;
   document.getElementById('evWines').innerHTML = ev.wines.map(w =>
@@ -3905,9 +4313,9 @@ function openEvent(id) {
   // 申込みボタン: 実データの申込URLがある時だけ有効（偽の申込完了は出さない）
   const rsvpBtn = document.getElementById('evRsvpBtn');
   if (ev.registrationUrl) {
-    rsvpBtn.textContent = '申込みページへ →'; rsvpBtn.disabled = false; rsvpBtn.style.background = '';
+    rsvpBtn.textContent = t('btn_rsvp_page'); rsvpBtn.disabled = false; rsvpBtn.style.background = '';
   } else {
-    rsvpBtn.textContent = '申込みは詳細内の連絡先へ'; rsvpBtn.disabled = true; rsvpBtn.style.background = '#9aa0a6';
+    rsvpBtn.textContent = t('btn_rsvp_contact'); rsvpBtn.disabled = true; rsvpBtn.style.background = '#9aa0a6';
   }
   document.getElementById('eventModal').classList.add('open');
 }
@@ -3960,11 +4368,11 @@ function renderClassicList(filter) {
 
   // カテゴリ定義（順番・表示名）
   const categories = [
-    { key: 'sparkling', label: '泡・スパークリング' },
-    { key: 'white',     label: '白ワイン' },
-    { key: 'rose',      label: 'ロゼ' },
-    { key: 'orange',    label: 'オレンジワイン' },
-    { key: 'red',       label: '赤ワイン' },
+    { key: 'sparkling', label: t('cls_sparkling') },
+    { key: 'white',     label: t('cls_white') },
+    { key: 'rose',      label: t('cls_rose') },
+    { key: 'orange',    label: t('cls_orange') },
+    { key: 'red',       label: t('cls_red') },
   ];
 
   const activeCategories = filter === 'all'
@@ -3984,7 +4392,7 @@ function renderClassicList(filter) {
       <div class="classic-section">
         <div class="classic-section-header">
           <span class="classic-section-title">${cat.label}</span>
-          <span class="classic-section-count">${items.length}種</span>
+          <span class="classic-section-count">${t('kinds_n').replace('{n}', items.length)}</span>
         </div>`;
 
     // 産地でグループ化
@@ -3996,21 +4404,21 @@ function renderClassicList(filter) {
 
     Object.entries(byRegion).forEach(([region, wines]) => {
       if (Object.keys(byRegion).length > 1) {
-        html += `<div style="padding:8px 28px 2px;font-size:10px;font-weight:700;color:var(--text-sub);letter-spacing:1px;">${region}</div>`;
+        html += `<div style="padding:8px 28px 2px;font-size:10px;font-weight:700;color:var(--text-sub);letter-spacing:1px;">${dj(region)}</div>`;
       }
       wines.forEach((w, i) => {
         html += `
           <div class="classic-row" onclick="openWine(${w.idx})">
             <div class="classic-row-left">
               <div class="classic-wine-name">${w.name}${w.sp != null ? ` <span style="font-size:10px;font-weight:800;color:#C9973A;">⭐${Number(w.sp).toFixed(1)}</span>` : ''}</div>
-              <div class="classic-origin">${w.producer}</div>
+              <div class="classic-origin">${dj(w.producer)}</div>
             </div>
             <div class="classic-dots"></div>
             <div class="classic-prices">
               <div class="classic-price-glass">${w.priceGlass ? '¥'+w.priceGlass.toLocaleString() : '—'}</div>
               ${w.priceBottle ? `<span class="classic-price-bottle">btl ¥${w.priceBottle.toLocaleString()}</span>` : ''}
             </div>
-            <div class="classic-mariage-dot ${w.hasMarriage ? '' : 'none'}" title="マリアージュあり"></div>
+            <div class="classic-mariage-dot ${w.hasMarriage ? '' : 'none'}" title="${t('title_has_mariage')}"></div>
           </div>`;
       });
     });
@@ -4150,14 +4558,14 @@ let wines = [
 function openWine(idx) {
   const w = wines[idx];
   document.getElementById('modalName').textContent = w.name;
-  document.getElementById('modalProducer').textContent = w.producer;
-  document.getElementById('modalNote').textContent = w.note;
+  document.getElementById('modalProducer').textContent = dj(w.producer);
+  document.getElementById('modalNote').textContent = dj(w.note);
 
   // Flavors
   const fb = document.getElementById('modalFlavors');
   fb.innerHTML = w.flavors.map(f => `
     <div class="flavor-row">
-      <span class="flavor-label">${f.label}</span>
+      <span class="flavor-label">${dj(f.label)}</span>
       <div class="flavor-bar-bg">
         <div class="flavor-bar-fill" style="width:${f.val}%"></div>
       </div>
@@ -4168,11 +4576,11 @@ function openWine(idx) {
   mb.innerHTML = w.mariage.map(m => `
     <div class="mariage-item">
       <div>
-        <div class="mariage-food">${m.food}</div>
-        <div class="mariage-source">${m.source}</div>
+        <div class="mariage-food">${dj(m.food)}</div>
+        <div class="mariage-source">${djSource(m.source)}</div>
       </div>
       <div class="mariage-score">
-        <span class="mariage-badge level-${m.level}">${m.score}</span>
+        <span class="mariage-badge level-${m.level}">${dj(m.score)}</span>
       </div>
     </div>`).join('');
 
@@ -4190,10 +4598,10 @@ function giveFeedback(btn, type) {
   document.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   const msgs = {
-    no_match: "そうでしたか…次はもっと合う組み合わせを探しますね。",
-    neutral: "なるほど。もう少し冒険的な組み合わせもご提案できますよ！",
-    match: "よかったです！記録しておきますね 😊",
-    mariage: "最高ですね！その組み合わせ、私も自信がありました 💫"
+    no_match: t('fb_reply_no_match'),
+    neutral: t('fb_reply_neutral'),
+    match: t('fb_reply_match'),
+    mariage: t('fb_reply_mariage')
   };
   setTimeout(() => {
     document.getElementById('wineModal').classList.remove('open');
@@ -4220,7 +4628,8 @@ function filterWines(cat, btn) {
   // セクションタイトルも隠す
   document.querySelectorAll('.section-title').forEach(t => {
     const next = t.nextElementSibling;
-    const map = { 'スパークリング':'sparkling','白ワイン':'white','赤ワイン':'red','ロゼ':'rose','オレンジワイン':'orange' };
+    const map = { 'スパークリング':'sparkling','白ワイン':'white','赤ワイン':'red','ロゼ':'rose','オレンジワイン':'orange',
+                  'Sparkling':'sparkling','White Wine':'white','Red Wine':'red','Rosé':'rose','Orange Wine':'orange' };
     const key = map[t.textContent.trim()];
     t.style.display = (cat === 'all' || !key || key === cat) ? '' : 'none';
   });
@@ -4335,7 +4744,7 @@ function initMypageIdentity(){
   const nameEl = document.getElementById('mypageNameEl');
   if (nameEl) {
     let nick = ''; try { nick = localStorage.getItem('sommelin_nickname') || ''; } catch(e){}
-    nameEl.textContent = nick || 'ゲスト';
+    nameEl.textContent = nick || t('guest');
   }
   const winesEl = document.getElementById('mypageStatWines');
   const shopsEl = document.getElementById('mypageStatShops');
@@ -4366,7 +4775,7 @@ function initMypageInvite() {
   const link = mypageInviteLink();
   const input = document.getElementById('mypageInviteLinkText');
   const qrWrap = document.getElementById('inviteQrWrap');
-  if (!link) { if (input) input.value = 'ログイン後に表示されます'; return; }
+  if (!link) { if (input) input.value = t('invite_login_first'); return; }
   if (input) input.value = link;
   if (qrWrap && window.QRCode && !qrWrap.dataset.rendered) {
     qrWrap.dataset.rendered = '1';
@@ -4376,15 +4785,15 @@ function initMypageInvite() {
 function copyMypageInviteLink() {
   const link = mypageInviteLink();
   if (!link) return;
-  navigator.clipboard.writeText(link).then(() => showToastLike('リンクをコピーしました')).catch(() => {});
+  navigator.clipboard.writeText(link).then(() => showToastLike(t('toast_link_copied'))).catch(() => {});
 }
 async function shareMypageInvite() {
   const link = mypageInviteLink();
   if (!link) return;
-  const text = 'ソムリンで一緒にワインを楽しもう🍷 ' + link;
+  const text = t('share_text') + link;
   try {
     if (navigator.share) { await navigator.share({ text, url: link }); }
-    else { await navigator.clipboard.writeText(link); showToastLike('📤 招待リンクをコピーしました！'); }
+    else { await navigator.clipboard.writeText(link); showToastLike(t('toast_invite_copied')); }
   } catch (e) { /* シェアをキャンセルした場合等は何もしない */ }
 }
 initMypageInvite();
@@ -4463,7 +4872,7 @@ applyAccountUI();        // まずローカルキャッシュで即描画
 syncAccountFromServer(); // サーバーの正で自己修復
 
 function sommelinLogout(){
-  if (!confirm('ログアウトしますか？')) return;
+  if (!confirm(t('confirm_logout'))) return;
   var s = accSession();
   if (s && s.access_token) {
     fetch(ACC_SB_URL + '/auth/v1/logout', { method: 'POST', headers: { apikey: ACC_SB_KEY, Authorization: 'Bearer ' + s.access_token } }).catch(function(){});
@@ -4486,30 +4895,30 @@ function openWineHistory() {
   const box = document.getElementById('wineHistoryList');
   const subEl = document.getElementById('wineHistorySubtitle');
   if (!CHAT_UID2) { box.innerHTML = ''; return; }
-  box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込み中…</div>';
+  box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">' + t('loading') + '</div>';
   fetch(CHAT_API_BASE + '/api/taste/list?userId=' + encodeURIComponent(CHAT_UID2))
     .then(r => r.ok ? r.json() : null)
     .then(d => {
       const items = (d && d.items) || [];
-      if (subEl) subEl.textContent = items.length + '本記録済み';
+      if (subEl) subEl.textContent = t('recorded_n').replace('{n}', items.length);
       if (!items.length) {
-        box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">まだ記録がありません</div>';
+        box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">' + t('no_records_yet') + '</div>';
         return;
       }
       const escR = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
       box.innerHTML = items.map(it => {
-        const region = [it.kuni, it.chiiki].filter(v => v && v !== '不明').join(' ');
+        const region = [dispKuni(it.kuni), it.chiiki].filter(v => v && v !== '不明').join(' ');
         const sub = [escR(it.producer), escR(region)].filter(Boolean).join(' ・ ');
-        const date = it.ts ? new Date(it.ts).toLocaleDateString('ja-JP') : '';
+        const date = it.ts ? new Date(it.ts).toLocaleDateString(LANG === 'en' ? 'en-US' : 'ja-JP') : '';
         return `
         <div style="padding:10px 0;border-bottom:1px solid var(--border);">
-          <div style="font-size:14px;font-weight:700;color:var(--text);">${escR(it.name) || '（名称不明）'}${it.vintage ? ' ' + escR(it.vintage) : ''}</div>
+          <div style="font-size:14px;font-weight:700;color:var(--text);">${escR(it.name) || t('unknown_name')}${it.vintage ? ' ' + escR(it.vintage) : ''}</div>
           <div style="font-size:12px;color:var(--text-sub);margin-top:2px;">${sub}</div>
           <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">${date}</div>
         </div>`;
       }).join('');
     })
-    .catch(() => { box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">読み込めませんでした</div>'; });
+    .catch(() => { box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">' + t('load_err_short') + '</div>'; });
 }
 
 // ── プロフィール編集（2026-07-08追加: ニックネーム＋一度だけ設定できるID） ──
@@ -4542,14 +4951,14 @@ function saveProfileNick() {
   try { localStorage.setItem('sommelin_nickname', v); } catch (e) {}
   const nameEl = document.getElementById('mypageNameEl');
   if (nameEl) nameEl.textContent = v;
-  showToastLike('ニックネームを保存しました');
+  showToastLike(t('toast_nick_saved'));
 }
 function saveProfileHandle() {
   const v = document.getElementById('profileHandleInput').value.trim();
   const msgEl = document.getElementById('profileHandleMsg');
   if (!CHAT_UID2) return;
   if (!/^[a-zA-Z0-9_]{3,20}$/.test(v)) {
-    msgEl.textContent = '半角英数字とアンダースコアで3〜20文字にしてください。';
+    msgEl.textContent = t('handle_invalid');
     return;
   }
   fetch(CHAT_API_BASE + '/api/profile/handle', {
@@ -4566,10 +4975,10 @@ function saveProfileHandle() {
         locked.textContent = '@' + d.handle;
         msgEl.textContent = '';
       } else {
-        msgEl.textContent = d.message || '設定できませんでした。';
+        msgEl.textContent = (LANG === 'en') ? t('handle_set_err') : (d.message || t('handle_set_err'));
       }
     })
-    .catch(() => { msgEl.textContent = '通信エラーが発生しました。'; });
+    .catch(() => { msgEl.textContent = t('network_err'); });
 }
 function showToastLike(text) {
   const el = document.createElement('div');
@@ -4589,16 +4998,16 @@ function closeSubscriptionInfo() {
 
 // ── 経験値・レベル・国推しバッジ（2026-07-07・backendのXP_RULES/LEVELSと対応） ──
 const XP_LEVELS = [
-  { level:1,  title:'たまごソムリン',     min:0,    avatar:'sommelin-welcome.png' },
-  { level:2,  title:'ひよこソムリン',     min:30,   avatar:'sommelin-welcome.png' },
-  { level:3,  title:'見習いソムリン',     min:80,   avatar:'sommelin-welcome.png' },
-  { level:4,  title:'ソムリン',           min:160,  avatar:'sommelin-recommend.png' },
-  { level:5,  title:'中堅ソムリン',       min:280,  avatar:'sommelin-recommend.png' },
-  { level:6,  title:'匠ソムリン',         min:450,  avatar:'sommelin-recommend.png' },
-  { level:7,  title:'賢者ソムリン',       min:700,  avatar:'sommelin-swirling.png' },
-  { level:8,  title:'マイスターソムリン', min:1000, avatar:'sommelin-swirling.png' },
-  { level:9,  title:'グランソムリン',     min:1400, avatar:'sommelin-swirling.png' },
-  { level:10, title:'レジェンドソムリン', min:2000, avatar:'sommelin-delighted.png' },
+  { level:1,  title:'たまごソムリン',     en:'Egg Sommelin',        min:0,    avatar:'sommelin-welcome.png' },
+  { level:2,  title:'ひよこソムリン',     en:'Chick Sommelin',      min:30,   avatar:'sommelin-welcome.png' },
+  { level:3,  title:'見習いソムリン',     en:'Apprentice Sommelin', min:80,   avatar:'sommelin-welcome.png' },
+  { level:4,  title:'ソムリン',           en:'Sommelin',            min:160,  avatar:'sommelin-recommend.png' },
+  { level:5,  title:'中堅ソムリン',       en:'Seasoned Sommelin',   min:280,  avatar:'sommelin-recommend.png' },
+  { level:6,  title:'匠ソムリン',         en:'Artisan Sommelin',    min:450,  avatar:'sommelin-recommend.png' },
+  { level:7,  title:'賢者ソムリン',       en:'Sage Sommelin',       min:700,  avatar:'sommelin-swirling.png' },
+  { level:8,  title:'マイスターソムリン', en:'Meister Sommelin',    min:1000, avatar:'sommelin-swirling.png' },
+  { level:9,  title:'グランソムリン',     en:'Grand Sommelin',      min:1400, avatar:'sommelin-swirling.png' },
+  { level:10, title:'レジェンドソムリン', en:'Legend Sommelin',     min:2000, avatar:'sommelin-delighted.png' },
 ];
 const COUNTRY_FLAGS = {
   'フランス':['🇫🇷','フランス通'], 'イタリア':['🇮🇹','イタリア通'], 'スペイン':['🇪🇸','スペイン通'],
@@ -4619,18 +5028,19 @@ function initMypageXp(){
       const barEl   = document.getElementById('mypageXpBar');
       const nextEl  = document.getElementById('mypageXpNext');
       const avatarEl= document.getElementById('mypageAvatarEl');
-      if (titleEl) titleEl.textContent = d.title || cur.title;
+      if (titleEl) titleEl.textContent = LANG === 'en' ? cur.en : (d.title || cur.title);
       if (numEl) numEl.textContent = d.total + ' XP';
       if (barEl) {
         const pct = next ? Math.min(100, Math.round((d.total - cur.min) / (next.min - cur.min) * 100)) : 100;
         barEl.style.width = pct + '%';
       }
-      if (nextEl) nextEl.textContent = next ? `次のレベルまであと${next.min - d.total}XP` : '最高レベルです🎉';
+      if (nextEl) nextEl.textContent = next ? t('xp_next').replace('{n}', next.min - d.total) : t('xp_max');
       if (avatarEl && cur.avatar) avatarEl.innerHTML = `<img src="assets/sommelin/${cur.avatar}" style="width:100%;height:100%;object-fit:contain;border-radius:50%;">`;
       const certEl = document.getElementById('mypageCertEl');
       if (certEl && d.topCountry && COUNTRY_FLAGS[d.topCountry]) {
         const [flag, label] = COUNTRY_FLAGS[d.topCountry];
-        certEl.textContent = `ソムリン会員 ・ ${flag} ${label}`;
+        const lbl = LANG === 'en' ? dispKuni(d.topCountry) + ' Expert' : label;
+        certEl.textContent = t('member_with').replace('{f}', flag).replace('{l}', lbl);
       }
     }).catch(() => {});
 }
@@ -4648,14 +5058,14 @@ function loadHomeCellarPreview() {
     .then(d => {
       const items = ((d && d.items) || []).filter(it => it.bottles == null || it.bottles > 0).slice(0, 8);
       if (!items.length) {
-        box.innerHTML = '<a href="cellar.html" style="text-decoration:none;font-size:12.5px;color:var(--text-sub);">まだ登録がありません。タップして追加しましょう →</a>';
+        box.innerHTML = '<a href="cellar.html" style="text-decoration:none;font-size:12.5px;color:var(--text-sub);">' + t('cellar_empty') + '</a>';
         return;
       }
       const escR = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
       box.innerHTML = items.map(it => `
         <a href="cellar.html" style="flex:none;width:120px;text-decoration:none;color:inherit;background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px;">
-          <div style="font-size:12.5px;font-weight:700;color:var(--text);line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${escR(it.name) || '（名称未設定）'}</div>
-          <div style="font-size:10.5px;color:var(--text-sub);margin-top:4px;">🍾 ${it.bottles != null ? it.bottles : 1}本${it.is_public ? ' ・ 🌐 公開' : ''}</div>
+          <div style="font-size:12.5px;font-weight:700;color:var(--text);line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${escR(it.name) || t('unnamed')}</div>
+          <div style="font-size:10.5px;color:var(--text-sub);margin-top:4px;">${t('bottles_e').replace('{n}', it.bottles != null ? it.bottles : 1)}${it.is_public ? t('pub_suffix') : ''}</div>
         </a>`).join('');
     })
     .catch(() => { box.innerHTML = ''; });
@@ -4677,13 +5087,13 @@ function loadHomeFeed() {
       if (!d || !d.items) { box.innerHTML = ''; return; }
       if (coldMsg) coldMsg.style.display = d.isColdStart ? 'block' : 'none';
       if (!d.items.length) {
-        box.innerHTML = '<div style="text-align:center;color:var(--text-sub);font-size:13px;padding:32px 0;">まだ表示できるおすすめがありません</div>';
+        box.innerHTML = '<div style="text-align:center;color:var(--text-sub);font-size:13px;padding:32px 0;">' + t('feed_empty') + '</div>';
         return;
       }
       const escR = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
       box.innerHTML = d.items.map(it => {
         const w = it.wine || {};
-        const region = [w.kuni, w.chiiki].filter(v => v && v !== '不明').join(' ');
+        const region = [dispKuni(w.kuni), w.chiiki].filter(v => v && v !== '不明').join(' ');
         const sub = [escR(w.producer), escR(region)].filter(Boolean).join(' ・ ');
         const badgeIcon = FEED_SOURCE_EMOJI[it.source] || '🍷';
         const who = it.filterName ? `${it.filterEmoji || ''} ${escR(it.filterName)}` : '';
@@ -4745,7 +5155,7 @@ async function askSomurin(text, photo) {
   if (protoChatBusy) return;
   protoChatBusy = true;
   protoChatHist.push({ role: 'user', content: text });
-  addChatMsg('somurin', '考え中… 🍷');
+  addChatMsg('somurin', t('chat_thinking'));
   const msgs = document.getElementById('chatMessages');
   const thinkingEl = msgs.lastElementChild;
   try {
@@ -4758,13 +5168,13 @@ async function askSomurin(text, photo) {
       body: JSON.stringify(body)
     });
     thinkingEl.remove();
-    if (r.status === 429) { addChatMsg('somurin', '少し混み合っています。しばらくしてからどうぞ 🙏'); return; }
+    if (r.status === 429) { addChatMsg('somurin', t('chat_busy')); return; }
     if (r.status === 403) {
-      addChatMsg('somurin', '今月の無料チャット枠（5回）を使い切りました🙏 毎月1日にリセットされます。ワイン探しは回数制限のないスカウター📷をどうぞ！');
+      addChatMsg('somurin', t('chat_quota'));
       return;
     }
     if (r.status === 400 || r.status === 413) {
-      addChatMsg('somurin', '写真がうまく読み込めませんでした。別の写真でもう一度お試しください 🙏');
+      addChatMsg('somurin', t('chat_photo_err'));
       return;
     }
     if (!r.ok) throw 0;
@@ -4772,12 +5182,12 @@ async function askSomurin(text, photo) {
     protoChatHist.push({ role: 'assistant', content: d.reply });
     let replyHtml = mdBold(d.reply).replace(/\n/g, '<br>');
     if (d.quota && !d.quota.premium && d.quota.remaining !== null && d.quota.remaining <= 2) {
-      replyHtml += `<br><span style="font-size:11px;color:var(--gold);font-weight:600;">📊 今月あと${d.quota.remaining}回</span>`;
+      replyHtml += `<br><span style="font-size:11px;color:var(--gold);font-weight:600;">${t('chat_remaining').replace('{n}', d.quota.remaining)}</span>`;
     }
     addChatMsg('somurin', replyHtml);
   } catch (e) {
     thinkingEl.remove();
-    addChatMsg('somurin', 'ごめんなさい、うまく応答できませんでした。通信環境をご確認ください 🙏');
+    addChatMsg('somurin', t('chat_fail'));
   } finally {
     protoChatBusy = false;
   }
@@ -4820,7 +5230,7 @@ function sendMessage() {
   let text = input.value.trim();
   const photo = protoPendingPhoto;
   if ((!text && !photo) || protoChatBusy) return;
-  if (!text && photo) text = 'この写真のワインについて教えて';
+  if (!text && photo) text = t('chat_photo_default');
   addChatMsg('user', escH(text), photo);
   if (window.sommLog) sommLog('chat_send', { photo: !!photo, widget: true });
   input.value = '';
