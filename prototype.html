@@ -754,6 +754,23 @@
   .cal-day.has-event.selected { background: #f0d8e2; }
   .cal-day.today.has-event { background: #fdf2e9; }
 
+  /* 申込み済み（自己申告）の日: セル右上に✅ */
+  .cal-day.rsvped::after {
+    content: '✅';
+    position: absolute;
+    top: 1px; right: 2px;
+    font-size: 9px;
+    line-height: 1;
+  }
+
+  .event-rsvp-badge {
+    display: inline-block;
+    font-size: 10px; font-weight: 800;
+    color: #2e7d32; background: #e8f5e9;
+    border-radius: 10px; padding: 2px 7px;
+    margin-left: 4px; vertical-align: middle;
+  }
+
   .cal-event-dots {
     display: flex;
     gap: 2px;
@@ -2612,10 +2629,35 @@
       <div class="modal-section-title" data-i18n="ev_details">詳細</div>
       <p style="font-size:13px;line-height:1.6;color:var(--text);white-space:pre-line;" id="evNote"></p>
     </div>
+    <div class="modal-section" id="evUrlSection" style="display:none;">
+      <div class="modal-section-title" data-i18n="ev_reg_url">申込みページURL</div>
+      <a id="evUrlLink" href="#" target="_blank" rel="noopener" style="font-size:12px;color:var(--burgundy);word-break:break-all;text-decoration:underline;line-height:1.6;"></a>
+    </div>
+    <!-- 申込み状態（自己申告）: 外部フォームのため完了はアプリには分からない。押しただけでロックせず、本人に確認して記録する -->
+    <div id="evRsvpConfirm" style="display:none;margin:12px 20px 0;padding:12px 14px;border-radius:12px;background:#fdf6ec;border:1.5px solid var(--gold,#C9973A);">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px;" data-i18n="rsvp_confirm_q">申込みは完了しましたか？</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="markRsvpDone()" style="flex:1;padding:10px;border:none;border-radius:10px;background:#2e7d32;color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;" data-i18n="rsvp_done_btn">✅ 完了した</button>
+        <button onclick="hideRsvpConfirm()" style="flex:1;padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--text);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;" data-i18n="rsvp_later_btn">まだ / あとで</button>
+      </div>
+    </div>
+    <div id="evRsvpStatusRow" style="display:none;margin:12px 20px 0;font-size:12.5px;color:#2e7d32;font-weight:700;">
+      ✅ <span data-i18n="rsvp_marked">申込み済みとして記録しています</span>
+      <a href="#" onclick="clearRsvp(event)" style="color:var(--text-sub);margin-left:10px;font-weight:600;" data-i18n="rsvp_clear">記録を解除</a>
+    </div>
     <div style="padding:16px 20px 32px; display:flex; gap:10px;">
       <button class="ev-btn-outline" onclick="closeEventModal({target:document.getElementById('eventModal')})" data-i18n="btn_close">閉じる</button>
       <button class="ev-btn-primary" id="evRsvpBtn" onclick="rsvpEvent()" data-i18n="ev_rsvp">参加を申し込む</button>
     </div>
+  </div>
+</div>
+
+<!-- 同日に複数の試飲会がある日のセルタップ用リスト -->
+<div class="modal-overlay" id="dayEventsModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="padding:16px 20px 8px;font-weight:800;font-size:15px;" id="dayEventsTitle"></div>
+    <div id="dayEventsList" style="padding:0 16px 28px;"></div>
   </div>
 </div>
 
@@ -2853,6 +2895,12 @@ const I18N = {
     time_see_details: '時間は詳細参照', fee_free: '参加費: 無料', fee_n: '参加費: ¥{n}', no_title: '（タイトルなし）',
     ev_when_where: '日時・場所', ev_featured: 'フィーチャーワイン', ev_details: '詳細', ev_rsvp: '参加を申し込む',
     btn_rsvp_page: '申込みページへ →', btn_rsvp_contact: '申込みは詳細内の連絡先へ',
+    ev_reg_url: '申込みページURL', rsvp_confirm_q: '申込みは完了しましたか？',
+    rsvp_done_btn: '✅ 完了した', rsvp_later_btn: 'まだ / あとで',
+    rsvp_marked: '申込み済みとして記録しています', rsvp_clear: '記録を解除',
+    btn_rsvp_again: '✅ 申込み済み（ページを再度開く）', badge_rsvped: '✅ 申込済',
+    rsvp_clear_confirm: '申込み済みの記録を解除しますか？', rsvp_done_toast: '✅ 申込み済みとして記録しました',
+    day_events_title: '{m}月{d}日の試飲会',
     // ホーム
     home_title: 'ホーム', home_sub: '気になる人・似た好みの人のワインをお届け',
     my_cellar: 'マイセラー', see_all: 'すべて見る ›',
@@ -3017,6 +3065,12 @@ const I18N = {
     time_see_details: 'See details for time', fee_free: 'Fee: Free', fee_n: 'Fee: ¥{n}', no_title: '(Untitled)',
     ev_when_where: 'Date & Venue', ev_featured: 'Featured Wines', ev_details: 'Details', ev_rsvp: 'Sign Up',
     btn_rsvp_page: 'Go to sign-up page →', btn_rsvp_contact: 'Sign up via contact info in details',
+    ev_reg_url: 'Sign-up page URL', rsvp_confirm_q: 'Did you complete the sign-up?',
+    rsvp_done_btn: '✅ Yes, done', rsvp_later_btn: 'Not yet',
+    rsvp_marked: 'Marked as signed up', rsvp_clear: 'Clear',
+    btn_rsvp_again: '✅ Signed up (open page again)', badge_rsvped: '✅ Signed up',
+    rsvp_clear_confirm: 'Clear the signed-up mark?', rsvp_done_toast: '✅ Marked as signed up',
+    day_events_title: 'Tastings on {m}/{d}',
     // Home
     home_title: 'Home', home_sub: 'Wines from people you follow and people with similar taste',
     my_cellar: 'My Cellar', see_all: 'See all ›',
@@ -4235,21 +4289,24 @@ function renderCalendar() {
       currentCalYear === today.getFullYear();
     const evs = isCurrentMonth && eventDays[dayNum] ? eventDays[dayNum] : [];
 
+    const hasRsvped = evs.some(ev => rsvpStateOf(ev) === 'done');
     const classes = [
       'cal-day',
       !isCurrentMonth ? 'other-month' : '',
       isToday ? 'today' : '',
       dow === 0 ? 'sunday' : '',
       dow === 6 ? 'saturday' : '',
-      evs.length > 0 ? 'has-event' : ''
+      evs.length > 0 ? 'has-event' : '',
+      hasRsvped ? 'rsvped' : ''
     ].filter(Boolean).join(' ');
 
     const dotsHtml = evs.map(ev =>
       `<div class="cal-dot ${ev.dotClass}" title="${ev.name}"></div>`
     ).join('');
 
+    // 2026-07-13: 複数イベント日はリスト表示に（従来は1件目しか開けなかった）
     const onclick = evs.length > 0
-      ? `onclick="scrollToEvent(${evs[0].id})"`
+      ? `onclick="openCalDay(${dayNum})"`
       : '';
 
     html += `
@@ -4298,6 +4355,7 @@ function renderEventList() {
         <div class="event-info">
           <span class="event-type-tag ${ev.tag}">${t('evtype_' + ev.type)}</span>
           ${ev.isNew ? '<span class="event-new-badge">NEW</span>' : ''}
+          ${rsvpStateOf(ev) === 'done' ? `<span class="event-rsvp-badge">${t('badge_rsvped')}</span>` : ''}
           <div class="event-name">${ev.name}</div>
           <div class="event-meta">⏰ ${ev.time} &nbsp;|&nbsp; 📍 ${ev.venue.split(' ')[0]}</div>
           <div class="event-wines-preview">${winesHtml}</div>
@@ -4322,14 +4380,71 @@ function openEvent(id) {
   document.getElementById('evWines').innerHTML = ev.wines.map(w =>
     `<span class="ev-wine-tag">${w}</span>`).join('');
   document.getElementById('evNote').textContent = ev.note;
-  // 申込みボタン: 実データの申込URLがある時だけ有効（偽の申込完了は出さない）
-  const rsvpBtn = document.getElementById('evRsvpBtn');
+
+  // 申込みページURLの明示（2026-07-13オーナー要望: ボタンだけでなくURL自体を見せる）
+  const urlSection = document.getElementById('evUrlSection');
+  const urlLink = document.getElementById('evUrlLink');
   if (ev.registrationUrl) {
-    rsvpBtn.textContent = t('btn_rsvp_page'); rsvpBtn.disabled = false; rsvpBtn.style.background = '';
+    urlLink.href = ev.registrationUrl;
+    urlLink.textContent = ev.registrationUrl;
+    urlSection.style.display = 'block';
+  } else {
+    urlSection.style.display = 'none';
+  }
+
+  refreshRsvpUI(ev);
+  document.getElementById('eventModal').classList.add('open');
+}
+
+// ── 申込み状態（自己申告・端末ローカル）──
+// 外部フォームのため本当に完了したかはアプリには分からない。「押したらロック」は誤操作で
+// 詰むためやらない（2026-07-13オーナー指摘）。開いた後に本人へ確認し、✅を記録する方式。
+// 状態: 'opened'（ページを開いた・完了未確認） / 'done'（本人が完了と申告）
+function rsvpMap() { try { return JSON.parse(localStorage.getItem('sommelin_event_rsvp') || '{}'); } catch (e) { return {}; } }
+function setRsvpState(uuid, st) {
+  if (!uuid) return;
+  const m = rsvpMap();
+  if (st) m[uuid] = st; else delete m[uuid];
+  try { localStorage.setItem('sommelin_event_rsvp', JSON.stringify(m)); } catch (e) {}
+}
+function rsvpStateOf(ev) { return (ev && ev.uuid && rsvpMap()[ev.uuid]) || null; }
+
+function refreshRsvpUI(ev) {
+  const rsvpBtn = document.getElementById('evRsvpBtn');
+  const st = rsvpStateOf(ev);
+  if (ev.registrationUrl) {
+    // ロックしない: 申込み済みでも「再度開く」として常に押せる
+    rsvpBtn.textContent = st === 'done' ? t('btn_rsvp_again') : t('btn_rsvp_page');
+    rsvpBtn.disabled = false; rsvpBtn.style.background = st === 'done' ? '#2e7d32' : '';
   } else {
     rsvpBtn.textContent = t('btn_rsvp_contact'); rsvpBtn.disabled = true; rsvpBtn.style.background = '#9aa0a6';
   }
-  document.getElementById('eventModal').classList.add('open');
+  document.getElementById('evRsvpConfirm').style.display = (st === 'opened') ? 'block' : 'none';
+  document.getElementById('evRsvpStatusRow').style.display = (st === 'done') ? 'block' : 'none';
+}
+
+function markRsvpDone() {
+  const ev = tastingEvents.find(e => e.id === selectedEventId);
+  if (!ev) return;
+  setRsvpState(ev.uuid, 'done');
+  refreshRsvpUI(ev);
+  renderEventList(); renderCalendar();
+  if (typeof showToastLike === 'function') showToastLike(t('rsvp_done_toast'));
+  if (window.sommLog) sommLog('event_rsvp_done', { uuid: ev.uuid });
+}
+function hideRsvpConfirm() {
+  const ev = tastingEvents.find(e => e.id === selectedEventId);
+  if (ev) setRsvpState(ev.uuid, null); // 「まだ」なら状態を消す（次回開いた時にまた聞かない）
+  document.getElementById('evRsvpConfirm').style.display = 'none';
+}
+function clearRsvp(e) {
+  if (e) e.preventDefault();
+  if (!confirm(t('rsvp_clear_confirm'))) return;
+  const ev = tastingEvents.find(e2 => e2.id === selectedEventId);
+  if (!ev) return;
+  setRsvpState(ev.uuid, null);
+  refreshRsvpUI(ev);
+  renderEventList(); renderCalendar();
 }
 
 function closeEventModal(e) {
@@ -4341,11 +4456,44 @@ function closeEventModal(e) {
 function rsvpEvent() {
   // 実データの申込みページを開く（主催者のフォーム/サイト）
   const ev = tastingEvents.find(e => e.id === selectedEventId);
-  if (ev && ev.registrationUrl) window.open(ev.registrationUrl, '_blank');
+  if (!ev || !ev.registrationUrl) return;
+  window.open(ev.registrationUrl, '_blank');
+  if (rsvpStateOf(ev) !== 'done') {
+    setRsvpState(ev.uuid, 'opened');
+    refreshRsvpUI(ev); // 戻ってきた時に「完了しましたか？」が見える
+  }
+  if (window.sommLog) sommLog('event_rsvp_open', { uuid: ev.uuid });
 }
 
 function scrollToEvent(id) {
   openEvent(id);
+}
+
+// 日セルタップ: その日のイベントが1件なら直接詳細、複数ならリストを出す（2026-07-13）
+function openCalDay(dayNum) {
+  const dayEvents = tastingEvents.filter(ev =>
+    ev.date.getFullYear() === currentCalYear &&
+    ev.date.getMonth() === currentCalMonth &&
+    ev.date.getDate() === dayNum
+  ).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+  if (!dayEvents.length) return;
+  if (dayEvents.length === 1) { openEvent(dayEvents[0].id); return; }
+  document.getElementById('dayEventsTitle').textContent =
+    t('day_events_title').replace('{m}', currentCalMonth + 1).replace('{d}', dayNum);
+  document.getElementById('dayEventsList').innerHTML = dayEvents.map(ev => {
+    const done = rsvpStateOf(ev) === 'done';
+    return `
+    <div onclick="document.getElementById('dayEventsModal').classList.remove('open');openEvent(${ev.id})"
+         style="display:flex;gap:10px;align-items:center;padding:12px 8px;border-bottom:1px solid var(--border);cursor:pointer;">
+      <span class="event-type-tag ${ev.tag}" style="flex-shrink:0;">${t('evtype_' + ev.type)}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ev.name}</div>
+        <div style="font-size:11.5px;color:var(--text-sub);">⏰ ${ev.time}${done ? ` <span class="event-rsvp-badge">${t('badge_rsvped')}</span>` : ''}</div>
+      </div>
+      <span style="color:var(--text-sub);">›</span>
+    </div>`;
+  }).join('');
+  document.getElementById('dayEventsModal').classList.add('open');
 }
 
 // ===== VIEW TOGGLE =====
