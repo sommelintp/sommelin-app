@@ -538,12 +538,19 @@ body {
       <button class="modal-close-btn" onclick="closeAddModal()">✕</button>
     </div>
     <div class="modal-body-pad">
-      <!-- Camera → スカウターへ誘導（ラベル特定・評価・自動入力はスカウター側で完結） -->
-      <a class="camera-area" href="scouter.html" style="text-decoration:none;color:inherit;display:block;">
-        <div class="icon">📷</div>
-        <div class="label" data-i18n="scan_label">ラベルをスキャン</div>
-        <div class="sub" data-i18n="scan_sub">スカウターでボトルを撮影・特定します</div>
-      </a>
+      <!-- スキャン起動: カメラ直起動 / 既存写真から選択 の2択 -->
+      <div class="scan-actions" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+        <a class="camera-area" href="scouter.html?autostart=1" style="text-decoration:none;color:inherit;display:block;margin:0;">
+          <div class="icon">📷</div>
+          <div class="label" data-i18n="scan_label">ラベルをスキャン</div>
+          <div class="sub" data-i18n="scan_sub">カメラを直接起動</div>
+        </a>
+        <a class="camera-area" href="scouter.html?openPhoto=1" style="text-decoration:none;color:inherit;display:block;margin:0;">
+          <div class="icon">📁</div>
+          <div class="label" data-i18n="scan_photo_label">写真から選ぶ</div>
+          <div class="sub" data-i18n="scan_photo_sub">複数枚まとめてOK</div>
+        </a>
+      </div>
       <!-- Cellar（AG節: どのセラーに入れるか） -->
       <div class="field-label" data-i18n="field_cellar">セラー</div>
       <select class="field-input" id="f-cellar"></select>
@@ -648,7 +655,9 @@ const I18N = {
     nav_mypage: 'マイページ',
     add_title: 'ワインを追加',
     scan_label: 'ラベルをスキャン',
-    scan_sub: 'スカウターでボトルを撮影・特定します',
+    scan_sub: 'カメラを直接起動',
+    scan_photo_label: '写真から選ぶ',
+    scan_photo_sub: '複数枚まとめてOK',
     field_category: 'カテゴリ',
     field_name: 'ワイン名',
     field_producer: '生産者',
@@ -761,7 +770,9 @@ const I18N = {
     nav_mypage: 'My Page',
     add_title: 'Add a Wine',
     scan_label: 'Scan the label',
-    scan_sub: 'Photograph and identify in the Scouter',
+    scan_sub: 'Open camera directly',
+    scan_photo_label: 'From photos',
+    scan_photo_sub: 'Multiple OK',
     field_category: 'Category',
     field_name: 'Wine name',
     field_producer: 'Producer',

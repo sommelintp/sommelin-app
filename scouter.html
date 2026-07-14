@@ -332,14 +332,14 @@ body{
     <div class="shoot-hint" id="shootHint" data-i18n="shoot_hint_bottle">ラベルを枠に入れてシャッター</div>
     <div class="bot-row">
       <label class="bot-btn" data-i18n="from_photo_label">📁 写真から
-        <input type="file" id="fileInput2" accept="image/*">
+        <input type="file" id="fileInput2" accept="image/*" multiple>
       </label>
     </div>
   </div>
 </div>
 
-<!-- fileInputは「写真から読み取る」ボタン専用。captureを付けるとiOSでカメラが強制起動しライブラリから選べなくなるため付けない。 -->
-<input type="file" id="fileInput" accept="image/*" style="display:none">
+<!-- fileInputは「写真から読み取る」ボタン専用。captureを付けるとiOSでカメラが強制起動しライブラリから選べなくなるため付けない。multipleで複数枚選択に対応。 -->
+<input type="file" id="fileInput" accept="image/*" multiple style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
 <!-- backCamはcapture属性なし: iOSで「カメラ/ライブラリ」の選択肢を出すため（撮影済み写真から選べる） -->
 <input type="file" id="backCam" accept="image/*" style="display:none">
 
@@ -871,19 +871,31 @@ async function scanNow(){
   else { await identifyShelf(grabFrame(v, false, 1568)); }
 }
 
-// ファイル（写真）から
-function handleFile(file){
-  if(!file) return;
+// ファイル（写真）から。複数枚選択にも対応（1枚ずつ結果表示→resumeLiveで次の写真へ）
+let pendingFiles = [];
+function handleFile(file){ return handleFiles(file ? [file] : []); }
+function handleFiles(files){
+  if(!files || !files.length) return;
+  // 既存のキューに追加ではなく置き換え（ユーザーが新規に選び直したら以前の残りは破棄）
+  pendingFiles = Array.from(files);
+  processNextPendingFile();
+}
+function processNextPendingFile(){
+  if(!pendingFiles.length) return;
+  const file = pendingFiles.shift();
   const img=new Image();
   img.onload=async ()=>{
     document.getElementById('perm').classList.add('gone');
     document.getElementById('scanview').style.display='block';
-    if(MODE==='list'){ await identifyList(grabFrame(img, false, 1568)); }
-    else { await identifyShelf(grabFrame(img, false, 1568)); }
-    URL.revokeObjectURL(img.src);
+    try{
+      if(MODE==='list'){ await identifyList(grabFrame(img, false, 1568)); }
+      else { await identifyShelf(grabFrame(img, false, 1568)); }
+    } finally { URL.revokeObjectURL(img.src); }
   };
+  img.onerror=()=>{ URL.revokeObjectURL(img.src); };
   img.src=URL.createObjectURL(file);
 }
+function pendingFilesRemaining(){ return pendingFiles.length; }
 
 // ── 棚/ボトル スキャン: /api/identify-shelf ──
 // 撮った瞬間に画面をその写真で固定し、結果を写真の上にマーカーで重ねる（画面遷移なし）
@@ -939,6 +951,8 @@ function resumeLive(){
   document.querySelector('.aBot').style.display='flex';
   showStatus(false);
   setSub(MODE==='list'?t('sub_list'):t('sub_bottle'));
+  // 複数枚選択の残りがあれば、ライブに戻さず次の写真を自動処理する
+  if(pendingFiles && pendingFiles.length){ processNextPendingFile(); }
 }
 
 // ベスト判定: 好み度＋コスパ＋総合評価（既知＝実データのボトルのみ対象）
@@ -1803,11 +1817,24 @@ function escAttr(s){ return esc(s).replace(/'/g,"&#39;"); }
 function trunc(s,n){ s=String(s||''); return s.length>n?s.slice(0,n-1)+'…':s; }
 
 // ── inputs ──
-document.getElementById('fileInput').addEventListener('change',e=>{ handleFile(e.target.files[0]); e.target.value=''; });
-document.getElementById('fileInput2').addEventListener('change',e=>{ handleFile(e.target.files[0]); e.target.value=''; });
+document.getElementById('fileInput').addEventListener('change',e=>{ handleFiles(Array.from(e.target.files||[])); e.target.value=''; });
+document.getElementById('fileInput2').addEventListener('change',e=>{ handleFiles(Array.from(e.target.files||[])); e.target.value=''; });
 
-// ── 起動モード（?mode=list でリストモード起動。prototype.htmlからの導線用） ──
-if(new URLSearchParams(location.search).get('mode')==='list') setMode('list');
+// ── 起動モード ──
+// ?mode=list       … リストモードで起動（prototype.htmlからの導線用）
+// ?autostart=1     … 説明画面を飛ばしてカメラを即起動（cellar.htmlの「ラベルをスキャン」用）
+// ?openPhoto=1     … 説明画面を飛ばして写真選択ダイアログを即オープン（cellar.htmlの「写真から選ぶ」用）
+{
+  const params = new URLSearchParams(location.search);
+  if(params.get('mode')==='list') setMode('list');
+  if(params.get('autostart')==='1'){
+    // ページロード直後にstartScanを呼ぶとカメラ許可ダイアログがユーザー操作外で発火するため、
+    // 微小遅延を入れつつ呼ぶ（許可はブラウザが持続的に扱うので通常は再確認されない）
+    setTimeout(()=>{ try{ startScan(); }catch(e){} }, 50);
+  } else if(params.get('openPhoto')==='1'){
+    setTimeout(()=>{ try{ document.getElementById('fileInput').click(); }catch(e){} }, 50);
+  }
+}
 
 // ── Service Worker（PWA） ──
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }

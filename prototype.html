@@ -3061,6 +3061,7 @@ const I18N = {
     confirm_logout: 'ログアウトしますか？',
     xp_next: '次のレベルまであと{n}XP', xp_max: '最高レベルです🎉',
     wine_history_title: '🍷 飲んだワイン', recorded_n: '{n}本記録済み', no_records_yet: 'まだ記録がありません', unknown_name: '（名称不明）',
+    delete_wine_btn: '削除', delete_wine_confirm: 'この記録を削除しますか？', delete_wine_ok: '削除しました', delete_wine_err: '削除に失敗しました',
     profile_edit_title: '👤 プロフィール編集', label_nickname: 'ニックネーム', ph_nickname: 'ニックネーム', btn_save_nick: 'ニックネームを保存',
     label_handle: 'ID（半角英数字・一度設定すると変更できません）', ph_handle: '例: taro_wine', btn_set_handle: 'IDを設定する',
     toast_nick_saved: 'ニックネームを保存しました',
@@ -3244,6 +3245,7 @@ const I18N = {
     confirm_logout: 'Log out?',
     xp_next: '{n} XP to the next level', xp_max: 'Max level reached 🎉',
     wine_history_title: "🍷 Wines You've Had", recorded_n: '{n} recorded', no_records_yet: 'No records yet', unknown_name: '(Unknown wine)',
+    delete_wine_btn: 'Delete', delete_wine_confirm: 'Delete this record?', delete_wine_ok: 'Deleted', delete_wine_err: 'Delete failed',
     profile_edit_title: '👤 Edit Profile', label_nickname: 'Nickname', ph_nickname: 'Nickname', btn_save_nick: 'Save Nickname',
     label_handle: 'ID (alphanumeric — cannot be changed once set)', ph_handle: 'e.g. taro_wine', btn_set_handle: 'Set ID',
     toast_nick_saved: 'Nickname saved',
@@ -5170,18 +5172,39 @@ function openWineHistory() {
         const thumb = it.imageUrl
           ? `<img src="${escR(it.imageUrl)}" alt="" loading="lazy" style="flex-shrink:0;width:44px;height:58px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">`
           : '';
+        // 削除ボタン（誤登録/重複対策・DELETE /api/taste/list/:id を呼ぶ）
+        const delBtn = it.id ? `<button onclick="deleteWineHistoryItem(event, '${escR(String(it.id))}')" title="${escR(t('delete_wine_btn'))}" aria-label="${escR(t('delete_wine_btn'))}" style="flex-shrink:0;background:transparent;border:none;color:var(--text-sub);font-size:16px;padding:6px 8px;cursor:pointer;line-height:1;">🗑</button>` : '';
         return `
-        <div style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div class="wine-history-row" data-id="${escR(String(it.id||''))}" style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
           ${thumb}
           <div style="min-width:0;flex:1;">
             <div style="font-size:14px;font-weight:700;color:var(--text);">${escR(it.name) || t('unknown_name')}${it.vintage ? ' ' + escR(it.vintage) : ''}</div>
             <div style="font-size:12px;color:var(--text-sub);margin-top:2px;">${sub}</div>
             <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">${date}</div>
           </div>
+          ${delBtn}
         </div>`;
       }).join('');
     })
     .catch(() => { box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">' + t('load_err_short') + '</div>'; });
+}
+
+// 飲んだワイン履歴の1件削除（誤登録・重複対策）
+async function deleteWineHistoryItem(ev, id) {
+  if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+  if (!id || !CHAT_UID2) return;
+  if (!confirm(t('delete_wine_confirm'))) return;
+  try {
+    const r = await fetch(CHAT_API_BASE + '/api/taste/list/' + encodeURIComponent(id) + '?userId=' + encodeURIComponent(CHAT_UID2), { method: 'DELETE' });
+    if (!r.ok) throw new Error('http ' + r.status);
+    // 楽観的にDOMから該当行を除去し、リストを再取得しないで済ませる
+    const row = document.querySelector('.wine-history-row[data-id="' + CSS.escape(String(id)) + '"]');
+    if (row) row.remove();
+    if (typeof showToastLike === 'function') showToastLike(t('delete_wine_ok'));
+  } catch (e) {
+    if (typeof showToastLike === 'function') showToastLike(t('delete_wine_err'));
+    else alert(t('delete_wine_err'));
+  }
 }
 
 // ── プロフィール編集（2026-07-08追加: ニックネーム＋一度だけ設定できるID） ──
