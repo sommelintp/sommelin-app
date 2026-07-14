@@ -1751,6 +1751,9 @@
     <button onclick="tnPickPhotos()" data-i18n="tn_pick_btn" style="width:100%;margin-top:12px;background:var(--burgundy);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">
       📁 写真を取り込む（複数OK）
     </button>
+    <button onclick="tnAddManual()" data-i18n="tn_manual_add_btn" style="width:100%;margin-top:8px;background:#fff;color:var(--burgundy);border:1.5px solid var(--burgundy);border-radius:12px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">
+      ✏️ 手入力で1本追加
+    </button>
     <div id="tnProgress" style="font-size:12px;color:var(--text-sub);margin-top:8px;text-align:center;"></div>
   </div>
 
@@ -2647,7 +2650,14 @@ const I18N = {
     tn_title: '📸 試飲会で撮った写真を、良かったワインリストに',
     tn_desc: 'カメラアプリで撮ったワインの写真を取り込むと、AIが銘柄を読み取ります。インポーター名を書き添えると、そのインポーターに「お店が気に入っています」と伝わります。',
     tn_pick_btn: '📁 写真を取り込む（複数OK）',
-    tn_staging_lbl: '認識したワイン — インポーター名を書き添えて保存',
+    tn_manual_add_btn: '✏️ 手入力で1本追加',
+    tn_staging_lbl: '認識したワイン — 内容を確認・修正して保存（試飲会の新ヴィンテージ等はここで直せます）',
+    tn_name_ph: 'ワイン名',
+    tn_producer_ph: '生産者',
+    tn_vintage_ph: 'ヴィンテージ',
+    tn_region_ph: '産地（例: イタリア ピエモンテ）',
+    tn_edit_hint: '↑ AIの読み取り結果です。違っていればタップして直してください',
+    tn_name_required: 'ワイン名を入力してください',
     tn_save_all_btn: '✓ まとめて保存',
     tn_list_lbl: '良かったワインリスト',
     tn_reading: 'AIが読み取り中… {i}/{n}枚目（10秒ほど）',
@@ -3114,7 +3124,14 @@ const I18N = {
     tn_title: '📸 Turn tasting event photos into your favorite wines list',
     tn_desc: 'Import wine photos taken with your camera and AI will identify the labels. Add the importer\'s name and they\'ll know your store liked their wine.',
     tn_pick_btn: '📁 Import photos (multiple OK)',
-    tn_staging_lbl: 'Recognized wines — add the importer name and save',
+    tn_manual_add_btn: '✏️ Add one by hand',
+    tn_staging_lbl: 'Recognized wines — review & correct, then save (fix new vintages here)',
+    tn_name_ph: 'Wine name',
+    tn_producer_ph: 'Producer',
+    tn_vintage_ph: 'Vintage',
+    tn_region_ph: 'Region (e.g. Italy, Piedmont)',
+    tn_edit_hint: "↑ AI's reading. Tap to correct anything that's wrong",
+    tn_name_required: 'Please enter a wine name',
     tn_save_all_btn: '✓ Save all',
     tn_list_lbl: 'FAVORITE WINES',
     tn_reading: 'AI reading… photo {i}/{n} (about 10 s)',
@@ -5265,6 +5282,7 @@ async function tnProcessFiles(files) {
           starRating: w ? w.starRating : null,
           rating: null,
           importer_name: '', memo: '',
+          photoDataUrl: dataUrl,   // 撮影した写真（保存前サムネイル表示用。永続化はDB側の写真列対応後）
         });
       });
     } catch (e) { showToast(t('toast_photo_read_fail')); }
@@ -5277,26 +5295,44 @@ function renderTnStaging() {
   const wrap = document.getElementById('tnStagingWrap');
   const box = document.getElementById('tnStaging');
   wrap.style.display = tnStaged.length ? 'block' : 'none';
+  const fieldStyle = 'border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;';
   box.innerHTML = tnStaged.map((s, i) => {
     const starsHtml = window.WineDisplay ? window.WineDisplay.starsHtml(s.starRating, {size:12, showLabel:true, source:'sommelin_v1'}) : '';
+    // 撮影写真のサムネイル（あれば）。永続化はDB側の写真列対応後だが、保存前の確認用に必ず表示する。
+    const thumb = s.photoDataUrl
+      ? `<img src="${tnEsc(s.photoDataUrl)}" alt="" style="flex-shrink:0;width:52px;height:68px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">`
+      : '';
     return `
     <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;">
-      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
-        <div style="min-width:0;">
-          <div style="font-size:14px;font-weight:800;color:var(--text);">${tnEsc(s.name)}${s.vintage ? ' ' + tnEsc(s.vintage) : ''}</div>
-          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">${tnEsc(s.region || '')}</div>
-          ${s.starRating != null ? `<div style="margin-top:3px;">${starsHtml}</div>` : ''}
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
+        <div style="display:flex;gap:10px;min-width:0;flex:1;">
+          ${thumb}
+          <div style="min-width:0;flex:1;">
+            ${s.starRating != null ? `<div style="margin-bottom:4px;">${starsHtml}</div>` : ''}
+            <!-- 認識結果をそのまま編集できるフィールド群（試飲会の新ヴィンテージ・誤認識をここで直す） -->
+            <input placeholder="${t('tn_name_ph')}" value="${tnEsc(s.name)}" oninput="tnStaged[${i}].name=this.value"
+              style="width:100%;font-weight:800;color:var(--text);${fieldStyle}">
+            <div style="display:flex;gap:6px;margin-top:6px;">
+              <input placeholder="${t('tn_vintage_ph')}" value="${tnEsc(s.vintage || '')}" oninput="tnStaged[${i}].vintage=this.value"
+                style="width:96px;flex-shrink:0;${fieldStyle}">
+              <input placeholder="${t('tn_producer_ph')}" value="${tnEsc(s.producer || '')}" oninput="tnStaged[${i}].producer=this.value"
+                style="flex:1;min-width:0;${fieldStyle}">
+            </div>
+            <input placeholder="${t('tn_region_ph')}" value="${tnEsc(s.region || '')}" oninput="tnStaged[${i}].region=this.value"
+              style="width:100%;margin-top:6px;color:var(--text-sub);${fieldStyle}">
+          </div>
         </div>
         <button onclick="tnStaged.splice(${i},1);renderTnStaging()" style="background:none;border:none;color:#bbb;font-size:16px;cursor:pointer;flex-shrink:0;">✕</button>
       </div>
+      <div style="font-size:10px;color:var(--text-sub);margin-top:4px;">${t('tn_edit_hint')}</div>
       <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
         <span style="font-size:12px;color:var(--text-sub);font-weight:700;">${t('tn_my_rating')}</span>
         <span>${tnMyStars(s.rating || 0, i)}</span>
       </div>
       <input placeholder="${t('tn_importer_ph')}" value="${tnEsc(s.importer_name)}" oninput="tnStaged[${i}].importer_name=this.value"
-        style="width:100%;margin-top:8px;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;">
+        style="width:100%;margin-top:8px;${fieldStyle}">
       <input placeholder="${t('tn_memo_ph')}" value="${tnEsc(s.memo)}" oninput="tnStaged[${i}].memo=this.value"
-        style="width:100%;margin-top:6px;border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;">
+        style="width:100%;margin-top:6px;${fieldStyle}">
       <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;color:var(--text-sub);cursor:pointer;">
         <input type="checkbox" ${s.condition_issue ? 'checked' : ''} onchange="tnStaged[${i}].condition_issue=this.checked" style="accent-color:var(--burgundy);">
         ${t('tn_condition_lbl')}
@@ -5305,14 +5341,28 @@ function renderTnStaging() {
   }).join('');
 }
 
+// 手入力で1本追加（AIが読み取れない・DBに無い新ワイン用）。空カードを先頭に足して編集させる。
+function tnAddManual() {
+  tnStaged.unshift({
+    wine_id: null, name: '', producer: null, vintage: null, region: '',
+    color: null, total: null, ref_price: null, cospaLevel: null, starRating: null,
+    rating: null, importer_name: '', memo: '', photoDataUrl: null,
+  });
+  renderTnStaging();
+  document.getElementById('tnStagingWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 async function tnSaveStaged() {
   if (!tnStaged.length) return;
+  // 名前が空のカード（手入力で未記入のまま等）は保存対象から除外
+  const toSave = tnStaged.filter(s => (s.name || '').trim());
+  if (!toSave.length) { showToast(t('tn_name_required')); return; }
   const uid = await rwUid();
   if (!uid) { alert(t('alert_login_again')); return; }
   // 2026-07-09: sp/osuは内部指標につきAPIから受け取れなくなった。tasting_notesの
   // sp/osu列の型・要否はDB側の確認が必要なため、ここでは送らない（列自体はnullのまま残る）。
-  const payload = tnStaged.map(s => ({
-    owner_id: uid, wine_id: s.wine_id, name: s.name, producer: s.producer,
+  const payload = toSave.map(s => ({
+    owner_id: uid, wine_id: s.wine_id, name: (s.name || '').trim(), producer: s.producer,
     vintage: s.vintage, region: s.region, color: s.color,
     importer_name: s.importer_name.trim() || null, memo: s.memo.trim() || null,
     ref_price: s.ref_price, rating: s.rating || null,
