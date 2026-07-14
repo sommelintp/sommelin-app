@@ -338,7 +338,8 @@ body{
   </div>
 </div>
 
-<input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none">
+<!-- fileInputは「写真から読み取る」ボタン専用。captureを付けるとiOSでカメラが強制起動しライブラリから選べなくなるため付けない。 -->
+<input type="file" id="fileInput" accept="image/*" style="display:none">
 <!-- backCamはcapture属性なし: iOSで「カメラ/ライブラリ」の選択肢を出すため（撮影済み写真から選べる） -->
 <input type="file" id="backCam" accept="image/*" style="display:none">
 

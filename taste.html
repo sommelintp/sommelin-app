@@ -20,6 +20,9 @@ body{
   font-size:18px;display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0;}
 .top .t1{font-size:17px;font-weight:800;}
 .top .t2{font-size:11px;color:rgba(255,255,255,.6);margin-top:1px;}
+.top .titles{flex:1;}
+.lang-toggle{background:rgba(255,255,255,.12);border:none;color:#fff;font-size:12px;font-weight:700;
+  padding:6px 12px;border-radius:14px;cursor:pointer;flex-shrink:0;}
 .wrap{padding:10px 20px;}
 .desc{font-size:13px;color:rgba(255,255,255,.75);line-height:1.8;margin-bottom:14px;}
 
@@ -36,6 +39,9 @@ body{
 
 .upload{width:100%;padding:16px;background:#fff;color:var(--burgundy);font-size:15px;font-weight:800;border:none;border-radius:16px;cursor:pointer;margin-bottom:10px;}
 .upload:disabled{opacity:.5;}
+/* iOS Safariでは display:none の input file への JS click が効かないケースがあるため、
+   画面外に配置して見えないが有効な状態にする（クリックは伝播可能）。 */
+.hidden-file{position:absolute;left:-9999px;width:1px;height:1px;opacity:0;}
 .note{font-size:10px;color:rgba(255,255,255,.45);line-height:1.7;margin-bottom:16px;}
 
 /* status / results */
@@ -77,43 +83,150 @@ body{
 
 <div class="top">
   <a href="scouter.html">‹</a>
-  <div><div class="t1">❤️ 好みのワインを登録</div><div class="t2">写真からAIが好みを学習します</div></div>
+  <div class="titles"><div class="t1" data-i18n="top_title">❤️ 好みのワインを登録</div><div class="t2" data-i18n="top_sub">写真からAIが好みを学習します</div></div>
+  <button class="lang-toggle" id="langBtn" onclick="setLang(LANG==='ja'?'en':'ja')"></button>
 </div>
 
 <div class="wrap">
-  <div class="desc">今まで飲んで好きだったワインの写真や、家のセラー・棚の写真をアップしてください。写っているボトルをAIが読み取り、あなたの好み（色・産地・価格帯）を学習します。スカウターの結果に「あなたに合うか」が表示されるようになります。</div>
+  <div class="desc" data-i18n="desc">今まで飲んで好きだったワインの写真や、家のセラー・棚の写真をアップしてください。写っているボトルをAIが読み取り、あなたの好み（色・産地・価格帯）を学習します。スカウターの結果に「あなたに合うか」が表示されるようになります。</div>
 
   <div class="prof" id="prof">
-    <div class="ph">あなたの好みプロファイル</div>
-    <div class="pv" id="profVal">読み込み中…</div>
+    <div class="ph" data-i18n="profile_head">あなたの好みプロファイル</div>
+    <div class="pv" id="profVal" data-i18n="profile_loading">読み込み中…</div>
     <div class="pn" id="profNote"></div>
   </div>
 
   <div class="seg">
-    <button id="segLike" class="on" onclick="setSource('photo_like')">🍷 好きなワインの写真</button>
-    <button id="segCellar" onclick="setSource('cellar')">🧊 セラー/棚の写真</button>
+    <button id="segLike" class="on" onclick="setSource('photo_like')" data-i18n="seg_like">🍷 好きなワインの写真</button>
+    <button id="segCellar" onclick="setSource('cellar')" data-i18n="seg_cellar">🧊 セラー/棚の写真</button>
   </div>
 
-  <button class="upload" id="upBtn" onclick="document.getElementById('file').click()">📁 写真を選ぶ（複数OK）</button>
-  <input type="file" id="file" accept="image/*" multiple style="display:none">
-  <div class="note">写真は銘柄の読み取りのためソムリンのサーバーで解析されます。ラベルが読み取れたボトルだけが保存されます（写真自体は保存しません）。</div>
+  <button class="upload" id="upBtn" onclick="document.getElementById('file').click()" data-i18n="upload_btn">📁 写真を選ぶ（複数OK）</button>
+  <input type="file" id="file" accept="image/*" multiple class="hidden-file">
+  <div class="note" data-i18n="note">写真は銘柄の読み取りのためソムリンのサーバーで解析されます。ラベルが読み取れたボトルだけが保存されます（写真自体は保存しません）。</div>
 
   <div class="stat" id="stat"></div>
   <div id="results"></div>
 
   <div class="fsection" id="fsection" style="display:none;">
-    <div class="fsection-head">📌 このワイン、あなたのフィルターに載せて皆さんにおすすめしますか？</div>
+    <div class="fsection-head" data-i18n="fsection_head">📌 このワイン、あなたのフィルターに載せて皆さんにおすすめしますか？</div>
     <div id="fcards"></div>
-    <button class="fsavebtn" id="fsaveBtn" onclick="saveToFilter()">この内容でフィルターに保存する</button>
+    <button class="fsavebtn" id="fsaveBtn" onclick="saveToFilter()" data-i18n="fsave_btn">この内容でフィルターに保存する</button>
   </div>
 
-  <a class="golink" href="filter_mine.html">🎨 マイフィルターを管理する →</a>
-  <a class="golink" href="scouter.html">📷 スカウターで使ってみる →</a>
+  <a class="golink" href="filter_mine.html" data-i18n="link_filter">🎨 マイフィルターを管理する →</a>
+  <a class="golink" href="scouter.html" data-i18n="link_scouter">📷 スカウターで使ってみる →</a>
 </div>
 
 <div id="toast"></div>
 
 <script>
+// ===== i18n =====
+const I18N = {
+  ja: {
+    top_title: '❤️ 好みのワインを登録',
+    top_sub: '写真からAIが好みを学習します',
+    desc: '今まで飲んで好きだったワインの写真や、家のセラー・棚の写真をアップしてください。写っているボトルをAIが読み取り、あなたの好み（色・産地・価格帯）を学習します。スカウターの結果に「あなたに合うか」が表示されるようになります。',
+    profile_head: 'あなたの好みプロファイル',
+    profile_loading: '読み込み中…',
+    profile_empty_val: 'まだ登録がありません',
+    profile_empty_note: '3本以上登録すると好み判定が始まります。',
+    profile_ready_note: 'スカウターの結果に「あなたに合うか」が表示されます。登録が増えるほど精度が上がります。',
+    profile_pending_val: (n) => `${n}本 登録済み`,
+    profile_pending_note: (rem) => `あと${rem}本で好み判定が始まります。`,
+    profile_ready_val: (summary, n) => `${summary}（${n}本）`,
+    profile_dash: '—',
+    profile_offline: '—（オフライン）',
+    seg_like: '🍷 好きなワインの写真',
+    seg_cellar: '🧊 セラー/棚の写真',
+    upload_btn: '📁 写真を選ぶ（複数OK）',
+    note: '写真は銘柄の読み取りのためソムリンのサーバーで解析されます。ラベルが読み取れたボトルだけが保存されます（写真自体は保存しません）。',
+    fsection_head: '📌 このワイン、あなたのフィルターに載せて皆さんにおすすめしますか？',
+    fsave_btn: 'この内容でフィルターに保存する',
+    link_filter: '🎨 マイフィルターを管理する →',
+    link_scouter: '📷 スカウターで使ってみる →',
+    stat_analyzing: (i, n) => `解析中… ${i}/${n}枚目（10秒ほど）`,
+    stat_done: (n) => `✅ ${n}本を好みに登録しました`,
+    stat_none: '',
+    toast_rate_limit: '回数上限です。少し待ってからどうぞ',
+    toast_no_bottle: 'ボトルを読み取れませんでした',
+    toast_analyze_fail: '解析に失敗しました',
+    toast_pick_wine: '載せるワインを選んでください',
+    toast_save_fail: '保存に失敗しました',
+    toast_saved: (n) => `🎨 ${n}本をフィルターに保存しました`,
+    toast_saved_limit: (n) => `${n}本保存しました（本日の上限に達しました）`,
+    fcard_no_name: '（銘柄名なし）',
+    fcard_included_label: '載せる',
+    fcard_comment_ph: '一言（任意）',
+    rec_no_name: '（銘柄名なし）',
+    rec_matched_prefix: '⭐ 評価あり ',
+    rec_matched_none: '—',
+    rec_ok: '記録OK',
+    rec_of_5: '/5',
+  },
+  en: {
+    top_title: '❤️ Register wines you like',
+    top_sub: 'AI learns your taste from photos',
+    desc: 'Upload photos of wines you have enjoyed or of your cellar / shelf. AI reads the bottles in the photo and learns your preferences (color, region, price range). "Fits you?" will start showing on Scouter results.',
+    profile_head: 'Your taste profile',
+    profile_loading: 'Loading…',
+    profile_empty_val: 'No wines registered yet',
+    profile_empty_note: 'Register 3+ wines to start taste matching.',
+    profile_ready_note: '"Fits you?" will now appear on Scouter results. Accuracy grows with each registration.',
+    profile_pending_val: (n) => `${n} wines registered`,
+    profile_pending_note: (rem) => `${rem} more wine${rem === 1 ? '' : 's'} until taste matching starts.`,
+    profile_ready_val: (summary, n) => `${summary} (${n} wines)`,
+    profile_dash: '—',
+    profile_offline: '— (offline)',
+    seg_like: '🍷 Wines you like',
+    seg_cellar: '🧊 Cellar / shelf photo',
+    upload_btn: '📁 Choose photos (multi OK)',
+    note: 'Photos are analyzed on Sommelin servers for label recognition. Only bottles whose labels are read will be saved (the photo itself is not stored).',
+    fsection_head: '📌 List this wine on your filter to recommend to others?',
+    fsave_btn: 'Save these to my filter',
+    link_filter: '🎨 Manage my filters →',
+    link_scouter: '📷 Try it in Scouter →',
+    stat_analyzing: (i, n) => `Analyzing… ${i}/${n} (about 10s)`,
+    stat_done: (n) => `✅ ${n} wines added to your taste`,
+    stat_none: '',
+    toast_rate_limit: 'Rate limit reached. Please try again shortly.',
+    toast_no_bottle: 'No bottle could be recognized',
+    toast_analyze_fail: 'Analysis failed',
+    toast_pick_wine: 'Pick at least one wine to list',
+    toast_save_fail: 'Save failed',
+    toast_saved: (n) => `🎨 Saved ${n} wine${n === 1 ? '' : 's'} to your filter`,
+    toast_saved_limit: (n) => `Saved ${n} (daily limit reached)`,
+    fcard_no_name: '(no name)',
+    fcard_included_label: 'List',
+    fcard_comment_ph: 'Comment (optional)',
+    rec_no_name: '(no name)',
+    rec_matched_prefix: '⭐ Rated ',
+    rec_matched_none: '—',
+    rec_ok: 'Saved',
+    rec_of_5: '/5',
+  },
+};
+let LANG = (() => { try { return localStorage.getItem('somm_lang') || (navigator.language && navigator.language.startsWith('ja') ? 'ja' : 'en'); } catch(e) { return 'ja'; } })();
+function t(key, ...args) {
+  const d = I18N[LANG] || I18N.ja;
+  const v = (d && d[key] != null) ? d[key] : (I18N.ja[key] != null ? I18N.ja[key] : key);
+  return typeof v === 'function' ? v(...args) : v;
+}
+function applyI18n() {
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  const btn = document.getElementById('langBtn');
+  if (btn) btn.textContent = LANG === 'ja' ? '🌐 EN' : '🌐 日本語';
+  // 現在のプロファイル表示を再描画（多言語対応）
+  if (window._lastProfile !== undefined) showProfile(window._lastProfile);
+}
+function setLang(l) {
+  LANG = l;
+  try { localStorage.setItem('somm_lang', l); } catch(e) {}
+  applyI18n();
+  if (window.sommLog) sommLog('lang_switch', { lang: l });
+}
+
 // scouter.html と同じ設定を共有（?api= 上書き・匿名ID）
 const API_BASE = (()=>{
   const p = new URLSearchParams(location.search).get('api');
@@ -132,22 +245,24 @@ function setSource(s){
 }
 
 function esc(x){ return (x==null?'':String(x)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2400); }
+function toast(m){ const el=document.getElementById('toast'); el.textContent=m; el.classList.add('on'); setTimeout(()=>el.classList.remove('on'),2400); }
 function setStat(m){ document.getElementById('stat').textContent=m; }
 
 function showProfile(p){
+  window._lastProfile = p; // 言語切替時の再描画用に保持
   const v=document.getElementById('profVal'), n=document.getElementById('profNote');
-  if(!p || !p.count){ v.textContent='まだ登録がありません'; n.textContent='3本以上登録すると好み判定が始まります。'; return; }
-  if(p.ready && p.summary){ v.textContent=p.summary+`（${p.count}本）`; n.textContent='スカウターの結果に「あなたに合うか」が表示されます。登録が増えるほど精度が上がります。'; }
-  else { v.textContent=`${p.count}本 登録済み`; n.textContent=`あと${Math.max(0,3-p.count)}本で好み判定が始まります。`; }
+  if(!p){ v.textContent=t('profile_dash'); n.textContent=''; return; }
+  if(!p.count){ v.textContent=t('profile_empty_val'); n.textContent=t('profile_empty_note'); return; }
+  if(p.ready && p.summary){ v.textContent=t('profile_ready_val', p.summary, p.count); n.textContent=t('profile_ready_note'); }
+  else { v.textContent=t('profile_pending_val', p.count); n.textContent=t('profile_pending_note', Math.max(0,3-p.count)); }
 }
 
 async function loadProfile(){
   try{
     const r=await fetch(API_BASE+'/api/taste/summary?userId='+encodeURIComponent(UID));
-    if(r.ok) showProfile(await r.json());
-    else document.getElementById('profVal').textContent='—';
-  }catch(e){ document.getElementById('profVal').textContent='—（オフライン）'; }
+    if(r.ok){ const p = await r.json(); showProfile(p); }
+    else { window._lastProfile=null; document.getElementById('profVal').textContent=t('profile_dash'); }
+  }catch(e){ window._lastProfile=null; document.getElementById('profVal').textContent=t('profile_offline'); }
 }
 
 // 画像→長辺1568px JPEG（セラー写真は小さいラベルが多いので高めの解像度）
@@ -168,10 +283,13 @@ function toDataUrl(file){
 }
 
 function recRow(b){
+  const badge = b.matched
+    ? t('rec_matched_prefix') + (b.total!=null ? (Number(b.total).toFixed(1) + t('rec_of_5')) : t('rec_matched_none'))
+    : t('rec_ok');
   return `<div class="rec">
-    <div><div class="rn">${esc(b.name||'（銘柄名なし）')}</div>
+    <div><div class="rn">${esc(b.name||t('rec_no_name'))}</div>
          <div class="rr">${esc([b.iro,b.kuni,b.chiiki,b.vintage].filter(Boolean).join('　'))}</div></div>
-    <div class="rm${b.matched?' hit':''}">${b.matched?'⭐ 評価あり '+(b.total!=null?Number(b.total).toFixed(1)+'/5':'—'):'記録OK'}</div>
+    <div class="rm${b.matched?' hit':''}">${esc(badge)}</div>
   </div>`;
 }
 
@@ -186,13 +304,13 @@ function fstarsHtml(idx, rating){
 
 function fcardHtml(item, idx){
   return `<div class="fcard" id="fcard-${idx}">
-    <div class="fn">${esc(item.name||'（銘柄名なし）')}</div>
+    <div class="fn">${esc(item.name||t('fcard_no_name'))}</div>
     <div class="fr">${esc([item.iro,item.kuni,item.chiiki,item.vintage].filter(Boolean).join('　'))}</div>
     <div class="frow">
       <div class="fstars" id="fstars-${idx}">${fstarsHtml(idx, item.rating)}</div>
-      <label class="fcheck"><input type="checkbox" ${item.included?'checked':''} onchange="pendingItems[${idx}].included=this.checked"> 載せる</label>
+      <label class="fcheck"><input type="checkbox" ${item.included?'checked':''} onchange="pendingItems[${idx}].included=this.checked"> ${esc(t('fcard_included_label'))}</label>
     </div>
-    <textarea class="fcomment" placeholder="一言（任意）" oninput="pendingItems[${idx}].comment=this.value">${esc(item.comment||'')}</textarea>
+    <textarea class="fcomment" placeholder="${esc(t('fcard_comment_ph'))}" oninput="pendingItems[${idx}].comment=this.value">${esc(item.comment||'')}</textarea>
   </div>`;
 }
 
@@ -210,7 +328,7 @@ function renderFilterSection(){
 
 async function saveToFilter(){
   const toSave = pendingItems.filter(it=>it.included);
-  if(!toSave.length){ toast('載せるワインを選んでください'); return; }
+  if(!toSave.length){ toast(t('toast_pick_wine')); return; }
   const btn=document.getElementById('fsaveBtn'); btn.disabled=true;
   let saved=0, limitHit=false;
   for(const it of toSave){
@@ -226,9 +344,9 @@ async function saveToFilter(){
   pendingItems=[];
   renderFilterSection();
   btn.disabled=false;
-  if(limitHit) toast(`${saved}本保存しました（本日の上限に達しました）`);
-  else if(saved) toast(`🎨 ${saved}本をフィルターに保存しました`);
-  else toast('保存に失敗しました');
+  if(limitHit) toast(t('toast_saved_limit', saved));
+  else if(saved) toast(t('toast_saved', saved));
+  else toast(t('toast_save_fail'));
 }
 
 async function handleFiles(files){
@@ -238,16 +356,16 @@ async function handleFiles(files){
   const resEl=document.getElementById('results');
   let total=0;
   for(let i=0;i<files.length;i++){
-    setStat(`解析中… ${i+1}/${files.length}枚目（10秒ほど）`);
+    setStat(t('stat_analyzing', i+1, files.length));
     const dataUrl=await toDataUrl(files[i]);
     if(!dataUrl){ continue; }
     try{
       const r=await fetch(API_BASE+'/api/taste/upload',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ image:dataUrl, userId:UID, source:SOURCE })
+        body: JSON.stringify({ image:dataUrl, userId:UID, source:SOURCE, locale: (LANG==='en'?'en-US':'ja-JP') })
       });
-      if(r.status===429){ toast('回数上限です。少し待ってからどうぞ'); break; }
+      if(r.status===429){ toast(t('toast_rate_limit')); break; }
       if(!r.ok) throw new Error('http '+r.status);
       const res=await r.json();
       total+=res.saved||0;
@@ -258,14 +376,15 @@ async function handleFiles(files){
       });
       renderFilterSection();
       if(res.profile) showProfile(res.profile);
-      if(!res.saved) toast('ボトルを読み取れませんでした');
-    }catch(e){ toast('解析に失敗しました'); }
+      if(!res.saved) toast(t('toast_no_bottle'));
+    }catch(e){ toast(t('toast_analyze_fail')); }
   }
-  setStat(total?`✅ ${total}本を好みに登録しました`:'');
+  setStat(total ? t('stat_done', total) : t('stat_none'));
   btn.disabled=false;
 }
 
 document.getElementById('file').addEventListener('change',e=>{ handleFiles(Array.from(e.target.files)); e.target.value=''; });
+applyI18n();
 loadProfile();
 </script>
 <script>

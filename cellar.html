@@ -524,6 +524,7 @@ body {
 <nav class="bottom-nav">
   <a href="prototype.html" class="nav-btn"><span class="icon">🏠</span><span class="label" data-i18n="nav_home">ホーム</span></a>
   <a href="wine_search.html" class="nav-btn"><span class="icon">🔍</span><span class="label" data-i18n="nav_search">検索</span></a>
+  <button class="nav-btn" onclick="switchTab('journal')"><span class="icon">📖</span><span class="label" data-i18n="nav_journal">記録</span></button>
   <button class="nav-btn active" onclick=""><span class="icon">🏺</span><span class="label" data-i18n="nav_cellar">セラー</span></button>
   <a href="prototype.html" class="nav-btn"><span class="icon">👤</span><span class="label" data-i18n="nav_mypage">マイページ</span></a>
 </nav>
@@ -537,12 +538,12 @@ body {
       <button class="modal-close-btn" onclick="closeAddModal()">✕</button>
     </div>
     <div class="modal-body-pad">
-      <!-- Camera -->
-      <div class="camera-area" onclick="simulateScan()">
+      <!-- Camera → スカウターへ誘導（ラベル特定・評価・自動入力はスカウター側で完結） -->
+      <a class="camera-area" href="scouter.html" style="text-decoration:none;color:inherit;display:block;">
         <div class="icon">📷</div>
         <div class="label" data-i18n="scan_label">ラベルをスキャン</div>
-        <div class="sub" data-i18n="scan_sub">カメラでボトルを撮影して自動入力</div>
-      </div>
+        <div class="sub" data-i18n="scan_sub">スカウターでボトルを撮影・特定します</div>
+      </a>
       <!-- Cellar（AG節: どのセラーに入れるか） -->
       <div class="field-label" data-i18n="field_cellar">セラー</div>
       <select class="field-input" id="f-cellar"></select>
@@ -642,11 +643,12 @@ const I18N = {
     stat_purchase_summary: '購入サマリー',
     nav_home: 'ホーム',
     nav_search: '検索',
+    nav_journal: '記録',
     nav_cellar: 'セラー',
     nav_mypage: 'マイページ',
     add_title: 'ワインを追加',
     scan_label: 'ラベルをスキャン',
-    scan_sub: 'カメラでボトルを撮影して自動入力',
+    scan_sub: 'スカウターでボトルを撮影・特定します',
     field_category: 'カテゴリ',
     field_name: 'ワイン名',
     field_producer: '生産者',
@@ -754,11 +756,12 @@ const I18N = {
     stat_purchase_summary: 'Purchase Summary',
     nav_home: 'Home',
     nav_search: 'Search',
+    nav_journal: 'Journal',
     nav_cellar: 'Cellar',
     nav_mypage: 'My Page',
     add_title: 'Add a Wine',
     scan_label: 'Scan the label',
-    scan_sub: 'Photograph the bottle to auto-fill',
+    scan_sub: 'Photograph and identify in the Scouter',
     field_category: 'Category',
     field_name: 'Wine name',
     field_producer: 'Producer',
@@ -1073,14 +1076,7 @@ async function loadCellarFromServer(){
   }catch(e){}
 }
 
-const journal = [
-  { id:1, wineId:1, name:'Gevrey-Chambertin', producer:'Rossignol-Trapet', vintage:'2019', region:'ブルゴーニュ', cat:'red',   rating:5, note:'ベリーの香りとスパイス。余韻がとても長い。デカンタ1時間後が最高だった。', date:'2026-06-08', place:'自宅' },
-  { id:2, wineId:0, name:'Barolo Riserva',    producer:'Giacomo Conterno', vintage:'2015', region:'バローロ',     cat:'red',   rating:5, note:'圧倒的なタンニンと果実味のバランス。生涯ベスト3に入る。', date:'2026-06-08', place:'Bistrot Lumière' },
-  { id:3, wineId:2, name:'Champagne Brut NV', producer:'Louis Roederer',   vintage:'NV',   region:'シャンパーニュ',cat:'sparkling', rating:4, note:'泡が細かく持続的。アペリティフとして完璧。', date:'2026-06-01', place:'自宅' },
-  { id:4, wineId:5, name:'Sancerre Blanc',    producer:'Henri Bourgeois',  vintage:'2022', region:'ロワール',    cat:'white', rating:4, note:'ハーブと柑橘のアロマ。貝のカルパッチョと合わせた。', date:'2026-05-25', place:'自宅' },
-  { id:5, wineId:0, name:'Grüner Veltliner',  producer:'F.X. Pichler',     vintage:'2021', region:'ヴァッハウ',   cat:'white', rating:4, note:'白胡椒のニュアンスが面白い。キャラクターが強い。', date:'2026-05-18', place:'Wine Bar Kyo' },
-  { id:6, wineId:6, name:'Ramato Pinot Grigio',producer:'Colterenzio',     vintage:'2021', region:'アルト・アディジェ', cat:'orange', rating:3, note:'タンニンが思ったより強め。食事と合わせると化ける。', date:'2026-05-10', place:'自宅' },
-];
+const journal = [];
 
 // ── RENDER ──
 // AG節: currentCellarId が設定されていればそのセラーだけに絞った配列を返す（すべての集計・一覧はこれを使う）
@@ -1324,28 +1320,6 @@ function selectCat(el, cat) {
   selectedCatForAdd = cat;
   document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-}
-function simulateScan() {
-  const scanMsg = document.querySelector('.camera-area .label');
-  const scanSub = document.querySelector('.camera-area .sub');
-  scanMsg.textContent = t('scan_analyzing');
-  scanSub.textContent = t('scan_analyzing_sub');
-  setTimeout(() => {
-    document.getElementById('f-name').value = 'Chambolle-Musigny';
-    document.getElementById('f-producer').value = 'Domaine Mugnier';
-    document.getElementById('f-vintage').value = '2020';
-    document.getElementById('f-region').value = 'ブルゴーニュ, フランス';
-    document.getElementById('f-grapes').value = 'ピノ・ノワール';
-    document.getElementById('f-price').value = '19800';
-    document.getElementById('f-bottles').value = '1';
-    // switch to red
-    selectedCatForAdd = 'red';
-    document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
-    document.querySelector('.cat-chip:nth-child(4)').classList.add('active');
-    scanMsg.textContent = t('scan_done');
-    scanSub.textContent = t('scan_done_sub');
-    showToast(t('toast_label_got'));
-  }, 1600);
 }
 function saveWine() {
   if(window.sommLog) sommLog('cellar_add');
