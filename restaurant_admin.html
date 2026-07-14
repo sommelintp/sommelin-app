@@ -5205,6 +5205,13 @@ let tnNotes = [];    // 保存済み
 
 function tnEsc(s) { return String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
+// 同一ワイン判定（重複除去用）。DB一致ならwine_idで、無ければ銘柄名+ヴィンテージの正規化一致で判断。
+function tnNorm(s) { return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+function tnSameWine(a, b) {
+  if (a.wine_id && b.wine_id) return String(a.wine_id) === String(b.wine_id);
+  return tnNorm(a.name) === tnNorm(b.name) && tnNorm(a.vintage) === tnNorm(b.vintage);
+}
+
 function tnMyStars(rating, editableIdx) {
   // editableIdx を渡すとタップで編集できる★列（保存前の入力用）
   let html = '';
@@ -5269,7 +5276,7 @@ async function tnProcessFiles(files) {
       (res.bottles || []).filter(b => b.readable !== false && b.identification).forEach(b => {
         const w = b.match && b.match.wine;
         const id = b.identification;
-        tnStaged.push({
+        const item = {
           wine_id: w ? w.id : null,
           name: (w && w.name) || [id.producer, id.wine].filter(Boolean).join(' ') || t('unknown_wine'),
           producer: (w && w.producer) || id.producer || null,
@@ -5283,7 +5290,10 @@ async function tnProcessFiles(files) {
           rating: null,
           importer_name: '', memo: '',
           photoDataUrl: dataUrl,   // 撮影した写真（保存前サムネイル表示用。永続化はDB側の写真列対応後）
-        });
+        };
+        // 重複除去: 1枚の写真からVisionが同じボトルを二重検出することがある（前後ラベル含む）。
+        // 同一ワイン（wine_id一致 or 銘柄名+ヴィンテージ一致）が既にstagingにあれば追加しない。
+        if (!tnStaged.some(x => tnSameWine(x, item))) tnStaged.push(item);
       });
     } catch (e) { showToast(t('toast_photo_read_fail')); }
   }
