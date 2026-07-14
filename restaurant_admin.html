@@ -2658,6 +2658,7 @@ const I18N = {
     tn_region_ph: '産地（例: イタリア ピエモンテ）',
     tn_edit_hint: '↑ AIの読み取り結果です。違っていればタップして直してください',
     tn_name_required: 'ワイン名を入力してください',
+    tn_photo_saving: '写真を保存中… {i}/{n}枚目',
     tn_save_all_btn: '✓ まとめて保存',
     tn_list_lbl: '良かったワインリスト',
     tn_reading: 'AIが読み取り中… {i}/{n}枚目（10秒ほど）',
@@ -3132,6 +3133,7 @@ const I18N = {
     tn_region_ph: 'Region (e.g. Italy, Piedmont)',
     tn_edit_hint: "↑ AI's reading. Tap to correct anything that's wrong",
     tn_name_required: 'Please enter a wine name',
+    tn_photo_saving: 'Saving photos… {i}/{n}',
     tn_save_all_btn: '✓ Save all',
     tn_list_lbl: 'FAVORITE WINES',
     tn_reading: 'AI reading… photo {i}/{n} (about 10 s)',
@@ -5257,6 +5259,43 @@ function tnToDataUrl(file) {
   });
 }
 
+// ⑧ 撮影写真の永続化（業務店=認証セッションありなのでフロント直upload）。
+// user-wine-photos バケット（非公開）にパス ${owner_id}/store-tasting/${noteId}/${uuid}.jpg で保存。
+// DDLで追加された INSERT ポリシー（foldername[1]=auth.uid()）で許可される。失敗しても記録本体は成功のまま。
+const TN_BUCKET = 'user-wine-photos';
+function tnDataUrlToBlob(dataUrl) {
+  return fetch(dataUrl).then(r => r.blob()).catch(() => null);
+}
+async function tnUploadPhoto(dataUrl, uid, noteId) {
+  if (!dataUrl || !uid || !noteId) return null;
+  try {
+    const blob = await tnDataUrlToBlob(dataUrl);
+    if (!blob) return null;
+    const path = uid + '/store-tasting/' + noteId + '/' + (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) + '.jpg';
+    const r = await fetch(RW_SB_URL + '/storage/v1/object/' + TN_BUCKET + '/' + path, {
+      method: 'POST',
+      headers: { apikey: RW_SB_KEY, Authorization: 'Bearer ' + (rwToken() || ''), 'Content-Type': 'image/jpeg', 'x-upsert': 'true' },
+      body: blob,
+    });
+    if (!r.ok) return null;
+    return path;
+  } catch (e) { return null; }
+}
+// 非公開バケットの表示用に署名付きURL(1h)を発行。SELECTポリシー未整備の環境ではnull（画像非表示）にフォールバック。
+async function tnSignedUrl(path) {
+  if (!path) return null;
+  try {
+    const r = await fetch(RW_SB_URL + '/storage/v1/object/sign/' + TN_BUCKET + '/' + path, {
+      method: 'POST',
+      headers: { apikey: RW_SB_KEY, Authorization: 'Bearer ' + (rwToken() || ''), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expiresIn: 3600 }),
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    return d.signedURL ? (RW_SB_URL + '/storage/v1' + d.signedURL) : null;
+  } catch (e) { return null; }
+}
+
 async function tnProcessFiles(files) {
   if (!files.length) return;
   const prog = document.getElementById('tnProgress');
@@ -5383,11 +5422,25 @@ async function tnSaveStaged() {
     const r = await rwFetch('tasting_notes', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify(payload) });
     if (!r.ok) throw 0;
     const rows = await r.json();
+    // ⑧ 撮影写真をStorageへ保存し photo_path を紐づける。表示用に即時ローカルURLも保持。
+    //    PostgRESTのinsertは挿入順で返るため rows[i] は toSave[i] に対応する。
+    const prog = document.getElementById('tnProgress');
+    for (let i = 0; i < rows.length; i++) {
+      const dataUrl = toSave[i] && toSave[i].photoDataUrl;
+      if (!dataUrl) continue;
+      prog.textContent = t('tn_photo_saving').replace('{i}', i + 1).replace('{n}', rows.length);
+      const path = await tnUploadPhoto(dataUrl, uid, rows[i].id);
+      if (path) {
+        try { await rwFetch('tasting_notes?id=eq.' + rows[i].id, { method: 'PATCH', body: JSON.stringify({ photo_path: path }) }); } catch (e) {}
+        rows[i].photo_path = path;
+      }
+      rows[i]._localPhotoUrl = dataUrl; // このセッション中は即表示できるようにローカル保持
+    }
     tnNotes = rows.concat(tnNotes);
     tnStaged = [];
     renderTnStaging();
     renderTnList();
-    document.getElementById('tnProgress').textContent = '';
+    if (prog) prog.textContent = '';
     showToast(t('toast_saved_n').replace('{n}', rows.length));
   } catch (e) { showToast(t('toast_save_fail')); }
 }
@@ -5417,6 +5470,21 @@ async function renderTastingNotes() {
     if (r.ok) tnNotes = await r.json();
   } catch (e) {}
   renderTnList();
+  // ⑧ 写真は署名付きURLが要るので、描画後に非同期で解決してサムネイルを差し込む
+  tnResolvePhotos();
+}
+
+// photo_path を持つ記録の署名付きURLを取得し、該当カードのサムネイル枠に反映（SELECTポリシー未整備なら黙って非表示）
+async function tnResolvePhotos() {
+  for (const n of tnNotes) {
+    if (!n.photo_path || n._localPhotoUrl || n._signedTried) continue;
+    n._signedTried = true;
+    const url = await tnSignedUrl(n.photo_path);
+    if (!url) continue;
+    n._localPhotoUrl = url;
+    const slot = document.getElementById('tnThumb-' + n.id);
+    if (slot) slot.innerHTML = `<img src="${tnEsc(url)}" alt="" loading="lazy" style="width:52px;height:68px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">`;
+  }
 }
 
 function renderTnList() {
@@ -5428,13 +5496,23 @@ function renderTnList() {
     return;
   }
   box.innerHTML = tnNotes.map(n => {
+    // 撮影写真のサムネイル枠。即時ローカルURLがあれば表示、無ければ空枠（tnResolvePhotosが後から差し込む）。
+    const thumbInner = n._localPhotoUrl
+      ? `<img src="${tnEsc(n._localPhotoUrl)}" alt="" loading="lazy" style="width:52px;height:68px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">`
+      : '';
+    const thumbSlot = n.photo_path || n._localPhotoUrl
+      ? `<div id="tnThumb-${n.id}" style="flex-shrink:0;">${thumbInner}</div>`
+      : '';
     return `
     <div style="background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;">
       <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
-        <div style="min-width:0;">
-          <div style="font-size:14px;font-weight:800;color:var(--text);">${tnEsc(n.name)}${n.vintage ? ' ' + tnEsc(n.vintage) : ''}</div>
-          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">
-            ${tnEsc(n.region || '')}${n.importer_name ? `　🏢 ${tnEsc(n.importer_name)}` : ''}
+        <div style="display:flex;gap:10px;min-width:0;flex:1;">
+          ${thumbSlot}
+          <div style="min-width:0;">
+            <div style="font-size:14px;font-weight:800;color:var(--text);">${tnEsc(n.name)}${n.vintage ? ' ' + tnEsc(n.vintage) : ''}</div>
+            <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">
+              ${tnEsc(n.region || '')}${n.importer_name ? `　🏢 ${tnEsc(n.importer_name)}` : ''}
+            </div>
           </div>
         </div>
         <button onclick="tnDelete('${n.id}')" style="background:none;border:none;color:#bbb;font-size:16px;cursor:pointer;flex-shrink:0;">✕</button>
