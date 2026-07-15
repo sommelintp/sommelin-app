@@ -1247,14 +1247,31 @@ function oshiPaintScore(){
 // ═══════════════════════════════════════════════════════════
 let cellarAddList=[], cellarAddBackPhoto=null, cellarAddSaving=false;
 
+// 色文字列 → セラーのカテゴリキー（sparkling/white/red/rose/orange）
+function cellarCatFromColor(c){
+  const s=String(c||'').toLowerCase();
+  if(/泡|スパークリング|sparkl|spumante|cava|champagne|シャンパ/.test(s)) return 'sparkling';
+  if(/ロゼ|ros[eé]/.test(s)) return 'rose';
+  if(/オレンジ|橙|amber|orange/.test(s)) return 'orange';
+  if(/白|white|blanc|bianco/.test(s)) return 'white';
+  if(/赤|red|rouge|rosso/.test(s)) return 'red';
+  return null;
+}
+
 // 在庫登録に使うワイン識別情報（既知=マスタ値、未登録=読み取り値）
 function cellarWineInfo(){
   const b=curOshiBottle||{}; const w=b.match&&b.match.wine; const id=b.identification||{};
+  const color = w ? (w.iro||w.color) : id.color;
+  const region = w
+    ? [w.kuni,w.chiiki].filter(v=>v&&v!=='不明').join(' ')
+    : [id.country,id.region].filter(Boolean).join(' ');
   return {
     catalogId: (w&&(w.catalogId||w.catalog_id))||null,
     name: w ? (w.name||'') : ([id.producer,id.wine].filter(Boolean).join(' ')||''),
     producer: w ? (w.producer||'') : (id.producer||''),
     vintage: (w ? w.vintage : id.vintage)||'',
+    region: region||'',
+    cat: cellarCatFromColor(color),
   };
 }
 
@@ -1343,6 +1360,7 @@ async function cellarAddSubmit(){
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ userId:UID, cellarId, catalogId:info.catalogId,
         name:info.name, producer:info.producer||null, vintage:info.vintage||null,
+        region:info.region||null, cat:info.cat||null,
         bottles, price, photos })
     });
     if(!r.ok) throw 0;

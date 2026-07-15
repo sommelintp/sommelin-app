@@ -1112,22 +1112,24 @@ async function loadServerBottles(){
     renderSummary(); renderCellar();
   }catch(e){}
 }
-// 表示対象（現在のセラー絞り込みに従う。cellar_bottlesは色情報が無いのでカテゴリ絞り込みは「すべて」時のみ表示）
+// 表示対象（現在のセラー絞り込み＋カテゴリ絞り込みに従う）
 function serverBottlesScoped(){
   let arr = serverBottles.filter(b => (b.bottles||0) > 0);
   if (currentCellarId !== null) arr = arr.filter(b => b.cellar_id === currentCellarId);
   return arr;
 }
 function renderServerBottleCards(){
-  if (currentCat !== 'all') return ''; // 色未知のためカテゴリ絞り込み時は出さない
-  const arr = serverBottlesScoped();
+  let arr = serverBottlesScoped();
+  // カテゴリ絞り込み: catがある在庫はそのcatで、cat未設定の在庫は「すべて」時のみ表示
+  if (currentCat !== 'all') arr = arr.filter(b => b.cat === currentCat);
   if (!arr.length) return '';
   const showBadge = currentCellarId === null && cellars.length > 1;
   return arr.map(b => {
+    const cfg = catCfg[b.cat] || null;
     const photo = (b.photos||[]).find(p => p.url);
     const thumb = photo
       ? `<img src="${esc(photo.url)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`
-      : `<span>🍷</span>`;
+      : `<span>${cfg ? cfg.emoji : '🍷'}</span>`;
     const price = b.price_jpy != null ? '¥' + Number(b.price_jpy).toLocaleString() : '—';
     return `
       <div class="cellar-card">
@@ -1139,6 +1141,7 @@ function renderServerBottleCards(){
               <div class="cellar-vintage">${esc(b.vintage||'')}</div>
             </div>
             <div class="cellar-producer">${esc(b.producer||'—')}</div>
+            ${b.region?`<div class="cellar-region">📍 ${esc(b.region)}</div>`:''}
             ${(b.photos&&b.photos.length>1)?`<div class="cellar-region">🏷 ${t('sb_photos_n', { n: b.photos.length })}</div>`:''}
             ${showBadge && b.cellar_id ? `<div class="cellar-badge">${esc(cellarNameOf(b.cellar_id))}</div>` : ''}
             <div class="cellar-bottom">
