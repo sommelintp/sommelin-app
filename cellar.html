@@ -705,6 +705,10 @@ const I18N = {
     spend_recorded: '記録した本数',
     toast_last: '🍷 最後の1本を飲みました！',
     toast_plus1: '＋1本 追加',
+    sb_delete: '削除',
+    sb_delete_confirm: 'この在庫を削除しますか？',
+    sb_deleted: '削除しました',
+    sb_photos_n: '写真{n}枚',
     toast_minus1: '−1本 消費',
     scan_analyzing: '解析中...',
     scan_analyzing_sub: 'AIがラベルを読み取っています',
@@ -820,6 +824,10 @@ const I18N = {
     spend_recorded: 'Bottles logged',
     toast_last: '🍷 That was the last bottle!',
     toast_plus1: '+1 bottle added',
+    sb_delete: 'Delete',
+    sb_delete_confirm: 'Delete this stock?',
+    sb_deleted: 'Deleted',
+    sb_photos_n: '{n} photos',
     toast_minus1: '−1 bottle used',
     scan_analyzing: 'Analyzing...',
     scan_analyzing_sub: 'AI is reading the label',
@@ -1087,6 +1095,97 @@ async function loadCellarFromServer(){
   }catch(e){}
 }
 
+// ═══════════════════════════════════════════════════════════
+// サーバー在庫（cellar_bottles・④⑤⑦）: スカウターから写真つきで追加された在庫。
+//   既存のlocalStorage在庫機構とは別軸で読み・表示・削除する（回帰リスクを避けるため独立）。
+//   写真は署名付きURL、本数±はPATCH、削除はDELETE /api/cellar/bottles。
+// ═══════════════════════════════════════════════════════════
+let serverBottles = [];
+async function loadServerBottles(){
+  let uid=null; try{ uid=localStorage.getItem('somm_uid'); }catch(e){}
+  if(!uid) return;
+  try{
+    const r = await fetch(CELLAR_API_BASE+'/api/cellar/bottles?userId='+encodeURIComponent(uid));
+    if(!r.ok) return;
+    const { items } = await r.json();
+    serverBottles = Array.isArray(items) ? items : [];
+    renderSummary(); renderCellar();
+  }catch(e){}
+}
+// 表示対象（現在のセラー絞り込みに従う。cellar_bottlesは色情報が無いのでカテゴリ絞り込みは「すべて」時のみ表示）
+function serverBottlesScoped(){
+  let arr = serverBottles.filter(b => (b.bottles||0) > 0);
+  if (currentCellarId !== null) arr = arr.filter(b => b.cellar_id === currentCellarId);
+  return arr;
+}
+function renderServerBottleCards(){
+  if (currentCat !== 'all') return ''; // 色未知のためカテゴリ絞り込み時は出さない
+  const arr = serverBottlesScoped();
+  if (!arr.length) return '';
+  const showBadge = currentCellarId === null && cellars.length > 1;
+  return arr.map(b => {
+    const photo = (b.photos||[]).find(p => p.url);
+    const thumb = photo
+      ? `<img src="${esc(photo.url)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`
+      : `<span>🍷</span>`;
+    const price = b.price_jpy != null ? '¥' + Number(b.price_jpy).toLocaleString() : '—';
+    return `
+      <div class="cellar-card">
+        <div class="cellar-card-inner">
+          <div class="cellar-card-label ${photo?'photo':''}" style="overflow:hidden;">${thumb}</div>
+          <div class="cellar-card-body">
+            <div class="cellar-card-top">
+              <div class="cellar-name">${esc(b.name||'—')}</div>
+              <div class="cellar-vintage">${esc(b.vintage||'')}</div>
+            </div>
+            <div class="cellar-producer">${esc(b.producer||'—')}</div>
+            ${(b.photos&&b.photos.length>1)?`<div class="cellar-region">🏷 ${t('sb_photos_n', { n: b.photos.length })}</div>`:''}
+            ${showBadge && b.cellar_id ? `<div class="cellar-badge">${esc(cellarNameOf(b.cellar_id))}</div>` : ''}
+            <div class="cellar-bottom">
+              <div class="cellar-purchase">${price}</div>
+              <div class="cellar-stock">
+                <button class="stock-minus" onclick="event.stopPropagation();sbChangeStock('${esc(b.id)}',-1)">−</button>
+                <div class="stock-badge">${t('fmt_stock', { n: b.bottles })}</div>
+                <button class="stock-plus"  onclick="event.stopPropagation();sbChangeStock('${esc(b.id)}',+1)">＋</button>
+              </div>
+            </div>
+            <button onclick="event.stopPropagation();sbDelete('${esc(b.id)}')" style="margin-top:8px;width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);background:#fff;color:#b03a3a;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">🗑 ${t('sb_delete')}</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+async function sbChangeStock(id, delta){
+  const b = serverBottles.find(x => String(x.id) === String(id));
+  if (!b) return;
+  const newVal = (b.bottles||0) + delta;
+  if (newVal < 0) return;
+  let uid=null; try{ uid=localStorage.getItem('somm_uid'); }catch(e){}
+  b.bottles = newVal; // 楽観更新
+  if (newVal === 0) { serverBottles = serverBottles.filter(x => String(x.id)!==String(id)); showToast(t('toast_last')); }
+  else showToast(delta > 0 ? t('toast_plus1') : t('toast_minus1'));
+  renderSummary(); renderCellar();
+  try{
+    if (newVal === 0) {
+      await fetch(CELLAR_API_BASE+'/api/cellar/bottles/'+encodeURIComponent(id)+'?userId='+encodeURIComponent(uid), { method:'DELETE' });
+    } else {
+      await fetch(CELLAR_API_BASE+'/api/cellar/bottles/'+encodeURIComponent(id), {
+        method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ userId:uid, bottles:newVal })
+      });
+    }
+  }catch(e){}
+}
+async function sbDelete(id){
+  if (!confirm(t('sb_delete_confirm'))) return;
+  let uid=null; try{ uid=localStorage.getItem('somm_uid'); }catch(e){}
+  serverBottles = serverBottles.filter(x => String(x.id)!==String(id));
+  renderSummary(); renderCellar();
+  try{
+    await fetch(CELLAR_API_BASE+'/api/cellar/bottles/'+encodeURIComponent(id)+'?userId='+encodeURIComponent(uid), { method:'DELETE' });
+    showToast(t('sb_deleted'));
+  }catch(e){}
+}
+
 const journal = [];
 
 // ── RENDER ──
@@ -1102,17 +1201,20 @@ function cellarNameOf(id){
 
 function renderSummary() {
   const scoped = cellarScoped();
-  const total = scoped.reduce((s,w) => s + w.bottles, 0);
-  const totalSpend = scoped.reduce((s,w) => s + w.price, 0);
+  // サーバー在庫（cellar_bottles）も本数・合計・平均に含める
+  const sb = serverBottlesScoped();
+  const total = scoped.reduce((s,w) => s + w.bottles, 0) + sb.reduce((s,b) => s + (b.bottles||0), 0);
+  const totalSpend = scoped.reduce((s,w) => s + w.price, 0) + sb.reduce((s,b) => s + (b.price_jpy||0), 0);
+  const kinds = scoped.length + sb.length;
   const cats = [...new Set(scoped.map(w => w.cat))].length;
-  const avgPrice = total ? Math.round(totalSpend / scoped.length) : 0;
+  const avgPrice = kinds ? Math.round(totalSpend / kinds) : 0;
   document.getElementById('summaryRow').innerHTML = `
     <div class="summary-item">
       <div class="summary-val">${total}</div>
       <div class="summary-label">${t('summary_total')}</div>
     </div>
     <div class="summary-item">
-      <div class="summary-val">${scoped.length}</div>
+      <div class="summary-val">${kinds}</div>
       <div class="summary-label">${t('summary_wines')}</div>
     </div>
     <div class="summary-item">
@@ -1130,7 +1232,7 @@ function renderCellar() {
   const catFiltered = currentCat === 'all' ? scoped : scoped.filter(w => w.cat === currentCat);
   const list = sortWines(catFiltered);
   const showBadge = currentCellarId === null && cellars.length > 1;
-  document.getElementById('cellarList').innerHTML = list.map(w => {
+  const localCards = list.map(w => {
     const cfg = catCfg[w.cat];
     return `
       <div class="cellar-card">
@@ -1158,7 +1260,10 @@ function renderCellar() {
           </div>
         </div>
       </div>`;
-  }).join('') || `<div class="empty-state" style="padding:40px 20px;text-align:center;color:var(--text-sub);">${t('empty_cat')}</div>`;
+  }).join('');
+  const serverCards = renderServerBottleCards();
+  document.getElementById('cellarList').innerHTML = (localCards + serverCards) ||
+    `<div class="empty-state" style="padding:40px 20px;text-align:center;color:var(--text-sub);">${t('empty_cat')}</div>`;
 }
 
 function renderJournal() {
@@ -1423,7 +1528,7 @@ renderCellar();
 renderJournal();
 renderStats();
 loadCellarFromServer();
-loadCellarsFromServer().then(() => { renderSummary(); renderCellar(); renderStats(); });
+loadCellarsFromServer().then(() => { renderSummary(); renderCellar(); renderStats(); loadServerBottles(); });
 (function initHeaderName(){
   try { const n = localStorage.getItem('sommelin_nickname'); const el = document.getElementById('cellarHeaderName'); if (el && n) el.textContent = n; } catch(e){}
 })();

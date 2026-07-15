@@ -413,6 +413,18 @@ const I18N = {
     toast_report_failed: '保存に失敗しました。通信環境をご確認ください',
     toast_enter_name: '店名を入力してください',
     like_btn: '❤️ 気に入った！（推す）',
+    cellar_add_btn: '🍾 セラーに追加',
+    cellar_add_title: '🍾 マイセラーに追加',
+    cellar_add_sub: '飲んだ記録ではなく、手持ちの在庫として登録します',
+    cellar_add_which: 'どのセラーに入れますか',
+    cellar_add_bottles: '本数',
+    cellar_add_price: '購入価格（任意・円）',
+    cellar_add_back: '📷 裏ラベルも追加（任意）',
+    cellar_add_back_done: '✓ 裏ラベルを追加しました',
+    cellar_add_save: '✓ セラーに保存',
+    cellar_add_saving: '保存中…',
+    cellar_add_saved: '🍾 マイセラーに追加しました',
+    cellar_add_fail: '追加に失敗しました。通信環境をご確認ください',
     oshi_rate_title: 'このワイン、何点でしたか？',
     oshi_rate_sub: '10点満点・0.1刻み。あなたの「気に入ったワインリスト」に保存されます',
     oshi_save: '❤️ この評価で保存', oshi_saving: '保存中…',
@@ -589,6 +601,18 @@ const I18N = {
     toast_report_failed: 'Failed to save. Please check your connection.',
     toast_enter_name: 'Please enter the venue name',
     like_btn: '❤️ I love this wine!',
+    cellar_add_btn: '🍾 Add to cellar',
+    cellar_add_title: '🍾 Add to my cellar',
+    cellar_add_sub: 'Register as stock you own — not as a wine you drank',
+    cellar_add_which: 'Which cellar?',
+    cellar_add_bottles: 'Bottles',
+    cellar_add_price: 'Purchase price (optional, JPY)',
+    cellar_add_back: '📷 Add back label (optional)',
+    cellar_add_back_done: '✓ Back label added',
+    cellar_add_save: '✓ Save to cellar',
+    cellar_add_saving: 'Saving…',
+    cellar_add_saved: '🍾 Added to your cellar',
+    cellar_add_fail: 'Could not add. Please check your connection.',
     oshi_rate_title: 'How would you rate this wine?',
     oshi_rate_sub: 'Out of 10, in 0.1 steps. Saved to your "wines I loved" list.',
     oshi_save: '❤️ Save my rating', oshi_saving: 'Saving…',
@@ -1058,6 +1082,7 @@ function renderShelfCard(b){
       ${backBlock(b)}
       <div id="simBox"></div>
       <button class="sh-like" onclick="oshiStart()">${t('like_btn')}</button>
+      <button class="sh-like" style="background:#fff;color:var(--burgundy);border:1.5px solid var(--burgundy);margin-top:8px;" onclick="cellarAddStart()">${t('cellar_add_btn')}</button>
       <div class="sh-btns">
         <button class="sh-main" onclick="buy('${escAttr(w.name||'')}', ${w.id})">${t('buy_search_label')}</button>
         <button class="sh-sub" onclick="closeSheet()">${t('close_label')}</button>
@@ -1073,6 +1098,7 @@ function renderShelfCard(b){
       ${backBlock(b)}
       <div id="simBox"></div>
       <button class="sh-like" onclick="oshiStart()">${t('like_btn')}</button>
+      <button class="sh-like" style="background:#fff;color:var(--burgundy);border:1.5px solid var(--burgundy);margin-top:8px;" onclick="cellarAddStart()">${t('cellar_add_btn')}</button>
       <div class="sh-btns">
         <button class="sh-main" onclick="buy('${escAttr(title)}')">${t('buy_search_web_label')}</button>
         <button class="sh-sub" onclick="closeSheet()">${t('close_label')}</button>
@@ -1213,6 +1239,119 @@ function oshiStart(){
 }
 function oshiPaintScore(){
   const v=document.getElementById('oshiScoreV'); if(v) v.textContent=oshiRating.toFixed(1);
+}
+
+// ═══════════════════════════════════════════════════════════
+// 🍾 セラーに追加（④⑤⑦）: スキャン結果を「飲んだ」ではなく在庫として登録。
+//    撮影写真(front)＋任意で裏ラベル(back)を同じ1本に紐づけて /api/cellar/bottles へ。
+// ═══════════════════════════════════════════════════════════
+let cellarAddList=[], cellarAddBackPhoto=null, cellarAddSaving=false;
+
+// 在庫登録に使うワイン識別情報（既知=マスタ値、未登録=読み取り値）
+function cellarWineInfo(){
+  const b=curOshiBottle||{}; const w=b.match&&b.match.wine; const id=b.identification||{};
+  return {
+    catalogId: (w&&(w.catalogId||w.catalog_id))||null,
+    name: w ? (w.name||'') : ([id.producer,id.wine].filter(Boolean).join(' ')||''),
+    producer: w ? (w.producer||'') : (id.producer||''),
+    vintage: (w ? w.vintage : id.vintage)||'',
+  };
+}
+
+async function cellarAddStart(){
+  if(!curOshiBottle) return;
+  cellarAddBackPhoto=null; cellarAddSaving=false;
+  const info=cellarWineInfo();
+  // セラー一覧を取得（無ければ既定セラーを作る）
+  try{
+    const r=await fetch(API_BASE+'/api/cellars?userId='+encodeURIComponent(UID));
+    const d=r.ok?await r.json():{items:[]};
+    cellarAddList=(d.items||[]);
+    if(!cellarAddList.length){
+      const cr=await fetch(API_BASE+'/api/cellars',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({userId:UID,name:(LANG==='en'?'My Cellar':'マイセラー'),emoji:'🍾'})});
+      if(cr.ok){ const cd=await cr.json(); if(cd.cellar) cellarAddList=[cd.cellar]; }
+    }
+  }catch(e){ cellarAddList=[]; }
+  const options=cellarAddList.map(c=>`<option value="${esc(c.id)}">${esc(c.emoji||'🍾')} ${esc(c.name)}</option>`).join('');
+  document.getElementById('sheetBody').innerHTML=`
+    <div class="oshi-step">
+      <div class="oshi-title">${t('cellar_add_title')}</div>
+      <div class="oshi-sub">${esc(trunc(info.name,30))}${info.vintage&&info.vintage!=='NV'?' '+esc(info.vintage):''}<br>${t('cellar_add_sub')}</div>
+      <div style="text-align:left;margin-top:12px;">
+        <label style="font-size:12px;font-weight:700;color:#555;">${t('cellar_add_which')}</label>
+        <select id="caCellar" style="width:100%;margin-top:4px;padding:10px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;font-family:inherit;">${options}</select>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <div style="width:90px;flex-shrink:0;">
+            <label style="font-size:12px;font-weight:700;color:#555;">${t('cellar_add_bottles')}</label>
+            <input id="caBottles" type="number" min="1" value="1" style="width:100%;margin-top:4px;padding:10px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;font-family:inherit;box-sizing:border-box;">
+          </div>
+          <div style="flex:1;">
+            <label style="font-size:12px;font-weight:700;color:#555;">${t('cellar_add_price')}</label>
+            <input id="caPrice" type="number" min="0" inputmode="numeric" placeholder="—" style="width:100%;margin-top:4px;padding:10px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;font-family:inherit;box-sizing:border-box;">
+          </div>
+        </div>
+        <button id="caBackBtn" onclick="cellarAddPickBack()" style="width:100%;margin-top:10px;padding:10px;background:#f5f3f0;color:var(--burgundy);border:1.5px solid #e5ddd5;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">${t('cellar_add_back')}</button>
+      </div>
+      <div class="sh-btns" style="padding:12px 0 6px">
+        <button class="sh-main" onclick="cellarAddSubmit()">${t('cellar_add_save')}</button>
+        <button class="sh-sub" onclick="renderShelfCard(curOshiBottle)">${t('oshi_back')}</button>
+      </div>
+    </div>`;
+}
+
+// 裏ラベル写真を選ぶ（camera/library）。cellarAddBackInput を使い回す。
+function cellarAddPickBack(){
+  let inp=document.getElementById('cellarAddBackInput');
+  if(!inp){
+    inp=document.createElement('input');
+    inp.type='file'; inp.accept='image/*'; inp.id='cellarAddBackInput'; inp.style.display='none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change',e=>{
+      const f=e.target.files&&e.target.files[0]; e.target.value='';
+      if(!f) return;
+      const img=new Image();
+      img.onload=()=>{ cellarAddBackPhoto=grabFrame(img,false,1568); URL.revokeObjectURL(img.src);
+        const btn=document.getElementById('caBackBtn'); if(btn){ btn.textContent=t('cellar_add_back_done'); btn.style.background='#e8f5e9'; btn.style.color='#16a34a'; btn.style.borderColor='#a5d6a7'; } };
+      img.src=URL.createObjectURL(f);
+    });
+  }
+  inp.click();
+}
+
+async function cellarAddSubmit(){
+  if(!curOshiBottle || cellarAddSaving) return;
+  const cellarId=(document.getElementById('caCellar')||{}).value||null;
+  if(!cellarId){ toast(t('cellar_add_fail')); return; }
+  const bottles=Math.max(1,parseInt((document.getElementById('caBottles')||{}).value,10)||1);
+  const priceRaw=(document.getElementById('caPrice')||{}).value;
+  const price=priceRaw!==''&&priceRaw!=null?Math.max(0,parseInt(priceRaw,10)||0):null;
+  const info=cellarWineInfo();
+  if(!info.name){ toast(t('cellar_add_fail')); return; }
+  cellarAddSaving=true;
+  const saveBtn=document.querySelector('#sheetBody .sh-main');
+  if(saveBtn){ saveBtn.disabled=true; saveBtn.style.opacity='.55'; saveBtn.textContent=t('cellar_add_saving'); }
+  // 撮影写真: front=frozen画像（あれば）、back=任意で撮った裏ラベル
+  const frozenSrc=(document.getElementById('frozenImg')||{}).src||'';
+  const frontPhoto=frozenSrc.startsWith('data:')?frozenSrc:null;
+  const photos=[];
+  if(frontPhoto) photos.push({dataUrl:frontPhoto,role:'front'});
+  if(cellarAddBackPhoto) photos.push({dataUrl:cellarAddBackPhoto,role:'back'});
+  try{
+    if(window.sommLog) sommLog('cellar_add',{fromScouter:true});
+    const r=await fetch(API_BASE+'/api/cellar/bottles',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ userId:UID, cellarId, catalogId:info.catalogId,
+        name:info.name, producer:info.producer||null, vintage:info.vintage||null,
+        bottles, price, photos })
+    });
+    if(!r.ok) throw 0;
+    toast(t('cellar_add_saved'));
+    closeSheet();
+  }catch(e){
+    toast(t('cellar_add_fail'));
+    if(saveBtn){ saveBtn.disabled=false; saveBtn.style.opacity='1'; saveBtn.textContent=t('cellar_add_save'); }
+  }finally{ cellarAddSaving=false; }
 }
 
 // Step2: 保存（蓄積は伝える/伝えないに関係なく必ず行う）
