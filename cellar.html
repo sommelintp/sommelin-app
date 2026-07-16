@@ -709,6 +709,11 @@ const I18N = {
     sb_delete_confirm: 'この在庫を削除しますか？',
     sb_deleted: '削除しました',
     sb_photos_n: '写真{n}枚',
+    journal_loading: '読み込み中…',
+    journal_empty: 'まだ記録がありません。<br>スカウターでワインを撮って「気に入った」を押すと、ここに記録されます。',
+    journal_delete_fail: '削除に失敗しました',
+    stats_no_data: 'まだデータがありません',
+    toast_add_fail: '追加に失敗しました。通信環境をご確認ください',
     toast_minus1: '−1本 消費',
     scan_analyzing: '解析中...',
     scan_analyzing_sub: 'AIがラベルを読み取っています',
@@ -828,6 +833,11 @@ const I18N = {
     sb_delete_confirm: 'Delete this stock?',
     sb_deleted: 'Deleted',
     sb_photos_n: '{n} photos',
+    journal_loading: 'Loading…',
+    journal_empty: 'No records yet.<br>Scan a wine in the Scouter and tap "I love this" to record it here.',
+    journal_delete_fail: 'Delete failed',
+    stats_no_data: 'No data yet',
+    toast_add_fail: 'Could not add. Please check your connection.',
     toast_minus1: '−1 bottle used',
     scan_analyzing: 'Analyzing...',
     scan_analyzing_sub: 'AI is reading the label',
@@ -1054,7 +1064,7 @@ function sortWines(list){
 
 // 公開/非公開の切り替え（2026-07-08追加: マイセラーをホームからも見られるようにするため）
 function toggleCellarPublic(id){
-  const w = cellar.find(x => x.id === id);
+  const w = cellar.find(x => String(x.id) === String(id));
   if (!w) return;
   w.isPublic = !w.isPublic;
   saveCellar();
@@ -1189,7 +1199,49 @@ async function sbDelete(id){
   }catch(e){}
 }
 
-const journal = [];
+// ═══════════════════════════════════════════════════════════
+// 記録タブ（飲んだワイン）: サーバーの実データ（/api/taste/list = taste_items）を表示。
+//   以前はプロトタイプ用サンプル配列だったが、マイページのモーダルと同じ実データに接続。
+//   写真サムネイル（署名付きURL）＋削除（DELETE /api/taste/list/:id）に対応。
+// ═══════════════════════════════════════════════════════════
+let journal = [];          // {id,name,producer,iro,kuni,chiiki,vintage,price,ts,imageUrl}[]
+let journalLoaded = false; // 読込完了フラグ（空とロード中の表示を区別）
+async function loadJournal(){
+  const uid = myUid();
+  if(!uid){ journalLoaded = true; renderJournal(); return; }
+  try{
+    const r = await fetch(CELLAR_API_BASE+'/api/taste/list?userId='+encodeURIComponent(uid));
+    if(!r.ok) throw 0;
+    const d = await r.json();
+    journal = Array.isArray(d.items) ? d.items : [];
+  }catch(e){ /* 失敗時は空のまま（オフライン等） */ }
+  journalLoaded = true;
+  renderJournal();
+  renderStats();
+}
+// 色（iro: 「赤」「白」等）→ catCfgキー
+function journalCatOf(iro){
+  const s = String(iro||'');
+  if (/泡|スパークリング/.test(s)) return 'sparkling';
+  if (/ロゼ/.test(s)) return 'rose';
+  if (/オレンジ|橙/.test(s)) return 'orange';
+  if (/白/.test(s)) return 'white';
+  if (/赤/.test(s)) return 'red';
+  return 'red';
+}
+async function journalDelete(id){
+  if (!confirm(t('sb_delete_confirm'))) return;
+  const uid = myUid();
+  if (!uid) return;
+  try{
+    const r = await fetch(CELLAR_API_BASE+'/api/taste/list/'+encodeURIComponent(id)+'?userId='+encodeURIComponent(uid), { method:'DELETE' });
+    if(!r.ok) throw 0;
+    journal = journal.filter(j => String(j.id) !== String(id));
+    renderJournal();
+    renderStats();
+    showToast(t('sb_deleted'));
+  }catch(e){ showToast(t('journal_delete_fail')); }
+}
 
 // ── RENDER ──
 // AG節: currentCellarId が設定されていればそのセラーだけに絞った配列を返す（すべての集計・一覧はこれを使う）
@@ -1237,29 +1289,30 @@ function renderCellar() {
   const showBadge = currentCellarId === null && cellars.length > 1;
   const localCards = list.map(w => {
     const cfg = catCfg[w.cat];
+    // idは必ず文字列として引用して渡す（uuid等の非数値idでonclickが壊れないように）。テキストはesc。
     return `
       <div class="cellar-card">
-        <div class="cellar-card-inner" onclick="openDetail(${w.id})">
+        <div class="cellar-card-inner" onclick="openDetail('${esc(String(w.id))}')">
           <div class="cellar-card-label ${w.hasLabel ? 'photo' : ''}">
             <span>${cfg.emoji}</span>
           </div>
           <div class="cellar-card-body">
             <div class="cellar-card-top">
-              <div class="cellar-name">${w.name}</div>
-              <div class="cellar-vintage">${w.vintage}</div>
+              <div class="cellar-name">${esc(w.name)}</div>
+              <div class="cellar-vintage">${esc(w.vintage)}</div>
             </div>
-            <div class="cellar-producer">${w.producer}</div>
-            <div class="cellar-region">📍 ${w.region}</div>
+            <div class="cellar-producer">${esc(w.producer)}</div>
+            <div class="cellar-region">📍 ${esc(w.region)}</div>
             ${showBadge && w.cellarId ? `<div class="cellar-badge">${esc(cellarNameOf(w.cellarId))}</div>` : ''}
             <div class="cellar-bottom">
-              <div class="cellar-purchase">¥${w.price.toLocaleString()}</div>
+              <div class="cellar-purchase">¥${(w.price||0).toLocaleString()}</div>
               <div class="cellar-stock">
-                <button class="stock-minus" onclick="event.stopPropagation();changeStock(${w.id},-1)">−</button>
+                <button class="stock-minus" onclick="event.stopPropagation();changeStock('${esc(String(w.id))}',-1)">−</button>
                 <div class="stock-badge">${t('fmt_stock', { n: w.bottles })}</div>
-                <button class="stock-plus"  onclick="event.stopPropagation();changeStock(${w.id},+1)">＋</button>
+                <button class="stock-plus"  onclick="event.stopPropagation();changeStock('${esc(String(w.id))}',+1)">＋</button>
               </div>
             </div>
-            <button onclick="event.stopPropagation();toggleCellarPublic(${w.id})" style="margin-top:8px;width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);background:${w.isPublic?'#fff4e8':'#fff'};color:${w.isPublic?'#b8730a':'#8a7a7d'};font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">${w.isPublic ? t('pub_on') : t('pub_off')}</button>
+            <button onclick="event.stopPropagation();toggleCellarPublic('${esc(String(w.id))}')" style="margin-top:8px;width:100%;padding:6px;border-radius:8px;border:1px solid var(--border);background:${w.isPublic?'#fff4e8':'#fff'};color:${w.isPublic?'#b8730a':'#8a7a7d'};font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">${w.isPublic ? t('pub_on') : t('pub_off')}</button>
           </div>
         </div>
       </div>`;
@@ -1270,37 +1323,49 @@ function renderCellar() {
 }
 
 function renderJournal() {
-  // group by date
+  const box = document.getElementById('journalList');
+  if (!journalLoaded) {
+    box.innerHTML = `<div style="text-align:center;padding:32px 16px;color:var(--text-sub);font-size:13px;">${t('journal_loading')}</div>`;
+    return;
+  }
+  if (!journal.length) {
+    box.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--text-sub);">
+      <div style="font-size:36px;margin-bottom:12px;">🍷</div>
+      <div style="font-size:13px;line-height:1.8;">${t('journal_empty')}</div></div>`;
+    return;
+  }
+  // 日付（ts）でグルーピング。新しい順
   const grouped = {};
   journal.forEach(j => {
-    if (!grouped[j.date]) grouped[j.date] = [];
-    grouped[j.date].push(j);
+    const key = j.ts ? String(j.ts).split('T')[0] : '';
+    (grouped[key] = grouped[key] || []).push(j);
   });
   let html = '';
   Object.keys(grouped).sort((a,b) => b.localeCompare(a)).forEach(date => {
     const d = new Date(date);
-    const label = t('fmt_date_md', {
+    const label = isNaN(d) ? '' : t('fmt_date_md', {
       m: d.getMonth()+1,
       d: d.getDate(),
       mon: t('months').split(',')[d.getMonth()],
       w: t('weekdays').split(',')[d.getDay()],
     });
-    html += `<div class="journal-date-header">${label}</div>`;
+    if (label) html += `<div class="journal-date-header">${label}</div>`;
     grouped[date].forEach(j => {
-      const cfg = catCfg[j.cat];
-      const stars = '★'.repeat(j.rating) + '☆'.repeat(5-j.rating);
+      const cfg = catCfg[journalCatOf(j.iro)];
+      const region = [j.kuni, j.chiiki].filter(v => v && v !== '不明').join(' ');
+      const thumb = j.imageUrl
+        ? `<img src="${esc(j.imageUrl)}" alt="" loading="lazy" style="flex-shrink:0;width:44px;height:58px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">`
+        : `<div class="journal-cat-dot" style="background:${cfg.bg}">${cfg.emoji}</div>`;
       html += `
         <div class="journal-card">
           <div class="journal-card-top">
-            <div class="journal-cat-dot" style="background:${cfg.bg}">${cfg.emoji}</div>
+            ${thumb}
             <div class="journal-card-info">
-              <div class="journal-wine-name">${j.name}</div>
-              <div class="journal-wine-sub">${j.vintage} · ${j.region}</div>
+              <div class="journal-wine-name">${esc(j.name) || '—'}${j.vintage ? ' ' + esc(j.vintage) : ''}</div>
+              <div class="journal-wine-sub">${esc([j.producer, region].filter(Boolean).join(' · '))}</div>
             </div>
-            <div class="journal-stars">${stars.split('').map((s,i) => `<span class="star" style="color:${i < j.rating ? '#C9973A' : '#ddd'}">${s}</span>`).join('')}</div>
+            <button onclick="journalDelete('${esc(String(j.id))}')" title="${esc(t('sb_delete'))}" style="flex-shrink:0;background:none;border:none;color:#bbb;font-size:15px;cursor:pointer;padding:4px 6px;">🗑</button>
           </div>
-          ${j.note ? `<div class="journal-note">${j.note}</div>` : ''}
-          <div class="journal-place">📍 ${j.place}</div>
         </div>`;
     });
   });
@@ -1322,46 +1387,43 @@ function renderStats() {
     </div>`;
   }).join('');
 
-  // region chart
+  // region chart（飲んだワイン実データ: kuni+chiiki）。データが無ければ正直に空表示
   const regions = {};
   journal.forEach(j => {
-    const r = j.region; regions[r] = (regions[r]||0) + 1;
+    const r = [j.kuni, j.chiiki].filter(v => v && v !== '不明').join(' ');
+    if (r) regions[r] = (regions[r]||0) + 1;
   });
   const topRegions = Object.entries(regions).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const maxR = topRegions[0]?.[1] || 1;
-  document.getElementById('regionChart').innerHTML = topRegions.map(([r,c]) => `
+  document.getElementById('regionChart').innerHTML = topRegions.length ? topRegions.map(([r,c]) => `
     <div class="bar-row">
-      <div class="bar-label">${r}</div>
+      <div class="bar-label">${esc(r)}</div>
       <div class="bar-track"><div class="bar-fill" style="width:${c/maxR*100}%;background:var(--burgundy)"></div></div>
       <div class="bar-count">${t('fmt_n_bottles', { n: c })}</div>
-    </div>`).join('');
+    </div>`).join('')
+    : `<div style="font-size:12px;color:var(--text-sub);padding:6px 0;">${t('stats_no_data')}</div>`;
 
-  // grape chart
+  // grape chart（'—'や空は集計から除外）
   const grapes = {};
   scoped.forEach(w => {
-    w.grapes.split('/').forEach(g => {
-      const gg = g.trim(); grapes[gg] = (grapes[gg]||0) + 1;
+    String(w.grapes||'').split('/').forEach(g => {
+      const gg = g.trim();
+      if (gg && gg !== '—') grapes[gg] = (grapes[gg]||0) + 1;
     });
   });
   const topGrapes = Object.entries(grapes).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const maxG = topGrapes[0]?.[1] || 1;
-  document.getElementById('grapeChart').innerHTML = topGrapes.map(([g,c]) => `
+  document.getElementById('grapeChart').innerHTML = topGrapes.length ? topGrapes.map(([g,c]) => `
     <div class="bar-row">
-      <div class="bar-label">${g}</div>
+      <div class="bar-label">${esc(g)}</div>
       <div class="bar-track"><div class="bar-fill" style="width:${c/maxG*100}%;background:var(--gold)"></div></div>
       <div class="bar-count">${t('fmt_n_bottles', { n: c })}</div>
-    </div>`).join('');
+    </div>`).join('')
+    : `<div style="font-size:12px;color:var(--text-sub);padding:6px 0;">${t('stats_no_data')}</div>`;
 
-  // rating
-  const ratings = {5:0,4:0,3:0,2:0,1:0};
-  journal.forEach(j => ratings[j.rating]++);
-  const maxRat = Math.max(...Object.values(ratings), 1);
-  document.getElementById('ratingChart').innerHTML = [5,4,3,2,1].map(r => `
-    <div class="rating-row">
-      <div class="rating-stars">${'★'.repeat(r)}${'☆'.repeat(5-r)}</div>
-      <div class="rating-bar-track"><div class="rating-bar-fill" style="width:${ratings[r]/maxRat*100}%"></div></div>
-      <div class="rating-count">${ratings[r]}</div>
-    </div>`).join('');
+  // rating: 記録データ（taste_items）に評価が含まれないため、カードごと非表示（推測の分布を出さない）
+  const ratingCard = document.getElementById('ratingChart').closest('.stat-card');
+  if (ratingCard) ratingCard.style.display = 'none';
 
   // spending（ローカル在庫＋サーバー在庫）
   const totalSpend = scoped.reduce((s,w)=>s+w.price,0) + sb.reduce((s,b)=>s+(b.price_jpy||0),0);
@@ -1402,14 +1464,14 @@ function filterCat(cat, el) {
 }
 
 function changeStock(id, delta) {
-  const w = cellar.find(x => x.id === id);
+  const w = cellar.find(x => String(x.id) === String(id));
   if (!w) return;
   const newVal = w.bottles + delta;
   if (newVal < 0) return;
   w.bottles = newVal;
   if (newVal === 0) {
     showToast(t('toast_last'));
-    cellar = cellar.filter(x => x.id !== id);
+    cellar = cellar.filter(x => String(x.id) !== String(id));
   } else {
     showToast(delta > 0 ? t('toast_plus1') : t('toast_minus1'));
   }
@@ -1443,44 +1505,61 @@ function selectCat(el, cat) {
   document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
 }
-function saveWine() {
-  if(window.sommLog) sommLog('cellar_add');
+// 2026-07-15: 保存先を旧user_cellar(localStorage同期)からcellar_bottlesへ統一。
+// スカウター追加と同じテーブルに入るため、データが2系統に分裂しない。
+// 失敗時は入力を保持してエラー表示（モーダルは閉じない）。
+let saveWineInflight = false;
+async function saveWine() {
+  if (saveWineInflight) return;
   const name = document.getElementById('f-name').value.trim();
   if (!name) { document.getElementById('f-name').focus(); return; }
+  const uid = myUid();
   const cellarSel = document.getElementById('f-cellar');
-  const w = {
-    id: nextId++,
-    cat: selectedCatForAdd,
-    name,
-    producer: document.getElementById('f-producer').value || '—',
-    vintage:  document.getElementById('f-vintage').value  || '—',
-    region:   document.getElementById('f-region').value   || '—',
-    grapes:   document.getElementById('f-grapes').value   || '—',
-    bottles:  parseInt(document.getElementById('f-bottles').value) || 1,
-    price:    parseInt(document.getElementById('f-price').value)   || 0,
-    date:     document.getElementById('f-date').value || new Date().toISOString().split('T')[0],
-    note:     document.getElementById('f-note').value || '',
-    hasLabel: false,
-    cellarId: (cellarSel && cellarSel.value) || currentCellarId || null,
-  };
-  cellar.unshift(w);
-  saveCellar();
-  syncWineToServer(w);
-  // reset form
-  ['f-name','f-producer','f-vintage','f-region','f-grapes','f-note'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f-bottles').value = '1';
-  document.getElementById('f-price').value = '';
-  document.querySelector('.camera-area .label').textContent = t('scan_label');
-  document.querySelector('.camera-area .sub').textContent = t('scan_sub');
-  closeAddModal();
-  renderSummary();
-  renderCellar();
-  showToast(t('toast_added'));
+  const cellarId = (cellarSel && cellarSel.value) || currentCellarId || (cellars[0] && cellars[0].id) || null;
+  if (!uid || !cellarId) { showToast(t('toast_add_fail')); return; }
+  if(window.sommLog) sommLog('cellar_add');
+  // cellar_bottlesにgrapes列が無いため、品種はnoteに合流させて保全する
+  const grapes = document.getElementById('f-grapes').value.trim();
+  const noteRaw = document.getElementById('f-note').value.trim();
+  const note = [noteRaw, grapes ? (LANG === 'en' ? 'Grapes: ' : '品種: ') + grapes : ''].filter(Boolean).join(' / ');
+  saveWineInflight = true;
+  const btn = document.querySelector('#addModal .save-btn');
+  if (btn) { btn.disabled = true; btn.style.opacity = '.55'; }
+  try {
+    const r = await fetch(CELLAR_API_BASE + '/api/cellar/bottles', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: uid, cellarId,
+        name,
+        producer: document.getElementById('f-producer').value.trim() || null,
+        vintage:  document.getElementById('f-vintage').value.trim()  || null,
+        region:   document.getElementById('f-region').value.trim()   || null,
+        cat: selectedCatForAdd,
+        bottles: parseInt(document.getElementById('f-bottles').value) || 1,
+        price: document.getElementById('f-price').value !== '' ? (parseInt(document.getElementById('f-price').value) || 0) : null,
+        purchaseDate: document.getElementById('f-date').value || null,
+        note: note || null,
+      }),
+    });
+    if (!r.ok) throw 0;
+    // reset form
+    ['f-name','f-producer','f-vintage','f-region','f-grapes','f-note'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-bottles').value = '1';
+    document.getElementById('f-price').value = '';
+    closeAddModal();
+    await loadServerBottles();   // 再読込（renderSummary/renderCellarも走る）
+    showToast(t('toast_added'));
+  } catch (e) {
+    showToast(t('toast_add_fail'));   // 入力は保持したまま
+  } finally {
+    saveWineInflight = false;
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  }
 }
 
 // ── DETAIL MODAL ──
 function openDetail(id) {
-  const w = cellar.find(x => x.id === id);
+  const w = cellar.find(x => String(x.id) === String(id));
   if (!w) return;
   const cfg = catCfg[w.cat];
   document.getElementById('detailContent').innerHTML = `
@@ -1490,20 +1569,20 @@ function openDetail(id) {
         <span style="background:${cfg.bg};border-radius:10px;padding:6px 10px;font-size:18px;">${cfg.emoji}</span>
         <span style="font-size:11px;font-weight:700;color:var(--text-sub);">${cfg.label}</span>
       </div>
-      <div style="font-size:19px;font-weight:900;color:var(--text);line-height:1.3;margin-bottom:4px;">${w.name}</div>
-      <div style="font-size:13px;color:var(--text-sub);">${w.producer}</div>
+      <div style="font-size:19px;font-weight:900;color:var(--text);line-height:1.3;margin-bottom:4px;">${esc(w.name)}</div>
+      <div style="font-size:13px;color:var(--text-sub);">${esc(w.producer)}</div>
     </div>
     <div class="detail-section">
-      <div class="detail-row"><span class="detail-label">${t('detail_vintage')}</span><span class="detail-val">${w.vintage}</span></div>
-      <div class="detail-row"><span class="detail-label">${t('detail_region')}</span><span class="detail-val">${w.region}</span></div>
-      <div class="detail-row"><span class="detail-label">${t('detail_grapes')}</span><span class="detail-val">${w.grapes}</span></div>
+      <div class="detail-row"><span class="detail-label">${t('detail_vintage')}</span><span class="detail-val">${esc(w.vintage)}</span></div>
+      <div class="detail-row"><span class="detail-label">${t('detail_region')}</span><span class="detail-val">${esc(w.region)}</span></div>
+      <div class="detail-row"><span class="detail-label">${t('detail_grapes')}</span><span class="detail-val">${esc(w.grapes)}</span></div>
       <div class="detail-row"><span class="detail-label">${t('detail_stock')}</span><span class="detail-val" style="color:var(--burgundy);font-size:16px;">${t('fmt_stock', { n: w.bottles })}</span></div>
-      <div class="detail-row"><span class="detail-label">${t('detail_price')}</span><span class="detail-val">¥${w.price.toLocaleString()}</span></div>
-      <div class="detail-row"><span class="detail-label">${t('detail_date')}</span><span class="detail-val">${w.date}</span></div>
-      ${w.note ? `<div class="detail-row"><span class="detail-label">${t('detail_note')}</span><span class="detail-val" style="font-size:12px;">${w.note}</span></div>` : ''}
+      <div class="detail-row"><span class="detail-label">${t('detail_price')}</span><span class="detail-val">¥${(w.price||0).toLocaleString()}</span></div>
+      <div class="detail-row"><span class="detail-label">${t('detail_date')}</span><span class="detail-val">${esc(w.date)}</span></div>
+      ${w.note ? `<div class="detail-row"><span class="detail-label">${t('detail_note')}</span><span class="detail-val" style="font-size:12px;">${esc(w.note)}</span></div>` : ''}
     </div>
     <div class="detail-section">
-      <button class="drink-btn" onclick="drinkOne(${w.id})">${t('drink_one')}</button>
+      <button class="drink-btn" onclick="drinkOne('${esc(String(w.id))}')">${t('drink_one')}</button>
     </div>`;
   document.getElementById('detailModalBg').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -1534,6 +1613,7 @@ renderCellar();
 renderJournal();
 renderStats();
 loadCellarFromServer();
+loadJournal();   // 記録タブ（飲んだワイン実データ）
 loadCellarsFromServer().then(() => { renderSummary(); renderCellar(); renderStats(); loadServerBottles(); });
 (function initHeaderName(){
   try { const n = localStorage.getItem('sommelin_nickname'); const el = document.getElementById('cellarHeaderName'); if (el && n) el.textContent = n; } catch(e){}
