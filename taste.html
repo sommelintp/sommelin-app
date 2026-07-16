@@ -331,6 +331,7 @@ async function saveToFilter(){
   if(!toSave.length){ toast(t('toast_pick_wine')); return; }
   const btn=document.getElementById('fsaveBtn'); btn.disabled=true;
   let saved=0, limitHit=false;
+  const savedSet=new Set(); // 実際に保存できたものだけ後で除去（未保存の入力＝評価・コメントを消さない）
   for(const it of toSave){
     try{
       const r=await fetch(API_BASE+'/api/filters/items',{
@@ -338,10 +339,11 @@ async function saveToFilter(){
         body: JSON.stringify({ uid:UID, wine:{ name:it.name, producer:it.producer, iro:it.iro, kuni:it.kuni, chiiki:it.chiiki, vintage:it.vintage, price:it.price, wineId:it.wineId }, rating:it.rating, comment:it.comment })
       });
       if(r.status===429){ limitHit=true; break; }
-      if(r.ok) saved++;
+      if(r.ok){ saved++; savedSet.add(it); }
     }catch(e){}
   }
-  pendingItems=[];
+  // 保存成功分だけを除去し、失敗・上限で残った分は入力内容ごと保持する
+  pendingItems = pendingItems.filter(it => !savedSet.has(it));
   renderFilterSection();
   btn.disabled=false;
   if(limitHit) toast(t('toast_saved_limit', saved));

@@ -1336,6 +1336,24 @@ function cellarAddPickBack(){
   inp.click();
 }
 
+// 撮影画像を対象ボトルの枠(box・0-1正規化)に切り抜く。棚に複数本写っていても
+// その1本だけをセラーのサムネイルにするため（boxが無ければnull＝全体にフォールバック）。
+function cropImageToBox(imgEl, box, maxEdge){
+  try{
+    const iw=imgEl.naturalWidth||imgEl.width, ih=imgEl.naturalHeight||imgEl.height;
+    if(!iw||!ih||!box||box.w==null) return null;
+    const pad=0.06;
+    const bw=Math.min(1,(box.w||0.2)+pad*2), bh=Math.min(1,(box.h||0.4)+pad*2);
+    const sw=Math.max(1,Math.round(bw*iw)), sh=Math.max(1,Math.round(bh*ih));
+    const sx=Math.min(iw-sw,Math.max(0,Math.round((box.cx-bw/2)*iw)));
+    const sy=Math.min(ih-sh,Math.max(0,Math.round((box.cy-bh/2)*ih)));
+    const scale=Math.min(1,(maxEdge||1024)/Math.max(sw,sh));
+    const c=document.createElement('canvas'); c.width=Math.round(sw*scale); c.height=Math.round(sh*scale);
+    c.getContext('2d').drawImage(imgEl, sx,sy,sw,sh, 0,0,c.width,c.height);
+    return c.toDataURL('image/jpeg',0.85);
+  }catch(e){ return null; }
+}
+
 async function cellarAddSubmit(){
   if(!curOshiBottle || cellarAddSaving) return;
   const cellarId=(document.getElementById('caCellar')||{}).value||null;
@@ -1348,9 +1366,13 @@ async function cellarAddSubmit(){
   cellarAddSaving=true;
   const saveBtn=document.querySelector('#sheetBody .sh-main');
   if(saveBtn){ saveBtn.disabled=true; saveBtn.style.opacity='.55'; saveBtn.textContent=t('cellar_add_saving'); }
-  // 撮影写真: front=frozen画像（あれば）、back=任意で撮った裏ラベル
-  const frozenSrc=(document.getElementById('frozenImg')||{}).src||'';
-  const frontPhoto=frozenSrc.startsWith('data:')?frozenSrc:null;
+  // 撮影写真: front=対象ボトルを枠で切り抜いた画像（棚全体ではなく1本）、back=任意の裏ラベル
+  const frozenEl=document.getElementById('frozenImg');
+  const frozenSrc=(frozenEl||{}).src||'';
+  let frontPhoto=null;
+  if(frozenSrc.startsWith('data:')){
+    frontPhoto = cropImageToBox(frozenEl, curOshiBottle.box, 1024) || frozenSrc;
+  }
   const photos=[];
   if(frontPhoto) photos.push({dataUrl:frontPhoto,role:'front'});
   if(cellarAddBackPhoto) photos.push({dataUrl:cellarAddBackPhoto,role:'back'});

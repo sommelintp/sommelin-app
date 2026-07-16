@@ -1209,7 +1209,7 @@ function renderSummary() {
   const total = scoped.reduce((s,w) => s + w.bottles, 0) + sb.reduce((s,b) => s + (b.bottles||0), 0);
   const totalSpend = scoped.reduce((s,w) => s + w.price, 0) + sb.reduce((s,b) => s + (b.price_jpy||0), 0);
   const kinds = scoped.length + sb.length;
-  const cats = [...new Set(scoped.map(w => w.cat))].length;
+  const cats = [...new Set([...scoped.map(w => w.cat), ...sb.map(b => b.cat).filter(Boolean)])].length;
   const avgPrice = kinds ? Math.round(totalSpend / kinds) : 0;
   document.getElementById('summaryRow').innerHTML = `
     <div class="summary-item">
@@ -1309,10 +1309,12 @@ function renderJournal() {
 
 function renderStats() {
   const scoped = cellarScoped();
-  // cat breakdown
+  const sb = serverBottlesScoped();   // スキャン追加のサーバー在庫も在庫系の集計に含める
+  // cat breakdown（ローカル在庫＋サーバー在庫）
   const catBreak = document.getElementById('catBreakdown');
   catBreak.innerHTML = Object.entries(catCfg).map(([cat, cfg]) => {
-    const total = scoped.filter(w => w.cat === cat).reduce((s,w) => s + w.bottles, 0);
+    const total = scoped.filter(w => w.cat === cat).reduce((s,w) => s + w.bottles, 0)
+                + sb.filter(b => b.cat === cat).reduce((s,b) => s + (b.bottles||0), 0);
     return `<div class="cat-item">
       <div class="cat-item-icon" style="background:${cfg.bg}">${cfg.emoji}</div>
       <div class="cat-item-count">${total}</div>
@@ -1361,9 +1363,10 @@ function renderStats() {
       <div class="rating-count">${ratings[r]}</div>
     </div>`).join('');
 
-  // spending
-  const totalSpend = scoped.reduce((s,w)=>s+w.price,0);
-  const thisYear = scoped.filter(w=>w.date.startsWith('2026')).reduce((s,w)=>s+w.price,0);
+  // spending（ローカル在庫＋サーバー在庫）
+  const totalSpend = scoped.reduce((s,w)=>s+w.price,0) + sb.reduce((s,b)=>s+(b.price_jpy||0),0);
+  const thisYear = scoped.filter(w=>w.date.startsWith('2026')).reduce((s,w)=>s+w.price,0)
+                 + sb.filter(b=>(b.purchase_date||'').startsWith('2026')).reduce((s,b)=>s+(b.price_jpy||0),0);
   document.getElementById('spendingBlock').innerHTML = `
     <div class="spending-row">
       <span class="spending-label">${t('spend_year')}</span>
@@ -1375,7 +1378,7 @@ function renderStats() {
     </div>
     <div class="spending-row">
       <span class="spending-label">${t('spend_wines')}</span>
-      <span class="spending-val">${t('fmt_n_kinds', { n: scoped.length })}</span>
+      <span class="spending-val">${t('fmt_n_kinds', { n: scoped.length + sb.length })}</span>
     </div>
     <div class="spending-row">
       <span class="spending-label">${t('spend_recorded')}</span>
