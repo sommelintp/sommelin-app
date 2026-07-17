@@ -102,7 +102,7 @@
     const shape = shapeOf(wine);
     const p = SHAPE_PARAMS[shape];
     const col = colorOf(wine.iro);
-    const isTop = wine.cospaLevel === 'top';
+    const isTop = (wine.somStar != null ? Number(wine.somStar) === 5 : wine.cospaLevel === 'top'); // 第4版: ★5=金箔
     const foil = isTop ? '#C9973A' : '#5a1626';
     const cx = VB_W / 2;
     const neckL = cx - p.neckW / 2, neckR = cx + p.neckW / 2;

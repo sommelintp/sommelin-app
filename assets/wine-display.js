@@ -48,5 +48,95 @@
     return `<span style="display:inline-flex;align-items:center;gap:${gap}px;">${stars}${label}</span>`;
   }
 
-  window.WineDisplay = { starsHtml, flagOf, ratingLabel };
+  /* ═══════════════════════════════════════════════════════════
+     表示体系第4版（2026-07-16 オーナー承認・正本=表示体系第4版_設計_2026-07-16.md）
+     「味は数字、おすすめは星」。
+       - 味スコア: tasteScore100（50-100点・ワイン誌の100点方式）＝味の絶対評価
+       - ソムスター: somStar（★1-5）＝この価格ならどれくらいおすすめか（コスパ込み）
+       - somStar null = 星なしが正常（母集団外・SP足切り）。旧starsHtmlと同じく
+         空スロットも「収集中」も出さない。
+       - 100点到達はtasteScoreInternalでランク分け:
+           ≥120 レジェンド / ≥110 ゴールド / ≥100 シルバー（全カタログで91銘柄のみ）
+     アプリ側で計算は一切しない（DB計算値の表示のみ）。
+     ═══════════════════════════════════════════════════════════ */
+
+  function rankOf(tasteScoreInternal){
+    if (tasteScoreInternal == null) return null;
+    const v = Number(tasteScoreInternal);
+    if (v >= 120) return 'legend';
+    if (v >= 110) return 'gold';
+    if (v >= 100) return 'silver';
+    return null;
+  }
+
+  // 100点ランクの意匠。基本チップは落ち着いたバーガンディ淡色、
+  // 100点だけ箔（銀/金/黒金）で「特別」を静かに主張する。
+  const RANK_STYLES = {
+    silver: {
+      bg: 'linear-gradient(135deg,#f5f6f8 0%,#dfe2e8 55%,#c9cdd6 100%)',
+      border: '#b9bec9', color: '#3a3f4a', label: 'SILVER',
+    },
+    gold: {
+      bg: 'linear-gradient(135deg,#fdf6dd 0%,#f3d98b 55%,#e0b455 100%)',
+      border: '#C9973A', color: '#6b4a00', label: 'GOLD',
+    },
+    legend: {
+      bg: 'linear-gradient(135deg,#40102a 0%,#2a0a1c 60%,#170510 100%)',
+      border: '#C9973A', color: '#F3D98B', label: '✦ LEGEND',
+    },
+  };
+
+  // 味スコアチップ＋ソムスターのワンセット描画。
+  //   wine: { tasteScore100, tasteScoreInternal, somStar, somPct, somPctNote } を含む任意オブジェクト
+  //   opts: { size=13, lang='ja', showPct=false }
+  //     showPct: somPctがあれば「同価格帯で上位X%」の小さな補足行を付ける（詳細画面向け）
+  // どちらも無ければ空文字（何も出さない＝no-lie）。
+  function scoreBlock(wine, opts){
+    opts = opts || {};
+    if (!wine) return '';
+    const size = opts.size || 13;
+    const lang = opts.lang === 'en' ? 'en' : 'ja';
+    const t100 = wine.tasteScore100 != null ? Math.round(Number(wine.tasteScore100)) : null;
+    const star = wine.somStar != null ? Number(wine.somStar) : null;
+    if (t100 == null && star == null) return '';
+
+    let chip = '';
+    if (t100 != null) {
+      const rank = rankOf(wine.tasteScoreInternal);
+      const rs = rank && RANK_STYLES[rank];
+      const label = lang === 'en' ? 'Taste' : '味';
+      const base = `display:inline-flex;align-items:baseline;gap:${Math.round(size*0.3)}px;`
+        + `padding:${Math.round(size*0.18)}px ${Math.round(size*0.55)}px;`
+        + `border-radius:${Math.round(size*0.55)}px;line-height:1.25;flex-shrink:0;`;
+      const look = rs
+        ? `background:${rs.bg};border:1px solid ${rs.border};color:${rs.color};`
+        : `background:var(--burgundy-pale,#f9f0f3);border:1px solid rgba(155,27,75,.18);color:var(--burgundy,#9B1B4B);`;
+      const rankTag = rs
+        ? `<span style="font-size:${Math.round(size*0.62)}px;font-weight:800;letter-spacing:.08em;margin-left:${Math.round(size*0.25)}px;">${rs.label}</span>`
+        : '';
+      chip = `<span style="${base}${look}">`
+        + `<span style="font-size:${Math.round(size*0.78)}px;font-weight:700;opacity:.85;">${label}</span>`
+        + `<span style="font-size:${Math.round(size*1.15)}px;font-weight:900;">${t100}</span>`
+        + rankTag
+        + `</span>`;
+    }
+    const stars = star != null ? starsHtml(star, { size: Math.max(11, Math.round(size*0.95)) }) : '';
+
+    let pctLine = '';
+    if (opts.showPct) {
+      let note = wine.somPctNote || null;
+      if (!note && wine.somPct != null && star != null) {
+        const topPct = 100 - Number(wine.somPct);
+        note = (lang === 'en')
+          ? (topPct < 1 ? 'Top <1% in its price range' : `Top ${Math.ceil(topPct)}% in its price range`)
+          : (topPct < 1 ? '同価格帯で上位1%未満' : `同価格帯で上位${Math.ceil(topPct)}%`);
+      }
+      if (note) pctLine = `<div style="font-size:${Math.round(size*0.78)}px;color:var(--text-sub,#8a7a7d);margin-top:2px;">${note}</div>`;
+    }
+
+    const row = `<span style="display:inline-flex;align-items:center;gap:${Math.round(size*0.5)}px;flex-wrap:wrap;">${chip}${stars}</span>`;
+    return pctLine ? `<span style="display:inline-block;">${row}${pctLine}</span>` : row;
+  }
+
+  window.WineDisplay = { starsHtml, flagOf, ratingLabel, scoreBlock, rankOf };
 })();

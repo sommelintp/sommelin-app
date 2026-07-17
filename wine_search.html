@@ -412,7 +412,8 @@ const I18N = {
     cospa_std: '標準的',
     tech_details: '詳細情報',
     checking_rating: 'ソムリン評価を照合中…',
-    rating_cospa_head: 'ソムリン評価（コスパ）',
+    rating_cospa_head: 'ソムリン評価',
+    score_caption: '味スコア（100点方式）／ ★はこの価格でのおすすめ度',
     bottle_image_alt: 'ボトル画像',
     ref_price: '参考価格',
     view_on_rakuten: '🛍️ 楽天市場でこの商品を見る',
@@ -486,7 +487,8 @@ const I18N = {
     cospa_std: 'Standard',
     tech_details: 'Details',
     checking_rating: 'Checking Sommelin rating…',
-    rating_cospa_head: 'Sommelin Rating (Value)',
+    rating_cospa_head: 'Sommelin Rating',
+    score_caption: 'Taste score (100-pt) / ★ = value at this price',
     bottle_image_alt: 'Bottle image',
     ref_price: 'Reference price',
     view_on_rakuten: '🛍️ View this item on Rakuten Ichiba',
@@ -657,12 +659,7 @@ function dispWProducer(w){ return (LANG==='en' && w && w.producerEn) ? w.produce
 const SB_URL = 'https://gkhdpzfmqraliwaiubwl.supabase.co';
 const SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
 const API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
-// 2026-07-11 V-1: コスパ判定は星型でなくアイコン+テキストで表す（星＝5点満点評価はstarRating専用）
-function _cospa(level){
-  if(level==='top')  return {st:'🏆',lbl:t('cospa_top'),bg:'#1e8449'};
-  if(level==='good') return {st:'👍', lbl:t('cospa_good'),  bg:'#27ae60'};
-  return                    {st:'',  lbl:t('cospa_std'),    bg:'#8a6d3b'};
-}
+// 表示体系第4版(2026-07-16): 旧_cospaバッジ退役。味スコア＋ソムスターはWineDisplay.scoreBlockに一元化
 function _p(p){ return (p==null||isNaN(p))?'—':('¥'+Math.round(p).toLocaleString('ja-JP')); }
 // AB節: DBさん投入の技術情報（土壌・醸造・度数・気候・ドサージュ）。あるものだけ折りたたみで出す。
 function techDetailsHtml(details){
@@ -688,16 +685,14 @@ async function loadMaster(q){
   }catch(e){}
   if(!rows||!rows.length){ el.innerHTML=''; return; }   // 見つからなければ非表示（外部リンクは残す）
   const top=rows[0];
-  const cp=_cospa(top.cospaLevel);
   const region=[dispKuni(top.kuni),top.chiiki].filter(v=>v&&v!=='不明').join(' ');
   const vint=(top.vintage&&top.vintage!=='NV')?(' '+top.vintage):'';
   let alts='';
   if(rows.length>1){
     alts=rows.slice(1,3).map(w=>{
-      const c=_cospa(w.cospaLevel);
       return `<div onclick="doSearch('${(w.name||'').replace(/'/g,"\\'")}')" style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;background:#faf7f8;border-radius:10px;margin-top:6px;cursor:pointer;">
         <div style="min-width:0;"><div style="font-size:12px;font-weight:700;color:#2C1810;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(dispWName(w))}</div><div style="font-size:10px;color:#999;">${escHtml([dispKuni(w.kuni),w.chiiki].filter(v=>v&&v!=='不明').join(' '))}</div></div>
-        <div style="text-align:right;white-space:nowrap;"><div style="font-size:11px;color:${c.bg};font-weight:800;">${c.st}</div><div style="margin-top:2px;">${window.WineDisplay?window.WineDisplay.starsHtml(w.starRating,{size:11}):''}</div></div>
+        <div style="text-align:right;white-space:nowrap;">${window.WineDisplay?window.WineDisplay.scoreBlock(w,{size:11,lang:LANG}):''}</div>
       </div>`;
     }).join('');
   }
@@ -714,22 +709,16 @@ async function loadMaster(q){
           <div style="font-size:12px;color:#888;margin:3px 0 10px;">${escHtml(region)}${top.producer?(' / '+escHtml(dispWProducer(top))):''}</div>
         </div>
       </div>
-      <div style="text-align:center;background:#faf7f8;border-radius:10px;padding:10px;margin-bottom:8px;">
-        ${window.WineDisplay ? window.WineDisplay.starsHtml(top.starRating, {size:20, showLabel:true, source:top.ratingSource}) : ''}
+      <div style="text-align:center;background:#faf7f8;border-radius:10px;padding:12px;margin-bottom:8px;">
+        ${window.WineDisplay ? window.WineDisplay.scoreBlock(top, {size:17, lang:LANG, showPct:true}) : ''}
+        <div style="font-size:9.5px;color:#aaa;margin-top:4px;">${t('score_caption')}</div>
       </div>
-      <div style="display:flex;gap:10px;align-items:stretch;">
-        <div style="flex:1;text-align:center;background:#faf7f8;border-radius:10px;padding:10px;">
-          <div style="font-size:18px;font-weight:900;color:#2C1810;line-height:1.2;">${_p(top.price)}</div>
-          <div style="font-size:10px;color:#999;margin-top:3px;">${t('ref_price')}${top.sizeNote?`<br>（${escHtml(top.sizeNote)}）`:''}</div>
-        </div>
-        <div style="flex:1.2;text-align:center;background:${cp.bg};color:#fff;border-radius:10px;padding:10px;">
-          <div style="font-size:15px;line-height:1.1;">${cp.st}</div>
-          <div style="font-size:11px;font-weight:800;margin-top:3px;">${cp.lbl}</div>
-        </div>
+      <div style="text-align:center;background:#faf7f8;border-radius:10px;padding:10px;">
+        <div style="font-size:18px;font-weight:900;color:#2C1810;line-height:1.2;">${_p(top.price)}</div>
+        <div style="font-size:10px;color:#999;margin-top:3px;">${t('ref_price')}${top.sizeNote?`<br>（${escHtml(top.sizeNote)}）`:''}</div>
       </div>
       ${top.rakutenLink?`<a href="${escHtml(top.rakutenLink.url)}" target="_blank" rel="noopener" onclick="if(window.sommLog)sommLog('rakuten_click',{name:'${(top.name||'').replace(/'/g,'').slice(0,40)}'})" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;background:#BF0000;color:#fff;border-radius:10px;padding:11px;font-size:13px;font-weight:800;text-decoration:none;">${t('view_on_rakuten')}${top.rakutenLink.price?`（${_p(top.rakutenLink.price)}〜）`:''}</a><div style="font-size:9.5px;color:#aaa;text-align:center;margin-top:3px;">${t('affiliate_link_label')}${top.rakutenLink.shopName?`・${escHtml(top.rakutenLink.shopName)}`:''}｜${t('vintage_size_note')}</div>`:''}
       ${top.styleNote?`<div style="margin-top:10px;border:1.5px solid #C9973A;color:#8a6a1a;border-radius:10px;padding:7px 12px;font-size:11.5px;font-weight:700;text-align:center;">🏅 ${escHtml(top.styleNote)}</div>`:''}
-      ${top.cospaNote?`<div style="margin-top:6px;color:#888;font-size:11px;text-align:center;">${escHtml(top.cospaNote)}</div>`:''}
       ${top.vintageNote?`<div style="margin-top:6px;color:#888;font-size:11px;text-align:center;line-height:1.5;">${escHtml(top.vintageNote)}</div>`:''}
       ${techDetailsHtml(top.techDetails)}
       ${alts}

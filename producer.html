@@ -60,7 +60,7 @@ body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg)
 
 <div class="stats" id="stats" style="display:none;">
   <div class="stat"><div class="sv" id="stCount">—</div><div class="sl">掲載ワイン</div></div>
-  <div class="stat"><div class="sv" id="stGood">—</div><div class="sl">💰 コスパ良好</div></div>
+  <div class="stat"><div class="sv" id="stGood">—</div><div class="sl">⭐ おすすめ付き</div></div>
 </div>
 
 <div class="wrap">
@@ -123,10 +123,9 @@ async function load() {
 
     listEl.innerHTML = '<div class="sec">掲載ワイン（評価順）</div>' + rows.map(w => {
       const price = w.price != null ? '¥' + Math.round(w.price).toLocaleString('ja-JP') : '';
-      const badge = w.cospaLevel ? '<span class="wbadge">💰 コスパ良好</span>' : '';
-      // AJ-8(2026-07-14): カード全体をタップ可能に。詳細は既存のワイン検索画面
-      // （星・詳細情報・楽天リンク・取扱店まで揃っている）に任せる
-      const stars = (w.starRating != null && window.WineDisplay) ? window.WineDisplay.starsHtml(w.starRating, { size: 13 }) : '';
+      // AJ-8(2026-07-14): カード全体をタップ可能に。詳細は既存のワイン検索画面に任せる
+      // 表示体系第4版(2026-07-16): 味スコア＋ソムスター（WineDisplay.scoreBlockに一元化）
+      const stars = window.WineDisplay ? window.WineDisplay.scoreBlock(w, { size: 12 }) : '';
       // AJ-11(2026-07-14): フォロワー機能はまだ無いため「みんなの評価」（全ユーザー平均・3件未満は非表示=no-lie）から。
       const community = w.communityCount >= 3
         ? `<span class="wcommunity">👥 みんなの評価 ${w.communityAvg.toFixed(1)}（${w.communityCount}件）</span>` : '';
@@ -137,7 +136,6 @@ async function load() {
         <div class="wrow">
           <span class="wprice">${price}</span>
           ${stars}
-          ${badge}
           ${w.id != null ? `<button class="wherebtn" onclick="event.stopPropagation();toggleWhere(${w.id}, this)">📍 どこで飲める？</button>` : ''}
         </div>
         ${community ? `<div class="wcommunity-row">${community}</div>` : ''}

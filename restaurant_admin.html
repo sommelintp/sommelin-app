@@ -2680,7 +2680,7 @@ const I18N = {
     tn_details_summary: '詳細（総合評価・みんなの評価）',
     tn_buzz_loading: 'みんなの評価 読み込み中…',
     tn_buzz_unregistered: 'みんなの評価 —（ソムリンDB未登録のため集計できません）',
-    tn_somm_rating: 'ソムリン評価 {stars} <span style="font-size:10px;color:var(--text-sub);">（ソムリン＋店舗の評価を信頼度で重み付け）</span>',
+    tn_somm_rating: 'ソムリン評価 {stars} <span style="font-size:10px;color:var(--text-sub);">（味スコア100点方式・★はこの価格でのおすすめ度）</span>',
     tn_buzz_community: 'みんなの評価 <b style="color:#C9973A;">{v}</b> <span style="font-size:10px;color:var(--text-sub);">（{n}店舗の平均・匿名）</span>',
     tn_buzz_none: 'みんなの評価 —（まだ他の店舗の評価がありません）',
     tn_buzz_fail: 'みんなの評価 —（取得できませんでした）',
@@ -3155,7 +3155,7 @@ const I18N = {
     tn_details_summary: 'Details (overall & community ratings)',
     tn_buzz_loading: 'Loading community ratings…',
     tn_buzz_unregistered: 'Community rating — (not in the Sommelin database, no stats available)',
-    tn_somm_rating: 'Sommelin rating {stars} <span style="font-size:10px;color:var(--text-sub);">(Sommelin + store ratings weighted by reliability)</span>',
+    tn_somm_rating: 'Sommelin rating {stars} <span style="font-size:10px;color:var(--text-sub);">(taste on 100-pt scale / ★ = value at this price)</span>',
     tn_buzz_community: 'Community rating <b style="color:#C9973A;">{v}</b> <span style="font-size:10px;color:var(--text-sub);">(average of {n} stores, anonymous)</span>',
     tn_buzz_none: 'Community rating — (no ratings from other stores yet)',
     tn_buzz_fail: 'Community rating — (could not be loaded)',
@@ -5322,10 +5322,12 @@ async function tnProcessFiles(files) {
           vintage: (w && w.vintage) || (id.vintage != null ? String(id.vintage) : null),
           region: w ? [w.kuni, w.chiiki].filter(v=>v&&v!=='不明').join(' ') : [id.country, id.region].filter(Boolean).join(' '),
           color: id.color || null,
-          total: w ? w.total : null,
           ref_price: w ? w.price : null,
-          cospaLevel: w ? w.cospaLevel : null,
-          starRating: w ? w.starRating : null,
+          // 表示体系第4版: 味スコア＋ソムスター（DB計算値の素通し）
+          tasteScore100: w ? w.tasteScore100 : null,
+          tasteScoreInternal: w ? w.tasteScoreInternal : null,
+          somStar: w ? w.somStar : null,
+          somPct: w ? w.somPct : null,
           rating: null,
           importer_name: '', memo: '',
           photoDataUrl: dataUrl,   // 撮影した写真（保存前サムネイル表示用。永続化はDB側の写真列対応後）
@@ -5346,7 +5348,7 @@ function renderTnStaging() {
   wrap.style.display = tnStaged.length ? 'block' : 'none';
   const fieldStyle = 'border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;';
   box.innerHTML = tnStaged.map((s, i) => {
-    const starsHtml = window.WineDisplay ? window.WineDisplay.starsHtml(s.starRating, {size:12, showLabel:true, source:'sommelin_v1'}) : '';
+    const starsHtml = window.WineDisplay ? window.WineDisplay.scoreBlock(s, {size:12}) : '';
     // 撮影写真のサムネイル（あれば）。永続化はDB側の写真列対応後だが、保存前の確認用に必ず表示する。
     const thumb = s.photoDataUrl
       ? `<img src="${tnEsc(s.photoDataUrl)}" alt="" style="flex-shrink:0;width:52px;height:68px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">`
@@ -5357,7 +5359,7 @@ function renderTnStaging() {
         <div style="display:flex;gap:10px;min-width:0;flex:1;">
           ${thumb}
           <div style="min-width:0;flex:1;">
-            ${s.starRating != null ? `<div style="margin-bottom:4px;">${starsHtml}</div>` : ''}
+            ${starsHtml ? `<div style="margin-bottom:4px;">${starsHtml}</div>` : ''}
             <!-- 認識結果をそのまま編集できるフィールド群（試飲会の新ヴィンテージ・誤認識をここで直す） -->
             <input placeholder="${t('tn_name_ph')}" value="${tnEsc(s.name)}" oninput="tnStaged[${i}].name=this.value"
               style="width:100%;font-weight:800;color:var(--text);${fieldStyle}">
@@ -5549,7 +5551,7 @@ async function tnLoadBuzz(noteId, wineId) {
     const d = await r.json();
     if (!el) return;
     const lines = [];
-    if (d.starRating != null && window.WineDisplay) lines.push(t('tn_somm_rating').replace('{stars}', window.WineDisplay.starsHtml(d.starRating, {size:13})));
+    if ((d.tasteScore100 != null || d.somStar != null) && window.WineDisplay) lines.push(t('tn_somm_rating').replace('{stars}', window.WineDisplay.scoreBlock(d, {size:12})));
     lines.push(d.communityCount
       ? t('tn_buzz_community').replace('{v}', Number(d.communityAvg).toFixed(1)).replace('{n}', d.communityCount)
       : t('tn_buzz_none'));

@@ -4183,13 +4183,12 @@ async function loadTopWines() {
       const revTxt = it.communityCount > 0
         ? t('community_rating').replace('{a}', it.communityAvg ?? '—').replace('{n}', it.communityCount)
         : null;
-      const cospaBadge = it.goodValue ? '<span class="s-badge-cospa">' + t('badge_cospa') + '</span>' : '';
-      const fiveStarBadge = it.starRating === 5 ? '<span class="s-badge-fivestar">' + t('badge_fivestar') + '</span>' : '';
       const producerLink = w.producer
         ? ` / <a href="producer.html?p=${encodeURIComponent(w.producer)}" style="color:inherit;text-decoration:underline;text-decoration-color:var(--border);">${escR(dispProducer)}</a>`
         : '';
+      // 表示体系第4版(2026-07-16): 味スコア＋ソムスター。旧コスパ/五つ星バッジは廃止
       const starsHtml = window.WineDisplay
-        ? window.WineDisplay.starsHtml(it.starRating, { size: 16, showLabel: it.starRating !== 5, source: it.ratingSource })
+        ? window.WineDisplay.scoreBlock(it, { size: 14, lang: LANG })
         : '';
       return `
       <div class="ranking-wine-card${i===0 ? ' is-top' : ''}">
@@ -4203,10 +4202,9 @@ async function loadTopWines() {
         <div class="rank-wine-info">
           <div class="rank-wine-name">${escR(dispName)}${w.vintage && w.vintage!=='NV' ? ' ' + escR(w.vintage) : ''}</div>
           <div class="rank-wine-region">${flag} ${escR(region)}${producerLink}</div>
-          <div class="rank-wine-stats" style="margin-top:4px;align-items:center;">${starsHtml}${fiveStarBadge}</div>
+          <div class="rank-wine-stats" style="margin-top:4px;align-items:center;">${starsHtml}</div>
           <div class="rank-wine-stats" style="margin-top:4px;">
             <span class="rank-stat">${t('ref_price').replace('{p}', price)}</span>
-            ${cospaBadge}
           </div>
           ${revTxt ? `<div class="rank-wine-stats" style="margin-top:2px;"><span class="rank-stat">${revTxt}</span></div>` : ''}
           <div style="margin-top:6px;"><button onclick="openWineMap(${it.wineId}, '${escR(w.name).replace(/'/g,"\\'")}')" style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--burgundy);cursor:pointer;font-family:inherit;">${t('btn_where')}</button></div>

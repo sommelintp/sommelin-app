@@ -487,6 +487,7 @@ const I18N = {
     match_pill_confirm: '🍷 ソムリン照合 ・ 要確認',
     match_pill_done: '🍷 ソムリン照合済み',
     ref_price_label: '参考価格',
+    score_caption: '味スコア（100点方式）／ ★はこの価格でのおすすめ度',
     sommelin_rating_label: 'ソムリン評価',
     buy_search_label: '🔍 購入先を探す',
     close_label: '閉じる',
@@ -675,6 +676,7 @@ const I18N = {
     match_pill_confirm: '🍷 Sommelin match · needs confirmation',
     match_pill_done: '🍷 Sommelin match confirmed',
     ref_price_label: 'Reference price',
+    score_caption: 'Taste score (100-pt scale) / ★ = value at this price',
     sommelin_rating_label: 'Sommelin rating',
     buy_search_label: '🔍 Find where to buy',
     close_label: 'Close',
@@ -812,18 +814,9 @@ async function logAction(ev){
   }catch(e){}
 }
 
-// ── コスパ（おすすめ度）→ 星・ラベル ──
-// 2026-07-09: バックエンドが生の内部指標(sp/osu_gbm/osu_lin)を返さなくなったため、
-// カテゴリ値cospaLevel('top'|'good'|null。chat/wine_lookupと共通の分類)から表示を作る。
-// 2026-07-11 V-1: 星型はstarRating専用。コスパ判定はアイコン+テキストで表す
-function cospa(level){
-  if(level==='top')  return {stars:'🏆', lbl:t('cospa_top_lbl'), sub:t('cospa_top_sub'), bg:'#1e8449'};
-  if(level==='good') return {stars:'👍',  lbl:t('cospa_good_lbl'), sub:t('cospa_good_sub'), bg:'#27ae60'};
-  return                    {stars:'',   lbl:t('cospa_std_lbl'), sub:t('cospa_std_sub'), bg:'#8a6d3b'};
-}
+// 表示体系第4版(2026-07-16): 旧cospa()バッジ・fmtTotal(旧5点満点)は退役。
+// 味スコア＋ソムスターの描画は WineDisplay.scoreBlock（assets/wine-display.js）に一元化。
 function fmtPrice(p){ if(p==null||isNaN(p)) return '—'; return '¥'+Math.round(p).toLocaleString('ja-JP'); }
-// 評価は「探す」タブ・チャットと同じtotal(5点満点)に統一（旧fmtSPはSP=10点満点を表示していた）
-function fmtTotal(t){ if(t==null||isNaN(t)) return '—'; return Number(t).toFixed(1); }
 
 // ── STATE ──
 let stream=null, busy=false;
@@ -979,15 +972,16 @@ function resumeLive(){
   if(pendingFiles && pendingFiles.length){ processNextPendingFile(); }
 }
 
-// ベスト判定: 好み度＋コスパ＋総合評価（既知＝実データのボトルのみ対象）
+// ベスト判定: 好み度＋おすすめ度＋味スコア（既知＝実データのボトルのみ対象）
+// 第4版: ソムスター(★)と味スコアで序列。★1つ=15点、味は50点起点からの伸び分。
 function bottleRank(b){
   let s=0;
   if(b.personalFit && b.personalFit.score) s+=b.personalFit.score;
   const w=b.match && b.match.wine;
   if(w){
     s+=20;
-    if(w.cospaLevel==='top') s+=60; else if(w.cospaLevel==='good') s+=25;
-    if(w.total) s+=Number(w.total)*10;
+    if(w.somStar!=null) s+=Number(w.somStar)*15;
+    if(w.tasteScore100!=null) s+=Math.max(0, Number(w.tasteScore100)-50);
   }
   return s;
 }
@@ -1013,7 +1007,8 @@ function renderMarks(res){
       const fit=b.personalFit && b.personalFit.score>=40;
       if(fit) cls+=' fit';
       if(pinned) cls+=' pinned';
-      html=(fit?'❤️':'')+fmtTotal(w.total)+'<span style="font-size:0.65em;opacity:.85;">/5</span>';
+      // 第4版: マーカーは味スコア(50-100)を出す。星は詳細カード側で見せる
+      html=(fit?'❤️':'')+(w.tasteScore100!=null?w.tasteScore100:'—')+'<span style="font-size:0.6em;opacity:.85;">'+(LANG==='en'?'pt':'点')+'</span>';
       if(pinned) html='📌 '+html+`<span class="pinsub">${esc(b.filterMatches[0].name||t('filter_default_name'))}</span>`;
       if(i===best){ cls+=' best'; html='👑 '+html+`<span class="bsub">${t('best_in_group')}</span>`; }
     }else if(b.match.status==='unlisted'){ html=t('label_unlisted'); }
@@ -1053,30 +1048,25 @@ function renderShelfCard(b){
   const id=b.identification||{};
   let inner='';
   if(w){
-    const cp=cospa(w.cospaLevel);
     const lowConf=(b.match.matchScore||0)<0.75;
-    const pick=b.sommelin && b.sommelin.isPick
-      ? `<div class="pick-ribbon">${b.sommelin.level==='top'?t('pick_top'):t('pick_normal')}<span style="font-weight:600">｜${esc(b.sommelin.reason||'')}</span></div>` : '';
     const filterRibbons=(b.filterMatches||[]).map(fm=>{
       const ratingStr = fm.rating ? t('rating_paren').replace('{n}', fm.rating) : '';
       const ribbonText = t('filter_ribbon').replace('{icon}', esc(fm.emoji||'🍷')).replace('{name}', esc(fm.name||t('filter_default_name'))).replace('{rating}', ratingStr);
       return `<div class="pick-ribbon" style="background:#8b5cf6;color:#fff">${ribbonText}</div>`;
     }).join('');
+    // 表示体系第4版: 味スコア(数字)＋ソムスター(★=この価格ならおすすめ)。旧コスパバッジ・旧星は廃止
+    const score = window.WineDisplay ? window.WineDisplay.scoreBlock(w, {size:17, lang:LANG, showPct:true}) : '';
     inner=`
       <div class="sh-pill" style="background:var(--burgundy)">${lowConf?t('match_pill_confirm'):t('match_pill_done')}</div>
       <div class="sh-name">${esc(w.name||'—')}${w.vintage&&w.vintage!=='NV'?` <span class="sh-vintage-badge">${esc(w.vintage)}</span>`:''}</div>
       <div class="sh-producer">${esc(w.producer||'')}</div>
       <div class="sh-region">${esc([dispKuni(w.kuni),w.chiiki].filter(v=>v&&v!=='不明').join(' '))}</div>
-      <div class="cospa-badge" style="background:${cp.bg}">
-        <div class="stars">${cp.stars}</div><div class="lbl">${cp.lbl}</div><div class="sub">${cp.sub}</div>
-      </div>
+      ${score?`<div style="margin:12px 16px 2px;text-align:center;">${score}<div style="font-size:10px;color:var(--text-sub,#8a7a7d);margin-top:3px;">${t('score_caption')}</div></div>`:''}
       <div class="sh-grid">
-        <div class="sh-cell"><div class="v">${fmtPrice(w.price)}</div><div class="l">${t('ref_price_label')}${w.sizeNote?`<br>（${esc(w.sizeNote)}）`:''}</div></div>
-        <div class="sh-cell"><div class="v sh-refscore">${window.WineDisplay?window.WineDisplay.starsHtml(w.starRating,{size:15}):''}</div><div class="l">${t('sommelin_rating_label')}</div></div>
+        <div class="sh-cell" style="grid-column:1/-1;"><div class="v">${fmtPrice(w.price)}</div><div class="l">${t('ref_price_label')}${w.sizeNote?`<br>（${esc(w.sizeNote)}）`:''}</div></div>
       </div>
       ${w.styleNote?`<div class="style-note">🏅 ${esc(w.styleNote)}</div>`:''}
       ${w.vintageNote?`<div class="vintage-note">${esc(w.vintageNote)}</div>`:''}
-      ${pick}
       ${filterRibbons}
       ${fitRibbon(b)}
       ${backBlock(b)}
@@ -1186,7 +1176,7 @@ async function loadSimilar(b){
     box.innerHTML=`<div class="cand-h">${t('similar_heading')}</div>`+d.items.map(x=>{
       return `<div class="cand-row" onclick="buy('${escAttr(x.name||'')}', ${x.id})">
         <div><div class="cn">${esc(trunc(x.name||'',26))}</div><div class="cr">${esc([dispKuni(x.kuni),x.chiiki].filter(v=>v&&v!=='不明').join(' '))}　${fmtPrice(x.price)}</div></div>
-        <div class="cc">${window.WineDisplay?window.WineDisplay.starsHtml(x.starRating,{size:11}):''}</div></div>`;
+        <div class="cc">${window.WineDisplay?window.WineDisplay.scoreBlock(x,{size:11,lang:LANG}):''}</div></div>`;
     }).join('');
   }catch(e){}
 }
@@ -1807,12 +1797,12 @@ async function identifyList(dataUrl){
   }
 }
 
-// リスト行のスコア（並べ替え用）: 好み度＋コスパ。実データがある行だけが上位に来る
+// リスト行のスコア（並べ替え用）: 好み度＋おすすめ度（第4版: ソムスター基準）
 function liScore(it){
   let s=0;
   if(it.personalFit && it.personalFit.score) s+=it.personalFit.score;
   const w=it.match && it.match.wine;
-  if(w){ if(w.cospaLevel==='top') s+=60; else if(w.cospaLevel==='good') s+=25; s+=5; }
+  if(w){ if(w.somStar!=null) s+=Number(w.somStar)*15; s+=5; }
   return s;
 }
 
@@ -1825,10 +1815,9 @@ function liRow(it, hit){
   else if(inp.country) meta.push(inp.country);
   const badges=[];
   if(it.personalFit && it.personalFit.label && it.personalFit.score>=40) badges.push(`<span class="b1">❤️ ${esc(it.personalFit.label)}</span>`);
-  if(it.sommelin && it.sommelin.isPick) badges.push(`<span class="b2">${it.sommelin.level==='top'?t('sommelin_pick_top'):t('sommelin_pick_normal')}</span>`);
   if(it.priceDelta!=null && Math.abs(it.priceDelta)>=15) badges.push(`<span class="b3">${t('price_delta_template').replace('{sign}',it.priceDelta>0?'+':'').replace('{n}',it.priceDelta)}</span>`);
   const right=w
-    ? (window.WineDisplay?window.WineDisplay.starsHtml(w.starRating,{size:11}):'')
+    ? (window.WineDisplay?window.WineDisplay.scoreBlock(w,{size:11,lang:LANG}):'')
     : `<span class="un">${t('label_unlisted')}</span>`;
   return `<div class="li-row${hit?' hit':''}">
     <div><div class="ln">${esc(trunc(name,34))}</div>

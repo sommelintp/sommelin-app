@@ -159,7 +159,8 @@ const I18N = {
     fcard_included_label: '載せる',
     fcard_comment_ph: '一言（任意）',
     rec_no_name: '（銘柄名なし）',
-    rec_matched_prefix: '⭐ 評価あり ',
+    rec_matched_prefix: '味 ',
+    rec_matched_generic: '⭐ 評価あり',
     rec_matched_none: '—',
     rec_ok: '記録OK',
     rec_of_5: '/5',
@@ -200,7 +201,8 @@ const I18N = {
     fcard_included_label: 'List',
     fcard_comment_ph: 'Comment (optional)',
     rec_no_name: '(no name)',
-    rec_matched_prefix: '⭐ Rated ',
+    rec_matched_prefix: 'Taste ',
+    rec_matched_generic: '⭐ Rated',
     rec_matched_none: '—',
     rec_ok: 'Saved',
     rec_of_5: '/5',
@@ -283,8 +285,10 @@ function toDataUrl(file){
 }
 
 function recRow(b){
+  // 表示体系第4版: 味スコア(100点方式)＋ソムスター。どちらも無ければ「評価あり」とだけ
+  const star = b.somStar!=null ? ' ' + '★'.repeat(Math.max(0,Math.min(5,Number(b.somStar)))) : '';
   const badge = b.matched
-    ? t('rec_matched_prefix') + (b.total!=null ? (Number(b.total).toFixed(1) + t('rec_of_5')) : t('rec_matched_none'))
+    ? (b.tasteScore100!=null ? t('rec_matched_prefix') + b.tasteScore100 + star : t('rec_matched_generic'))
     : t('rec_ok');
   return `<div class="rec">
     <div><div class="rn">${esc(b.name||t('rec_no_name'))}</div>
