@@ -6,7 +6,12 @@
    あり、おすすめ度の数値スコアではない。整数1〜5のみ・半星なし。
    星なし(null)は基本状態（全体の約70%）で、称号なしなだけ＝低評価でも
    集計中でもない。空スロットも「収集中」文言も出さない（DBさん合意）。
-   公開API: window.WineDisplay = { starsHtml, flagOf, ratingLabel }
+   公開API: window.WineDisplay = { starsHtml, flagOf, ratingLabel, scoreBlock, rankOf }
+   【重要】このファイルを変更したら、読み込み側5ページ（scouter/wine_search/
+   producer/prototype/restaurant_admin）の <script src="assets/wine-display.js?v=日付">
+   の ?v= も必ず上げること。素のsrcだとスマホのキャッシュに旧版が残り、
+   新HTML×旧JSの組合せで壊れる（2026-07-18: scoreBlock未定義でスカウターの
+   詳細カードが開けなくなる実害が発生した）。
    ═════════════════════════════════════════════════════════════ */
 (function(){
   // AJ-10(2026-07-14): オーナー判断で星バッジ・星ラベルにブランド名を冠するのをやめた。

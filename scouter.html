@@ -270,7 +270,7 @@ body{
 </style>
 <link rel="stylesheet" href="assets/sommelin-ui.css">
 <script src="assets/oshi-card.js"></script>
-<script src="assets/wine-display.js"></script>
+<script src="assets/wine-display.js?v=20260718"></script>
 </head>
 <body>
 
@@ -1072,7 +1072,7 @@ function renderShelfCard(b){
       return `<div class="pick-ribbon" style="background:#8b5cf6;color:#fff">${ribbonText}</div>`;
     }).join('');
     // 表示体系第4版: 味スコア(数字)＋ソムスター(★=この価格ならおすすめ)。旧コスパバッジ・旧星は廃止
-    const score = window.WineDisplay ? window.WineDisplay.scoreBlock(w, {size:17, lang:LANG, showPct:true}) : '';
+    const score = (window.WineDisplay && WineDisplay.scoreBlock) ? WineDisplay.scoreBlock(w, {size:17, lang:LANG, showPct:true}) : '';
     inner=`
       <div class="sh-pill" style="background:var(--burgundy)">${lowConf?t('match_pill_confirm'):t('match_pill_done')}</div>
       <div class="sh-name">${esc(w.name||'—')}${w.vintage&&w.vintage!=='NV'?` <span class="sh-vintage-badge">${esc(w.vintage)}</span>`:''}</div>
@@ -1193,7 +1193,7 @@ async function loadSimilar(b){
     box.innerHTML=`<div class="cand-h">${t('similar_heading')}</div>`+d.items.map(x=>{
       return `<div class="cand-row" onclick="buy('${escAttr(x.name||'')}', ${x.id})">
         <div><div class="cn">${esc(trunc(x.name||'',26))}</div><div class="cr">${esc([dispKuni(x.kuni),x.chiiki].filter(v=>v&&v!=='不明').join(' '))}　${fmtPrice(x.price)}</div></div>
-        <div class="cc">${window.WineDisplay?window.WineDisplay.scoreBlock(x,{size:11,lang:LANG}):''}</div></div>`;
+        <div class="cc">${(window.WineDisplay&&WineDisplay.scoreBlock)?WineDisplay.scoreBlock(x,{size:11,lang:LANG}):''}</div></div>`;
     }).join('');
   }catch(e){}
 }
@@ -1834,7 +1834,7 @@ function liRow(it, hit){
   if(it.personalFit && it.personalFit.label && it.personalFit.score>=40) badges.push(`<span class="b1">❤️ ${esc(it.personalFit.label)}</span>`);
   if(it.priceDelta!=null && Math.abs(it.priceDelta)>=15) badges.push(`<span class="b3">${t('price_delta_template').replace('{sign}',it.priceDelta>0?'+':'').replace('{n}',it.priceDelta)}</span>`);
   const right=w
-    ? (window.WineDisplay?window.WineDisplay.scoreBlock(w,{size:11,lang:LANG}):'')
+    ? ((window.WineDisplay&&WineDisplay.scoreBlock)?WineDisplay.scoreBlock(w,{size:11,lang:LANG}):'')
     : `<span class="un">${t('label_unlisted')}</span>`;
   return `<div class="li-row${hit?' hit':''}">
     <div><div class="ln">${esc(trunc(name,34))}</div>
