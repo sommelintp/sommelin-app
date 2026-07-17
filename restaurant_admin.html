@@ -3591,7 +3591,7 @@ async function loadAnalytics() {
       <div style="font-size:12px;font-weight:800;color:var(--text);">${t('an_list_title').replace('{n}', d.list.total)}</div>
       ${cats.length ? cats.map(([k,v]) => bar(CAT_JA[k]||k, v, cmax, 'var(--burgundy)')).join('') : '<div style="font-size:11px;color:var(--text-sub);margin-top:8px;">'+t('an_list_empty')+'</div>'}
       ${bandEntries.length ? '<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-top:14px;">'+t('an_band_title')+'</div>' + bandEntries.map(([k,v]) => bar(k, v, bmax, 'var(--gold)')).join('') : ''}
-      ${(d.list.cospaTop||[]).length ? '<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-top:14px;">'+t('an_cospa_title')+'</div>' + d.list.cospaTop.map(w => `<div style="font-size:12px;color:var(--text);margin-top:5px;">・${esc(w.name)} <span style="color:var(--gold);font-weight:700;">${w.cospaLevel==='top'?t('cospa_top'):t('cospa_good')}</span></div>`).join('') : ''}
+      ${(d.list.cospaTop||[]).length ? '<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-top:14px;">'+t('an_cospa_title')+'</div>' + d.list.cospaTop.map(w => `<div style="font-size:12px;color:var(--text);margin-top:5px;">・${esc(w.name)} <span style="color:var(--gold);font-weight:700;">${w.tasteScore100!=null?('味'+w.tasteScore100):''} ${'★'.repeat(w.somStar||0)}</span></div>`).join('') : ''}
     </div>`;
 
     // ④ 試飲メモ
