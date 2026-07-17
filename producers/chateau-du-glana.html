@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/sommelin-ui.css">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"シャトー・デュ・グラナのワイン一覧・評価 — ソムリン","itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"Product","name":"シャトー デュ グラナ サンジュリアン","model":"2016","aggregateRating":{"@type":"AggregateRating","ratingValue":3.01,"bestRating":5,"worstRating":1,"ratingCount":1},"offers":{"@type":"Offer","price":8500,"priceCurrency":"JPY"}}},{"@type":"ListItem","position":2,"item":{"@type":"Product","name":"シャトー・デュ・グラナ","model":"2016","aggregateRating":{"@type":"AggregateRating","ratingValue":2.94,"bestRating":5,"worstRating":1,"ratingCount":1},"offers":{"@type":"Offer","price":8500,"priceCurrency":"JPY"}}},{"@type":"ListItem","position":3,"item":{"@type":"Product","name":"シャトー・デュ・グラナ","model":"2014","aggregateRating":{"@type":"AggregateRating","ratingValue":2.94,"bestRating":5,"worstRating":1,"ratingCount":1},"offers":{"@type":"Offer","price":8300,"priceCurrency":"JPY"}}},{"@type":"ListItem","position":4,"item":{"@type":"Product","name":"シャトー デュ グラナ サンジュリアン","model":"2014","aggregateRating":{"@type":"AggregateRating","ratingValue":2.72,"bestRating":5,"worstRating":1,"ratingCount":1},"offers":{"@type":"Offer","price":8300,"priceCurrency":"JPY"}}},{"@type":"ListItem","position":5,"item":{"@type":"Product","name":"パヴィヨン・デュ・グラナ サン・ジュリアン","model":"2016","aggregateRating":{"@type":"AggregateRating","ratingValue":2.54,"bestRating":5,"worstRating":1,"ratingCount":1},"offers":{"@type":"Offer","price":5500,"priceCurrency":"JPY"}}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"ItemList","name":"シャトー・デュ・グラナのワイン一覧・評価 — ソムリン","itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"Product","name":"シャトー デュ グラナ サンジュリアン","model":"2016","aggregateRating":{"@type":"AggregateRating","ratingValue":4.4,"bestRating":5,"worstRating":2.5,"ratingCount":1},"offers":{"@type":"Offer","price":8500,"priceCurrency":"JPY"}}},{"@type":"ListItem","position":2,"item":{"@type":"Product","name":"シャトー・デュ・グラナ","model":"2016","aggregateRating":{"@type":"AggregateRating","ratingValue":4.35,"bestRating":5,"worstRating":2.5,"ratingCount":1},"offers":{"@type":"Offer","price":8500,"priceCurrency":"JPY"}}},{"@type":"ListItem","position":3,"item":{"@type":"Product","name":"シャトー・デュ・グラナ","model":"2014","aggregateRating":{"@type":"AggregateRating","ratingValue":4.35,"bestRating":5,"worstRating":2.5,"ratingCount":1},"offers":{"@type":"Offer","price":8300,"priceCurrency":"JPY"}}},{"@type":"ListItem","position":4,"item":{"@type":"Product","name":"シャトー デュ グラナ サンジュリアン","model":"2014","aggregateRating":{"@type":"AggregateRating","ratingValue":4.25,"bestRating":5,"worstRating":2.5,"ratingCount":1},"offers":{"@type":"Offer","price":8300,"priceCurrency":"JPY"}}},{"@type":"ListItem","position":5,"item":{"@type":"Product","name":"パヴィヨン・デュ・グラナ サン・ジュリアン","model":"2016","aggregateRating":{"@type":"AggregateRating","ratingValue":4.15,"bestRating":5,"worstRating":2.5,"ratingCount":1},"offers":{"@type":"Offer","price":5500,"priceCurrency":"JPY"}}}]}</script>
 <style>
   body{max-width:430px;margin:0 auto;padding:0 0 40px;background:var(--paper);color:var(--wine-ink);}
   .pp-header{padding:28px 20px 20px;text-align:center;background:linear-gradient(165deg,var(--wine-deep) 0%,var(--wine) 100%);color:#fff;}
@@ -28,6 +28,15 @@
   .pp-wine-card{display:flex;align-items:center;justify-content:space-between;gap:12px;text-decoration:none;color:inherit;}
   .pp-wine-main{min-width:0;flex:1;}
   .pp-score{flex-shrink:0;text-align:right;}
+  .s-score-chip{display:inline-flex;align-items:baseline;gap:4px;padding:3px 9px;border-radius:10px;
+    background:var(--wine-pale,#f9f0f3);border:1px solid rgba(155,27,75,.18);color:var(--wine,#9B1B4B);
+    font-size:11px;font-weight:700;white-space:nowrap;}
+  .s-score-chip b{font-size:15px;font-weight:900;}
+  .s-score-chip.rank-silver{background:linear-gradient(135deg,#f5f6f8 0%,#dfe2e8 55%,#c9cdd6 100%);border-color:#b9bec9;color:#3a3f4a;}
+  .s-score-chip.rank-gold{background:linear-gradient(135deg,#fdf6dd 0%,#f3d98b 55%,#e0b455 100%);border-color:#C9973A;color:#6b4a00;}
+  .s-score-chip.rank-legend{background:linear-gradient(135deg,#40102a 0%,#2a0a1c 60%,#170510 100%);border-color:#C9973A;color:#F3D98B;}
+  .s-rank-tag{font-size:8.5px;font-weight:800;letter-spacing:.06em;margin-left:2px;}
+  .s-stars{font-size:12px;color:#C9973A;margin-top:3px;letter-spacing:1px;}
   .pp-footer{text-align:center;padding:20px;font-size:11px;color:var(--text-sub);}
   .pp-footer a{color:var(--wine);text-decoration:underline;}
 </style>
@@ -44,41 +53,36 @@
       <div class="pp-wine-main">
         <div class="s-wine-name">シャトー デュ グラナ サンジュリアン 2016</div>
         <div class="s-wine-meta">フランス ボルドー　¥8,500</div>
-        <span class="s-badge-cospa">コスパ良好</span>
       </div>
-      <div class="pp-score"><span class="s-score">3.01<span class="s-score-max">/5</span></span></div>
+      <div class="pp-score"><span class="s-score-chip">味 <b>88</b></span><div class="s-stars">★★★</div></div>
     </a>
     <a class="s-card pp-wine-card" href="../wine_search.html?q=%E3%82%B7%E3%83%A3%E3%83%88%E3%83%BC%E3%83%BB%E3%83%87%E3%83%A5%E3%83%BB%E3%82%B0%E3%83%A9%E3%83%8A">
       <div class="pp-wine-main">
         <div class="s-wine-name">シャトー・デュ・グラナ 2016</div>
         <div class="s-wine-meta">フランス ボルドー　¥8,500</div>
-        <span class="s-badge-cospa">コスパ良好</span>
       </div>
-      <div class="pp-score"><span class="s-score">2.94<span class="s-score-max">/5</span></span></div>
+      <div class="pp-score"><span class="s-score-chip">味 <b>87</b></span><div class="s-stars">★★★</div></div>
     </a>
     <a class="s-card pp-wine-card" href="../wine_search.html?q=%E3%82%B7%E3%83%A3%E3%83%88%E3%83%BC%E3%83%BB%E3%83%87%E3%83%A5%E3%83%BB%E3%82%B0%E3%83%A9%E3%83%8A">
       <div class="pp-wine-main">
         <div class="s-wine-name">シャトー・デュ・グラナ 2014</div>
         <div class="s-wine-meta">フランス ボルドー　¥8,300</div>
-        <span class="s-badge-cospa">コスパ良好</span>
       </div>
-      <div class="pp-score"><span class="s-score">2.94<span class="s-score-max">/5</span></span></div>
+      <div class="pp-score"><span class="s-score-chip">味 <b>87</b></span><div class="s-stars">★★★</div></div>
     </a>
     <a class="s-card pp-wine-card" href="../wine_search.html?q=%E3%82%B7%E3%83%A3%E3%83%88%E3%83%BC%20%E3%83%87%E3%83%A5%20%E3%82%B0%E3%83%A9%E3%83%8A%20%E3%82%B5%E3%83%B3%E3%82%B8%E3%83%A5%E3%83%AA%E3%82%A2%E3%83%B3">
       <div class="pp-wine-main">
         <div class="s-wine-name">シャトー デュ グラナ サンジュリアン 2014</div>
         <div class="s-wine-meta">フランス ボルドー　¥8,300</div>
-        
       </div>
-      <div class="pp-score"><span class="s-score">2.72<span class="s-score-max">/5</span></span></div>
+      <div class="pp-score"><span class="s-score-chip">味 <b>85</b></span><div class="s-stars">★</div></div>
     </a>
     <a class="s-card pp-wine-card" href="../wine_search.html?q=%E3%83%91%E3%83%B4%E3%82%A3%E3%83%A8%E3%83%B3%E3%83%BB%E3%83%87%E3%83%A5%E3%83%BB%E3%82%B0%E3%83%A9%E3%83%8A%20%E3%82%B5%E3%83%B3%E3%83%BB%E3%82%B8%E3%83%A5%E3%83%AA%E3%82%A2%E3%83%B3">
       <div class="pp-wine-main">
         <div class="s-wine-name">パヴィヨン・デュ・グラナ サン・ジュリアン 2016</div>
         <div class="s-wine-meta">フランス ボルドー　¥5,500</div>
-        
       </div>
-      <div class="pp-score"><span class="s-score">2.54<span class="s-score-max">/5</span></span></div>
+      <div class="pp-score"><span class="s-score-chip">味 <b>83</b></span></div>
     </a>
 </div>
 <div class="pp-footer">
