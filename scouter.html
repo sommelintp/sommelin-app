@@ -541,6 +541,7 @@ const I18N = {
     data_note: '評価はソムリンの実データがある銘柄のみ表示しています。',
     next_page_btn: '📷 次のページを撮る',
     clear_btn: '🗑 クリア',
+    consult_list_btn: '💬 このリストでAIに相談',
     back_to_list_btn: '← リストに戻る',
     where_store_q: '📍 どこのお店ですか？',
     store_pick_desc: 'お店を選ぶと「この店にはこのワインがある」という情報がソムリンに貯まり、みんなの「どこで飲める？」に役立ちます。記録は匿名です。',
@@ -730,6 +731,7 @@ const I18N = {
     data_note: 'Only wines with real Sommelin data are rated here.',
     next_page_btn: '📷 Scan next page',
     clear_btn: '🗑 Clear',
+    consult_list_btn: '💬 Ask AI about this list',
     back_to_list_btn: '← Back to list',
     where_store_q: '📍 Which venue is this?',
     store_pick_desc: 'Picking a venue helps Sommelin learn "this wine is available here", powering everyone\'s "where can I find it?" search. Recorded anonymously.',
@@ -1843,7 +1845,36 @@ function renderListSheet(){
     <div class="sh-btns">
       <button class="sh-main" onclick="closeSheet()">${t('next_page_btn')}</button>
       <button class="sh-sub" onclick="listItems=[];listPages=0;listPlace=null;lastListScanId=null;closeSheet();toast(t('toast_list_cleared'))">${t('clear_btn')}</button>
+    </div>
+    <div class="sh-btns" style="margin-top:8px">
+      <button class="sh-main" style="flex:1;background:var(--burgundy)" onclick="consultListInChat()">${t('consult_list_btn')}</button>
     </div>`;
+}
+
+// Phase B（チャット第2版）: スキャンしたリストを持ってAIソムリエへ。
+// sommelier-chat.html が sessionStorage 'somm_chat_list' を読んで listContext(source=scan) を送る。
+// 味スコア等は渡さず catalogId だけ渡す（サーバーがDBから確定値を引き直す＝数字はDB一本化）。
+function consultListInChat(){
+  const items = listItems.map(it=>{
+    const w = it.match && it.match.wine;
+    const inp = it.input || {};
+    return {
+      name: (w && w.name) || inp.name || inp.rawText || null,
+      producer: (w && w.producer) || inp.producer || null,
+      iro: (w && w.iro) || null,
+      catalogId: (w && w.catalogId) || null,
+      listPrice: (typeof inp.listPrice==='number' && inp.listPrice>0) ? inp.listPrice : null,
+    };
+  }).filter(x=>x.name);
+  if(!items.length){ toast(t('list_unreadable')); return; }
+  try{
+    sessionStorage.setItem('somm_chat_list', JSON.stringify({
+      storeName: (listPlace && listPlace.name) || null,
+      items,
+    }));
+  }catch(e){}
+  if(window.sommLog) sommLog('chat_list_handoff',{count:items.length});
+  location.href = 'sommelier-chat.html';
 }
 
 // ── 「このお店を記録」（みんなのワイン地図。GPS→OSM候補 or 店名手入力→backend保存） ──

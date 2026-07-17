@@ -88,6 +88,26 @@
   }
   .db-bar-count { color: var(--gold); font-weight: 700; }
 
+  .list-ctx-bar {
+    background: rgba(122,39,26,0.08);
+    border-bottom: 1px solid rgba(122,39,26,0.2);
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--wine, #7A271A);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+  }
+  .list-ctx-emoji { font-size: 14px; }
+  .list-ctx-text { flex: 1; line-height: 1.3; }
+  .list-ctx-clear {
+    border: none; background: transparent; color: var(--text-sub);
+    font-size: 14px; cursor: pointer; padding: 2px 4px; border-radius: 6px;
+  }
+  .list-ctx-clear:hover { background: rgba(0,0,0,0.06); }
+
   /* ===== MESSAGES AREA ===== */
   .messages-wrap {
     flex: 1; overflow-y: auto;
@@ -362,6 +382,13 @@
   <span data-i18n="db_label">ワインデータ</span> <span class="db-bar-count" id="dbCount" data-i18n="db_loading">読み込み中…</span>
 </div>
 
+<!-- LIST CONTEXT BAR（Phase B: 今いる店のリストで相談中） -->
+<div class="list-ctx-bar" id="listCtxBar" style="display:none;">
+  <span class="list-ctx-emoji">🍽️</span>
+  <span class="list-ctx-text" id="listCtxText"></span>
+  <button class="list-ctx-clear" id="listCtxClear" onclick="clearListContext()" aria-label="clear">✕</button>
+</div>
+
 <!-- MESSAGES -->
 <div class="messages-wrap" id="msgWrap">
   <div class="date-chip" data-i18n="date_today">今日</div>
@@ -493,6 +520,8 @@ const I18N = {
     pill_rose: '🌸 ロゼ',
     pill_rose_q: 'ロゼワインを教えて',
     photo_hint: 'この写真について聞けます',
+    list_ctx_label: '{store}のリストを見ながら相談中',
+    list_ctx_generic: 'このお店',
     attach_title: '写真を送る',
     input_placeholder: 'ワインについて何でも聞いてください…',
     nav_home: 'ホーム',
@@ -515,7 +544,7 @@ const I18N = {
     db_count: '{n}本 ({cats})',
     status_online_full: 'オンライン — {n}本 更新:{date}',
     db_error: '⚠️ データ読み込みエラー',
-    photo_default_q: 'この写真のワインについて教えて',
+    photo_default_q: 'この写真について教えて',
     err_rate_limit: '少し混み合っています。しばらくしてからもう一度どうぞ 🙏',
     err_photo: '写真がうまく読み込めませんでした。別の写真でもう一度お試しください 🙏',
     err_generic: 'ごめんなさい、うまく応答できませんでした。通信環境を確認してもう一度お試しください 🙏',
@@ -569,6 +598,8 @@ const I18N = {
     pill_rose: '🌸 Rosé',
     pill_rose_q: 'Show me rosé wines',
     photo_hint: 'You can ask about this photo',
+    list_ctx_label: 'Chatting with {store}\'s list',
+    list_ctx_generic: 'this venue',
     attach_title: 'Send a photo',
     input_placeholder: 'Ask me anything about wine…',
     nav_home: 'Home',
@@ -591,7 +622,7 @@ const I18N = {
     db_count: '{n} wines ({cats})',
     status_online_full: 'Online — {n} wines, updated {date}',
     db_error: '⚠️ Failed to load data',
-    photo_default_q: 'Tell me about the wine in this photo',
+    photo_default_q: 'Tell me about this photo',
     err_rate_limit: 'We\'re a bit busy right now. Please try again in a moment 🙏',
     err_photo: 'We couldn\'t read that photo. Please try another one 🙏',
     err_generic: 'Sorry, something went wrong. Please check your connection and try again 🙏',
@@ -669,6 +700,41 @@ async function getAnonAccessToken() {
 let chatHistory = [];   // {role:'user'|'assistant', content}
 let pendingPhoto = null; // 送信待ちの写真dataURL（長辺1024 JPEG）
 
+// Phase B: 今いる店のリスト文脈。QRリンク(?store=owner_id&storeName=…)、または
+// スキャナー(スキャン済みリスト)からsessionStorage 'somm_chat_list' で受け取る。
+let chatListContext = null;
+function initListContext() {
+  try {
+    const p = new URLSearchParams(location.search);
+    const storeId = p.get('store');
+    const storeNameQ = p.get('storeName');
+    if (storeId) {
+      chatListContext = { source: 'qr', storeId, storeName: storeNameQ || null };
+    } else {
+      const raw = sessionStorage.getItem('somm_chat_list');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const items = Array.isArray(parsed && parsed.items) ? parsed.items : [];
+        if (items.length) chatListContext = { source: 'scan', storeName: parsed.storeName || null, items };
+      }
+    }
+  } catch (e) { chatListContext = null; }
+  renderListContextBar();
+}
+function renderListContextBar() {
+  const bar = document.getElementById('listCtxBar');
+  if (!bar) return;
+  if (!chatListContext) { bar.style.display = 'none'; return; }
+  const name = chatListContext.storeName ? chatListContext.storeName : t('list_ctx_generic');
+  document.getElementById('listCtxText').textContent = t('list_ctx_label').replace('{store}', name);
+  bar.style.display = 'flex';
+}
+function clearListContext() {
+  chatListContext = null;
+  try { sessionStorage.removeItem('somm_chat_list'); } catch (e) {}
+  renderListContextBar();
+}
+
 // 選択写真を長辺1024pxのJPEGに縮小（スカウターのgrabFrameと同じ考え方）
 function resizeImageFile(file, maxEdge) {
   return new Promise((resolve, reject) => {
@@ -709,6 +775,7 @@ function removePendingPhoto() {
 window.addEventListener('load', () => {
   document.getElementById('initTime').textContent = nowTime();
   updateUsageDisplay();
+  initListContext();
 
   // サーバーから実残数を取得（月次・匿名認証トークン単位で共通）
   getAnonAccessToken().then(token =>
@@ -787,6 +854,7 @@ async function sendMessage() {
   try {
     const body = { messages: chatHistory.slice(-8), userId: CHAT_UID, locale: LANG === 'en' ? 'en-US' : 'ja-JP' };
     if (photo) body.image = photo;
+    if (chatListContext) body.listContext = chatListContext;
     const token = await getAnonAccessToken();
     const r = await fetch(CHAT_API + '/api/chat', {
       method: 'POST',
