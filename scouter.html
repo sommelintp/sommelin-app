@@ -941,6 +941,9 @@ async function identifyShelf(dataUrl){
       toast(t('toast_no_bottle_found')); resumeLive(); return;
     }
     shelfRes=res;
+    // 2026-07-18: 30秒問題の実測。サーバーのフェーズ別タイミングをapp_eventsへ転記
+    // （Cloud Runログを開かずに内訳を追えるように。原因確定後に外してよい）
+    if(res.timing && window.sommLog) sommLog('scan_shelf_timing', res.timing);
     renderMarks(res);
     if(res.bottles.length===1) markTap(0);   // 1本だけなら詳細カードを自動で開く
   }catch(e){
@@ -1035,12 +1038,19 @@ function renderMarks(res){
 }
 
 function markTap(i){
-  if(!shelfRes) return;
-  const b=shelfRes.bottles[i];
-  if(!b) return;
-  if(b.match.status==='unreadable'){ toast(t('toast_unreadable')); return; }
-  renderShelfCard(b);
-  openSheet();
+  // 2026-07-18: 実機で「タップしても詳細が出ない」報告（ローカルでは再現せず）。
+  // 例外を握りつぶさずtoast＋sommLogで自動報告し、次に起きたとき原因が特定できるようにする。
+  try{
+    if(!shelfRes){ if(window.sommLog) sommLog('mark_tap_error',{reason:'no_shelfRes'}); return; }
+    const b=shelfRes.bottles[i];
+    if(!b){ if(window.sommLog) sommLog('mark_tap_error',{reason:'no_bottle',i}); return; }
+    if(b.match.status==='unreadable'){ toast(t('toast_unreadable')); return; }
+    renderShelfCard(b);
+    openSheet();
+  }catch(e){
+    toast('表示エラー: '+(e.message||e));
+    if(window.sommLog) sommLog('mark_tap_error',{reason:'exception', msg:String(e.message||e).slice(0,200), i});
+  }
 }
 
 // タップ時の詳細カード（既知=実SP・コスパ／未登録=正直表示。近縁おすすめは遅延読込＝無料）
