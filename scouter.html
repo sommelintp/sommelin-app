@@ -408,6 +408,7 @@ const I18N = {
     toast_no_bottle_found: 'ボトルを見つけられませんでした。近づいて撮ってみてください',
     toast_analyze_failed: '解析に失敗しました。通信環境をご確認ください',
     toast_unreadable: 'ラベルを読み取れませんでした。近づいて撮り直してみてください',
+    toast_stale_rescan: '前回の結果が期限切れになりました。もう一度撮影してください',
     toast_list_cleared: 'リストをクリアしました',
     toast_report_saved: '記録しました。ありがとうございます！ 🍷',
     toast_report_failed: '保存に失敗しました。通信環境をご確認ください',
@@ -598,6 +599,7 @@ const I18N = {
     toast_no_bottle_found: 'No bottle found. Try moving closer.',
     toast_analyze_failed: 'Analysis failed. Please check your connection.',
     toast_unreadable: 'Could not read the label. Try moving closer and reshoot.',
+    toast_stale_rescan: 'The previous result has expired. Please scan again.',
     toast_list_cleared: 'List cleared',
     toast_report_saved: 'Recorded — thank you! 🍷',
     toast_report_failed: 'Failed to save. Please check your connection.',
@@ -1041,7 +1043,10 @@ function markTap(i){
   // 2026-07-18: 実機で「タップしても詳細が出ない」報告（ローカルでは再現せず）。
   // 例外を握りつぶさずtoast＋sommLogで自動報告し、次に起きたとき原因が特定できるようにする。
   try{
-    if(!shelfRes){ if(window.sommLog) sommLog('mark_tap_error',{reason:'no_shelfRes'}); return; }
+    // 2026-07-18実測: iOSのアプリ切替/画面ロック後、見た目のマーカーだけ残って内部状態が
+    // 消えた「古い画面」でのタップが本番で観測された（no_shelfRes）。黙って無視せず、
+    // 案内を出してライブ画面へ自動復帰する。
+    if(!shelfRes){ if(window.sommLog) sommLog('mark_tap_error',{reason:'no_shelfRes'}); toast(t('toast_stale_rescan')); resumeLive(); return; }
     const b=shelfRes.bottles[i];
     if(!b){ if(window.sommLog) sommLog('mark_tap_error',{reason:'no_bottle',i}); return; }
     if(b.match.status==='unreadable'){ toast(t('toast_unreadable')); return; }
