@@ -260,6 +260,32 @@ body {
   display: flex; align-items: center; gap: 4px;
   margin-top: 6px;
 }
+/* ===== PAIRING FEEDBACK on journal card (#0・2026-07-18) ===== */
+.jp-row { margin-top: 8px; border-top: 1px solid var(--bg); padding-top: 8px; }
+.jp-btn {
+  background: none; border: none; padding: 2px 0; cursor: pointer;
+  font-size: 12px; color: var(--text-sub); font-weight: 600;
+}
+.jp-btn:active { opacity: .6; }
+.jp-slot:empty { display: none; }
+.jp-panel { margin-top: 8px; }
+.jp-intro { font-size: 11px; color: var(--text-sub); margin-bottom: 6px; }
+.jp-dish {
+  width: 100%; box-sizing: border-box; border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 8px 10px; font-size: 13px; color: var(--text);
+  background: var(--card-bg); margin-bottom: 8px;
+}
+.jp-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.jp-chip {
+  background: var(--card-bg); border: 1.5px solid var(--border);
+  border-radius: 20px; padding: 5px 11px; font-size: 12px;
+  color: var(--burgundy, #7a2e3a); font-weight: 600; cursor: pointer;
+  transition: all 0.15s; white-space: nowrap;
+}
+.jp-chip:active { background: var(--burgundy, #7a2e3a); color: #fff; }
+.jp-chip--mariage { border-color: var(--gold, #C9973A); color: var(--gold, #C9973A); }
+.jp-chip--mariage:active { background: var(--gold, #C9973A); color: #fff; }
+.jp-thanks { font-size: 12px; color: var(--text-sub); font-style: italic; margin-top: 8px; }
 
 /* ── STATS ── */
 .stats-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
@@ -1322,6 +1348,91 @@ function renderCellar() {
     `<div class="empty-state" style="padding:40px 20px;text-align:center;color:var(--text-sub);">${t('empty_cat')}</div>`;
 }
 
+/* ===== PAIRING FEEDBACK on journal (#0・2026-07-18) =====
+   飲んだワインを振り返って「何と合わせましたか？」＋5チップ（context=taste_memo）。
+   taste_itemsはcatalog_idを持たないため wineName で記録（guide_id/catalog_id は null）。任意・スキップ自由。 */
+const JOURNAL_PAIRING_FB = {
+  ja: {
+    recBtn: 'ペアリングを記録',
+    intro: 'このワイン、何と合わせましたか？',
+    dishPh: '料理を入力（例: 麻婆豆腐、生ハム）',
+    verdicts: [
+      { v: 'awanai',    label: '合わなかった…' },
+      { v: 'warukunai', label: '悪くなかった' },
+      { v: 'bunan',     label: '無難' },
+      { v: 'au',        label: '合う！' },
+      { v: 'mariage',   label: 'マリアージュ✨' },
+    ],
+    needDish: '合わせた料理を入れてください',
+    thanks: {
+      awanai:    '教えてくださってありがとうございます',
+      warukunai: '率直にありがとうございます',
+      bunan:     'なるほど、記録しました',
+      au:        'よかった！覚えておきます',
+      mariage:   '1+1が3の組み合わせですね。大切に記録します',
+    },
+  },
+  en: {
+    recBtn: 'Log a pairing',
+    intro: 'What did you pair this wine with?',
+    dishPh: 'Enter a dish (e.g. mapo tofu, prosciutto)',
+    verdicts: [
+      { v: 'awanai',    label: 'Didn\'t work…' },
+      { v: 'warukunai', label: 'Not bad' },
+      { v: 'bunan',     label: 'Fine' },
+      { v: 'au',        label: 'Good match!' },
+      { v: 'mariage',   label: 'Mariage✨' },
+    ],
+    needDish: 'Please enter the dish you paired',
+    thanks: {
+      awanai:    'Thank you for letting me know',
+      warukunai: 'Thanks for the honesty',
+      bunan:     'Got it, recorded',
+      au:        'Glad to hear! I\'ll remember',
+      mariage:   'That 1+1=3 pairing. I\'ll treasure it',
+    },
+  },
+};
+function jpDict() { return JOURNAL_PAIRING_FB[LANG] || JOURNAL_PAIRING_FB.ja; }
+
+function toggleJournalPairing(id) {
+  const slot = document.getElementById('jp-slot-' + id);
+  if (!slot) return;
+  if (slot.firstChild) { slot.innerHTML = ''; return; } // 開いていたら閉じる
+  const d = jpDict();
+  const chips = d.verdicts.map(o =>
+    `<div class="jp-chip${o.v === 'mariage' ? ' jp-chip--mariage' : ''}" data-v="${o.v}">${o.label}</div>`
+  ).join('');
+  slot.innerHTML = `<div class="jp-panel">
+    <div class="jp-intro">${esc(d.intro)}</div>
+    <input class="jp-dish" type="text" maxlength="60" placeholder="${esc(d.dishPh)}">
+    <div class="jp-chips">${chips}</div></div>`;
+  const item = journal.find(j => String(j.id) === String(id)) || {};
+  slot.querySelectorAll('.jp-chip').forEach(el => {
+    el.addEventListener('click', () => {
+      const dish = (slot.querySelector('.jp-dish').value || '').trim();
+      if (!dish) { showToast(d.needDish); slot.querySelector('.jp-dish').focus(); return; }
+      submitJournalPairing(slot, item, el.dataset.v, dish);
+    });
+  });
+}
+
+function submitJournalPairing(slot, item, verdict, dish) {
+  const d = jpDict();
+  slot.innerHTML = `<div class="jp-thanks">${esc(d.thanks[verdict] || '')}</div>`;
+  const body = {
+    userId: myUid(),
+    verdict,
+    dish: dish.slice(0, 60),
+    wineName: item.name ? String(item.name).slice(0, 200) : null,
+    context: 'taste_memo',
+  };
+  fetch(CELLAR_API_BASE + '/api/pairing-feedback', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }).catch(e => console.warn('journal pairing-feedback failed (silent):', e));
+}
+
 function renderJournal() {
   const box = document.getElementById('journalList');
   if (!journalLoaded) {
@@ -1366,6 +1477,8 @@ function renderJournal() {
             </div>
             <button onclick="journalDelete('${esc(String(j.id))}')" title="${esc(t('sb_delete'))}" style="flex-shrink:0;background:none;border:none;color:#bbb;font-size:15px;cursor:pointer;padding:4px 6px;">🗑</button>
           </div>
+          <div class="jp-row"><button class="jp-btn" onclick="toggleJournalPairing('${esc(String(j.id))}')">🍽 ${esc(jpDict().recBtn)}</button></div>
+          <div class="jp-slot" id="jp-slot-${esc(String(j.id))}"></div>
         </div>`;
     });
   });

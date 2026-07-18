@@ -194,6 +194,22 @@
   }
   .chip:hover, .chip:active { background: var(--burgundy); color: #fff; border-color: var(--burgundy); }
 
+  /* ===== PAIRING FEEDBACK CHIPS (#0・2026-07-18) ===== */
+  .fb-block { margin-top: 10px; }
+  .fb-intro { font-size: 11px; color: var(--muted, #8a7d78); margin-bottom: 6px; }
+  .fb-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .fb-chip {
+    background: var(--card-bg); border: 1.5px solid var(--border);
+    border-radius: 20px; padding: 5px 11px; font-size: 12px;
+    color: var(--burgundy); font-weight: 600; cursor: pointer;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .fb-chip:hover, .fb-chip:active { background: var(--burgundy); color: #fff; border-color: var(--burgundy); }
+  .fb-chip--mariage { border-color: var(--gold); color: var(--gold); }
+  .fb-chip--mariage:hover, .fb-chip--mariage:active { background: var(--gold); color: #fff; }
+  .fb-thanks { font-size: 12px; color: var(--muted, #8a7d78); font-style: italic; }
+  .fb-picker-label { font-size: 11px; color: var(--muted, #8a7d78); margin: 6px 0 4px; }
+
   /* ===== TYPING ===== */
   .typing-indicator { display: flex; gap: 8px; align-items: flex-start; }
   .typing-bubble {
@@ -879,7 +895,7 @@ async function sendMessage() {
     const d = await r.json();
     if (d.quota) { quota = d.quota; updateUsageDisplay(); }
     chatHistory.push({ role: 'assistant', content: d.reply });
-    addBotMessage({ text: d.reply });
+    addBotMessage({ text: d.reply, pairingMeta: d.pairingMeta || null });
   } catch (e) {
     hideTyping();
     addBotMessage({ text: t('err_generic') });
@@ -899,7 +915,7 @@ function addUserMessage(text, photo) {
   scrollBottom();
 }
 
-function addBotMessage({ text, wines, chips }) {
+function addBotMessage({ text, wines, chips, pairingMeta }) {
   const wrap = document.getElementById('msgWrap');
   const msgEl = document.createElement('div');
   msgEl.className = 'msg-bot';
@@ -921,11 +937,117 @@ function addBotMessage({ text, wines, chips }) {
     <div class="msg-bot-body">
       <div class="bot-bubble">${mdBold(text).replace(/\n/g,'<br>')}${limitNote}</div>
       ${cardsHtml}${chipsHtml}
+      <div class="fb-slot"></div>
       <div class="msg-time">${nowTime()}</div>
     </div>`;
 
+  // 実銘柄を提案できた時だけ、フィードバックの5チップを控えめに添える（#0・設計§2）
+  if (pairingMeta && pairingMeta.candidates && pairingMeta.candidates.length) {
+    renderFeedbackChips(msgEl.querySelector('.fb-slot'), pairingMeta);
+  }
+
   wrap.appendChild(msgEl);
   scrollBottom();
+}
+
+/* ===== PAIRING FEEDBACK (#0・2026-07-18) =====
+   提案バブルの下に「合わせてみたら、ひとこと」の5チップを常設。押すも押さぬも自由・催促しない。
+   複数銘柄提案時はチップ後に銘柄ピッカーを一段。POST /api/pairing-feedback（24h冪等はサーバー側）。 */
+const PAIRING_FB = {
+  ja: {
+    intro: '合わせてみたら、ひとことだけ聞かせてください',
+    verdicts: [
+      { v: 'awanai',    label: '合わなかった…' },
+      { v: 'warukunai', label: '悪くなかった' },
+      { v: 'bunan',     label: '無難' },
+      { v: 'au',        label: '合う！' },
+      { v: 'mariage',   label: 'マリアージュ✨' },
+    ],
+    pickLabel: 'どのワインでしたか？',
+    outside: 'リスト外のワイン',
+    thanks: {
+      awanai:    '教えてくださってありがとうございます。次はもっと寄り添える一本を',
+      warukunai: '率直にありがとうございます。次はもう少し寄れる一本を探しますね',
+      bunan:     'なるほど。次はもう一歩踏み込んでみますね',
+      au:        'よかった！この組み合わせ、覚えておきます',
+      mariage:   '1+1が3になる瞬間ですね。大切に記録します',
+    },
+  },
+  en: {
+    intro: 'If you try the pairing, let me know in a word',
+    verdicts: [
+      { v: 'awanai',    label: 'Didn\'t work…' },
+      { v: 'warukunai', label: 'Not bad' },
+      { v: 'bunan',     label: 'Fine' },
+      { v: 'au',        label: 'Good match!' },
+      { v: 'mariage',   label: 'Mariage✨' },
+    ],
+    pickLabel: 'Which wine was it?',
+    outside: 'A wine not listed',
+    thanks: {
+      awanai:    'Thank you for telling me. I\'ll find a closer match next time',
+      warukunai: 'Thanks for the honesty. I\'ll aim a little closer next time',
+      bunan:     'Got it. I\'ll push a bit further next time',
+      au:        'Glad to hear! I\'ll remember this pairing',
+      mariage:   'That 1+1=3 moment. I\'ll treasure this one',
+    },
+  },
+};
+function fbDict() { return PAIRING_FB[LANG] || PAIRING_FB.ja; }
+
+function renderFeedbackChips(slot, meta) {
+  if (!slot) return;
+  const d = fbDict();
+  const chips = d.verdicts.map(o =>
+    `<div class="fb-chip${o.v === 'mariage' ? ' fb-chip--mariage' : ''}" data-v="${o.v}">${o.label}</div>`
+  ).join('');
+  slot.innerHTML = `<div class="fb-block"><div class="fb-intro">${escHtml(d.intro)}</div><div class="fb-chips">${chips}</div></div>`;
+  slot.querySelectorAll('.fb-chip').forEach(el => {
+    el.addEventListener('click', () => onFeedbackChip(slot, meta, el.dataset.v));
+  });
+}
+
+function onFeedbackChip(slot, meta, verdict) {
+  const d = fbDict();
+  const cands = meta.candidates || [];
+  // 候補が2本以上なら「どのワインでしたか？」を一段だけ。1本なら即送信。
+  if (cands.length > 1) {
+    const opts = cands.map((c, i) =>
+      `<div class="fb-chip" data-i="${i}">${escHtml(c.name || '')}</div>`
+    ).join('') + `<div class="fb-chip" data-i="-1">${escHtml(d.outside)}</div>`;
+    slot.innerHTML = `<div class="fb-block"><div class="fb-picker-label">${escHtml(d.pickLabel)}</div><div class="fb-chips">${opts}</div></div>`;
+    slot.querySelectorAll('.fb-chip').forEach(el => {
+      el.addEventListener('click', () => {
+        const i = parseInt(el.dataset.i, 10);
+        const chosen = i >= 0 ? cands[i] : null;
+        submitPairingFeedback(slot, meta, verdict, chosen);
+      });
+    });
+  } else {
+    submitPairingFeedback(slot, meta, verdict, cands[0] || null);
+  }
+}
+
+function submitPairingFeedback(slot, meta, verdict, chosen) {
+  const d = fbDict();
+  // 楽観的にお礼へ置換（送信失敗でもユーザーは煩わせない＝サイレント。設計§2）
+  slot.innerHTML = `<div class="fb-block"><div class="fb-thanks">${escHtml(d.thanks[verdict] || '')}</div></div>`;
+  const body = {
+    userId: CHAT_UID,
+    verdict,
+    dish: meta.dishText || meta.dishMatched || null,
+    guideId: meta.guideId || null,
+    catalogId: chosen && chosen.catalogId ? chosen.catalogId : null,
+    wineName: chosen && chosen.name ? chosen.name : null,
+    context: 'chat_suggestion',
+  };
+  getAnonAccessToken().then(token => {
+    fetch(CHAT_API + '/api/pairing-feedback', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { Authorization: 'Bearer ' + token } : {}),
+      body: JSON.stringify(body),
+    }).catch(e => console.warn('pairing-feedback failed (silent):', e));
+  }).catch(e => console.warn('pairing-feedback token failed (silent):', e));
 }
 
 function wineCardHtml(w, rank) {
