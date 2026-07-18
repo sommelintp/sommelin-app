@@ -144,6 +144,18 @@
   /* ===== CLASSIC LIST VIEW ===== */
   .classic-list { padding: 0 0 120px; display: none; }
   .classic-list.active { display: block; }
+  /* 店リスト相談バー（QR着地時の送り手・#0 2026-07-18） */
+  #storeConsultBar { padding: 14px 16px 4px; }
+  .store-consult-btn {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    width: 100%; box-sizing: border-box; text-decoration: none;
+    background: linear-gradient(135deg, #9B1B4B, #7a1339);
+    color: #fff; font-size: 14px; font-weight: 700;
+    padding: 13px 16px; border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(155,27,75,0.25);
+  }
+  .store-consult-btn:active { transform: scale(0.99); opacity: 0.94; }
+  .store-consult-sub { font-size: 11px; color: var(--text-sub); text-align: center; margin-top: 6px; }
   .wine-list.hidden { display: none; }
 
   .classic-section {
@@ -2162,6 +2174,12 @@
     </div>
   </div>
 
+</div>
+
+<!-- 店リスト相談バー（QR着地時のみ表示・#0の送り手接続 2026-07-18） -->
+<div id="storeConsultBar" style="display:none;">
+  <a id="storeConsultLink" href="#" class="store-consult-btn">💬 <span id="storeConsultText">このリストでAIに相談</span></a>
+  <div class="store-consult-sub" id="storeConsultSub">料理やお好みを伝えると、このリストの中から選びます</div>
 </div>
 
 <!-- CLASSIC LIST VIEW -->
@@ -4328,6 +4346,22 @@ async function loadRestaurantList(rid) {
     const cl = document.getElementById('classicList');
     cl.style.display = 'block'; cl.classList.add('active');
     renderClassicList('all');
+
+    // #0（2026-07-18）: このリストで相談＝チャットの店モード受け口へ送る（source='qr'→backendがrestaurant_wines解決）。
+    // リストが1件以上あるときだけ出す（空リストで相談に送っても意味がない）。
+    if (rows.length) {
+      const bar = document.getElementById('storeConsultBar');
+      const link = document.getElementById('storeConsultLink');
+      if (bar && link) {
+        link.href = 'sommelier-chat.html?store=' + encodeURIComponent(rid) + '&storeName=' + encodeURIComponent(shopName);
+        const isEn = (typeof LANG !== 'undefined' && LANG === 'en');
+        const txt = document.getElementById('storeConsultText');
+        const sub = document.getElementById('storeConsultSub');
+        if (txt) txt.textContent = isEn ? 'Ask the AI about this list' : 'このリストでAIに相談';
+        if (sub) sub.textContent = isEn ? 'Tell it your dish or taste, and it picks from this list' : '料理やお好みを伝えると、このリストの中から選びます';
+        bar.style.display = 'block';
+      }
+    }
     if (!rows.length) {
       cl.innerHTML = '<div style="text-align:center;padding:50px 20px;color:var(--text-sub);font-size:13px;">' + t('shop_list_unpublished') + '</div>';
     }
