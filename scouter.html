@@ -107,6 +107,10 @@ body{
 .mark.known{border-color:var(--gold);color:#ffd98a;}
 .mark.fit{border-color:#ff7aa8;}
 .mark.unread{opacity:.7;font-weight:700;}
+/* §5: 読み取り中プレースホルダ（点滅で「処理中」を伝える。小さめ・控えめ） */
+.mark.pending{opacity:.85;padding:4px 8px;border-color:rgba(255,255,255,.55);border-style:dashed;animation:pPulse 1.1s ease-in-out infinite;}
+.mark.pending .pdot{letter-spacing:1px;}
+@keyframes pPulse{0%,100%{opacity:.45;}50%{opacity:.95;}}
 .mark.best{background:linear-gradient(90deg,var(--gold),#e0b45c);color:#3d2a05;border-color:#fff;
   padding:7px 13px;font-size:13px;z-index:2;animation:rPulse 1.8s ease-in-out infinite;}
 .mark .bsub{display:block;font-size:9px;font-weight:700;}
@@ -404,6 +408,11 @@ const I18N = {
     toast_no_image: '画像を取得できませんでした',
     status_analyzing_bottle: 'ボトルを解析中…（数秒）',
     status_analyzing_list: 'リストを解析中…（10秒ほど）',
+    status_detecting: 'ボトルを探しています…',
+    status_reading_n: '{n}本 見つけました・読み取り中…',
+    status_read_progress: '読み取り中… {d}/{n}',
+    toast_reading_wait: '読み取り中です…',
+    toast_tile_failed: '一部読み取れませんでした',
     toast_rate_limit: '回数上限です。少し待ってからどうぞ',
     toast_no_bottle_found: 'ボトルを見つけられませんでした。近づいて撮ってみてください',
     toast_analyze_failed: '解析に失敗しました。通信環境をご確認ください',
@@ -593,6 +602,11 @@ const I18N = {
     sub_result: 'Showing results',
     toast_cam_prep: 'Camera starting…',
     toast_no_image: 'Could not capture image',
+    status_detecting: 'Finding bottles…',
+    status_reading_n: 'Found {n} bottles · reading…',
+    status_read_progress: 'Reading… {d}/{n}',
+    toast_reading_wait: 'Still reading…',
+    toast_tile_failed: 'Some bottles could not be read',
     status_analyzing_bottle: 'Analyzing bottles… (a few seconds)',
     status_analyzing_list: 'Analyzing list… (about 10s)',
     toast_rate_limit: 'Too many requests. Please wait a moment.',
@@ -882,6 +896,43 @@ function grabFrame(srcEl, crop, maxEdge){
   return c.toDataURL('image/jpeg', 0.8);
 }
 
+// §5: 撮影ソースを高解像度canvasへ1枚固定（タイル切り抜き元）。ライブ映像は動くので撮影の
+// 瞬間に一度だけ確保する。長辺は3000pxで頭打ち（メモリ有界・中下段の小ラベルは1568全景より鮮明）。
+function captureFullRes(srcEl, maxEdge){
+  let sw,sh;
+  if(srcEl.tagName==='VIDEO'){ sw=srcEl.videoWidth; sh=srcEl.videoHeight; }
+  else { sw=srcEl.naturalWidth||srcEl.width; sh=srcEl.naturalHeight||srcEl.height; }
+  if(!sw||!sh) return null;
+  const scale=Math.min(1, (maxEdge||3000)/Math.max(sw,sh));
+  const c=document.createElement('canvas');
+  c.width=Math.round(sw*scale); c.height=Math.round(sh*scale);
+  c.getContext('2d').drawImage(srcEl, 0,0,sw,sh, 0,0,c.width,c.height);
+  return c;
+}
+// タイル矩形rect(0-1)を高解像度canvasから切り抜いてJPEG化。長辺maxEdgeで縮小（トークン節約）。
+function cropTile(canvas, rect, maxEdge){
+  if(!canvas) return null;
+  const W=canvas.width, H=canvas.height;
+  const cx=clamp01(rect.cx), cy=clamp01(rect.cy), rw=clamp01(rect.w), rh=clamp01(rect.h);
+  const x0=Math.max(0,(cx-rw/2)*W), y0=Math.max(0,(cy-rh/2)*H);
+  const cw=Math.min(W-x0, rw*W), ch=Math.min(H-y0, rh*H);
+  if(cw<=0||ch<=0) return null;
+  const scale=Math.min(1, (maxEdge||1536)/Math.max(cw,ch));
+  const c=document.createElement('canvas');
+  c.width=Math.max(1,Math.round(cw*scale)); c.height=Math.max(1,Math.round(ch*scale));
+  c.getContext('2d').drawImage(canvas, x0,y0,cw,ch, 0,0,c.width,c.height);
+  return c.toDataURL('image/jpeg', 0.85);
+}
+function clamp01(n){ const x=Number(n); return Number.isFinite(x)?Math.min(1,Math.max(0,x)):0; }
+// 並列実行（同時実行上限つき）。thunkの配列を受け、全完了を待つ。
+async function runWithConcurrency(thunks, limit){
+  let idx=0;
+  const workers=Array.from({length:Math.min(limit, thunks.length)}, async ()=>{
+    while(idx<thunks.length){ const my=idx++; await thunks[my](); }
+  });
+  await Promise.all(workers);
+}
+
 async function scanNow(){
   if(busy) return;
   const v=document.getElementById('cam');
@@ -889,7 +940,7 @@ async function scanNow(){
   const flash=document.getElementById('flash');
   flash.classList.add('on'); setTimeout(()=>flash.classList.remove('on'),120);
   if(MODE==='list'){ await identifyList(grabFrame(v, false, 1568)); }
-  else { await identifyShelf(grabFrame(v, false, 1568)); }
+  else { await identifyShelf(grabFrame(v, false, 1568), captureFullRes(v, 3000)); }
 }
 
 // ファイル（写真）から。複数枚選択にも対応（1枚ずつ結果表示→resumeLiveで次の写真へ）
@@ -910,7 +961,7 @@ function processNextPendingFile(){
     document.getElementById('scanview').style.display='block';
     try{
       if(MODE==='list'){ await identifyList(grabFrame(img, false, 1568)); }
-      else { await identifyShelf(grabFrame(img, false, 1568)); }
+      else { await identifyShelf(grabFrame(img, false, 1568), captureFullRes(img, 3000)); }
     } finally { URL.revokeObjectURL(img.src); }
   };
   img.onerror=()=>{ URL.revokeObjectURL(img.src); };
@@ -922,32 +973,65 @@ function pendingFilesRemaining(){ return pendingFiles.length; }
 // 撮った瞬間に画面をその写真で固定し、結果を写真の上にマーカーで重ねる（画面遷移なし）
 let shelfRes=null;
 
-async function identifyShelf(dataUrl){
+// §5 二相スキャン（2026-07-18）: detect（箱位置だけ・速い）→全箱に「?」を即表示→タイルを並列read
+// →着いた順にマーカーを実結果へ差し替え。密集棚の12本上限を解消し、待ちの体感を「埋まっていく」に変える。
+// fullCanvas: 撮影時に確保した高解像度canvas（タイル切り抜き元）。無ければdataUrlで代替。
+async function identifyShelf(dataUrl, fullCanvas){
   if(window.sommLog) sommLog('scan',{mode:'shelf'});
   if(!dataUrl){ toast(t('toast_no_image')); return; }
   if(API_BASE.includes('★')){ showApiUnset(); return; }
   busy=true; setShoot(true);
   showFrozen(dataUrl);
-  showStatus(true); setStatus(t('status_analyzing_bottle'));
+  showStatus(true); setStatus(t('status_detecting'));
   try{
-    const r=await fetch(API_BASE+'/api/identify-shelf',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
+    // Phase 1: detect（Haiku・箱だけ）
+    const dr=await fetch(API_BASE+'/api/identify-shelf-detect',{
+      method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ image:dataUrl, userId:UID, locale: (LANG==='en'?'en-US':'ja-JP') })
     });
-    if(r.status===429){ toast(t('toast_rate_limit')); resumeLive(); return; }
-    if(!r.ok) throw new Error('http '+r.status);
-    const res=await r.json();
+    if(dr.status===429||dr.status===403){ showStatus(false); toast(t('toast_rate_limit')); resumeLive(); return; }
+    if(!dr.ok) throw new Error('detect http '+dr.status);
+    const det=await dr.json();
+    if(!det.bottles || !det.bottles.length){ showStatus(false); toast(t('toast_no_bottle_found')); resumeLive(); return; }
+    if(det.timing && window.sommLog) sommLog('scan_detect_timing', { ...det.timing, detected: det.detected, tiles: (det.tiles||[]).length });
+
+    // 全箱に「?読み取り中」プレースホルダを即表示（画面が数秒で生きる）
+    shelfRes={ scanId: det.scanId,
+      bottles: det.bottles.map(b=>({ box:b.box, readable:false, _pending:true,
+        match:{status:'detecting', matchScore:0, wine:null},
+        sommelin:{isPick:false, level:null, reason:null},
+        personalFit:{label:null, score:null, reasons:[], basedOn:'coldStart'}, filterMatches:[] })),
+      summary:{ total: det.bottles.length, known:0 } };
+    // 中央スピナーは消す＝即表示したマーカー（?点滅）を隠さない。以降の進捗は「pendingドットの点滅」
+    // ＋「下部サマリーの評価あり本数が増えていく」で伝える（§5の狙い=埋まっていくのを見せる）。
     showStatus(false);
-    if(!res.bottles || !res.bottles.length){
-      toast(t('toast_no_bottle_found')); resumeLive(); return;
-    }
-    shelfRes=res;
-    // 2026-07-18: 30秒問題の実測。サーバーのフェーズ別タイミングをapp_eventsへ転記
-    // （Cloud Runログを開かずに内訳を追えるように。原因確定後に外してよい）
-    if(res.timing && window.sommLog) sommLog('scan_shelf_timing', res.timing);
-    renderMarks(res);
-    if(res.bottles.length===1) markTap(0);   // 1本だけなら詳細カードを自動で開く
+    renderMarks(shelfRes);
+    setSub(t('status_reading_n').replace('{n}', det.bottles.length));
+
+    // Phase 2: タイルを並列read（同時3）。≤8本(1タイル)でも同じ経路＝全景1タイルを1回read。
+    const tiles=(det.tiles&&det.tiles.length)?det.tiles
+      :[{ rect:{cx:.5,cy:.5,w:1,h:1}, indices: det.bottles.map((_,i)=>i) }];
+    let done=0;
+    const readOne=async (tile, idx)=>{
+      const crop=cropTile(fullCanvas, tile.rect, 1536) || dataUrl;
+      try{
+        const rr=await fetch(API_BASE+'/api/identify-shelf-read',{
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ image:crop, userId:UID, scanId:det.scanId, sig:det.sig,
+            tileIndex:idx, tileCount:tiles.length, rect:tile.rect, readSource:'house',
+            locale:(LANG==='en'?'en-US':'ja-JP') })
+        });
+        if(!rr.ok) throw new Error('read http '+rr.status);
+        const rres=await rr.json();
+        mergeTileResult(tile, rres.bottles||[]);
+      }catch(e){
+        markTileFailed(tile);
+      }
+    };
+    await runWithConcurrency(tiles.map((tl,i)=>()=>readOne(tl,i)), 3);
+
+    finalizeShelf();
+    if(shelfRes && shelfRes.bottles.length===1 && shelfRes.bottles[0].readable) markTap(0);
   }catch(e){
     showStatus(false);
     toast(t('toast_analyze_failed'));
@@ -955,6 +1039,43 @@ async function identifyShelf(dataUrl){
   }finally{
     busy=false; setShoot(false);
   }
+}
+
+// タイルreadの結果を shelfRes へ合流: そのタイル領域のプレースホルダを除き、実結果を足す。
+function mergeTileResult(tile, readBottles){
+  if(!shelfRes) return;
+  const r=tile.rect, x0=r.cx-r.w/2, x1=r.cx+r.w/2, y0=r.cy-r.h/2, y1=r.cy+r.h/2;
+  const inside=b=> b.box && b.box.cx>=x0-0.02 && b.box.cx<=x1+0.02 && b.box.cy>=y0-0.02 && b.box.cy<=y1+0.02;
+  shelfRes.bottles = shelfRes.bottles.filter(b=> !(b._pending && inside(b)));
+  (readBottles||[]).forEach(b=> shelfRes.bottles.push(b));
+  recomputeSummary();
+  renderMarks(shelfRes);
+}
+// タイルreadが失敗したら、その領域のプレースホルダを「読めなかった」静的マーカーに（撮り直しで再挑戦）。
+function markTileFailed(tile){
+  if(!shelfRes) return;
+  const r=tile.rect, x0=r.cx-r.w/2, x1=r.cx+r.w/2, y0=r.cy-r.h/2, y1=r.cy+r.h/2;
+  const inside=b=> b.box && b.box.cx>=x0-0.02 && b.box.cx<=x1+0.02 && b.box.cy>=y0-0.02 && b.box.cy<=y1+0.02;
+  shelfRes.bottles.forEach(b=>{ if(b._pending && inside(b)){ b._pending=false; b.match.status='unreadable'; } });
+  recomputeSummary();
+  renderMarks(shelfRes);
+}
+function recomputeSummary(){
+  if(!shelfRes) return;
+  const bs=shelfRes.bottles;
+  shelfRes.summary={
+    total: bs.length,
+    known: bs.filter(x=>x.match.status==='known').length,
+    picks: bs.filter(x=>x.sommelin&&x.sommelin.isPick).length,
+    fits: bs.filter(x=>x.personalFit&&x.personalFit.score>=40).length,
+  };
+}
+function finalizeShelf(){
+  if(!shelfRes) return;
+  // 全タイル完了後もまだpendingが残っていれば（＝上限超過で読まれなかった等）unreadableに落とす
+  shelfRes.bottles.forEach(b=>{ if(b._pending){ b._pending=false; b.match.status='unreadable'; } });
+  recomputeSummary();
+  renderMarks(shelfRes);
 }
 
 function showFrozen(dataUrl){
@@ -1009,7 +1130,10 @@ function renderMarks(res){
     const w=b.match && b.match.wine;
     let cls='mark', html='';
     const pinned=b.filterMatches && b.filterMatches.length>0;
-    if(b.match.status==='known'){
+    if(b._pending || b.match.status==='detecting'){
+      // §5: 読み取り中プレースホルダ（箱だけ分かっている状態）
+      cls+=' unread pending'; html='<span class="pdot">⋯</span>';
+    }else if(b.match.status==='known'){
       cls+=' known';
       const fit=b.personalFit && b.personalFit.score>=40;
       if(fit) cls+=' fit';
@@ -1049,6 +1173,7 @@ function markTap(i){
     if(!shelfRes){ if(window.sommLog) sommLog('mark_tap_error',{reason:'no_shelfRes'}); toast(t('toast_stale_rescan')); resumeLive(); return; }
     const b=shelfRes.bottles[i];
     if(!b){ if(window.sommLog) sommLog('mark_tap_error',{reason:'no_bottle',i}); return; }
+    if(b._pending || b.match.status==='detecting'){ toast(t('toast_reading_wait')); return; }
     if(b.match.status==='unreadable'){ toast(t('toast_unreadable')); return; }
     renderShelfCard(b);
     openSheet();
