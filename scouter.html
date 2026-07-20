@@ -92,8 +92,36 @@ body{
 .shoot:active{transform:scale(.94);}
 .shoot.busy{opacity:.4;pointer-events:none;}
 .mode-seg{display:flex;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:3px;}
-.mode-seg button{border:none;background:none;color:rgba(255,255,255,.7);font-size:12px;font-weight:700;padding:6px 16px;border-radius:16px;cursor:pointer;}
+.mode-seg button{border:none;background:none;color:rgba(255,255,255,.7);font-size:11px;font-weight:700;padding:6px 11px;border-radius:16px;cursor:pointer;white-space:nowrap;}
 .mode-seg button.on{background:#fff;color:var(--burgundy);}
+
+/* 土俵バッジ（先読みリスト＝照合の土俵） */
+#arenaBadge{position:absolute;top:92px;left:12px;z-index:31;display:flex;align-items:stretch;
+  border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.35);}
+#arenaBadge .ab-main{border:none;background:var(--burgundy);color:#fff;font-size:12px;font-weight:800;
+  padding:7px 12px;cursor:pointer;display:flex;align-items:center;}
+#arenaBadge .ab-x{border:none;background:rgba(0,0,0,.55);color:#fff;font-size:12px;font-weight:800;
+  padding:0 10px;cursor:pointer;}
+
+/* モード自動判定の2チップ（mixed/unknown時） */
+#docChoice{position:absolute;inset:0;z-index:36;display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.45);}
+#docChoice .dc-card{background:rgba(20,10,12,.94);border:1px solid rgba(255,255,255,.15);border-radius:18px;
+  padding:20px 18px;width:78%;max-width:320px;text-align:center;}
+#docChoice .dc-q{color:#fff;font-size:14px;font-weight:800;margin-bottom:14px;line-height:1.5;}
+#docChoice .dc-b{display:block;width:100%;margin:8px 0;padding:13px;border:none;border-radius:13px;
+  background:#fff;color:var(--burgundy);font-size:14px;font-weight:800;cursor:pointer;}
+#docChoice .dc-x{margin-top:6px;border:none;background:none;color:rgba(255,255,255,.6);font-size:13px;cursor:pointer;}
+
+/* frozenBar「リストとして読み直す」 */
+#frozenBar .fb3{width:100%;padding:10px;margin-bottom:8px;border:none;border-radius:14px;
+  background:rgba(255,255,255,.16);color:#fff;font-size:13px;font-weight:700;cursor:pointer;}
+
+/* リスト一致・年矛盾の一言（詳細カード内） */
+.arena-hit{margin:8px 16px 2px;padding:7px 12px;background:#f3ecff;color:#5b3fa0;border-radius:10px;
+  font-size:12px;font-weight:700;text-align:center;}
+.arena-note{margin:6px 16px 2px;padding:7px 12px;background:#fff6e6;color:#8a5a00;border-radius:10px;
+  font-size:12px;font-weight:600;text-align:center;line-height:1.5;}
 .bot-row{display:flex;gap:10px;align-items:center;}
 
 /* ── FROZEN OVERLAY（撮った写真の上に結果マーカー） ── */
@@ -308,6 +336,7 @@ body{
   <div id="frozenBar">
     <div class="fs" id="frozenSum">—</div>
     <button class="fb2" id="frozenPlaceBtn" style="display:none;" data-i18n="place_record_cta" onclick="openPlacePicker()">📍 このお店を記録する</button>
+    <button class="fb3" id="rereadListBtn" style="display:none;" data-i18n="reread_as_list" onclick="rereadAsList()">📋 リストとして読み直す</button>
     <button class="fb1" data-i18n="resume_btn" onclick="resumeLive()">↺ 撮り直す</button>
   </div>
 
@@ -327,9 +356,19 @@ body{
     <div class="aTop-sp"></div>
   </div>
 
+  <!-- 土俵バッジ（先に読み込んだリスト＝照合の土俵。ライブ/frozen両方で見える） -->
+  <div id="arenaBadge" style="display:none;">
+    <button class="ab-main" onclick="openArenaSheet()"><span class="ab-txt"></span></button>
+    <button class="ab-x" onclick="arenaClear()" aria-label="外す">✕</button>
+  </div>
+
+  <!-- モード自動判定でmixed/unknownのとき、推測せず優しく聞く2チップ -->
+  <div id="docChoice"></div>
+
   <div class="aBot">
     <div class="mode-seg">
-      <button id="modeBottle" class="on" onclick="setMode('bottle')" data-i18n="mode_bottle">🍾 ボトル・棚</button>
+      <button id="modeAuto" class="on" onclick="setMode('auto')" data-i18n="mode_auto">✨ おまかせ</button>
+      <button id="modeBottle" onclick="setMode('bottle')" data-i18n="mode_bottle">🍾 ボトル・棚</button>
       <button id="modeList" onclick="setMode('list')" data-i18n="mode_list">📋 リスト</button>
     </div>
     <div class="shoot" id="shootBtn" onclick="scanNow()">📷</div>
@@ -394,13 +433,25 @@ const I18N = {
     err_desc: '設定でカメラを許可するか、「写真から読み取る」をお試しください。',
     scouter_title: 'スカウター',
     sub_default: 'ラベルを枠に入れて撮影',
+    mode_auto: '✨ おまかせ',
     mode_bottle: '🍾 ボトル・棚',
     mode_list: '📋 リスト',
     shoot_hint_bottle: '1本でも棚ごとでもOK。撮るだけ',
     shoot_hint_list: 'ワインリストを撮影（複数ページOK）',
+    shoot_hint_auto: 'ボトルでもリストでも、撮るだけ',
     from_photo_label: '📁 写真から',
     sub_list: 'リストモード',
     sub_bottle: '撮るだけで全ボトル評価',
+    sub_auto: 'ボトルもリストも撮るだけ',
+    arena_badge: '📋 リスト照合中: {n}本',
+    toast_arena_cleared: 'リスト照合を外しました',
+    ask_doc_type: 'この写真、どちらとして読みますか？',
+    chip_read_as_shelf: '🍾 棚・ボトルとして読む',
+    chip_read_as_list: '📋 リストとして読む',
+    reread_as_list: '📋 リストとして読み直す',
+    arena_hit_line: '📋 リスト一致 — 年・価格はリスト情報',
+    arena_list_price: 'リスト価格 {p}',
+    arena_note_line: 'リストでは{list}年でした（ラベルは{label}）',
     sub_analyzing: '解析中…',
     sub_tap_detail: 'タップで詳細',
     sub_result: '結果を表示中',
@@ -590,13 +641,25 @@ const I18N = {
     err_desc: 'Please allow camera access in settings, or try "Scan from a photo" instead.',
     scouter_title: 'Scouter',
     sub_default: 'Frame the label to scan',
+    mode_auto: '✨ Auto',
     mode_bottle: '🍾 Bottle / Shelf',
     mode_list: '📋 List',
     shoot_hint_bottle: 'One bottle or a whole shelf — just shoot',
     shoot_hint_list: 'Photograph the wine list (multiple pages OK)',
+    shoot_hint_auto: 'Bottle or list — just shoot',
     from_photo_label: '📁 From photo',
     sub_list: 'List mode',
     sub_bottle: 'Score every bottle at a glance',
+    sub_auto: 'Bottle or list — just shoot',
+    arena_badge: '📋 List loaded: {n}',
+    toast_arena_cleared: 'List reference removed',
+    ask_doc_type: 'How should we read this photo?',
+    chip_read_as_shelf: '🍾 Read as bottles / shelf',
+    chip_read_as_list: '📋 Read as a list',
+    reread_as_list: '📋 Re-read as a list',
+    arena_hit_line: '📋 List match — vintage & price from the list',
+    arena_list_price: 'List price {p}',
+    arena_note_line: 'The list showed {list} (label reads {label})',
     sub_analyzing: 'Analyzing…',
     sub_tap_detail: 'Tap for details',
     sub_result: 'Showing results',
@@ -838,10 +901,56 @@ function fmtPrice(p){ if(p==null||isNaN(p)) return '—'; return '¥'+Math.round
 
 // ── STATE ──
 let stream=null, busy=false;
-let MODE='bottle';                 // 'bottle' | 'list'
-let listItems=[], listPages=0;     // リストモードの累積（複数ページ）
+let MODE='auto';                   // 'auto' | 'bottle' | 'list'（既定=おまかせ・detectのdocTypeで自動振り分け）
+let listItems=[], listPages=0;     // リストモードの累積（複数ページ）＝土俵（arena）の中身
 let listPlace=null, lastListScanId=null, listHasTaste=false;  // お店記録（みんなのワイン地図）
 let shelfPlace=null;  // 棚モードでのお店記録（同じくみんなのワイン地図に協力）
+let lastShotDataUrl=null, lastShotCanvas=null;  // 直近の撮影（auto→リスト読み直しの再利用元）
+
+// ── 土俵（arena・2026-07-20 P2a）: 先に読み込んだリストを以降のラベル照合の優先範囲にする ──
+const ARENA_TTL = 12*3600*1000;  // sessionStorage保持は12h（試飲会1回分をまたぐが翌日は破棄）
+// listItems → サーバーが受ける土俵項目に写像。§2.3: リスト印字年とカタログ照合行の年が
+// 食い違う項目は catalogId を渡さない（別年のスコアをリスト年として見せる嘘を防ぐ）。
+function arenaItems(){
+  return (listItems||[]).map(it=>{
+    const w=it.match&&it.match.wine; const inp=it.input||{};
+    const name=(w&&w.name)||inp.name||inp.rawText||null;
+    const producer=(w&&w.producer)||inp.producer||null;
+    if(!name && !producer) return null;
+    const inpV=(inp.vintage!=null&&!isNaN(Number(inp.vintage)))?Number(inp.vintage):null;
+    const wV=(w&&w.vintage!=null&&!isNaN(Number(w.vintage)))?Number(w.vintage):null;
+    let catalogId=(w&&w.catalogId)||null;
+    if(catalogId && inpV!=null && wV!=null && inpV!==wV) catalogId=null;  // §2.3ガード
+    const listPrice=(inp.listPrice!=null&&!isNaN(Number(inp.listPrice))&&Number(inp.listPrice)>0)?Number(inp.listPrice):null;
+    return { name, producer, vintage:(inpV!=null?inpV:wV), catalogId, listPrice, color:(w&&w.iro)||inp.color||null };
+  }).filter(Boolean);
+}
+function saveArena(){
+  try{ sessionStorage.setItem('somm_arena', JSON.stringify({ v:1, ts:Date.now(), pages:listPages, items:listItems })); }catch(e){}
+}
+function loadArena(){
+  try{
+    const raw=sessionStorage.getItem('somm_arena'); if(!raw) return;
+    const o=JSON.parse(raw);
+    if(!o || !Array.isArray(o.items) || !o.items.length) return;
+    if(o.ts && (Date.now()-o.ts)>ARENA_TTL){ sessionStorage.removeItem('somm_arena'); return; }
+    listItems=o.items; listPages=o.pages||1;
+  }catch(e){}
+}
+function arenaClear(){
+  listItems=[]; listPages=0; listPlace=null; lastListScanId=null; listHasTaste=false;
+  try{ sessionStorage.removeItem('somm_arena'); }catch(e){}
+  updateArenaBadge();
+  if(window.sommLog) sommLog('arena_clear');
+  toast(t('toast_arena_cleared'));
+}
+function updateArenaBadge(){
+  const el=document.getElementById('arenaBadge'); if(!el) return;
+  const n=(listItems||[]).length;
+  if(n>0){ el.style.display='flex'; el.querySelector('.ab-txt').textContent=t('arena_badge').replace('{n}',n); }
+  else el.style.display='none';
+}
+function openArenaSheet(){ if(!(listItems||[]).length) return; renderListSheet(); openSheet(); }
 
 // 匿名ユーザーID（好みプロファイル用。端末に保存）
 const UID=(()=>{ let u=localStorage.getItem('somm_uid');
@@ -851,15 +960,15 @@ const UID=(()=>{ let u=localStorage.getItem('somm_uid');
 function setMode(m){
   MODE=m;
   resumeLive();   // 静止画表示中ならライブに戻す
+  document.getElementById('modeAuto').classList.toggle('on',m==='auto');
   document.getElementById('modeBottle').classList.toggle('on',m==='bottle');
   document.getElementById('modeList').classList.toggle('on',m==='list');
-  if(m==='list'){
-    setSub(t('sub_list')); document.getElementById('shootHint').textContent=t('shoot_hint_list');
-    shelfPlace=null;   // リストに切替たら棚モードの記録状態はリセット
-  }else{
-    setSub(t('sub_bottle')); document.getElementById('shootHint').textContent=t('shoot_hint_bottle');
-    listItems=[]; listPages=0; listPlace=null; lastListScanId=null;   // ボトルに戻したらリスト累積はリセット
-  }
+  // 土俵（listItems）はモード切替では消さない（「先にリスト→棚を撮る」の動線を守る。
+  // 消す権限は土俵バッジの「外す」とリストシートのクリアだけ＝arenaClear()に一元化）。
+  const hint=document.getElementById('shootHint');
+  if(m==='list'){ setSub(t('sub_list')); hint.textContent=t('shoot_hint_list'); shelfPlace=null; }
+  else if(m==='bottle'){ setSub(t('sub_bottle')); hint.textContent=t('shoot_hint_bottle'); }
+  else { setSub(t('sub_auto')); hint.textContent=t('shoot_hint_auto'); }
 }
 
 // ── CAMERA ──
@@ -976,15 +1085,18 @@ let shelfRes=null;
 // §5 二相スキャン（2026-07-18）: detect（箱位置だけ・速い）→全箱に「?」を即表示→タイルを並列read
 // →着いた順にマーカーを実結果へ差し替え。密集棚の12本上限を解消し、待ちの体感を「埋まっていく」に変える。
 // fullCanvas: 撮影時に確保した高解像度canvas（タイル切り抜き元）。無ければdataUrlで代替。
-async function identifyShelf(dataUrl, fullCanvas){
+// opts.forceShelf: おまかせ判定を無視して必ず棚として読む（手動ボトルモード・チップ「棚として読む」用）。
+async function identifyShelf(dataUrl, fullCanvas, opts){
+  opts=opts||{};
   if(window.sommLog) sommLog('scan',{mode:'shelf'});
   if(!dataUrl){ toast(t('toast_no_image')); return; }
   if(API_BASE.includes('★')){ showApiUnset(); return; }
   busy=true; setShoot(true);
+  lastShotDataUrl=dataUrl; lastShotCanvas=fullCanvas||null;  // auto→リスト読み直しの再利用元
   showFrozen(dataUrl);
   showStatus(true); setStatus(t('status_detecting'));
   try{
-    // Phase 1: detect（Haiku・箱だけ）
+    // Phase 1: detect（Haiku・箱＋docType）
     const dr=await fetch(API_BASE+'/api/identify-shelf-detect',{
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ image:dataUrl, userId:UID, locale: (LANG==='en'?'en-US':'ja-JP') })
@@ -992,46 +1104,28 @@ async function identifyShelf(dataUrl, fullCanvas){
     if(dr.status===429||dr.status===403){ showStatus(false); toast(t('toast_rate_limit')); resumeLive(); return; }
     if(!dr.ok) throw new Error('detect http '+dr.status);
     const det=await dr.json();
-    if(!det.bottles || !det.bottles.length){ showStatus(false); toast(t('toast_no_bottle_found')); resumeLive(); return; }
-    if(det.timing && window.sommLog) sommLog('scan_detect_timing', { ...det.timing, detected: det.detected, tiles: (det.tiles||[]).length });
 
-    // 全箱に「?読み取り中」プレースホルダを即表示（画面が数秒で生きる）
-    shelfRes={ scanId: det.scanId,
-      bottles: det.bottles.map(b=>({ box:b.box, readable:false, _pending:true,
-        match:{status:'detecting', matchScore:0, wine:null},
-        sommelin:{isPick:false, level:null, reason:null},
-        personalFit:{label:null, score:null, reasons:[], basedOn:'coldStart'}, filterMatches:[] })),
-      summary:{ total: det.bottles.length, known:0 } };
-    // 中央スピナーは消す＝即表示したマーカー（?点滅）を隠さない。以降の進捗は「pendingドットの点滅」
-    // ＋「下部サマリーの評価あり本数が増えていく」で伝える（§5の狙い=埋まっていくのを見せる）。
-    showStatus(false);
-    renderMarks(shelfRes);
-    setSub(t('status_reading_n').replace('{n}', det.bottles.length));
-
-    // Phase 2: タイルを並列read（同時3）。≤8本(1タイル)でも同じ経路＝全景1タイルを1回read。
-    const tiles=(det.tiles&&det.tiles.length)?det.tiles
-      :[{ rect:{cx:.5,cy:.5,w:1,h:1}, indices: det.bottles.map((_,i)=>i) }];
-    let done=0;
-    const readOne=async (tile, idx)=>{
-      const crop=cropTile(fullCanvas, tile.rect, 1536) || dataUrl;
-      try{
-        const rr=await fetch(API_BASE+'/api/identify-shelf-read',{
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ image:crop, userId:UID, scanId:det.scanId, sig:det.sig,
-            tileIndex:idx, tileCount:tiles.length, rect:tile.rect, readSource:'house',
-            locale:(LANG==='en'?'en-US':'ja-JP') })
-        });
-        if(!rr.ok) throw new Error('read http '+rr.status);
-        const rres=await rr.json();
-        mergeTileResult(tile, rres.bottles||[]);
-      }catch(e){
-        markTileFailed(tile);
+    // おまかせ（MODE==='auto'）のときだけ docType で自動振り分け。手動ボトル/forceShelfは無視。
+    const honor = (MODE==='auto') && !opts.forceShelf;
+    const docType = det.docType || 'bottles';
+    if(honor){
+      if(window.sommLog) sommLog('auto_route',{docType});
+      if(docType==='list'){
+        // リストとして読む（同じ撮影画像を流用）。frozenを解いてライブに戻し、リストシートを出す。
+        restoreLiveNoQueue();
+        await identifyList(dataUrl, {fromAuto:true});
+        return;
       }
-    };
-    await runWithConcurrency(tiles.map((tl,i)=>()=>readOne(tl,i)), 3);
-
-    finalizeShelf();
-    if(shelfRes && shelfRes.bottles.length===1 && shelfRes.bottles[0].readable) markTap(0);
+      if(docType==='mixed' || docType==='unknown'){
+        // 推測しない。frozen画像の上で2チップを出して優しく聞く（§3.1）。
+        showStatus(false);
+        askDocType(dataUrl, fullCanvas, det);
+        return;
+      }
+    }
+    // bottles（または手動/forceShelf） → タイルread
+    if(!det.bottles || !det.bottles.length){ showStatus(false); toast(t('toast_no_bottle_found')); resumeLive(); return; }
+    await runTileRead(det, dataUrl, fullCanvas);
   }catch(e){
     showStatus(false);
     toast(t('toast_analyze_failed'));
@@ -1039,6 +1133,105 @@ async function identifyShelf(dataUrl, fullCanvas){
   }finally{
     busy=false; setShoot(false);
   }
+}
+
+// detect結果からタイルreadを実行（identifyShelf本体・チップ「棚として読む」から共有）。
+// arena（先読みリスト）があれば各readに添える＝土俵優先照合（サーバー側P1が受ける）。
+async function runTileRead(det, dataUrl, fullCanvas){
+  if(det.timing && window.sommLog) sommLog('scan_detect_timing', { ...det.timing, detected: det.detected, tiles: (det.tiles||[]).length });
+  const boxes = det.bottles || [];
+  // 全箱に「?読み取り中」プレースホルダを即表示（画面が数秒で生きる）。unknown→棚は箱ゼロで全景read。
+  shelfRes={ scanId: det.scanId,
+    bottles: boxes.map(b=>({ box:b.box, readable:false, _pending:true,
+      match:{status:'detecting', matchScore:0, wine:null},
+      sommelin:{isPick:false, level:null, reason:null},
+      personalFit:{label:null, score:null, reasons:[], basedOn:'coldStart'}, filterMatches:[] })),
+    summary:{ total: boxes.length, known:0 } };
+  showStatus(false);
+  renderMarks(shelfRes);
+  setSub(boxes.length ? t('status_reading_n').replace('{n}', boxes.length) : t('sub_analyzing'));
+
+  const arena = arenaItems();
+  if(arena.length && window.sommLog) sommLog('arena_scan',{arenaCount:arena.length});
+
+  // Phase 2: タイルを並列read（同時3）。≤8本(1タイル)でも同じ経路＝全景1タイルを1回read。
+  const tiles=(det.tiles&&det.tiles.length)?det.tiles
+    :[{ rect:{cx:.5,cy:.5,w:1,h:1}, indices: boxes.map((_,i)=>i) }];
+  const readOne=async (tile, idx)=>{
+    const crop=cropTile(fullCanvas, tile.rect, 1536) || dataUrl;
+    try{
+      const body={ image:crop, userId:UID, scanId:det.scanId, sig:det.sig,
+        tileIndex:idx, tileCount:tiles.length, rect:tile.rect, readSource:'house',
+        locale:(LANG==='en'?'en-US':'ja-JP') };
+      if(arena.length) body.arena=arena;   // §2: 土俵優先照合
+      const rr=await fetch(API_BASE+'/api/identify-shelf-read',{
+        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
+      });
+      if(!rr.ok) throw new Error('read http '+rr.status);
+      const rres=await rr.json();
+      mergeTileResult(tile, rres.bottles||[]);
+    }catch(e){
+      markTileFailed(tile);
+    }
+  };
+  await runWithConcurrency(tiles.map((tl,i)=>()=>readOne(tl,i)), 3);
+
+  finalizeShelf();
+  // unknown→棚で結局1本も読めなければ、正直に「見つからなかった」でライブへ戻す。
+  if(shelfRes && !shelfRes.bottles.length){ toast(t('toast_no_bottle_found')); resumeLive(); return; }
+  if(shelfRes && shelfRes.bottles.length===1 && shelfRes.bottles[0].readable) markTap(0);
+}
+
+// frozenを解いてライブ表示へ戻す（pendingFilesの自動送りは行わない＝処理途中の割り込み防止）。
+// resumeLiveのうち「複数枚の次を処理」を除いた軽量版。auto→リスト分岐で使う。
+function restoreLiveNoQueue(){
+  closeSheet();
+  shelfRes=null;
+  document.getElementById('frozen').style.display='none';
+  document.getElementById('marks').style.display='none';
+  document.getElementById('frozenBar').style.display='none';
+  document.querySelector('.aBot').style.display='flex';
+  showStatus(false);
+}
+
+// モード自動判定でmixed/unknownのとき、推測せず2チップで聞く（§3.1）。
+// det: detect結果（棚として読むとき再detectを省ける）。無ければ棚選択時に再detectする。
+function askDocType(dataUrl, fullCanvas, det){
+  const el=document.getElementById('docChoice');
+  el.innerHTML=`<div class="dc-card">
+    <div class="dc-q">${t('ask_doc_type')}</div>
+    <button class="dc-b" id="dcShelf">${t('chip_read_as_shelf')}</button>
+    <button class="dc-b" id="dcList">${t('chip_read_as_list')}</button>
+    <button class="dc-x" id="dcX">✕</button>
+  </div>`;
+  el.style.display='flex';
+  document.getElementById('dcShelf').onclick=async ()=>{
+    el.style.display='none';
+    if(window.sommLog) sommLog('auto_route_choice',{chosen:'shelf'});
+    if(det){
+      busy=true; setShoot(true);
+      try{ await runTileRead(det, dataUrl, fullCanvas); }
+      catch(e){ toast(t('toast_analyze_failed')); resumeLive(); }
+      finally{ busy=false; setShoot(false); }
+    }else{
+      await identifyShelf(dataUrl, fullCanvas, {forceShelf:true});
+    }
+  };
+  document.getElementById('dcList').onclick=()=>{
+    el.style.display='none';
+    if(window.sommLog) sommLog('auto_route_choice',{chosen:'list'});
+    restoreLiveNoQueue();
+    identifyList(dataUrl, {fromAuto:false});   // 明示選択＝非リストでも聞き返さずtoast
+  };
+  document.getElementById('dcX').onclick=()=>{ el.style.display='none'; resumeLive(); };
+}
+
+// 棚結果を「実はリストだった」と読み直す（auto→棚の誤判定救済・frozenBarの小リンク）。
+function rereadAsList(){
+  if(!lastShotDataUrl) return;
+  if(window.sommLog) sommLog('reread_as_list');
+  restoreLiveNoQueue();
+  identifyList(lastShotDataUrl, {fromAuto:false});
 }
 
 // タイルreadの結果を shelfRes へ合流: そのタイル領域のプレースホルダを除き、実結果を足す。
@@ -1095,7 +1288,7 @@ function resumeLive(){
   document.getElementById('frozenBar').style.display='none';
   document.querySelector('.aBot').style.display='flex';
   showStatus(false);
-  setSub(MODE==='list'?t('sub_list'):t('sub_bottle'));
+  setSub(MODE==='list'?t('sub_list'):MODE==='bottle'?t('sub_bottle'):t('sub_auto'));
   // 複数枚選択の残りがあれば、ライブに戻さず次の写真を自動処理する
   if(pendingFiles && pendingFiles.length){ processNextPendingFile(); }
 }
@@ -1139,7 +1332,8 @@ function renderMarks(res){
       if(fit) cls+=' fit';
       if(pinned) cls+=' pinned';
       // 第4版: マーカーは味スコア(50-100)を出す。星は詳細カード側で見せる
-      html=(fit?'❤️':'')+(w.tasteScore100!=null?w.tasteScore100:'—')+'<span style="font-size:0.6em;opacity:.85;">'+(LANG==='en'?'pt':'点')+'</span>';
+      const arenaHit=b.match && b.match.matchSource==='arena';   // リスト（土俵）一致は📋を前置
+      html=(fit?'❤️':'')+(arenaHit?'📋':'')+(w.tasteScore100!=null?w.tasteScore100:'—')+'<span style="font-size:0.6em;opacity:.85;">'+(LANG==='en'?'pt':'点')+'</span>';
       if(pinned) html='📌 '+html+`<span class="pinsub">${esc(b.filterMatches[0].name||t('filter_default_name'))}</span>`;
       if(i===best){ cls+=' best'; html='👑 '+html+`<span class="bsub">${t('best_in_group')}</span>`; }
     }else if(b.match.status==='unlisted'){ html=t('label_unlisted'); }
@@ -1160,6 +1354,9 @@ function renderMarks(res){
   if(shelfPlace){ placeBtn.style.display='block'; placeBtn.disabled=true; placeBtn.textContent=t('place_recorded').replace('{n}', shelfPlace.name); }
   else if((s.known||0)>0){ placeBtn.style.display='block'; placeBtn.disabled=false; placeBtn.textContent=t('place_record_cta'); }
   else { placeBtn.style.display='none'; }
+  // おまかせで棚と判定した結果には「実はリストだった」救済リンクを添える（手動ボトルモードでは出さない）
+  const rrBtn=document.getElementById('rereadListBtn');
+  if(rrBtn) rrBtn.style.display = (MODE==='auto' && lastShotDataUrl) ? 'block' : 'none';
   setSub(t('sub_tap_detail'));
 }
 
@@ -1188,6 +1385,12 @@ function renderShelfCard(b){
   curOshiBottle=b;   // 推し活（❤️気に入った）用に保持
   const w=b.match.wine;
   const id=b.identification||{};
+  // 土俵（リスト）一致・年矛盾の一言（§3.2）。known/unlisted両カードで共有。
+  const mm=b.match||{};
+  const arenaHitHtml = (mm.matchSource==='arena')
+    ? `<div class="arena-hit">${t('arena_hit_line')}${(mm.listPrice!=null)?('　・'+t('arena_list_price').replace('{p}', fmtPrice(mm.listPrice))):''}</div>` : '';
+  const arenaNoteHtml = (mm.arenaNote)
+    ? `<div class="arena-note">${t('arena_note_line').replace('{list}', esc(String(mm.arenaNote.listVintage))).replace('{label}', esc(String(mm.arenaNote.labelVintage)))}</div>` : '';
   let inner='';
   if(w){
     const lowConf=(b.match.matchScore||0)<0.75;
@@ -1200,6 +1403,7 @@ function renderShelfCard(b){
     const score = (window.WineDisplay && WineDisplay.scoreBlock) ? WineDisplay.scoreBlock(w, {size:17, lang:LANG, showPct:true}) : '';
     inner=`
       <div class="sh-pill" style="background:var(--burgundy)">${lowConf?t('match_pill_confirm'):t('match_pill_done')}</div>
+      ${arenaHitHtml}${arenaNoteHtml}
       <div class="sh-name">${esc(w.name||'—')}${w.vintage&&w.vintage!=='NV'?` <span class="sh-vintage-badge">${esc(w.vintage)}</span>`:''}</div>
       <div class="sh-producer">${esc(w.producer||'')}</div>
       <div class="sh-region">${esc([dispKuni(w.kuni),w.chiiki].filter(v=>v&&v!=='不明').join(' '))}</div>
@@ -1223,6 +1427,7 @@ function renderShelfCard(b){
     const title=[id.producer,id.wine].filter(Boolean).join(' ') || t('this_wine_label');
     inner=`
       <div class="sh-pill" style="background:#555">${t('id_ok_unlisted_pill')}</div>
+      ${arenaNoteHtml}
       <div class="sh-name">${esc(trunc(title,40))}${id.vintage?'　'+esc(id.vintage):''}</div>
       <div class="sh-region">${esc([id.country,id.region].filter(Boolean).join(' / '))}${id.grape&&id.grape.length?'　/　'+esc(id.grape.join(', ')):''}</div>
       ${fitRibbon(b)}
@@ -1906,7 +2111,8 @@ function showApiUnset(){
 }
 
 // ── リストモード: /api/identify-list（1枚＝1回。複数ページは撮るたび累積） ──
-async function identifyList(dataUrl){
+async function identifyList(dataUrl, opts){
+  opts=opts||{};
   if(window.sommLog) sommLog('scan',{mode:'list'});
   if(!dataUrl){ toast(t('toast_no_image')); return; }
   if(API_BASE.includes('★')){ showApiUnset(); return; }
@@ -1917,11 +2123,16 @@ async function identifyList(dataUrl){
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ image:dataUrl, userId:UID, locale: (LANG==='en'?'en-US':'ja-JP') })
     });
-    if(r.status===429){ showStatus(false); toast(t('toast_rate_limit')); return; }
+    if(r.status===429||r.status===403){ showStatus(false); toast(t('toast_rate_limit')); return; }
     if(!r.ok) throw new Error('http '+r.status);
     const res=await r.json();
     showStatus(false);
     if(!res.items || !res.items.length){
+      // おまかせでリストと判定→実は非リストだった＝棚だった可能性。推測せず2チップで聞き直す（§3.1救済）。
+      if(opts.fromAuto && res.isWineList===false){
+        askDocType(dataUrl, lastShotCanvas, null);
+        return;
+      }
       toast(res.isWineList===false?t('list_not_found'):t('list_unreadable'));
       return;
     }
@@ -1929,6 +2140,7 @@ async function identifyList(dataUrl){
     listItems=listItems.concat(res.items);
     lastListScanId=res.scanId||lastListScanId;
     listHasTaste=!!(res.summary&&res.summary.hasTasteProfile);
+    saveArena(); updateArenaBadge();   // 土俵に反映（sessionStorage保持＋バッジ更新）
     renderListSheet();
     openSheet();
   }catch(e){
@@ -1984,7 +2196,7 @@ function renderListSheet(){
     <div class="sh-meta">${t('data_note')}</div>
     <div class="sh-btns">
       <button class="sh-main" onclick="closeSheet()">${t('next_page_btn')}</button>
-      <button class="sh-sub" onclick="listItems=[];listPages=0;listPlace=null;lastListScanId=null;closeSheet();toast(t('toast_list_cleared'))">${t('clear_btn')}</button>
+      <button class="sh-sub" onclick="arenaClear();closeSheet()">${t('clear_btn')}</button>
     </div>
     <div class="sh-btns" style="margin-top:8px">
       <button class="sh-main" style="flex:1;background:var(--burgundy)" onclick="consultListInChat()">${t('consult_list_btn')}</button>
@@ -2165,6 +2377,7 @@ document.getElementById('fileInput2').addEventListener('change',e=>{ handleFiles
 // ?openPhoto=1     … 説明画面を飛ばして写真選択ダイアログを即オープン（cellar.htmlの「写真から選ぶ」用）
 {
   const params = new URLSearchParams(location.search);
+  loadArena(); updateArenaBadge();   // 前回の土俵（先読みリスト）をsessionStorageから復元（12h期限）
   if(params.get('mode')==='list') setMode('list');
   if(params.get('autostart')==='1'){
     // ページロード直後にstartScanを呼ぶとカメラ許可ダイアログがユーザー操作外で発火するため、
