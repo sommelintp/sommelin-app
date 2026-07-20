@@ -1,0 +1,193 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ソムリンに接続 — あなたのAI</title>
+<!--
+  byo_connect.html — BYO Phase 1 OAuth 同意ページ（2026-07-20）
+  設計: 設計_BYO_OAuth_MCP_2026-07-20.md §5
+  Cloud Runの /oauth/authorize から ?req=<署名JWT> を持って302で到着する。
+  既存の sommelin_session（Supabase）を再利用し、承認したら /api/byo/approve でコード発行→Claudeへ戻す。
+-->
+<style>
+  :root{ --burgundy:#9B1B4B; --bg:#fbf7f4; --text:#2C1810; --sub:#8a7a7d; --border:#ecdfe3; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:460px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; padding:calc(28px + env(safe-area-inset-top)) 22px 28px; }
+  .brand{ text-align:center; margin-bottom:22px; }
+  .brand .logo{ font-size:34px; }
+  .brand .name{ font-size:15px; font-weight:800; letter-spacing:.5px; margin-top:2px; }
+  .card{ background:#fff; border:1px solid var(--border); border-radius:20px; padding:24px 22px; box-shadow:0 6px 24px rgba(155,27,75,.06); }
+  h1{ font-size:19px; font-weight:800; margin:0 0 6px; line-height:1.5; }
+  .lead{ font-size:13px; color:var(--sub); line-height:1.7; margin-bottom:18px; }
+  .acct{ display:flex; align-items:center; gap:10px; background:#faf3f6; border:1px solid var(--border); border-radius:14px; padding:11px 14px; margin-bottom:18px; }
+  .acct .av{ width:34px; height:34px; border-radius:50%; background:var(--burgundy); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; flex-shrink:0; }
+  .acct .who{ min-width:0; }
+  .acct .who .n{ font-size:13px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .acct .who .s{ font-size:11px; color:var(--sub); }
+  .perms{ list-style:none; margin:0 0 8px; padding:0; }
+  .perms li{ display:flex; gap:10px; align-items:flex-start; padding:9px 0; border-bottom:1px dashed var(--border); font-size:13px; line-height:1.6; }
+  .perms li .ic{ flex-shrink:0; }
+  .perms li b{ font-weight:800; }
+  .note{ font-size:11px; color:var(--sub); line-height:1.7; margin:12px 0 20px; }
+  .btns{ display:flex; flex-direction:column; gap:10px; }
+  .btn{ border:none; border-radius:14px; padding:15px; font-size:15px; font-weight:800; cursor:pointer; font-family:inherit; }
+  .btn-main{ background:var(--burgundy); color:#fff; }
+  .btn-main:disabled{ opacity:.6; cursor:default; }
+  .btn-sub{ background:#fff; color:var(--sub); border:1.5px solid var(--border); }
+  .foot{ text-align:center; font-size:11px; color:var(--sub); margin-top:20px; line-height:1.7; }
+  .err{ display:none; background:#fdecec; color:#b3261e; border-radius:12px; padding:12px 14px; font-size:12px; line-height:1.6; margin-bottom:14px; }
+  .lang{ position:absolute; top:calc(14px + env(safe-area-inset-top)); right:16px; background:#fff; border:1px solid var(--border); border-radius:16px; font-size:11px; font-weight:700; color:var(--sub); padding:6px 11px; cursor:pointer; }
+  .spin{ display:inline-block; width:15px; height:15px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:sp .7s linear infinite; vertical-align:-2px; margin-right:6px; }
+  @keyframes sp{ to{ transform:rotate(360deg); } }
+</style>
+
+<button class="lang" id="langBtn" onclick="toggleLang()">🌐 EN</button>
+<div class="wrap">
+  <div class="brand"><div class="logo">🍷</div><div class="name">Sommelin</div></div>
+
+  <div class="card" id="card">
+    <div class="err" id="err"></div>
+    <h1 id="h1">あなたのAIにソムリンを接続します</h1>
+    <div class="lead" id="lead">承認すると、あなたのAI（Claude等）がソムリンのワインデータを使えるようになります。</div>
+
+    <div class="acct" id="acct" style="display:none;">
+      <div class="av" id="acctAv">?</div>
+      <div class="who"><div class="n" id="acctName">—</div><div class="s" id="acctSub">このアカウントとして接続します</div></div>
+    </div>
+
+    <ul class="perms" id="perms"></ul>
+    <div class="note" id="note"></div>
+
+    <div class="btns">
+      <button class="btn btn-main" id="approveBtn" onclick="approve()">接続する</button>
+      <button class="btn btn-sub" onclick="cancel()">やめる</button>
+    </div>
+  </div>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+const API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+const SESSION_KEY = 'sommelin_session';
+const REQ_KEY = 'byo_req';
+
+// ── i18n ──
+const I18N = {
+  ja: {
+    title: 'ソムリンに接続 — あなたのAI',
+    h1: 'あなたのAIにソムリンを接続します',
+    lead: '承認すると、あなたのAI（Claude等）がソムリンのワインデータを使えるようになります。',
+    acct_sub: 'このアカウントとして接続します',
+    perm_read_t: 'ワインの評価・知識・マリアージュ検索',
+    perm_read_d: 'あなたのAIが、ソムリンのワイン評価・産地や品種の知識・料理との相性検索を使えるようになります（<b>読み取り専用</b>）。',
+    perm_future_t: '将来: あなたの記録に保存',
+    perm_future_d: '準備ができ次第、あなたのAIが読んだワインを<b>あなたのソムリン記録</b>に保存できるようになります（この同意に含まれます）。',
+    note: '接続はいつでも解除できます（お使いのAI側の設定から削除）。ソムリンがあなたのAIの会話を読むことはありません。',
+    approve: '接続する',
+    approving: '接続中…',
+    cancel: 'やめる',
+    foot: 'この画面は、あなたが自分のAIにソムリンを繋ごうとしたときに表示されます。',
+    err_noreq: '接続リクエストが見つかりません。お使いのAIからもう一度お試しください。',
+    err_fail: '接続に失敗しました。少し時間をおいてお試しください。',
+    login_redirect: 'ログインが必要です。ログイン画面へ移動します…',
+  },
+  en: {
+    title: 'Connect to Sommelin — Your AI',
+    h1: 'Connect Sommelin to your AI',
+    lead: 'Approving lets your AI (Claude, etc.) use Sommelin\'s wine data.',
+    acct_sub: 'You will connect as this account',
+    perm_read_t: 'Wine ratings, knowledge & pairing search',
+    perm_read_d: 'Your AI will be able to use Sommelin\'s wine ratings, region/grape knowledge, and food-pairing search (<b>read-only</b>).',
+    perm_future_t: 'Later: save to your records',
+    perm_future_d: 'When ready, your AI will be able to save wines it reads to <b>your Sommelin records</b> (included in this consent).',
+    note: 'You can disconnect anytime (remove it in your AI\'s settings). Sommelin never reads your AI conversations.',
+    approve: 'Connect',
+    approving: 'Connecting…',
+    cancel: 'Cancel',
+    foot: 'This screen appears when you connect Sommelin to your own AI.',
+    err_noreq: 'No connection request found. Please try again from your AI.',
+    err_fail: 'Connection failed. Please try again shortly.',
+    login_redirect: 'Login required. Redirecting to sign in…',
+  },
+};
+let LANG = (() => { try { return localStorage.getItem('somm_lang') || (navigator.language && navigator.language.startsWith('ja') ? 'ja' : 'en'); } catch(e){ return 'ja'; } })();
+const t = (k) => (I18N[LANG] && I18N[LANG][k]) || I18N.ja[k] || k;
+
+function render() {
+  document.title = t('title');
+  document.getElementById('langBtn').textContent = LANG === 'ja' ? '🌐 EN' : '🌐 日本語';
+  document.getElementById('h1').textContent = t('h1');
+  document.getElementById('lead').textContent = t('lead');
+  document.getElementById('acctSub').textContent = t('acct_sub');
+  document.getElementById('perms').innerHTML =
+    `<li><span class="ic">🍷</span><span><b>${t('perm_read_t')}</b><br>${t('perm_read_d')}</span></li>` +
+    `<li><span class="ic">📝</span><span><b>${t('perm_future_t')}</b><br>${t('perm_future_d')}</span></li>`;
+  document.getElementById('note').textContent = t('note');
+  document.getElementById('approveBtn').textContent = t('approve');
+  document.querySelector('.btn-sub').textContent = t('cancel');
+  document.getElementById('foot').textContent = t('foot');
+}
+function toggleLang(){ LANG = LANG === 'ja' ? 'en' : 'ja'; try { localStorage.setItem('somm_lang', LANG); } catch(e){} render(); }
+
+function getSession(){ try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e){ return null; } }
+function showErr(msg){ const e = document.getElementById('err'); e.textContent = msg; e.style.display = 'block'; }
+
+// リクエストJWT: URLの?req= を優先し、無ければsessionStorage（ログイン往復から戻ったとき）から。
+function currentReq(){
+  const fromUrl = new URLSearchParams(location.search).get('req');
+  if (fromUrl) { try { sessionStorage.setItem(REQ_KEY, fromUrl); } catch(e){} return fromUrl; }
+  try { return sessionStorage.getItem(REQ_KEY); } catch(e){ return null; }
+}
+
+let REQ = null;
+function init(){
+  render();
+  REQ = currentReq();
+  if (!REQ) { showErr(t('err_noreq')); document.getElementById('approveBtn').disabled = true; return; }
+
+  const s = getSession();
+  if (!s || !s.access_token) {
+    // 未ログイン → リクエストを退避してログインへ（戻り先=このページ）
+    try { sessionStorage.setItem(REQ_KEY, REQ); } catch(e){}
+    showErr(t('login_redirect'));
+    setTimeout(() => { window.location.href = 'login.html?return=' + encodeURIComponent('byo_connect.html'); }, 900);
+    return;
+  }
+  // アカウント表示
+  let name = null;
+  try { const p = JSON.parse(localStorage.getItem('sommelin_profile') || 'null'); name = p && p.display_name; } catch(e){}
+  if (!name) { name = (s.user && s.user.email) || (s.user && s.user.user_metadata && s.user.user_metadata.display_name) || 'あなた'; }
+  document.getElementById('acctName').textContent = name;
+  document.getElementById('acctAv').textContent = (String(name).trim()[0] || '?').toUpperCase();
+  document.getElementById('acct').style.display = 'flex';
+}
+
+async function approve(){
+  const btn = document.getElementById('approveBtn');
+  const s = getSession();
+  if (!REQ || !s || !s.access_token) { showErr(t('err_noreq')); return; }
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>' + t('approving');
+  try {
+    const r = await fetch(API_BASE + '/api/byo/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.access_token },
+      body: JSON.stringify({ req: REQ }),
+    });
+    if (r.status === 401) { // トークン失効 → 再ログイン
+      try { sessionStorage.setItem(REQ_KEY, REQ); } catch(e){}
+      window.location.href = 'login.html?return=' + encodeURIComponent('byo_connect.html'); return;
+    }
+    if (!r.ok) throw new Error('http ' + r.status);
+    const d = await r.json();
+    if (!d.redirect) throw new Error('no redirect');
+    try { sessionStorage.removeItem(REQ_KEY); } catch(e){}
+    window.location.href = d.redirect;   // Claudeのコールバックへ戻す
+  } catch (e) {
+    btn.disabled = false; btn.textContent = t('approve');
+    showErr(t('err_fail'));
+  }
+}
+function cancel(){ try { sessionStorage.removeItem(REQ_KEY); } catch(e){} window.location.href = 'prototype.html'; }
+
+init();
+</script>

@@ -1,0 +1,153 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>あなたのAIにソムリンを接続</title>
+<!--
+  byo.html — BYO 接続の案内ページ（2026-07-20）
+  設計: 設計_BYO_OAuth_MCP_2026-07-20.md §6
+  売り文句＋番号付き手順＋接続URLコピー。ソムリンMCPサーバーへ「あなたのAI」を繋ぐ入口。
+-->
+<style>
+  :root{ --burgundy:#9B1B4B; --burgundy-d:#7a123a; --bg:#fbf7f4; --text:#2C1810; --sub:#8a7a7d; --border:#ecdfe3; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:480px; margin:0 auto; padding:calc(20px + env(safe-area-inset-top)) 20px 60px; }
+  .top{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .top a{ width:34px; height:34px; border-radius:50%; background:#fff; border:1px solid var(--border); color:var(--text); display:flex; align-items:center; justify-content:center; text-decoration:none; font-size:18px; }
+  .lang{ margin-left:auto; background:#fff; border:1px solid var(--border); border-radius:16px; font-size:11px; font-weight:700; color:var(--sub); padding:6px 11px; cursor:pointer; }
+  .hero{ background:linear-gradient(135deg,var(--burgundy),var(--burgundy-d)); color:#fff; border-radius:22px; padding:26px 22px; margin:8px 0 20px; }
+  .hero .logo{ font-size:30px; }
+  .hero h1{ font-size:21px; font-weight:800; line-height:1.5; margin:10px 0 8px; }
+  .hero p{ font-size:13px; line-height:1.75; opacity:.94; margin:0; }
+  .sec-h{ font-size:12px; font-weight:800; color:var(--sub); letter-spacing:.08em; margin:22px 4px 10px; }
+  .card{ background:#fff; border:1px solid var(--border); border-radius:18px; padding:18px 18px; }
+  .url-row{ display:flex; gap:8px; align-items:center; }
+  .url{ flex:1; min-width:0; background:#faf3f6; border:1px solid var(--border); border-radius:12px; padding:12px 14px; font-size:12px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .copy{ flex-shrink:0; background:var(--burgundy); color:#fff; border:none; border-radius:12px; padding:12px 16px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; }
+  ol.steps{ margin:2px 0 0; padding:0; list-style:none; counter-reset:s; }
+  ol.steps li{ counter-increment:s; position:relative; padding:12px 0 12px 40px; border-bottom:1px dashed var(--border); font-size:13.5px; line-height:1.7; }
+  ol.steps li:last-child{ border-bottom:none; }
+  ol.steps li::before{ content:counter(s); position:absolute; left:0; top:11px; width:26px; height:26px; border-radius:50%; background:var(--burgundy); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; }
+  ol.steps b{ font-weight:800; }
+  .example{ background:#faf3f6; border:1px solid var(--border); border-radius:14px; padding:14px 16px; font-size:13px; line-height:1.8; }
+  .example .q{ font-weight:800; color:var(--burgundy); }
+  .note{ font-size:11.5px; color:var(--sub); line-height:1.75; margin-top:14px; }
+  .toast{ position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(16px); background:rgba(15,15,15,.92); color:#fff; padding:10px 20px; border-radius:20px; font-size:13px; font-weight:700; opacity:0; transition:all .3s; pointer-events:none; }
+  .toast.on{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <a href="prototype.html" aria-label="戻る">‹</a>
+    <button class="lang" id="langBtn" onclick="toggleLang()">🌐 EN</button>
+  </div>
+
+  <div class="hero">
+    <div class="logo">🍷✨</div>
+    <h1 id="heroH1">あなたのAIにソムリンを接続</h1>
+    <p id="heroP">あなたを知っているAIが、ソムリンの舌を手に入れる。棚の写真をあなたのAIに見せて「この中でどれがいい？」——あなたのAIがソムリンで照合して答えます。</p>
+  </div>
+
+  <div class="sec-h" id="urlLbl">接続URL</div>
+  <div class="card">
+    <div class="url-row">
+      <div class="url" id="mcpUrl">https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app/mcp</div>
+      <button class="copy" id="copyBtn" onclick="copyUrl()">コピー</button>
+    </div>
+  </div>
+
+  <div class="sec-h" id="stepsLbl">つなぎ方（3ステップ）</div>
+  <div class="card">
+    <ol class="steps" id="steps"></ol>
+  </div>
+
+  <div class="sec-h" id="exLbl">できること</div>
+  <div class="example" id="example"></div>
+
+  <div class="note" id="note"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const MCP_URL = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app/mcp';
+
+const I18N = {
+  ja: {
+    title: 'あなたのAIにソムリンを接続',
+    heroH1: 'あなたのAIにソムリンを接続',
+    heroP: 'あなたを知っているAIが、ソムリンの舌を手に入れる。棚の写真をあなたのAIに見せて「この中でどれがいい？」——あなたのAIがソムリンで照合して答えます。',
+    urlLbl: '接続URL',
+    copy: 'コピー',
+    copied: 'コピーしました ✓',
+    stepsLbl: 'つなぎ方（3ステップ）',
+    steps: [
+      '上の<b>接続URLをコピー</b>します。',
+      'お使いのAIの設定でカスタムコネクタを追加し、URLを貼り付けます（例: Claude → 設定 → コネクタ → カスタムコネクタを追加）。',
+      '表示された画面で<b>「接続する」</b>を押します。ソムリンにログインしていれば、それだけで完了です。',
+    ],
+    exLbl: 'できること',
+    example: '<span class="q">「この棚の中でおすすめは？」</span><br>棚の写真をあなたのAIに見せて聞くと、あなたのAIがソムリンで銘柄を照合し、味スコアやこの価格でのおすすめ度（★）を踏まえて答えます。<br><span class="q">「ビーフシチューに合うワインは？」</span>——マリアージュも、実在する銘柄で。',
+    note: '※ カスタムコネクタはClaudeの有料プランの機能です（全員がすぐ使えるわけではありません）。ChatGPT等でも同じURLで接続できる場合があります。接続はいつでもAI側の設定から解除できます。',
+  },
+  en: {
+    title: 'Connect Sommelin to your AI',
+    heroH1: 'Connect Sommelin to your AI',
+    heroP: 'The AI that knows you gains Sommelin\'s palate. Show a shelf photo to your AI and ask "which one\'s best?" — your AI checks Sommelin and answers.',
+    urlLbl: 'Connection URL',
+    copy: 'Copy',
+    copied: 'Copied ✓',
+    stepsLbl: 'How to connect (3 steps)',
+    steps: [
+      '<b>Copy the connection URL</b> above.',
+      'In your AI\'s settings, add a custom connector and paste the URL (e.g. Claude → Settings → Connectors → Add custom connector).',
+      'On the screen that appears, press <b>"Connect"</b>. If you\'re signed in to Sommelin, that\'s all it takes.',
+    ],
+    exLbl: 'What you can do',
+    example: '<span class="q">"Which of these is the best pick?"</span><br>Show your AI a shelf photo and ask — it checks Sommelin, then answers with the taste score and value-for-price rating (★).<br><span class="q">"What wine goes with beef stew?"</span> — pairings, with real bottles.',
+    note: '* Custom connectors are a paid Claude feature (not available to everyone right away). Other AIs like ChatGPT may connect with the same URL. You can disconnect anytime from your AI\'s settings.',
+  },
+};
+let LANG = (() => { try { return localStorage.getItem('somm_lang') || (navigator.language && navigator.language.startsWith('ja') ? 'ja' : 'en'); } catch(e){ return 'ja'; } })();
+const t = (k) => (I18N[LANG] && I18N[LANG][k] != null) ? I18N[LANG][k] : I18N.ja[k];
+
+function render(){
+  document.title = t('title');
+  document.getElementById('langBtn').textContent = LANG === 'ja' ? '🌐 EN' : '🌐 日本語';
+  document.getElementById('heroH1').textContent = t('heroH1');
+  document.getElementById('heroP').textContent = t('heroP');
+  document.getElementById('urlLbl').textContent = t('urlLbl');
+  document.getElementById('copyBtn').textContent = t('copy');
+  document.getElementById('stepsLbl').textContent = t('stepsLbl');
+  document.getElementById('steps').innerHTML = t('steps').map(s => `<li>${s}</li>`).join('');
+  document.getElementById('exLbl').textContent = t('exLbl');
+  document.getElementById('example').innerHTML = t('example');
+  document.getElementById('note').textContent = t('note');
+}
+function toggleLang(){ LANG = LANG === 'ja' ? 'en' : 'ja'; try { localStorage.setItem('somm_lang', LANG); } catch(e){} render(); }
+
+function toast(msg){ const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('on'); setTimeout(() => el.classList.remove('on'), 1800); }
+function copyUrl(){
+  const done = () => toast(t('copied'));
+  if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(MCP_URL).then(done).catch(fallback); }
+  else fallback();
+  function fallback(){
+    const ta = document.createElement('textarea'); ta.value = MCP_URL; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch(e){}
+    document.body.removeChild(ta);
+  }
+}
+
+// 利用ログ（app_events・任意）
+try {
+  const K = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+  let uid = localStorage.getItem('somm_uid') || 'na';
+  fetch('https://gkhdpzfmqraliwaiubwl.supabase.co/rest/v1/app_events', {
+    method: 'POST', keepalive: true,
+    headers: { 'Content-Type': 'application/json', apikey: K, Authorization: 'Bearer ' + K, Prefer: 'return=minimal' },
+    body: JSON.stringify({ uid, page: 'byo', event: 'page_view', meta: null }),
+  }).catch(() => {});
+} catch(e){}
+
+render();
+</script>

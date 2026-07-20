@@ -995,6 +995,20 @@ const roleHome = {
 };
 function destForRole(role) { return roleHome[role] || 'prototype.html'; }
 
+// ?return= 対応（2026-07-20・BYO接続導線）: ログイン後に元のページへ戻す。
+// オープンリダイレクト防止のため、許可した相対パスのホワイトリストのみ受け付ける。
+const RETURN_WHITELIST = ['byo_connect.html'];
+function returnDest() {
+  try {
+    const raw = new URLSearchParams(location.search).get('return');
+    if (!raw) return null;
+    // クエリ文字列は保持しつつ、パス部分だけをホワイトリスト照合（絶対URL・親ディレクトリは弾く）
+    if (raw.includes('://') || raw.startsWith('//') || raw.startsWith('/') || raw.includes('..')) return null;
+    const pathOnly = raw.split('?')[0];
+    return RETURN_WHITELIST.includes(pathOnly) ? raw : null;
+  } catch (e) { return null; }
+}
+
 // ── 画面切り替え ──
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -1046,6 +1060,13 @@ function chooseRole(role) {
 
   showScreen('screenRegForm');
 }
+
+// ?return= 付きで来て既にログイン済みなら、即その戻り先へ（BYO接続導線のロバスト化）。
+(function initReturnRedirect(){
+  const ret = returnDest();
+  const session = getSession();
+  if (ret && session && session.access_token) { window.location.replace(ret); }
+})();
 
 // 2026-07-08追加: マイページの「業務店として登録する」からの遷移（?addRole=1）。
 // 既にログイン済みのアカウントに業務ロールを追加するだけなので、メール/パスワード作成は
@@ -1292,7 +1313,8 @@ function emailLogin() {
     const role = sessionRole();
     try { localStorage.setItem('sommelin_role', role); } catch(e){}
     showToast('ログインしました ✓');
-    setTimeout(() => { window.location.href = destForRole(role); }, 700);
+    const ret = returnDest();   // BYO接続等からの遷移なら元のページへ戻す
+    setTimeout(() => { window.location.href = ret || destForRole(role); }, 700);
   }).catch(e => { hideLoading(); showToast(authMsgJa(e.message)); });
 }
 
