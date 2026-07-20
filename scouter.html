@@ -303,6 +303,7 @@ body{
 <link rel="stylesheet" href="assets/sommelin-ui.css">
 <script src="assets/oshi-card.js"></script>
 <script src="assets/wine-display.js?v=20260718"></script>
+<script src="assets/arena-utils.js?v=1"></script>
 </head>
 <body>
 
@@ -907,39 +908,19 @@ let listPlace=null, lastListScanId=null, listHasTaste=false;  // お店記録（
 let shelfPlace=null;  // 棚モードでのお店記録（同じくみんなのワイン地図に協力）
 let lastShotDataUrl=null, lastShotCanvas=null;  // 直近の撮影（auto→リスト読み直しの再利用元）
 
-// ── 土俵（arena・2026-07-20 P2a）: 先に読み込んだリストを以降のラベル照合の優先範囲にする ──
-const ARENA_TTL = 12*3600*1000;  // sessionStorage保持は12h（試飲会1回分をまたぐが翌日は破棄）
-// listItems → サーバーが受ける土俵項目に写像。§2.3: リスト印字年とカタログ照合行の年が
-// 食い違う項目は catalogId を渡さない（別年のスコアをリスト年として見せる嘘を防ぐ）。
-function arenaItems(){
-  return (listItems||[]).map(it=>{
-    const w=it.match&&it.match.wine; const inp=it.input||{};
-    const name=(w&&w.name)||inp.name||inp.rawText||null;
-    const producer=(w&&w.producer)||inp.producer||null;
-    if(!name && !producer) return null;
-    const inpV=(inp.vintage!=null&&!isNaN(Number(inp.vintage)))?Number(inp.vintage):null;
-    const wV=(w&&w.vintage!=null&&!isNaN(Number(w.vintage)))?Number(w.vintage):null;
-    let catalogId=(w&&w.catalogId)||null;
-    if(catalogId && inpV!=null && wV!=null && inpV!==wV) catalogId=null;  // §2.3ガード
-    const listPrice=(inp.listPrice!=null&&!isNaN(Number(inp.listPrice))&&Number(inp.listPrice)>0)?Number(inp.listPrice):null;
-    return { name, producer, vintage:(inpV!=null?inpV:wV), catalogId, listPrice, color:(w&&w.iro)||inp.color||null };
-  }).filter(Boolean);
-}
-function saveArena(){
-  try{ sessionStorage.setItem('somm_arena', JSON.stringify({ v:1, ts:Date.now(), pages:listPages, items:listItems })); }catch(e){}
-}
+// ── 土俵（arena・2026-07-20 P2a→P3で共有部品化）: 先に読み込んだリストを照合の優先範囲に ──
+// 写像・保存・復元は assets/arena-utils.js（window.SommArena）に一元化。キー=somm_arena。
+const ARENA_KEY = 'somm_arena';
+function arenaItems(){ return window.SommArena ? SommArena.itemsFrom(listItems) : []; }
+function saveArena(){ if(window.SommArena) SommArena.save(ARENA_KEY, listItems, listPages); }
 function loadArena(){
-  try{
-    const raw=sessionStorage.getItem('somm_arena'); if(!raw) return;
-    const o=JSON.parse(raw);
-    if(!o || !Array.isArray(o.items) || !o.items.length) return;
-    if(o.ts && (Date.now()-o.ts)>ARENA_TTL){ sessionStorage.removeItem('somm_arena'); return; }
-    listItems=o.items; listPages=o.pages||1;
-  }catch(e){}
+  if(!window.SommArena) return;
+  const a = SommArena.load(ARENA_KEY);
+  if(a){ listItems=a.items; listPages=a.pages; }
 }
 function arenaClear(){
   listItems=[]; listPages=0; listPlace=null; lastListScanId=null; listHasTaste=false;
-  try{ sessionStorage.removeItem('somm_arena'); }catch(e){}
+  if(window.SommArena) SommArena.clear(ARENA_KEY);
   updateArenaBadge();
   if(window.sommLog) sommLog('arena_clear');
   toast(t('toast_arena_cleared'));

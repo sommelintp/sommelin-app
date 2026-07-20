@@ -1423,6 +1423,7 @@
 </style>
 <script src="assets/oshi-card.js"></script>
 <script src="assets/wine-display.js?v=20260718"></script>
+<script src="assets/arena-utils.js?v=1"></script>
 </head>
 <body>
 
@@ -1748,6 +1749,24 @@
       カメラアプリで撮ったワインの写真を取り込むと、AIが銘柄を読み取ります。
       インポーター名を書き添えると、そのインポーターに「お店が気に入っています」と伝わります。
     </div>
+
+    <!-- 土俵（先に試飲会リストを読む）: ①先にリスト→②写真取込 の順の物語（P3・§4） -->
+    <div id="tnArenaRow" style="margin-top:12px;">
+      <!-- 土俵なし -->
+      <div id="tnArenaEmpty">
+        <button onclick="tnArenaLoad()" data-i18n="tn_arena_load_btn" style="width:100%;background:#fff;color:var(--burgundy);border:1.5px dashed var(--burgundy);border-radius:12px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">
+          📋 先に試飲会リストを読み込む（任意）
+        </button>
+        <div data-i18n="tn_arena_load_hint" style="font-size:11px;color:var(--text-sub);margin-top:5px;text-align:center;line-height:1.5;">読み込んでおくと、銘柄・ヴィンテージの特定が確実になります</div>
+      </div>
+      <!-- 土俵あり -->
+      <div id="tnArenaActive" style="display:none;align-items:center;gap:8px;">
+        <button onclick="tnArenaOpen()" id="tnArenaBadge" style="flex:1;text-align:left;background:var(--burgundy);color:#fff;border:none;border-radius:12px;padding:10px 13px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">📋 リスト照合中: 0本</button>
+        <button onclick="tnArenaLoad()" id="tnArenaAddBtn" title="ページを追加" style="background:#fff;color:var(--burgundy);border:1.5px solid var(--burgundy);border-radius:12px;padding:10px 12px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">＋</button>
+        <button onclick="tnArenaClear()" id="tnArenaClearBtn" aria-label="外す" style="background:#f4f4f4;color:#999;border:none;border-radius:12px;padding:10px 12px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">✕</button>
+      </div>
+    </div>
+
     <button onclick="tnPickPhotos()" data-i18n="tn_pick_btn" style="width:100%;margin-top:12px;background:var(--burgundy);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">
       📁 写真を取り込む（複数OK）
     </button>
@@ -1767,6 +1786,20 @@
   <!-- 保存済みリスト -->
   <div style="margin:18px 16px 6px;font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:.07em;" data-i18n="tn_list_lbl">良かったワインリスト</div>
   <div id="tnList" style="padding:0 16px 80px;"></div>
+</div>
+
+<!-- 土俵の中身（確認用・読み取り専用） -->
+<div id="tnArenaModal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);align-items:flex-end;justify-content:center;">
+  <div style="background:#fff;width:100%;max-width:480px;border-radius:18px 18px 0 0;max-height:80vh;display:flex;flex-direction:column;">
+    <div style="padding:16px 18px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div id="tnArenaModalTitle" style="font-size:14px;font-weight:800;color:var(--text);">📋 リスト照合中</div>
+      <button onclick="tnArenaCloseModal()" style="background:none;border:none;font-size:20px;color:#bbb;cursor:pointer;">✕</button>
+    </div>
+    <div id="tnArenaModalBody" style="overflow-y:auto;padding:8px 18px 4px;"></div>
+    <div style="padding:12px 18px 18px;">
+      <button onclick="tnArenaClear();tnArenaCloseModal();" data-i18n="tn_arena_clear" style="width:100%;background:#f4f4f4;color:#c0392b;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">リストを外す</button>
+    </div>
+  </div>
 </div>
 
 <!-- ==================== PANEL: 分析（実データのみ・/api/store-analytics） ==================== -->
@@ -2677,6 +2710,14 @@ const I18N = {
     tn_price_est: '仕入れの目安 <b>{a}〜{b}</b> ／ ボトル提供 <b>{c}〜{d}</b> ／ グラス <b>{e}〜{f}</b>',
     tn_price_note: '※ 一般的な掛け率（仕入=小売の7〜8割、提供=仕入の2.5〜3倍、グラス=ボトル1/4）による目安です',
     tn_empty: 'まだ記録がありません。<br>試飲会で撮った写真を取り込んでみてください。',
+    tn_arena_load_btn: '📋 先に試飲会リストを読み込む（任意）',
+    tn_arena_load_hint: '読み込んでおくと、銘柄・ヴィンテージの特定が確実になります',
+    tn_arena_badge: '📋 リスト照合中: {n}本',
+    tn_arena_clear: 'リストを外す',
+    tn_arena_hit_badge: '📋 リスト一致',
+    tn_arena_list_price: 'リスト価格 {p}',
+    tn_arena_note_line: 'リストでは{list}年でした（ラベルは{label}）',
+    tn_arena_loaded_toast: '{n}本を読み込みました（合計{m}本）',
     tn_details_summary: '詳細（総合評価・みんなの評価）',
     tn_buzz_loading: 'みんなの評価 読み込み中…',
     tn_buzz_unregistered: 'みんなの評価 —（ソムリンDB未登録のため集計できません）',
@@ -3152,6 +3193,14 @@ const I18N = {
     tn_price_est: 'Est. wholesale <b>{a}–{b}</b> / bottle list <b>{c}–{d}</b> / glass <b>{e}–{f}</b>',
     tn_price_note: '* Estimates based on typical trade margins (wholesale = 70–80% of retail, list = 2.5–3x wholesale, glass = 1/4 of bottle)',
     tn_empty: 'No records yet.<br>Try importing photos taken at a tasting event.',
+    tn_arena_load_btn: '📋 Load the tasting list first (optional)',
+    tn_arena_load_hint: 'Loading it first makes wine & vintage identification more reliable',
+    tn_arena_badge: '📋 List loaded: {n}',
+    tn_arena_clear: 'Remove list',
+    tn_arena_hit_badge: '📋 List match',
+    tn_arena_list_price: 'List price {p}',
+    tn_arena_note_line: 'The list showed {list} (label reads {label})',
+    tn_arena_loaded_toast: 'Loaded {n} (total {m})',
     tn_details_summary: 'Details (overall & community ratings)',
     tn_buzz_loading: 'Loading community ratings…',
     tn_buzz_unregistered: 'Community rating — (not in the Sommelin database, no stats available)',
@@ -5207,6 +5256,91 @@ let tnNotes = [];    // 保存済み
 
 function tnEsc(s) { return String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
+// ── 土俵（先に試飲会リストを読む・P3/§4）: 写真取込の照合の優先範囲にする ──
+// 写像・保存・復元は assets/arena-utils.js（SommArena）で共有。キーはscouterと分離（試飲会文脈）。
+const TN_ARENA_KEY = 'somm_arena_tn';
+let tnArenaItems = [], tnArenaPages = 0;   // 読み込んだリスト（土俵）の累積
+
+function tnArenaRestore() {
+  if (!window.SommArena) return;
+  const a = SommArena.load(TN_ARENA_KEY);
+  if (a) { tnArenaItems = a.items; tnArenaPages = a.pages; }
+  tnArenaUpdateRow();
+}
+function tnArenaUpdateRow() {
+  const empty = document.getElementById('tnArenaEmpty');
+  const active = document.getElementById('tnArenaActive');
+  if (!empty || !active) return;
+  const n = tnArenaItems.length;
+  empty.style.display = n ? 'none' : 'block';
+  active.style.display = n ? 'flex' : 'none';
+  if (n) document.getElementById('tnArenaBadge').textContent = t('tn_arena_badge').replace('{n}', n);
+}
+function tnArenaClear() {
+  tnArenaItems = []; tnArenaPages = 0;
+  if (window.SommArena) SommArena.clear(TN_ARENA_KEY);
+  tnArenaUpdateRow();
+  if (window.sommLog) sommLog('tn_arena_clear');
+}
+// 「先に試飲会リストを読み込む」= 写真選択→各ページを /api/identify-list→土俵に累積。
+function tnArenaLoad() {
+  let inp = document.getElementById('tnArenaInput');
+  if (!inp) {
+    inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true;
+    inp.id = 'tnArenaInput'; inp.style.display = 'none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change', e => { tnArenaProcessFiles(Array.from(e.target.files)); e.target.value = ''; });
+  }
+  inp.click();
+}
+async function tnArenaProcessFiles(files) {
+  if (!files.length) return;
+  const prog = document.getElementById('tnProgress');
+  const uid = await rwUid();
+  let added = 0;
+  for (let i = 0; i < files.length; i++) {
+    prog.textContent = t('tn_reading').replace('{i}', i + 1).replace('{n}', files.length);
+    const dataUrl = await tnToDataUrl(files[i]);
+    if (!dataUrl) continue;
+    try {
+      const r = await fetch(RW_API + '/api/identify-list', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: dataUrl, userId: 'store-' + (uid || 'unknown'), locale: 'ja-JP' })
+      });
+      if (r.status === 429 || r.status === 403) { showToast(t('toast_rate_limit')); break; }
+      if (!r.ok) throw 0;
+      const res = await r.json();
+      const items = (res.items || []).filter(it => it.input && (it.input.name || it.input.rawText));
+      if (items.length) { tnArenaItems = tnArenaItems.concat(items); tnArenaPages++; added += items.length; }
+    } catch (e) { showToast(t('toast_photo_read_fail')); }
+  }
+  prog.textContent = '';
+  if (added) {
+    if (window.SommArena) SommArena.save(TN_ARENA_KEY, tnArenaItems, tnArenaPages);
+    tnArenaUpdateRow();
+    if (window.sommLog) sommLog('tn_arena_load', { items: tnArenaItems.length, pages: tnArenaPages });
+    showToast(t('tn_arena_loaded_toast').replace('{n}', added).replace('{m}', tnArenaItems.length));
+  } else {
+    showToast(t('tn_none_read'));
+  }
+}
+// 土俵の中身（確認用・読み取り専用）。銘柄・年・リスト価格だけの簡素な一覧。
+function tnArenaOpen() {
+  const body = document.getElementById('tnArenaModalBody');
+  const rows = SommArena ? SommArena.itemsFrom(tnArenaItems) : [];
+  document.getElementById('tnArenaModalTitle').textContent = t('tn_arena_badge').replace('{n}', tnArenaItems.length);
+  body.innerHTML = rows.map(r => {
+    const meta = [r.vintage || '', (r.listPrice != null ? '¥' + Number(r.listPrice).toLocaleString('ja-JP') : '')].filter(Boolean).join(' ・ ');
+    return `<div style="padding:9px 0;border-bottom:1px solid var(--border);">
+      <div style="font-size:13px;font-weight:700;color:var(--text);">${tnEsc(r.name || r.producer || '—')}</div>
+      ${meta ? `<div style="font-size:11px;color:var(--text-sub);margin-top:2px;">${tnEsc(meta)}</div>` : ''}
+    </div>`;
+  }).join('') || `<div style="padding:14px 0;color:var(--text-sub);font-size:13px;">—</div>`;
+  document.getElementById('tnArenaModal').style.display = 'flex';
+}
+function tnArenaCloseModal() { document.getElementById('tnArenaModal').style.display = 'none'; }
+
 // 同一ワイン判定（重複除去用）。DB一致ならwine_idで、無ければ銘柄名+ヴィンテージの正規化一致で判断。
 function tnNorm(s) { return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); }
 function tnSameWine(a, b) {
@@ -5305,16 +5439,21 @@ async function tnProcessFiles(files) {
     const dataUrl = await tnToDataUrl(files[i]);
     if (!dataUrl) continue;
     try {
+      const body = { image: dataUrl, userId: 'store-' + (uid || 'unknown'), locale: 'ja-JP' };
+      const arena = window.SommArena ? SommArena.itemsFrom(tnArenaItems) : [];
+      if (arena.length) body.arena = arena;   // §4: 先に読んだ試飲会リストを土俵に（年・価格が自動で正しくなる）
       const r = await fetch(RW_API + '/api/identify-shelf', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: dataUrl, userId: 'store-' + (uid || 'unknown'), locale: 'ja-JP' })
+        body: JSON.stringify(body)
       });
-      if (r.status === 429) { showToast(t('toast_rate_limit')); break; }
+      if (r.status === 429 || r.status === 403) { showToast(t('toast_rate_limit')); break; }
       if (!r.ok) throw 0;
       const res = await r.json();
+      if (arena.length && window.sommLog) sommLog('tn_arena_scan', { arenaCount: arena.length });
       (res.bottles || []).filter(b => b.readable !== false && b.identification).forEach(b => {
         const w = b.match && b.match.wine;
         const id = b.identification;
+        const mm = b.match || {};
         const item = {
           wine_id: w ? w.id : null,
           name: (w && w.name) || [id.producer, id.wine].filter(Boolean).join(' ') || t('unknown_wine'),
@@ -5331,6 +5470,10 @@ async function tnProcessFiles(files) {
           rating: null,
           importer_name: '', memo: '',
           photoDataUrl: dataUrl,   // 撮影した写真（保存前サムネイル表示用。永続化はDB側の写真列対応後）
+          // §4: 土俵（リスト）由来の照合か・年矛盾の一言・リスト価格（表示のみ。DB保存はしない）
+          matchSource: mm.matchSource || null,
+          arenaNote: mm.arenaNote || null,
+          listPrice: (mm.listPrice != null) ? mm.listPrice : null,
         };
         // 重複除去: 1枚の写真からVisionが同じボトルを二重検出することがある（前後ラベル含む）。
         // 同一ワイン（wine_id一致 or 銘柄名+ヴィンテージ一致）が既にstagingにあれば追加しない。
@@ -5339,6 +5482,8 @@ async function tnProcessFiles(files) {
     } catch (e) { showToast(t('toast_photo_read_fail')); }
   }
   prog.textContent = tnStaged.length ? t('tn_recognized').replace('{n}', tnStaged.length) : t('tn_none_read');
+  const hits = tnStaged.filter(x => x.matchSource === 'arena').length;
+  if (hits && window.sommLog) sommLog('tn_arena_hit', { n: hits });
   renderTnStaging();
 }
 
@@ -5360,6 +5505,8 @@ function renderTnStaging() {
           ${thumb}
           <div style="min-width:0;flex:1;">
             ${starsHtml ? `<div style="margin-bottom:4px;">${starsHtml}</div>` : ''}
+            ${s.matchSource === 'arena' ? `<div style="display:inline-block;font-size:10px;font-weight:800;color:#5b3fa0;background:#f3ecff;border-radius:8px;padding:2px 8px;margin-bottom:5px;">${t('tn_arena_hit_badge')}${s.listPrice != null ? '　' + t('tn_arena_list_price').replace('{p}', '¥' + Number(s.listPrice).toLocaleString('ja-JP')) : ''}</div>` : ''}
+            ${s.arenaNote ? `<div style="font-size:10px;color:#8a5a00;background:#fff6e6;border-radius:8px;padding:3px 8px;margin-bottom:5px;line-height:1.5;">${t('tn_arena_note_line').replace('{list}', tnEsc(String(s.arenaNote.listVintage))).replace('{label}', tnEsc(String(s.arenaNote.labelVintage)))}</div>` : ''}
             <!-- 認識結果をそのまま編集できるフィールド群（試飲会の新ヴィンテージ・誤認識をここで直す） -->
             <input placeholder="${t('tn_name_ph')}" value="${tnEsc(s.name)}" oninput="tnStaged[${i}].name=this.value"
               style="width:100%;font-weight:800;color:var(--text);${fieldStyle}">
@@ -5464,6 +5611,7 @@ function tnPriceHint(ref) {
 }
 
 async function renderTastingNotes() {
+  tnArenaRestore();   // 前回読み込んだ試飲会リスト（土俵）を復元（12h期限）
   renderTnStaging();
   const uid = await rwUid();
   if (!uid) return;
