@@ -2182,6 +2182,13 @@
   <div class="store-consult-sub" id="storeConsultSub">料理やお好みを伝えると、このリストの中から選びます</div>
 </div>
 
+<!-- 店フォロー＋店イベント（E3 2026-07-21・?r=店ページでのみ表示） -->
+<div id="storeFollowBar" style="display:none;margin:0 20px 10px;align-items:center;gap:10px;">
+  <button id="storeFollowBtn" onclick="toggleStoreFollow()" style="flex:1;border:1.5px solid var(--burgundy);background:#fff;color:var(--burgundy);border-radius:12px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">🔔 このお店をフォロー</button>
+  <span id="storeFollowerCount" style="font-size:11px;color:var(--text-sub);white-space:nowrap;"></span>
+</div>
+<div id="storeEventsBox" style="display:none;margin:0 20px 14px;"></div>
+
 <!-- CLASSIC LIST VIEW -->
 <div class="classic-list" id="classicList"></div>
 
@@ -2235,6 +2242,8 @@
       <div style="color:var(--text-sub);font-size:12.5px;" data-i18n="loading">読み込み中…</div>
     </div>
   </div>
+  <!-- フォロー中のお店のイベント（E3 2026-07-21・あれば表示） -->
+  <div id="homeStoreEvents" style="display:none;margin:0 20px 16px;"></div>
   <div id="homeFeedColdMsg" style="display:none;margin:0 20px 12px;padding:12px 14px;background:var(--burgundy-pale);border-radius:10px;font-size:12.5px;color:var(--text-sub);line-height:1.6;" data-i18n-html="home_cold">
     まだフォロー中の人や紹介つながりがいません。まずは<a href="#" onclick="switchTab('mypage');return false;" style="color:var(--burgundy);font-weight:700;">お友達を招待</a>したり、気になる人をフォローすると、その人のおすすめが優先的に届くようになります。
   </div>
@@ -3068,6 +3077,9 @@ const I18N = {
     btn_share_invite: '📤 招待リンクをシェア', invite_login_first: 'ログイン後に表示されます',
     toast_link_copied: 'リンクをコピーしました', toast_invite_copied: '📤 招待リンクをコピーしました！',
     share_text: 'ソムリンで一緒にワインを楽しもう🍷 ',
+    store_follow: 'このお店をフォロー', store_following: 'フォロー中', store_followers: 'フォロワー {n}人',
+    store_follow_need_uid: 'フォローできませんでした', store_events_head: 'このお店のイベント', home_store_events: 'フォロー中のお店のイベント',
+    ev_free: '無料', ev_signup: '申し込む',
     settings_header: '設定', menu_byo: 'あなたのAIに接続', menu_subscription: 'サブスクリプション', free_plan: '無料プラン',
     menu_integrations: '連携サービス', coming_soon: '準備中', toast_integrations: '連携サービスは準備中です（近日公開）',
     ig_not_linked: '未連携', ig_modal_title: '🔗 連携サービス',
@@ -3252,6 +3264,9 @@ const I18N = {
     btn_share_invite: '📤 Share Invite Link', invite_login_first: 'Shown after you log in',
     toast_link_copied: 'Link copied', toast_invite_copied: '📤 Invite link copied!',
     share_text: 'Join me on Sommelin and enjoy wine together 🍷 ',
+    store_follow: 'Follow this shop', store_following: 'Following', store_followers: '{n} followers',
+    store_follow_need_uid: 'Could not follow', store_events_head: 'This shop\'s events', home_store_events: 'Events from shops you follow',
+    ev_free: 'Free', ev_signup: 'Sign up',
     settings_header: 'Settings', menu_byo: 'Connect your AI', menu_subscription: 'Subscription', free_plan: 'Free Plan',
     menu_integrations: 'Linked Services', coming_soon: 'Coming soon', toast_integrations: 'Linked services are coming soon',
     ig_not_linked: 'Not linked', ig_modal_title: '🔗 Linked Services',
@@ -4309,6 +4324,7 @@ async function loadRestaurantList(rid) {
     const shopName = (st && st.display_name) || t('wine_list_fallback');
     document.querySelectorAll('.restaurant-name').forEach(el => el.textContent = shopName);
     if (window.sommLog) sommLog('store_list_view', { r: rid });
+    initStoreFollowAndEvents(rid);   // E3: フォローボタン＋この店のイベント
 
     // 来店記録（端末キャッシュ＋サーバー同期。履歴からの再訪問 nv=1 は記録しない）
     if (!new URLSearchParams(location.search).get('nv')) {
@@ -5476,11 +5492,86 @@ function loadHomeCellarPreview() {
     .catch(() => { box.innerHTML = ''; });
 }
 
+// ── 店フォロー＋店イベント（E3 2026-07-21）──────────────────────────
+let curStoreRid = null, curStoreFollowing = false;
+function sommUidLocal(){ try{ return localStorage.getItem('somm_uid'); }catch(e){ return null; } }
+function escE(s){ return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+const UUID_RE_E = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+async function initStoreFollowAndEvents(rid){
+  curStoreRid = rid;
+  const bar = document.getElementById('storeFollowBar');
+  if(!UUID_RE_E.test(String(rid||''))){ if(bar) bar.style.display='none'; return; }  // 店IDがUUIDの時だけ
+  // フォロー状態
+  try{
+    const uid = sommUidLocal();
+    const r = await fetch(CHAT_API_BASE+'/api/store-follow/status?storeId='+encodeURIComponent(rid)+(uid?'&uid='+encodeURIComponent(uid):''));
+    if(r.ok){ const d=await r.json(); curStoreFollowing=!!d.following; renderStoreFollowBtn(d.followerCount); }
+    if(bar) bar.style.display='flex';
+  }catch(e){}
+  loadStorePageEvents(rid);
+}
+function renderStoreFollowBtn(count){
+  const btn=document.getElementById('storeFollowBtn'); if(!btn) return;
+  if(curStoreFollowing){ btn.textContent='✓ '+t('store_following'); btn.style.background='var(--burgundy)'; btn.style.color='#fff'; }
+  else { btn.textContent='🔔 '+t('store_follow'); btn.style.background='#fff'; btn.style.color='var(--burgundy)'; }
+  const c=document.getElementById('storeFollowerCount');
+  if(c) c.textContent = (count!=null && count>0) ? t('store_followers').replace('{n}', count) : '';
+}
+async function toggleStoreFollow(){
+  if(!curStoreRid) return;
+  const uid = sommUidLocal();
+  if(!uid){ showToastLike ? showToastLike(t('store_follow_need_uid')) : alert(t('store_follow_need_uid')); return; }
+  const next = !curStoreFollowing;
+  curStoreFollowing = next; renderStoreFollowBtn();   // 楽観更新
+  try{
+    const r=await fetch(CHAT_API_BASE+'/api/store-follow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid, storeProfileId:curStoreRid, follow:next})});
+    if(r.ok){ const d=await r.json(); renderStoreFollowBtn(d.followerCount); }
+  }catch(e){ curStoreFollowing=!next; renderStoreFollowBtn(); }
+}
+function storeEventCard(e, withStore){
+  const meta=[e.eventDate, e.startTime?e.startTime.slice(0,5):'', e.venueName].filter(Boolean).join(' ・ ');
+  const cost = (e.cost===0)? t('ev_free') : (e.cost? '¥'+Number(e.cost).toLocaleString() : '');
+  const btn = e.registrationUrl ? `<a href="${escE(e.registrationUrl)}" target="_blank" rel="noopener" style="display:inline-block;margin-top:6px;font-size:12px;color:var(--burgundy);font-weight:700;text-decoration:none;">${t('ev_signup')} ›</a>` : '';
+  return `<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;">
+    ${withStore&&e.storeName?`<div style="font-size:11px;color:var(--burgundy);font-weight:700;margin-bottom:2px;">💛 ${escE(e.storeName)}</div>`:''}
+    <div style="font-size:14px;font-weight:800;color:var(--text);">${escE(e.title)}</div>
+    <div style="font-size:11.5px;color:var(--text-sub);margin-top:3px;">${escE(meta)}${cost?' ・ '+cost:''}</div>
+    ${e.description?`<div style="font-size:12px;color:var(--text-sub);margin-top:5px;line-height:1.5;white-space:pre-wrap;">${escE(e.description).slice(0,200)}</div>`:''}
+    ${btn}
+  </div>`;
+}
+async function loadStorePageEvents(rid){
+  const box=document.getElementById('storeEventsBox'); if(!box) return;
+  try{
+    const r=await fetch(CHAT_API_BASE+'/api/store-events/by-store?storeId='+encodeURIComponent(rid));
+    if(!r.ok){ box.style.display='none'; return; }
+    const items=(await r.json()).items||[];
+    if(!items.length){ box.style.display='none'; return; }
+    box.innerHTML='<div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:8px;">📅 '+t('store_events_head')+'</div>'+items.map(e=>storeEventCard(e,false)).join('');
+    box.style.display='block';
+  }catch(e){ box.style.display='none'; }
+}
+// ホーム: フォロー中の店の今後のイベント
+function loadHomeStoreEvents(){
+  const box=document.getElementById('homeStoreEvents'); if(!box) return;
+  const uid=sommUidLocal(); if(!uid){ box.style.display='none'; return; }
+  fetch(CHAT_API_BASE+'/api/store-events/feed?userId='+encodeURIComponent(uid))
+    .then(r=>r.ok?r.json():null)
+    .then(d=>{
+      const items=(d&&d.items)||[];
+      if(!items.length){ box.style.display='none'; return; }
+      box.innerHTML='<div style="font-size:14px;font-weight:800;color:var(--text);font-family:var(--font-display);margin-bottom:8px;">📅 '+t('home_store_events')+'</div>'+items.map(e=>storeEventCard(e,true)).join('');
+      box.style.display='block';
+    }).catch(()=>{ box.style.display='none'; });
+}
+
 // ── ホーム(発見フィード) 2026-07-07: フォロー中/紹介ネットワーク/好み類似/人気を統合した/api/feed ──
 const FEED_SOURCE_EMOJI = { follow: '💛', referral: '🌱', similar: '🔍', popular: '🏆', nearby: '📍' };
 let homeFeedLoaded = false;
 function loadHomeFeed() {
   loadHomeCellarPreview();
+  loadHomeStoreEvents();   // E3: フォロー中の店のイベント（毎回更新）
   if (homeFeedLoaded) return;
   homeFeedLoaded = true;
   const box = document.getElementById('homeFeedList');

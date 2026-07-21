@@ -1471,6 +1471,47 @@
   </div>
 </div>
 
+<!-- ==================== 店イベント作成モーダル（E2 2026-07-21） ==================== -->
+<div id="sevBackdrop" onclick="closeStoreEventModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150;"></div>
+<div id="sevSheet" style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:151;background:#fff;max-width:480px;margin:0 auto;border-radius:20px 20px 0 0;max-height:90vh;overflow-y:auto;">
+  <div style="position:sticky;top:0;background:#fff;padding:14px 18px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;z-index:1;">
+    <div style="font-size:15px;font-weight:800;color:var(--text);" data-i18n="sev_title">イベントを作成</div>
+    <button onclick="closeStoreEventModal()" style="background:none;border:none;font-size:20px;color:#bbb;cursor:pointer;">✕</button>
+  </div>
+  <div style="padding:14px 18px 28px;">
+    <label class="form-label" style="font-size:11px;" data-i18n="sev_name">イベント名 ✳︎</label>
+    <input id="sev-title" class="form-input" type="text" data-i18n-ph="sev_name_ph" placeholder="例: 秋の自然派ワイン会" style="margin-bottom:12px;">
+
+    <label class="form-label" style="font-size:11px;" data-i18n="sev_dates">開催日 ✳︎（複数OK）</label>
+    <div style="display:flex;gap:8px;margin-bottom:6px;">
+      <input id="sev-date" type="date" class="form-input" style="flex:1;">
+      <button onclick="sevAddDate()" style="background:#fff;color:var(--burgundy);border:1.5px solid var(--burgundy);border-radius:10px;padding:0 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;" data-i18n="sev_add">＋追加</button>
+    </div>
+    <div id="sevDateChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
+
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <div style="flex:1;"><label class="form-label" style="font-size:11px;" data-i18n="sev_start">開始</label><input id="sev-start" type="time" class="form-input"></div>
+      <div style="flex:1;"><label class="form-label" style="font-size:11px;" data-i18n="sev_end">終了</label><input id="sev-end" type="time" class="form-input"></div>
+    </div>
+
+    <label class="form-label" style="font-size:11px;" data-i18n="sev_venue">会場</label>
+    <input id="sev-venue" class="form-input" type="text" style="margin-bottom:12px;">
+
+    <label class="form-label" style="font-size:11px;" data-i18n="sev_desc">説明（任意）</label>
+    <textarea id="sev-desc" class="form-input" rows="3" data-i18n-ph="sev_desc_ph" placeholder="内容・参加方法など" style="margin-bottom:12px;resize:vertical;"></textarea>
+
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <div style="flex:1;"><label class="form-label" style="font-size:11px;" data-i18n="sev_cost">参加費（円・任意）</label><input id="sev-cost" type="number" min="0" class="form-input" placeholder="0"></div>
+    </div>
+
+    <label class="form-label" style="font-size:11px;" data-i18n="sev_url">申込URL（任意）</label>
+    <input id="sev-url" class="form-input" type="url" placeholder="https://..." style="margin-bottom:16px;">
+
+    <button onclick="submitStoreEvent()" id="sevSubmitBtn" style="width:100%;background:var(--burgundy);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;" data-i18n="sev_submit">この内容で作成</button>
+    <div style="font-size:10.5px;color:var(--text-sub);text-align:center;margin-top:8px;" data-i18n="sev_note">作成すると、あなたをフォローしているお客さんのホームとお店ページに表示されます</div>
+  </div>
+</div>
+
 <!-- ==================== PANEL: 試飲会 ==================== -->
 <div id="panelCalendar" class="panel active">
 
@@ -1555,24 +1596,20 @@
     <!-- 連携済み ビュー（初期は非表示） -->
     <div class="line-connected-body" id="lineConnected" style="display:none;">
       <div class="line-account-row">
-        <div class="line-account-icon">🏰</div>
+        <div class="line-account-icon">💬</div>
         <div>
-          <div class="line-account-name" data-i18n="line_account_name">Bistrot Lumière スタッフ</div>
-          <div class="line-account-id">@bistrot_lumiere_staff</div>
+          <div class="line-account-name" id="lineAccountName" data-i18n="line_connected_label">LINE連携済み</div>
         </div>
       </div>
-      <div style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:0.8px;margin-bottom:8px;" data-i18n="line_types_label">通知する種別</div>
-      <div class="line-notify-types" id="lineNotifyTypes">
-        <span class="line-type-chip" id="ltc-tasting" data-i18n="chip_tasting">🍷 試飲会</span>
-        <span class="line-type-chip" id="ltc-seminar" data-i18n="chip_seminar">📚 セミナー</span>
-        <span class="line-type-chip" id="ltc-fair" data-i18n="chip_fair">🏆 フェア</span>
-      </div>
-      <div class="line-timing-row" style="margin-top:8px;">
-        ⏰ <span data-i18n="line_timing_prefix">通知タイミング:</span> <span id="lineTimingLabel" data-i18n="line_timing_default">1週間前 · 当日</span>
-      </div>
+      <!-- 受け取る設定（本物・/api/line-link/prefs に保存） -->
+      <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 0 4px;">
+        <span style="font-size:13px;font-weight:700;color:var(--text);">🍷 <span data-i18n="line_pref_tasting">新着試飲会を受け取る</span></span>
+        <span class="toggle toggle-line"><input type="checkbox" id="prefTastingNew" checked onchange="saveLinePref()"><span class="toggle-slider"></span></span>
+      </label>
+      <div style="font-size:10.5px;color:var(--text-sub);margin-bottom:8px;" data-i18n="line_pref_hint">インポーターが配信する新着試飲会をLINEでお知らせします</div>
       <div class="line-action-row">
-        <button class="line-settings-btn" onclick="openLineSettings()" data-i18n="line_settings_btn">⚙️ 設定変更</button>
         <button class="line-test-btn" onclick="sendLineTest()" data-i18n="line_test_btn">💬 テスト送信</button>
+        <button class="line-settings-btn" onclick="disconnectLine()" data-i18n="line_unlink_btn">連携を解除</button>
       </div>
     </div>
   </div>
@@ -1593,8 +1630,16 @@
     </div>
   </div>
 
+  <!-- 自分のイベント（お店主催・フォロワーに届く）2026-07-21 E2 -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 4px;">
+    <span style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:1.2px;" data-i18n="my_events">自分のイベント</span>
+    <button onclick="openStoreEventModal()" style="background:var(--burgundy);color:#fff;border:none;border-radius:10px;padding:7px 14px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;" data-i18n="ev_create_btn">＋ イベント作成</button>
+  </div>
+  <div style="font-size:10.5px;color:var(--text-sub);padding:0 16px 6px;" data-i18n="my_events_hint">お店のイベントは、あなたをフォローしているお客さんに届きます</div>
+  <div id="storeEventList" style="padding:0 16px;"></div>
+
   <!-- Event list（月縛りなし: 今日以降を月見出し付きで連続表示） -->
-  <div style="padding: 12px 16px 4px; font-size:11px; font-weight:700; color:var(--text-sub); letter-spacing:1.2px;" data-i18n="upcoming_tastings">今後の試飲会</div>
+  <div style="padding: 14px 16px 4px; font-size:11px; font-weight:700; color:var(--text-sub); letter-spacing:1.2px;" data-i18n="upcoming_tastings">今後の試飲会</div>
   <div id="adminEventList"></div>
 
 </div>
@@ -2130,69 +2175,8 @@
   </div>
 </div>
 
-<!-- ==================== LINE 設定モーダル ==================== -->
-<div class="line-modal-bg" id="lineModalBg" onclick="closeLineModalBg(event)">
-  <div class="line-modal-sheet">
-    <div class="line-modal-handle"></div>
-    <div class="line-modal-title">
-      <svg width="22" height="22" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#06C755"/><path d="M18 7C11.373 7 6 11.477 6 16.97c0 4.928 3.928 9.065 9.237 9.847.359.077.848.237.972.544.111.279.073.716.036 1l-.157 1.02c-.048.31-.22 1.21.955.66 1.175-.55 6.34-4.084 8.65-6.99C27.31 20.96 30 19.12 30 16.97 30 11.477 24.627 7 18 7z" fill="white"/></svg>
-      <span data-i18n="lset_title">LINE 通知設定</span>
-    </div>
-
-    <!-- 通知する種別 -->
-    <div class="line-setting-section">
-      <div class="line-setting-label" data-i18n="line_types_label">通知する種別</div>
-      <div class="line-toggle-row">
-        <div class="row-left"><span>🍷</span> <span data-i18n="type_tasting">試飲会</span></div>
-        <label class="toggle toggle-line"><input type="checkbox" id="lset-tasting" checked onchange="updateLineTypes()"><span class="toggle-slider"></span></label>
-      </div>
-      <div class="line-toggle-row">
-        <div class="row-left"><span>📚</span> <span data-i18n="type_seminar">セミナー</span></div>
-        <label class="toggle toggle-line"><input type="checkbox" id="lset-seminar" checked onchange="updateLineTypes()"><span class="toggle-slider"></span></label>
-      </div>
-      <div class="line-toggle-row">
-        <div class="row-left"><span>🏆</span> <span data-i18n="type_fair_ex">フェア・展示会</span></div>
-        <label class="toggle toggle-line"><input type="checkbox" id="lset-fair" checked onchange="updateLineTypes()"><span class="toggle-slider"></span></label>
-      </div>
-    </div>
-
-    <!-- 通知タイミング -->
-    <div class="line-setting-section">
-      <div class="line-setting-label" data-i18n="lset_timing_lbl">通知タイミング（複数選択可）</div>
-      <div class="line-timing-chips">
-        <div class="line-timing-chip selected" id="ltime-1w" onclick="toggleLineTiming('1w', this)" data-i18n="timing_1w">1週間前</div>
-        <div class="line-timing-chip" id="ltime-3d" onclick="toggleLineTiming('3d', this)" data-i18n="timing_3d">3日前</div>
-        <div class="line-timing-chip" id="ltime-1d" onclick="toggleLineTiming('1d', this)" data-i18n="timing_1d">前日</div>
-        <div class="line-timing-chip selected" id="ltime-0d" onclick="toggleLineTiming('0d', this)" data-i18n="timing_0d">当日</div>
-      </div>
-    </div>
-
-    <!-- LINE メッセージプレビュー -->
-    <div class="line-setting-section">
-      <div class="line-setting-label" data-i18n="lset_preview_lbl">通知プレビュー</div>
-      <div style="background:#e9e9e9;border-radius:14px;padding:14px;">
-        <div style="font-size:10px;color:#888;text-align:center;margin-bottom:10px;" data-i18n="line_push_app">ソムリン 試飲会通知</div>
-        <!-- LINEバブル -->
-        <div style="display:flex;align-items:flex-start;gap:8px;">
-          <div style="width:32px;height:32px;background:var(--line);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg width="20" height="20" viewBox="0 0 36 36" fill="none"><path d="M18 7C11.373 7 6 11.477 6 16.97c0 4.928 3.928 9.065 9.237 9.847.359.077.848.237.972.544.111.279.073.716.036 1l-.157 1.02c-.048.31-.22 1.21.955.66 1.175-.55 6.34-4.084 8.65-6.99C27.31 20.96 30 19.12 30 16.97 30 11.477 24.627 7 18 7z" fill="white"/></svg>
-          </div>
-          <div style="background:white;border-radius:0 12px 12px 12px;padding:10px 12px;max-width:82%;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-            <div style="font-size:11px;font-weight:800;color:#06C755;margin-bottom:5px;" data-i18n="lset_pv_title">🍷 新着試飲会のお知らせ</div>
-            <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:4px;" data-i18n="lset_pv_event">ブルゴーニュ新着ワイン試飲会</div>
-            <div style="font-size:12px;color:#555;line-height:1.5;" data-i18n-html="lset_pv_meta">📅 5月22日(木) 14:00〜18:00<br>📍 ザ・ウエスティン東京 3F<br>🏢 山田商店（インポーター）</div>
-            <div style="margin-top:8px;background:#f0fdf4;border-radius:8px;padding:7px 10px;font-size:11px;color:#15803d;font-weight:600;" data-i18n="lset_pv_cta">👆 タップして参加申込みへ</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <button class="line-modal-save" onclick="saveLineSettings()" data-i18n="lset_save_btn">設定を保存する</button>
-    <div style="text-align:center;margin-top:12px;">
-      <span style="font-size:12px;color:#dc2626;cursor:pointer;text-decoration:underline;text-underline-offset:3px;" onclick="disconnectLine()" data-i18n="lset_unlink">LINE連携を解除する</span>
-    </div>
-  </div>
-</div>
+<!-- LINE設定モーダルは撤去（2026-07-22）: 種別/タイミング/産地は実データで絞れないため見せかけだった。
+     受け取る設定は連携済みビューの「新着試飲会を受け取る」トグル1個（本物・/api/line-link/prefs）に一本化。 -->
 
 <!-- LINE風 プッシュ通知トースト -->
 <div class="line-push" id="linePush">
@@ -2352,6 +2336,14 @@ const I18N = {
     acct_urls: '登録URL', acct_no_app: '登録情報がまだありません。「登録情報を変更」から登録できます。',
     acct_actions: '操作', acct_edit: '登録情報を変更', acct_logo: 'ロゴを変更', acct_personal: '個人モードへ',
     acct_renew_due: '次回の年次確認: {d}',
+    my_events: '自分のイベント', my_events_hint: 'お店のイベントは、あなたをフォローしているお客さんに届きます',
+    ev_create_btn: '＋ イベント作成', sev_title: 'イベントを作成', sev_name: 'イベント名 ✳︎', sev_name_ph: '例: 秋の自然派ワイン会',
+    sev_dates: '開催日 ✳︎（複数OK）', sev_add: '＋追加', sev_start: '開始', sev_end: '終了', sev_venue: '会場',
+    sev_desc: '説明（任意）', sev_desc_ph: '内容・参加方法など', sev_cost: '参加費（円・任意）', sev_url: '申込URL（任意）',
+    sev_submit: 'この内容で作成', sev_note: '作成すると、フォロー中のお客さんのホームとお店ページに表示されます',
+    sev_need_title: 'イベント名を入力してください', sev_need_date: '開催日を追加してください', sev_saving: '作成中…',
+    sev_created: 'イベントを作成しました 🎉', sev_fail: '作成に失敗しました', sev_empty: 'まだイベントがありません',
+    sev_delete: '削除', sev_del_confirm: 'このイベントを削除しますか？',
     role_staff: 'スタッフ',
     btn_personal: '🍷 個人モード',
     btn_personal_title: '個人モードに切り替え',
@@ -2396,6 +2388,9 @@ const I18N = {
     line_add_friend_btn: 'LINEで友達追加する',
     line_add_friend_note: 'ソムリン公式LINE · タップするとLINEアプリが開きます',
     line_account_name: 'Bistrot Lumière スタッフ',
+    line_connected_label: 'LINE連携済み', line_pref_tasting: '新着試飲会を受け取る',
+    line_pref_hint: 'インポーターが配信する新着試飲会をLINEでお知らせします', line_pref_saved: '設定を保存しました',
+    line_unlink_btn: '連携を解除',
     line_types_label: '通知する種別',
     chip_tasting: '🍷 試飲会',
     chip_seminar: '📚 セミナー',
@@ -2857,6 +2852,14 @@ const I18N = {
     acct_urls: 'Registered URLs', acct_no_app: 'No registration info yet. You can register from "Edit registration".',
     acct_actions: 'Actions', acct_edit: 'Edit registration', acct_logo: 'Change logo', acct_personal: 'Personal mode',
     acct_renew_due: 'Next annual check: {d}',
+    my_events: 'My events', my_events_hint: 'Your events reach customers who follow your shop',
+    ev_create_btn: '＋ Create event', sev_title: 'Create an event', sev_name: 'Event name ✳︎', sev_name_ph: 'e.g. Autumn natural wine night',
+    sev_dates: 'Date(s) ✳︎', sev_add: '＋ Add', sev_start: 'Start', sev_end: 'End', sev_venue: 'Venue',
+    sev_desc: 'Description (optional)', sev_desc_ph: 'Details, how to join, etc.', sev_cost: 'Fee (JPY, optional)', sev_url: 'Signup URL (optional)',
+    sev_submit: 'Create', sev_note: 'Once created, it appears on your followers\' home and your shop page',
+    sev_need_title: 'Please enter an event name', sev_need_date: 'Please add a date', sev_saving: 'Creating…',
+    sev_created: 'Event created 🎉', sev_fail: 'Failed to create', sev_empty: 'No events yet',
+    sev_delete: 'Delete', sev_del_confirm: 'Delete this event?',
     role_staff: 'Staff',
     btn_personal: '🍷 Personal',
     btn_personal_title: 'Switch to personal mode',
@@ -2900,6 +2903,9 @@ const I18N = {
     line_add_friend_btn: 'Add as friend on LINE',
     line_add_friend_note: 'Sommelin official LINE · Tapping opens the LINE app',
     line_account_name: 'Bistrot Lumière Staff',
+    line_connected_label: 'LINE connected', line_pref_tasting: 'Receive new tasting events',
+    line_pref_hint: 'Get LINE notifications for new tasting events from importers', line_pref_saved: 'Setting saved',
+    line_unlink_btn: 'Disconnect',
     line_types_label: 'Notification types',
     chip_tasting: '🍷 Tastings',
     chip_seminar: '📚 Seminars',
@@ -3585,6 +3591,7 @@ async function loadRealEvents() {
   } catch (err) { console.warn('[events] loadRealEvents error', err); }
 }
 loadRealEvents();
+loadStoreEvents();   // 店イベント（自分の作成分）も初期表示（E2）
 
 // ============================================================
 // 📈 分析パネル（実データのみ: /api/store-analytics）
@@ -3700,7 +3707,7 @@ function switchPanel(panel) {
   document.getElementById('panel' + panel.charAt(0).toUpperCase() + panel.slice(1)).classList.add('active');
   document.getElementById('tnav-' + ID_MAP[panel]).classList.add('active');
 
-  if (panel === 'calendar') renderAdminCalendar();
+  if (panel === 'calendar') { renderAdminCalendar(); loadStoreEvents(); }
   if (panel === 'winelist') renderWineTable('all', '');
   if (panel === 'qr') renderQr();
   if (panel === 'stock') renderStock();
@@ -4125,7 +4132,6 @@ function disconnectLine() {
   if (!confirm(t('confirm_line_unlink'))) return;
   try { lineLinkUnlink(); } catch (e) {}
   lineState.connected = false;
-  closeLineModal();
   renderLineCard();
   showToast(t('toast_line_unlinked'));
 }
@@ -4156,8 +4162,9 @@ function renderLineCard() {
     badge.textContent   = t('line_badge_linked');
     badge.classList.add('connected');
     sub.textContent     = lineState.displayName ? t('line_sub_linked_name').replace('{name}', lineState.displayName) : t('line_sub_linked');
-    updateLineTypesDisplay();
-    updateLineTimingDisplay();
+    const nameEl=document.getElementById('lineAccountName');
+    if(nameEl) nameEl.textContent = lineState.displayName ? ('LINE: '+lineState.displayName) : t('line_connected_label');
+    loadLinePref();
   } else {
     uncon.style.display = 'block';
     con.style.display   = 'none';
@@ -4170,55 +4177,19 @@ function renderLineCard() {
   }
 }
 
-// 通知種別チップ更新
-function updateLineTypes() {
-  lineState.types.tasting = document.getElementById('lset-tasting').checked;
-  lineState.types.seminar = document.getElementById('lset-seminar').checked;
-  lineState.types.fair    = document.getElementById('lset-fair').checked;
-  updateLineTypesDisplay();
+// 受け取る設定（本物・/api/line-link/prefs）。種別/タイミング/産地の見せかけUIは撤去済み（2026-07-22）。
+function loadLinePref() {
+  const tok = rwToken(); if (!tok) return;
+  fetch(RW_API + '/api/line-link/prefs', { headers: { 'Authorization': 'Bearer ' + tok } })
+    .then(r => r.ok ? r.json() : null)
+    .then(d => { const el = document.getElementById('prefTastingNew'); if (el && d) el.checked = d.tastingNew !== false; })
+    .catch(() => {});
 }
-function updateLineTypesDisplay() {
-  document.getElementById('ltc-tasting').classList.toggle('off', !lineState.types.tasting);
-  document.getElementById('ltc-seminar').classList.toggle('off', !lineState.types.seminar);
-  document.getElementById('ltc-fair').classList.toggle('off',    !lineState.types.fair);
-}
-
-// 通知タイミング
-function toggleLineTiming(key, el) {
-  el.classList.toggle('selected');
-  const idx = lineState.timing.indexOf(key);
-  if (idx >= 0) lineState.timing.splice(idx, 1);
-  else lineState.timing.push(key);
-  updateLineTimingDisplay();
-}
-function updateLineTimingDisplay() {
-  const labels = { '1w':t('timing_1w'), '3d':t('timing_3d'), '1d':t('timing_1d'), '0d':t('timing_0d') };
-  const text = lineState.timing.map(k => labels[k]).join(' · ') || t('timing_none');
-  const el = document.getElementById('lineTimingLabel');
-  if (el) el.textContent = text;
-}
-
-// LINE 設定モーダル
-function openLineSettings() {
-  document.getElementById('lset-tasting').checked = lineState.types.tasting;
-  document.getElementById('lset-seminar').checked = lineState.types.seminar;
-  document.getElementById('lset-fair').checked    = lineState.types.fair;
-  ['1w','3d','1d','0d'].forEach(k => {
-    document.getElementById('ltime-' + k).classList.toggle('selected', lineState.timing.includes(k));
-  });
-  document.getElementById('lineModalBg').classList.add('open');
-}
-function closeLineModal() {
-  document.getElementById('lineModalBg').classList.remove('open');
-}
-function closeLineModalBg(e) {
-  if (e.target === document.getElementById('lineModalBg')) closeLineModal();
-}
-function saveLineSettings() {
-  updateLineTypes();
-  updateLineTimingDisplay();
-  closeLineModal();
-  showToast(t('toast_line_settings_saved'));
+function saveLinePref() {
+  const el = document.getElementById('prefTastingNew'); if (!el) return;
+  const tok = rwToken(); if (!tok) return;
+  fetch(RW_API + '/api/line-link/prefs', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok }, body: JSON.stringify({ tastingNew: el.checked }) })
+    .then(r => { if (r.ok) showToast(t('line_pref_saved')); }).catch(() => {});
 }
 
 // テスト送信
@@ -5912,6 +5883,73 @@ async function renderAccountSheet(){
 }
 // 登録情報の変更＝前回値プリフィルで再確認フローへ（M2で本実装。今は登録フローへ誘導）
 function renewBusinessInfo(){ location.href='login.html?renew=1'; }
+
+// ── 店イベント作成・一覧・削除（E2 2026-07-21） ──
+let sevDates = [];
+function openStoreEventModal(){
+  sevDates = [];
+  ['sev-title','sev-date','sev-start','sev-end','sev-desc','sev-cost','sev-url'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  let name=''; try{ const p=JSON.parse(localStorage.getItem('sommelin_profile')||'{}'); name=p.display_name||''; }catch(e){}
+  document.getElementById('sev-venue').value=name;
+  renderSevChips();
+  document.getElementById('sevBackdrop').style.display='block';
+  document.getElementById('sevSheet').style.display='block';
+}
+function closeStoreEventModal(){ document.getElementById('sevBackdrop').style.display='none'; document.getElementById('sevSheet').style.display='none'; }
+function sevAddDate(){
+  const v=document.getElementById('sev-date').value;
+  if(!v) return;
+  if(!sevDates.includes(v) && sevDates.length<14) sevDates.push(v);
+  sevDates.sort();
+  document.getElementById('sev-date').value='';
+  renderSevChips();
+}
+function sevRemoveDate(d){ sevDates=sevDates.filter(x=>x!==d); renderSevChips(); }
+function renderSevChips(){
+  const el=document.getElementById('sevDateChips');
+  el.innerHTML = sevDates.length ? sevDates.map(d=>`<span style="background:var(--burgundy-pale,#f0dde3);color:var(--burgundy);font-size:12px;font-weight:700;border-radius:14px;padding:5px 10px;">${d} <span onclick="sevRemoveDate('${d}')" style="cursor:pointer;">✕</span></span>`).join('') : '<span style="font-size:11px;color:var(--text-sub);">'+t('sev_need_date')+'</span>';
+}
+async function submitStoreEvent(){
+  const title=document.getElementById('sev-title').value.trim();
+  const pend=document.getElementById('sev-date').value; if(pend && !sevDates.includes(pend)){ sevDates.push(pend); sevDates.sort(); }
+  if(!title){ showToast(t('sev_need_title')); return; }
+  if(!sevDates.length){ showToast(t('sev_need_date')); return; }
+  const btn=document.getElementById('sevSubmitBtn'); btn.disabled=true; btn.textContent=t('sev_saving');
+  const costV=parseInt(document.getElementById('sev-cost').value,10);
+  const body={ title, eventDates:sevDates,
+    startTime:document.getElementById('sev-start').value||null, endTime:document.getElementById('sev-end').value||null,
+    venueName:document.getElementById('sev-venue').value.trim()||null, description:document.getElementById('sev-desc').value.trim()||null,
+    cost:(Number.isFinite(costV)&&costV>=0)?costV:null, registrationUrl:document.getElementById('sev-url').value.trim()||null };
+  try{
+    const tok=rwToken();
+    const r=await fetch(RW_API+'/api/store-events',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(tok||'')},body:JSON.stringify(body)});
+    if(!r.ok) throw new Error('http '+r.status);
+    showToast(t('sev_created')); closeStoreEventModal(); loadStoreEvents();
+  }catch(e){ showToast(t('sev_fail')); }
+  finally{ btn.disabled=false; btn.textContent=t('sev_submit'); }
+}
+async function loadStoreEvents(){
+  const el=document.getElementById('storeEventList'); if(!el) return;
+  try{
+    const tok=rwToken();
+    const r=await fetch(RW_API+'/api/store-events/mine',{headers:{'Authorization':'Bearer '+(tok||'')}});
+    if(!r.ok) throw 0;
+    const evs=(await r.json()).events||[];
+    if(!evs.length){ el.innerHTML='<div style="font-size:12px;color:var(--text-sub);padding:4px 0 8px;">'+t('sev_empty')+'</div>'; return; }
+    el.innerHTML=evs.map(e=>{
+      const meta=[e.eventDate, e.startTime?e.startTime.slice(0,5):'', e.venueName].filter(Boolean).join(' ・ ');
+      return `<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+        <div style="min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${acctEsc(e.title)}</div><div style="font-size:11px;color:var(--text-sub);">${acctEsc(meta)}</div></div>
+        <button onclick="deleteStoreEvent('${e.id}')" style="background:none;border:none;color:#c0392b;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;">${t('sev_delete')}</button>
+      </div>`;
+    }).join('');
+  }catch(e){ el.innerHTML=''; }
+}
+async function deleteStoreEvent(id){
+  if(!confirm(t('sev_del_confirm'))) return;
+  try{ const tok=rwToken(); await fetch(RW_API+'/api/store-events/'+encodeURIComponent(id),{method:'DELETE',headers:{'Authorization':'Bearer '+(tok||'')}}); }catch(e){}
+  loadStoreEvents();
+}
 
 async function uploadHeaderLogo(file){
   const uid=await rwUid();
