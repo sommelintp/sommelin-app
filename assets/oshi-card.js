@@ -47,7 +47,9 @@
       ctx.strokeStyle='rgba(232,201,122,.6)'; ctx.lineWidth=2;
       ctx.beginPath(); ctx.arc(bx+br,by+br,br,0,Math.PI*2); ctx.stroke();
       ctx.fillStyle='#fff'; ctx.textAlign='center';
-      ctx.font=`800 50px ${FONT}`; ctx.fillText(Number(opts.rating).toFixed(1),bx+br,by+br+18);
+      // MY RATINGは100点満点表示（2026-07-22 タスクC）。内部ratingは0〜10のまま×10で整数化。
+      const score100=Math.round(Number(opts.rating)*10);
+      ctx.font=`800 ${score100>=100?42:52}px ${FONT}`; ctx.fillText(String(score100),bx+br,by+br+16);
     }
 
     ctx.textAlign='center';
@@ -124,10 +126,11 @@
     if(opts.showScore){
       ctx.font=`800 26px ${FONT}`; ctx.fillStyle='#E8C97A'; ctx.letterSpacing='7px';
       ctx.fillText('MY RATING',W/2,y+40); ctx.letterSpacing='0px';
+      // 100点満点表示（2026-07-22 タスクC）。内部ratingは0〜10のまま×10で整数化。
       ctx.font=`800 88px ${FONT}`; ctx.fillStyle='#fff';
-      ctx.fillText(Number(opts.rating).toFixed(1),W/2,y+150);
+      ctx.fillText(String(Math.round(opts.rating*10)),W/2,y+150);
       ctx.font=`700 30px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.6)';
-      ctx.fillText('/ 10',W/2,y+188);
+      ctx.fillText('/ 100',W/2,y+188);
       const n5=opts.rating/2, ssize=40, sgap=ssize*1.35, sx0=W/2-sgap*2, sy=y+250;
       ctx.font=`${ssize}px ${FONT}`; ctx.fillStyle='#C9973A';
       for(let i=0;i<5;i++){

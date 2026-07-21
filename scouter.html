@@ -133,6 +133,7 @@ body{
   color:#fff;border-radius:18px;padding:5px 11px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;
   box-shadow:0 2px 12px rgba(0,0,0,.55);text-align:center;line-height:1.3;}
 .mark.known{border-color:var(--gold);color:#ffd98a;}
+.mark.unlisted{border-color:#5bd08a;color:#eafff2;}
 .mark.fit{border-color:#ff7aa8;}
 .mark.unread{opacity:.7;font-weight:700;}
 /* §5: 読み取り中プレースホルダ（点滅で「処理中」を伝える。小さめ・控えめ） */
@@ -182,6 +183,29 @@ body{
   background:var(--burgundy-pale,#f7e6ee);border-radius:8px;padding:1px 7px;vertical-align:middle;margin-left:2px;}
 .sh-producer{font-size:13px;font-weight:600;color:#555;padding:4px 20px 0;}
 .sh-region{font-size:12px;color:#888;padding:2px 20px 12px;}
+.sh-importer{font-size:12.5px;color:#5a4a4d;padding:2px 20px 10px;}
+.sh-importer b{color:#2C1810;}
+.sh-backlist{display:inline-block;margin:0 0 10px 16px;padding:6px 12px;border:none;background:none;color:var(--burgundy);
+  font-size:13px;font-weight:800;cursor:pointer;}
+/* 結果一覧シート（タスクD） */
+.rl-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:4px 20px 12px;
+  font-family:var(--font-display);font-size:19px;font-weight:700;color:#2C1810;}
+.rl-count{font-family:var(--font);font-size:12px;font-weight:700;color:#8a7a7d;white-space:nowrap;}
+.rl-list{display:flex;flex-direction:column;gap:8px;padding:0 12px 4px;}
+.rl-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 12px;border:1px solid #efe6e8;
+  border-radius:14px;background:#fff;cursor:pointer;font:inherit;color:inherit;}
+.rl-row:active{background:#faf5f6;}
+.rl-dim{opacity:.55;cursor:default;}
+.rl-badge{flex:0 0 auto;min-width:46px;height:40px;display:flex;align-items:center;justify-content:center;
+  border-radius:11px;font-size:15px;font-weight:800;border:1.5px solid #ddd;}
+.rl-known{border-color:var(--gold);color:#a9791b;background:#fdf6e6;}
+.rl-unlisted{border-color:#5bd08a;color:#1f7a4d;background:#effaf3;}
+.rl-pending,.rl-unread{border-color:#ddd;color:#999;background:#f6f2f3;}
+.rl-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.rl-title{font-size:14.5px;font-weight:700;color:#2C1810;line-height:1.25;overflow:hidden;text-overflow:ellipsis;}
+.rl-vin{font-size:11px;color:#8a7a7d;font-weight:700;}
+.rl-sub{font-size:12px;color:#8a7a7d;line-height:1.25;overflow:hidden;text-overflow:ellipsis;}
+.rl-arrow{flex:0 0 auto;color:#c9b8bb;font-size:20px;font-weight:700;}
 .sh-refscore{font-family:var(--font-display) !important;font-size:26px !important;font-weight:700 !important;color:var(--burgundy) !important;}
 .sh-refscore small{font-size:11px;color:#999;font-weight:600;}
 .sh-grid{display:flex;gap:12px;padding:12px 20px;border-top:1px solid #f2f2f2;border-bottom:1px solid #f2f2f2;}
@@ -301,7 +325,7 @@ body{
 #err .e2{font-size:12px;color:rgba(255,255,255,.7);line-height:1.7;}
 </style>
 <link rel="stylesheet" href="assets/sommelin-ui.css">
-<script src="assets/oshi-card.js"></script>
+<script src="assets/oshi-card.js?v=20260722"></script>
 <script src="assets/wine-display.js?v=20260718"></script>
 <script src="assets/arena-utils.js?v=1"></script>
 </head>
@@ -336,6 +360,7 @@ body{
   <div id="marks"></div>
   <div id="frozenBar">
     <div class="fs" id="frozenSum">—</div>
+    <button class="fb2" id="frozenListBtn" style="display:none;" data-i18n="results_list_cta" onclick="openResultsList()">📋 結果一覧</button>
     <button class="fb2" id="frozenPlaceBtn" style="display:none;" data-i18n="place_record_cta" onclick="openPlacePicker()">📍 このお店を記録する</button>
     <button class="fb3" id="rereadListBtn" style="display:none;" data-i18n="reread_as_list" onclick="rereadAsList()">📋 リストとして読み直す</button>
     <button class="fb1" data-i18n="resume_btn" onclick="resumeLive()">↺ 撮り直す</button>
@@ -538,7 +563,7 @@ const I18N = {
     cospa_std_sub: '価格相応の評価です',
     filter_default_name: 'フィルター',
     best_in_group: 'この中でおすすめ',
-    label_unlisted: '未登録',
+    label_unlisted: '✅',
     scan_summary: '{n}本を検出 ・ 評価あり {k}本{f}｜マーカーをタップで詳細',
     scan_fits_part: ' ・ ❤️好み {n}本',
     place_recorded: '📍 {n} として記録済み',
@@ -554,9 +579,16 @@ const I18N = {
     buy_search_label: '🔍 購入先を探す',
     close_label: '閉じる',
     this_wine_label: 'このワイン',
-    id_ok_unlisted_pill: '🔎 特定OK ・ ソムリンDB未登録',
-    no_data_meta: 'まだソムリンの評価データにありません。<b>推測のスコアは表示しません。</b>スキャンは記録済みです。',
+    id_ok_unlisted_pill: '✅ 銘柄を認識しました',
+    no_data_meta: '銘柄はしっかり認識できました。ソムリンの評価はまだこれからです — <b>ぜひあなたの評価を聞かせてください🍷</b>（推測のスコアは出しません）',
     buy_search_web_label: '🔍 ネットで探す',
+    importer_label: '🚢 輸入元',
+    results_list_cta: '📋 結果一覧',
+    results_list_title: 'スキャン結果',
+    back_to_list: '‹ 結果一覧にもどる',
+    list_pending_label: '読み取り中',
+    list_unreadable_label: '読み取れず',
+    list_eval_pending: '評価をどうぞ',
     back_reading: '📸 裏ラベルを読み取り中…',
     back_import_prefix: '🚢 輸入: ',
     back_alcohol_prefix: 'アルコール ',
@@ -620,7 +652,7 @@ const I18N = {
     search_query_suffix: ' ワイン',
     caption_store_ig: '📍 @{n} で',
     caption_store_name: '📍 {n} にて',
-    caption_my_rating: '私の評価 {n}/10 ⭐',
+    caption_my_rating: '私の評価 {n}/100 ⭐',
     caption_thanks_handle: '@{n} 美味しかったです。ごちそうさまでした🙏',
     caption_thanks_plain: '美味しかったです。ごちそうさまでした🙏',
     caption_hashtags: '#Sommelin #ソムリン #ワイン好きと繋がりたい #wine',
@@ -746,7 +778,7 @@ const I18N = {
     cospa_std_sub: 'Rated in line with its price',
     filter_default_name: 'Filter',
     best_in_group: 'Top pick here',
-    label_unlisted: 'Not listed',
+    label_unlisted: '✅',
     scan_summary: '{n} bottles detected · {k} rated{f} | Tap a marker for details',
     scan_fits_part: ' · ❤️ {n} match your taste',
     place_recorded: '📍 Recorded as {n}',
@@ -762,9 +794,16 @@ const I18N = {
     buy_search_label: '🔍 Find where to buy',
     close_label: 'Close',
     this_wine_label: 'this wine',
-    id_ok_unlisted_pill: '🔎 Identified · not yet in Sommelin DB',
-    no_data_meta: 'No Sommelin rating data yet for this wine. <b>We never show a guessed score.</b> Your scan has been recorded.',
+    id_ok_unlisted_pill: '✅ Wine identified',
+    no_data_meta: 'We identified this wine clearly. A Sommelin rating is still to come — <b>please share your own rating 🍷</b> (we never show a guessed score).',
     buy_search_web_label: '🔍 Search online',
+    importer_label: '🚢 Importer',
+    results_list_cta: '📋 All results',
+    results_list_title: 'Scan results',
+    back_to_list: '‹ Back to results',
+    list_pending_label: 'reading…',
+    list_unreadable_label: 'unreadable',
+    list_eval_pending: 'Rate it',
     back_reading: '📸 Reading the back label…',
     back_import_prefix: '🚢 Importer: ',
     back_alcohol_prefix: 'Alcohol ',
@@ -828,7 +867,7 @@ const I18N = {
     search_query_suffix: ' wine',
     caption_store_ig: '📍 at @{n}',
     caption_store_name: '📍 at {n}',
-    caption_my_rating: 'My rating: {n}/10 ⭐',
+    caption_my_rating: 'My rating: {n}/100 ⭐',
     caption_thanks_handle: '@{n} This was delicious. Thank you! 🙏',
     caption_thanks_plain: 'This was delicious. Thank you! 🙏',
     caption_hashtags: '#sommelin #winelover',
@@ -1317,7 +1356,7 @@ function renderMarks(res){
       html=(fit?'❤️':'')+(arenaHit?'📋':'')+(w.tasteScore100!=null?w.tasteScore100:'—')+'<span style="font-size:0.6em;opacity:.85;">'+(LANG==='en'?'pt':'点')+'</span>';
       if(pinned) html='📌 '+html+`<span class="pinsub">${esc(b.filterMatches[0].name||t('filter_default_name'))}</span>`;
       if(i===best){ cls+=' best'; html='👑 '+html+`<span class="bsub">${t('best_in_group')}</span>`; }
-    }else if(b.match.status==='unlisted'){ html=t('label_unlisted'); }
+    }else if(b.match.status==='unlisted'){ cls+=' unlisted'; html=t('label_unlisted'); }
     else { cls+=' unread'; html='?'; }
     el.className=cls; el.innerHTML=html;
     el.style.left=(ox+b.box.cx*dw)+'px';
@@ -1331,6 +1370,9 @@ function renderMarks(res){
   document.getElementById('frozenSum').textContent=
     t('scan_summary').replace('{n}', s.total||res.bottles.length).replace('{k}', s.known||0).replace('{f}', fitsPart);
   document.getElementById('frozenBar').style.display='block';
+  // 結果一覧ボタン: 2本以上のスキャン結果があるとき出す（1本なら一覧不要＝マーカータップで足りる）
+  const listBtn=document.getElementById('frozenListBtn');
+  if(listBtn) listBtn.style.display = (res.bottles && res.bottles.length>1) ? 'block' : 'none';
   const placeBtn=document.getElementById('frozenPlaceBtn');
   if(shelfPlace){ placeBtn.style.display='block'; placeBtn.disabled=true; placeBtn.textContent=t('place_recorded').replace('{n}', shelfPlace.name); }
   else if((s.known||0)>0){ placeBtn.style.display='block'; placeBtn.disabled=false; placeBtn.textContent=t('place_record_cta'); }
@@ -1383,6 +1425,7 @@ function renderShelfCard(b){
     // 表示体系第4版: 味スコア(数字)＋ソムスター(★=この価格ならおすすめ)。旧コスパバッジ・旧星は廃止
     const score = (window.WineDisplay && WineDisplay.scoreBlock) ? WineDisplay.scoreBlock(w, {size:17, lang:LANG, showPct:true}) : '';
     inner=`
+      ${listBackBtn()}
       <div class="sh-pill" style="background:var(--burgundy)">${lowConf?t('match_pill_confirm'):t('match_pill_done')}</div>
       ${arenaHitHtml}${arenaNoteHtml}
       <div class="sh-name">${esc(w.name||'—')}${w.vintage&&w.vintage!=='NV'?` <span class="sh-vintage-badge">${esc(w.vintage)}</span>`:''}</div>
@@ -1392,6 +1435,7 @@ function renderShelfCard(b){
       <div class="sh-grid">
         <div class="sh-cell" style="grid-column:1/-1;"><div class="v">${fmtPrice(w.price)}</div><div class="l">${t('ref_price_label')}${w.sizeNote?`<br>（${esc(w.sizeNote)}）`:''}</div></div>
       </div>
+      ${w.importer?`<div class="sh-importer">${t('importer_label')}：<b>${esc(w.importer)}</b></div>`:''}
       ${w.styleNote?`<div class="style-note">🏅 ${esc(w.styleNote)}</div>`:''}
       ${w.vintageNote?`<div class="vintage-note">${esc(w.vintageNote)}</div>`:''}
       ${filterRibbons}
@@ -1407,7 +1451,8 @@ function renderShelfCard(b){
   } else {
     const title=[id.producer,id.wine].filter(Boolean).join(' ') || t('this_wine_label');
     inner=`
-      <div class="sh-pill" style="background:#555">${t('id_ok_unlisted_pill')}</div>
+      ${listBackBtn()}
+      <div class="sh-pill" style="background:#2e7d52">${t('id_ok_unlisted_pill')}</div>
       ${arenaNoteHtml}
       <div class="sh-name">${esc(trunc(title,40))}${id.vintage?'　'+esc(id.vintage):''}</div>
       <div class="sh-region">${esc([id.country,id.region].filter(Boolean).join(' / '))}${id.grape&&id.grape.length?'　/　'+esc(id.grape.join(', ')):''}</div>
@@ -1424,6 +1469,48 @@ function renderShelfCard(b){
   }
   document.getElementById('sheetBody').innerHTML=inner;
   loadSimilar(b);
+}
+
+// ④重なりバグの根本解決（2026-07-22 タスクD）: frozenBarが下部マーカーを覆ってタップできない
+// 問題を、マーカー依存をやめた「結果一覧シート」で解消する。全ボトルがリスト行から確実に開ける。
+function listBackBtn(){
+  return (shelfRes && shelfRes.bottles && shelfRes.bottles.length>1)
+    ? `<button class="sh-backlist" onclick="renderResultsList()">${t('back_to_list')}</button>` : '';
+}
+function openResultsList(){
+  if(!shelfRes || !shelfRes.bottles || !shelfRes.bottles.length) return;
+  renderResultsList(); openSheet();
+}
+function renderResultsList(){
+  if(!shelfRes || !shelfRes.bottles) return;
+  const rows=shelfRes.bottles.map((b,i)=>{
+    const w=b.match && b.match.wine;
+    const st=b.match && b.match.status;
+    let badge='?', badgeCls='unread', title=t('this_wine_label'), sub='', tappable=false;
+    if(b._pending || st==='detecting'){ badge='⋯'; badgeCls='pending'; title=t('list_pending_label'); }
+    else if(st==='known' && w){
+      badge=(w.tasteScore100!=null?w.tasteScore100:'—'); badgeCls='known'; tappable=true;
+      title=esc(w.name||'—')+(w.vintage&&w.vintage!=='NV'?` <span class="rl-vin">${esc(w.vintage)}</span>`:'');
+      sub=[esc(w.producer||''), w.importer?('🚢 '+esc(w.importer)):''].filter(Boolean).join('　・　');
+    }
+    else if(st==='unlisted'){
+      const id=b.identification||{}; badge='✅'; badgeCls='unlisted'; tappable=true;
+      title=esc([id.producer,id.wine].filter(Boolean).join(' ')||t('this_wine_label'))+(id.vintage?` <span class="rl-vin">${esc(id.vintage)}</span>`:'');
+      sub=t('list_eval_pending');
+    }
+    else if(st==='unreadable'){ badge='?'; badgeCls='unread'; title=t('list_unreadable_label'); }
+    return `<button class="rl-row${tappable?'':' rl-dim'}"${tappable?` onclick="markTap(${i})"`:''}>
+      <span class="rl-badge rl-${badgeCls}">${badge}</span>
+      <span class="rl-main"><span class="rl-title">${title}</span>${sub?`<span class="rl-sub">${sub}</span>`:''}</span>
+      ${tappable?'<span class="rl-arrow">›</span>':''}
+    </button>`;
+  }).join('');
+  const s=shelfRes.summary||{};
+  const cnt=`🍷 ${s.total||shelfRes.bottles.length}${(s.known||0)?`　⭐ ${s.known}`:''}${s.fits?`　❤️ ${s.fits}`:''}`;
+  document.getElementById('sheetBody').innerHTML=`
+    <div class="rl-head"><span>${t('results_list_title')}</span><span class="rl-count">${cnt}</span></div>
+    <div class="rl-list">${rows}</div>
+    <div class="sh-btns" style="padding:6px 16px 4px"><button class="sh-sub" onclick="closeSheet()">${t('close_label')}</button></div>`;
 }
 
 // ── 裏ラベル撮影（AE-2節・2026-07-12）: 任意。輸入者名等を追加取得し高XPで釣り合わせる ──
@@ -1545,7 +1632,7 @@ function oshiStart(){
     <div class="oshi-step">
       <div class="oshi-title">${t('oshi_rate_title')}</div>
       <div class="oshi-sub">${esc(trunc(info.name,30))}${info.vintage&&info.vintage!=='NV'?' '+esc(info.vintage):''}<br>${t('oshi_rate_sub')}</div>
-      <div class="oshi-score"><span id="oshiScoreV">8.0</span><small> /10</small></div>
+      <div class="oshi-score"><span id="oshiScoreV">80</span><small> /100</small></div>
       <input type="range" class="oshi-slider" id="oshiSlider" min="0" max="10" step="0.1" value="8.0"
         oninput="oshiRating=parseFloat(this.value);oshiPaintScore()">
       <div class="sh-btns" style="padding:6px 0 10px">
@@ -1556,7 +1643,8 @@ function oshiStart(){
   oshiPaintScore();
 }
 function oshiPaintScore(){
-  const v=document.getElementById('oshiScoreV'); if(v) v.textContent=oshiRating.toFixed(1);
+  // 100点満点表示（2026-07-22 タスクC）。内部oshiRatingは0〜10のまま×10で整数化。
+  const v=document.getElementById('oshiScoreV'); if(v) v.textContent=Math.round(oshiRating*10);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1809,7 +1897,7 @@ function oshiCardSetup(){
       <div id="oshiPhotoPickWrap" style="display:${oshiPhotoDataUrl?'none':'block'};">
         <button class="oshi-filter-btn" onclick="oshiPickPhoto()">${t('oshi_card_withphoto')}</button>
       </div>
-      <input type="file" id="oshiPhotoInput" accept="image/*" capture="environment" style="display:none" onchange="oshiOnPhotoSelected(event)">
+      <input type="file" id="oshiPhotoInput" accept="image/*" style="display:none" onchange="oshiOnPhotoSelected(event)">
 
       ${info.producer ? `<div id="oshiIgBlock">${oshiIgBlockHtml()}</div>` : ''}
 
@@ -2047,7 +2135,7 @@ function oshiBuildCaption(info){
   if(info.producer) L.push(`👨‍🌾 ${info.producer}`);
   const store=oshiStoreResolved;
   if(store) L.push(store.ig ? t('caption_store_ig').replace('{n}', store.ig) : t('caption_store_name').replace('{n}', store.name));
-  if(oshiShowScore) L.push(t('caption_my_rating').replace('{n}', oshiRating.toFixed(1)));
+  if(oshiShowScore) L.push(t('caption_my_rating').replace('{n}', Math.round(oshiRating*10)));
   if(oshiHandle) L.push(t('caption_thanks_handle').replace('{n}', oshiHandle));
   else L.push(t('caption_thanks_plain'));
   L.push('');
