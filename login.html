@@ -708,17 +708,17 @@ body {
 
   <div class="body-pad" style="padding-top:16px;">
 
-    <!-- AIバナー -->
+    <!-- AIバナー（renew時は文言差し替え） -->
     <div style="background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border:1.5px solid #86efac;border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:16px;">
       <span style="font-size:24px;">✨</span>
       <div>
-        <div style="font-size:13px;font-weight:800;color:#15803d;">AIが名刺から情報を読み取りました</div>
-        <div style="font-size:11px;color:#16a34a;margin-top:2px;">内容を確認・修正してから申請してください</div>
+        <div id="cfBannerTitle" style="font-size:13px;font-weight:800;color:#15803d;">AIが名刺から情報を読み取りました</div>
+        <div id="cfBannerSub" style="font-size:11px;color:#16a34a;margin-top:2px;">内容を確認・修正してから申請してください</div>
       </div>
     </div>
 
-    <!-- 名刺サムネイル -->
-    <div style="display:flex;gap:10px;margin-bottom:16px;">
+    <!-- 名刺サムネイル（renew時は非表示） -->
+    <div id="cfThumbs" style="display:flex;gap:10px;margin-bottom:16px;">
       <div id="thumbFront" style="flex:1;height:72px;background:linear-gradient(135deg,#9B1B4B,#C84B6B);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;">
         <span style="font-size:20px;">📇</span>
         <span style="color:white;font-size:10px;font-weight:700;">表面 ✓</span>
@@ -1090,6 +1090,16 @@ function chooseRole(role) {
 // トークン期限切れ（access_tokenは残るが失効）のとき byo_connect.html ⇄ login.html の無限ループを
 // 生んだため撤去。戻りは emailLogin 成功時（=フレッシュなトークン取得後）にのみ行う。
 
+// ?renew=1（M2 2026-07-21）: 業務店マイページの「登録情報を変更」からの遷移。
+// ログイン済み前提（管理画面から来る）。前回値プリフィルの確認画面へ直行。
+(function initRenewMode(){
+  const params = new URLSearchParams(location.search);
+  if (params.get('renew') !== '1') return;
+  const session = getSession();
+  if (!session || !session.access_token) return;  // 未ログインなら通常フロー
+  startRenew();
+})();
+
 // 2026-07-08追加: マイページの「業務店として登録する」からの遷移（?addRole=1）。
 // 既にログイン済みのアカウントに業務ロールを追加するだけなので、メール/パスワード作成は
 // スキップし、業種選択→本人確認（screenVerify）だけを行う。
@@ -1342,6 +1352,36 @@ function goToVerifyConfirm() {
   showScreen('screenVerifyConfirm');
 }
 function escAttr(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── 年次確認・登録情報の変更（M2 2026-07-21）: 前回値をプリフィルして確認画面へ直行 ──
+// 名刺の再アップは求めない（URL照合で足りる）。「この内容で更新」→ submitFinalVerifyで再申請→AI再確認→approved。
+let renewMode = false;
+async function startRenew(){
+  renewMode = true;
+  showLoading('登録情報を読み込み中…');
+  const tok = authToken();
+  let d=null;
+  try{ const r=await fetch(API_BASE+'/api/business/me',{headers:{Authorization:'Bearer '+(tok||'')}}); if(r.ok) d=await r.json(); }catch(e){}
+  hideLoading();
+  const biz=(d&&d.business)||{}; const roles=(d&&d.account&&d.account.roles)||[];
+  selectedRole = roles.find(r=>['store','retailer','importer'].includes(r)) || selectedRole || 'store';
+  // URL状態＋入力欄をプリフィル
+  const urls=biz.urls||{};
+  ['website','gmap','tabelog','instagram'].forEach(k=>{
+    if(urls[k]){ verifyUrlSelected.add(k); verifyUrlData[k]=true; const inp=document.getElementById('vmurl-'+k); if(inp) inp.value=urls[k]; }
+  });
+  goToVerifyConfirm();   // URL一覧生成＋確認画面表示（cf-*はmergedOcr=空で一旦クリア→下で前回値に上書き）
+  document.getElementById('cf-company').value  = biz.company||'';
+  document.getElementById('cf-name').value     = biz.contactName||'';
+  document.getElementById('cf-jobtitle').value = biz.jobTitle||'';
+  document.getElementById('cf-phone').value    = biz.phone||'';
+  document.getElementById('cf-email').value    = biz.contactEmail||'';
+  // renew用の見た目（名刺バナー・サムネイルは出さない・ボタン文言を更新に）
+  const bt=document.getElementById('cfBannerTitle'); if(bt) bt.textContent='年次確認：登録内容のご確認';
+  const bs=document.getElementById('cfBannerSub'); if(bs) bs.textContent='変わっていなければ「この内容で更新」を押してください';
+  const th=document.getElementById('cfThumbs'); if(th) th.style.display='none';
+  const btn=document.querySelector('#screenVerifyConfirm .btn-primary'); if(btn) btn.textContent='この内容で更新 →';
+}
 
 // ── 最終申請（保存 → 仮許可 → AI自動確認を発火） ──
 function submitFinalVerify() {

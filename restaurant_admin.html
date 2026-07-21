@@ -1427,18 +1427,14 @@
 </head>
 <body>
 
-<!-- TOP HEADER -->
-<div class="top-header">
-  <div class="top-header-icon">🏰</div>
-  <div class="top-header-info">
-    <div class="top-header-rest">Bistrot Lumière</div>
-    <div class="top-header-sub" data-i18n="hdr_sub">Sommelin 管理画面</div>
-    <div class="top-header-sub" id="verifStatus" style="display:none;font-weight:700;margin-top:2px;"></div>
+<!-- TOP HEADER（1行・タップでアカウントシート。EN/個人モード/ログアウト/役職はシート内へ移設） -->
+<div class="top-header" onclick="openAccountSheet()" style="cursor:pointer;">
+  <div class="top-header-icon" id="hdrIcon">🏰</div>
+  <div class="top-header-info" style="display:flex;align-items:center;gap:7px;min-width:0;">
+    <div class="top-header-rest" style="-webkit-line-clamp:1;">Bistrot Lumière</div>
+    <span id="verifMark" style="display:none;font-size:13px;flex-shrink:0;"></span>
   </div>
-  <div class="top-header-badge" id="roleBadge" data-i18n="role_staff">スタッフ</div>
-  <button id="langBtn" onclick="setLang(LANG==='ja'?'en':'ja')" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:11px;font-weight:700;cursor:pointer;padding:6px 10px;margin-left:6px;border-radius:14px;white-space:nowrap;"></button>
-  <button onclick="location.href='prototype.html'" title="個人モードに切り替え" data-i18n="btn_personal" data-i18n-title="btn_personal_title" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:11px;font-weight:700;cursor:pointer;padding:6px 10px;margin-left:6px;border-radius:14px;white-space:nowrap;">🍷 個人モード</button>
-  <button onclick="sommelinLogout()" title="ログアウト" data-i18n-title="btn_logout_title" style="background:none;border:none;color:rgba(255,255,255,.7);font-size:18px;cursor:pointer;padding:4px 8px;margin-left:2px;">⏻</button>
+  <button title="アカウント" aria-label="アカウント" onclick="event.stopPropagation();openAccountSheet()" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:16px;cursor:pointer;width:34px;height:34px;border-radius:50%;flex-shrink:0;">👤</button>
 </div>
 
 <!-- TAB NAV -->
@@ -1460,6 +1456,18 @@
   </div>
   <div class="tab-nav-item" id="tnav-an" onclick="switchPanel('analytics')">
     <span class="nav-icon">📈</span><span data-i18n="tab_analytics">分析</span>
+  </div>
+</div>
+
+<!-- ==================== アカウントシート（業務店マイページ・M1 2026-07-21） ==================== -->
+<div id="acctBackdrop" onclick="closeAccountSheet()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150;"></div>
+<div id="acctSheet" style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:151;background:#fff;max-width:480px;margin:0 auto;border-radius:20px 20px 0 0;max-height:88vh;overflow-y:auto;">
+  <div style="position:sticky;top:0;background:#fff;padding:14px 18px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;z-index:1;">
+    <div style="font-size:15px;font-weight:800;color:var(--text);" data-i18n="acct_title">アカウント</div>
+    <button onclick="closeAccountSheet()" style="background:none;border:none;font-size:20px;color:#bbb;cursor:pointer;">✕</button>
+  </div>
+  <div id="acctBody" style="padding:14px 18px 28px;">
+    <div style="text-align:center;color:var(--text-sub);font-size:13px;padding:24px 0;" data-i18n="loading">読み込み中…</div>
   </div>
 </div>
 
@@ -1528,7 +1536,7 @@
       </div>
 
       <!-- ▼ タップで友達追加ボタン（スマホで自分の画面のQRは読めないので） -->
-      <a href="https://line.me/R/ti/p/@sommelin_official" target="_blank"
+      <a href="https://lin.ee/oe6bcON" target="_blank" rel="noopener"
          style="display:flex;align-items:center;justify-content:center;gap:10px;
                 background:var(--line);color:white;border-radius:14px;
                 padding:16px;text-decoration:none;font-size:16px;font-weight:800;
@@ -1540,7 +1548,7 @@
         <span data-i18n="line_add_friend_btn">LINEで友達追加する</span>
       </a>
       <div style="font-size:11px;color:var(--text-sub);text-align:center;margin-bottom:14px;" data-i18n="line_add_friend_note">
-        @sommelin_official · タップするとLINEアプリが開きます
+        ソムリン公式LINE · タップするとLINEアプリが開きます
       </div>
     </div>
 
@@ -2337,6 +2345,13 @@ const I18N = {
     verif_provisional: '確認中（仮許可でご利用中）',
     verif_verified: '確認済み',
     verif_rejected: '確認できませんでした',
+    verif_none: '未申請',
+    acct_title: 'アカウント', acct_store: '店舗・会社', acct_contact: '担当者（あなた）',
+    acct_name: '氏名', acct_jobtitle: '役職', acct_phone: '電話', acct_email: '連絡先メール', acct_login_email: 'ログインメール',
+    acct_from_card: '※ 担当者情報は登録時に名刺から読み取った申請内容です',
+    acct_urls: '登録URL', acct_no_app: '登録情報がまだありません。「登録情報を変更」から登録できます。',
+    acct_actions: '操作', acct_edit: '登録情報を変更', acct_logo: 'ロゴを変更', acct_personal: '個人モードへ',
+    acct_renew_due: '次回の年次確認: {d}',
     role_staff: 'スタッフ',
     btn_personal: '🍷 個人モード',
     btn_personal_title: '個人モードに切り替え',
@@ -2379,7 +2394,7 @@ const I18N = {
     line_step2: '自動で届くメッセージからお店情報を登録',
     line_step3: '試飲会情報がLINEに届くようになります 🎉',
     line_add_friend_btn: 'LINEで友達追加する',
-    line_add_friend_note: '@sommelin_official · タップするとLINEアプリが開きます',
+    line_add_friend_note: 'ソムリン公式LINE · タップするとLINEアプリが開きます',
     line_account_name: 'Bistrot Lumière スタッフ',
     line_types_label: '通知する種別',
     chip_tasting: '🍷 試飲会',
@@ -2835,6 +2850,13 @@ const I18N = {
     verif_provisional: 'Verifying (provisional access)',
     verif_verified: 'Verified',
     verif_rejected: 'Could not verify',
+    verif_none: 'Not applied',
+    acct_title: 'Account', acct_store: 'Store / Company', acct_contact: 'Contact (you)',
+    acct_name: 'Name', acct_jobtitle: 'Title', acct_phone: 'Phone', acct_email: 'Contact email', acct_login_email: 'Login email',
+    acct_from_card: '* Contact info is the application data read from your business card at registration',
+    acct_urls: 'Registered URLs', acct_no_app: 'No registration info yet. You can register from "Edit registration".',
+    acct_actions: 'Actions', acct_edit: 'Edit registration', acct_logo: 'Change logo', acct_personal: 'Personal mode',
+    acct_renew_due: 'Next annual check: {d}',
     role_staff: 'Staff',
     btn_personal: '🍷 Personal',
     btn_personal_title: 'Switch to personal mode',
@@ -2876,7 +2898,7 @@ const I18N = {
     line_step2: 'Register your store info from the message that arrives automatically',
     line_step3: 'Tasting event info will start arriving on LINE 🎉',
     line_add_friend_btn: 'Add as friend on LINE',
-    line_add_friend_note: '@sommelin_official · Tapping opens the LINE app',
+    line_add_friend_note: 'Sommelin official LINE · Tapping opens the LINE app',
     line_account_name: 'Bistrot Lumière Staff',
     line_types_label: 'Notification types',
     chip_tasting: '🍷 Tastings',
@@ -5773,20 +5795,17 @@ function initHeaderIdentity(){
   const nameEl=document.querySelector('.top-header-rest');
   if(nameEl && p.display_name) nameEl.textContent=p.display_name;
   const ic=document.querySelector('.top-header-icon');
-  if(ic){
-    if(p.avatar_url) ic.innerHTML='<img src="'+p.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" alt="logo">';
-    ic.style.cursor='pointer'; ic.title=t('logo_change_title'); ic.style.overflow='hidden';
-    ic.onclick=pickHeaderLogo;
-  }
+  if(ic && p.avatar_url){ ic.innerHTML='<img src="'+p.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" alt="logo">'; ic.style.overflow='hidden'; }
+  // ※ヘッダー全体タップ＝アカウントシート。ロゴ変更はシート内から（アイコン単独onclickは廃止）
   initVerifStatus(p.verification_status);
 }
 
-// 業務店確認ステータス表示（2026-07-21）: provisional=仮許可 / verified=確認済み / rejected=確認不可。
+// 業務店確認ステータス（2026-07-21・M1でヘッダーは小マーク化）: approved=✓ / pending=🕐 / rejected=⚠。
 function initVerifStatus(st){
-  const el=document.getElementById('verifStatus'); if(!el) return;
-  if(st==='approved'||st==='verified'){ el.textContent='✓ '+t('verif_verified'); el.style.color='#8CFFC0'; el.style.display='block'; }
-  else if(st==='provisional'||st==='pending'){ el.textContent='🕐 '+t('verif_provisional'); el.style.color='rgba(255,255,255,.85)'; el.style.display='block'; bizVerifySelfHeal(); }
-  else if(st==='rejected'){ el.textContent='⚠ '+t('verif_rejected'); el.style.color='#FFD08A'; el.style.display='block'; }
+  const el=document.getElementById('verifMark'); if(!el) return;
+  if(st==='approved'||st==='verified'){ el.textContent='✓'; el.style.color='#8CFFC0'; el.style.display='inline'; el.title=t('verif_verified'); }
+  else if(st==='provisional'||st==='pending'){ el.textContent='🕐'; el.style.display='inline'; el.title=t('verif_provisional'); bizVerifySelfHeal(); }
+  else if(st==='rejected'){ el.textContent='⚠'; el.style.color='#FFD08A'; el.style.display='inline'; el.title=t('verif_rejected'); }
   else { el.style.display='none'; }
 }
 // 30分に1回まで、provisionalなら再確認を叩く（申請直後の失敗・fetch一時障害の自己修復・cron不要）。
@@ -5798,7 +5817,7 @@ function bizVerifySelfHeal(){
     localStorage.setItem('somm_biz_verify_last', String(Date.now()));
     fetch(RW_API+'/api/business/verify',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:'{}'})
       .then(r=>r.ok?r.json():null)
-      .then(d=>{ if(d&&d.verdict==='verified'){ const el=document.getElementById('verifStatus'); if(el){ el.textContent='✓ '+t('verif_verified'); el.style.color='#8CFFC0'; } } })
+      .then(d=>{ if(d&&d.verdict==='verified'){ const el=document.getElementById('verifMark'); if(el){ el.textContent='✓'; el.style.color='#8CFFC0'; el.title=t('verif_verified'); } } })
       .catch(()=>{});
   }catch(e){}
 }
@@ -5813,6 +5832,86 @@ function pickHeaderLogo(){
   }
   inp.click();
 }
+
+// ── アカウントシート（業務店マイページ・M1 2026-07-21） ──
+function acctEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function openAccountSheet(){
+  document.getElementById('acctBackdrop').style.display='block';
+  document.getElementById('acctSheet').style.display='block';
+  document.getElementById('acctBody').innerHTML='<div style="text-align:center;color:var(--text-sub);font-size:13px;padding:24px 0;">'+t('loading')+'</div>';
+  renderAccountSheet();
+}
+function closeAccountSheet(){ document.getElementById('acctBackdrop').style.display='none'; document.getElementById('acctSheet').style.display='none'; }
+
+const ROLE_LABEL = { store:'🍽️ '+'', retailer:'🍾 ', importer:'📦 ', admin:'⚙️ ' };
+function roleLabelJa(r){ return { store:'🍽️ 飲食店・ホテル', retailer:'🍾 酒販店・卸', importer:'📦 インポーター', admin:'⚙️ 管理者' }[r] || r; }
+
+async function renderAccountSheet(){
+  let email=null; try{ const s=JSON.parse(localStorage.getItem('sommelin_session')||'null'); email=s&&s.user&&s.user.email; }catch(e){}
+  let d=null;
+  try{
+    const tok=rwToken();
+    const r=await fetch(RW_API+'/api/business/me',{headers:{'Authorization':'Bearer '+(tok||'')}});
+    if(r.ok) d=await r.json();
+  }catch(e){}
+  const body=document.getElementById('acctBody');
+  const acc=(d&&d.account)||{}, biz=(d&&d.business)||{}, ver=(d&&d.verification)||{};
+  const st=acc.verificationStatus;
+  // 確認ステータス行
+  let stChip='';
+  if(st==='approved'||st==='verified') stChip='<span style="color:#16a34a;font-weight:800;">✓ '+t('verif_verified')+'</span>';
+  else if(st==='pending'||st==='provisional') stChip='<span style="color:#b7791f;font-weight:800;">🕐 '+t('verif_provisional')+'</span>';
+  else if(st==='rejected') stChip='<span style="color:#c0392b;font-weight:800;">⚠ '+t('verif_rejected')+'</span>';
+  const renew = ver.renewDue ? new Date(ver.renewDue) : null;
+  const renewStr = renew ? (renew.getFullYear()+'/'+(renew.getMonth()+1)+'/'+renew.getDate()) : null;
+  const rolesHtml = (acc.roles||[]).map(r=>'<span style="display:inline-block;background:var(--burgundy-pale,#f0dde3);color:var(--burgundy);font-size:11px;font-weight:700;border-radius:10px;padding:3px 9px;margin:0 4px 4px 0;">'+acctEsc(roleLabelJa(r))+'</span>').join('') || '<span style="color:var(--text-sub);font-size:12px;">—</span>';
+  const row=(label,val)=> val ? '<div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;"><span style="color:var(--text-sub);flex-shrink:0;">'+label+'</span><span style="color:var(--text);font-weight:600;text-align:right;word-break:break-all;">'+acctEsc(val)+'</span></div>' : '';
+  const urls=biz.urls||{};
+  const urlRow=(icon,k)=> urls[k] ? '<a href="'+acctEsc(urls[k])+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--burgundy);text-decoration:none;word-break:break-all;">'+icon+' <span>'+acctEsc(urls[k])+'</span></a>' : '';
+  const anyUrl = urls.website||urls.gmap||urls.tabelog||urls.instagram;
+
+  body.innerHTML = `
+    <!-- 店舗・会社 -->
+    <div style="font-size:11px;font-weight:800;color:var(--text-sub);letter-spacing:.06em;margin-bottom:6px;">${t('acct_store')}</div>
+    <div style="background:#faf7f8;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;">
+      <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:6px;">${acctEsc(biz.company||acc.displayName||'—')}</div>
+      <div style="margin-bottom:6px;">${rolesHtml}</div>
+      <div style="font-size:13px;">${stChip||'<span style="color:var(--text-sub);font-size:12px;">'+t('verif_none')+'</span>'}</div>
+      ${renewStr && (st==='approved'||st==='verified') ? '<div style="font-size:11px;color:var(--text-sub);margin-top:4px;">'+t('acct_renew_due').replace('{d}', renewStr)+'</div>' : ''}
+    </div>
+
+    <!-- 担当者 -->
+    <div style="font-size:11px;font-weight:800;color:var(--text-sub);letter-spacing:.06em;margin:14px 0 6px;">${t('acct_contact')}</div>
+    <div style="background:#faf7f8;border:1px solid var(--border);border-radius:12px;padding:4px 14px;margin-bottom:4px;">
+      ${row(t('acct_name'), biz.contactName)}
+      ${row(t('acct_jobtitle'), biz.jobTitle)}
+      ${row(t('acct_phone'), biz.phone)}
+      ${row(t('acct_email'), biz.contactEmail)}
+      ${row(t('acct_login_email'), email)}
+    </div>
+    ${biz.fromCard ? '<div style="font-size:10.5px;color:var(--text-sub);margin:4px 2px 0;">'+t('acct_from_card')+'</div>' : ''}
+
+    <!-- URL -->
+    ${anyUrl ? `<div style="font-size:11px;font-weight:800;color:var(--text-sub);letter-spacing:.06em;margin:14px 0 6px;">${t('acct_urls')}</div>
+    <div style="background:#faf7f8;border:1px solid var(--border);border-radius:12px;padding:4px 14px;margin-bottom:4px;">
+      ${urlRow('🌐','website')}${urlRow('📍','gmap')}${urlRow('🍴','tabelog')}${urlRow('📸','instagram')}
+    </div>`:''}
+
+    ${!ver.hasApplication ? '<div style="font-size:12px;color:var(--text-sub);background:#fff6e6;border-radius:10px;padding:10px 12px;margin-top:12px;">'+t('acct_no_app')+'</div>' : ''}
+
+    <!-- 操作 -->
+    <div style="font-size:11px;font-weight:800;color:var(--text-sub);letter-spacing:.06em;margin:18px 0 8px;">${t('acct_actions')}</div>
+    <button onclick="renewBusinessInfo()" style="width:100%;background:var(--burgundy);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:8px;">✏️ ${t('acct_edit')}</button>
+    <button onclick="pickHeaderLogo()" style="width:100%;background:#fff;color:var(--text);border:1px solid var(--border);border-radius:12px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;">🖼️ ${t('acct_logo')}</button>
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <button onclick="setLang(LANG==='ja'?'en':'ja');renderAccountSheet();" style="flex:1;background:#fff;color:var(--text);border:1px solid var(--border);border-radius:12px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">🌏 ${LANG==='ja'?'English':'日本語'}</button>
+      <button onclick="location.href='prototype.html'" style="flex:1;background:#fff;color:var(--text);border:1px solid var(--border);border-radius:12px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">🍷 ${t('acct_personal')}</button>
+    </div>
+    <button onclick="sommelinLogout()" style="width:100%;background:#fff;color:#c0392b;border:1px solid var(--border);border-radius:12px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">⏻ ${t('menu_logout')}</button>
+  `;
+}
+// 登録情報の変更＝前回値プリフィルで再確認フローへ（M2で本実装。今は登録フローへ誘導）
+function renewBusinessInfo(){ location.href='login.html?renew=1'; }
 
 async function uploadHeaderLogo(file){
   const uid=await rwUid();
