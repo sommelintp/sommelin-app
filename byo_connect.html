@@ -68,6 +68,8 @@
 
 <script>
 const API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+const SB_URL = 'https://gkhdpzfmqraliwaiubwl.supabase.co';
+const SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
 const SESSION_KEY = 'sommelin_session';
 const REQ_KEY = 'byo_req';
 
@@ -132,6 +134,30 @@ function toggleLang(){ LANG = LANG === 'ja' ? 'en' : 'ja'; try { localStorage.se
 function getSession(){ try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e){ return null; } }
 function showErr(msg){ const e = document.getElementById('err'); e.textContent = msg; e.style.display = 'block'; }
 
+// Supabaseアクセストークンは1時間で失効する。失効していると /api/byo/approve が401になり、
+// 名前は表示されているのに接続できない（＝ログイン往復のループの原因）。refresh_tokenで更新を試みる。
+async function refreshSession(){
+  const s = getSession();
+  if (!s || !s.refresh_token) return null;
+  try {
+    const r = await fetch(SB_URL + '/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SB_KEY },
+      body: JSON.stringify({ refresh_token: s.refresh_token }),
+    });
+    if (!r.ok) return null;
+    const ns = await r.json();
+    if (!ns || !ns.access_token) return null;
+    const merged = Object.assign({}, s, ns);   // access/refresh/user等を更新
+    try { localStorage.setItem(SESSION_KEY, JSON.stringify(merged)); } catch(e){}
+    return merged;
+  } catch (e) { return null; }
+}
+function goLogin(){
+  try { sessionStorage.setItem(REQ_KEY, REQ); } catch(e){}
+  window.location.href = 'login.html?return=' + encodeURIComponent('byo_connect.html');
+}
+
 // リクエストJWT: URLの?req= を優先し、無ければsessionStorage（ログイン往復から戻ったとき）から。
 function currentReq(){
   const fromUrl = new URLSearchParams(location.search).get('req');
@@ -162,26 +188,34 @@ function init(){
   document.getElementById('acct').style.display = 'flex';
 }
 
+// 承認API呼び出し（1回分）。401なら {unauth:true} を返す。
+async function callApprove(token){
+  const r = await fetch(API_BASE + '/api/byo/approve', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ req: REQ }),
+  });
+  if (r.status === 401) return { unauth: true };
+  if (!r.ok) throw new Error('http ' + r.status);
+  const d = await r.json();
+  if (!d.redirect) throw new Error('no redirect');
+  return { redirect: d.redirect };
+}
 async function approve(){
   const btn = document.getElementById('approveBtn');
-  const s = getSession();
+  let s = getSession();
   if (!REQ || !s || !s.access_token) { showErr(t('err_noreq')); return; }
   btn.disabled = true; btn.innerHTML = '<span class="spin"></span>' + t('approving');
   try {
-    const r = await fetch(API_BASE + '/api/byo/approve', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.access_token },
-      body: JSON.stringify({ req: REQ }),
-    });
-    if (r.status === 401) { // トークン失効 → 再ログイン
-      try { sessionStorage.setItem(REQ_KEY, REQ); } catch(e){}
-      window.location.href = 'login.html?return=' + encodeURIComponent('byo_connect.html'); return;
+    let res = await callApprove(s.access_token);
+    if (res.unauth) {
+      // トークン失効 → まず更新を試みる（ログイン往復を避ける）。だめなら普通のログインへ。
+      const ns = await refreshSession();
+      if (ns && ns.access_token) { res = await callApprove(ns.access_token); }
+      if (!ns || res.unauth) { goLogin(); return; }
     }
-    if (!r.ok) throw new Error('http ' + r.status);
-    const d = await r.json();
-    if (!d.redirect) throw new Error('no redirect');
     try { sessionStorage.removeItem(REQ_KEY); } catch(e){}
-    window.location.href = d.redirect;   // Claudeのコールバックへ戻す
+    window.location.href = res.redirect;   // Claudeのコールバックへ戻す
   } catch (e) {
     btn.disabled = false; btn.textContent = t('approve');
     showErr(t('err_fail'));

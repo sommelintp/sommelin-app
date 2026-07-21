@@ -1061,12 +1061,9 @@ function chooseRole(role) {
   showScreen('screenRegForm');
 }
 
-// ?return= 付きで来て既にログイン済みなら、即その戻り先へ（BYO接続導線のロバスト化）。
-(function initReturnRedirect(){
-  const ret = returnDest();
-  const session = getSession();
-  if (ret && session && session.access_token) { window.location.replace(ret); }
-})();
+// 注（2026-07-20）: 以前ここに「?return=付きで既ログインなら即戻す」自動リダイレクトを置いたが、
+// トークン期限切れ（access_tokenは残るが失効）のとき byo_connect.html ⇄ login.html の無限ループを
+// 生んだため撤去。戻りは emailLogin 成功時（=フレッシュなトークン取得後）にのみ行う。
 
 // 2026-07-08追加: マイページの「業務店として登録する」からの遷移（?addRole=1）。
 // 既にログイン済みのアカウントに業務ロールを追加するだけなので、メール/パスワード作成は
