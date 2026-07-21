@@ -45,7 +45,7 @@
         try{
           localStorage.setItem('sommelin_role',role);
           localStorage.setItem('sommelin_roles',JSON.stringify(roles));
-          localStorage.setItem('sommelin_profile',JSON.stringify({display_name:(rows&&rows[0]&&rows[0].display_name)||null, avatar_url:(rows&&rows[0]&&rows[0].avatar_url)||null}));
+          localStorage.setItem('sommelin_profile',JSON.stringify({display_name:(rows&&rows[0]&&rows[0].display_name)||null, avatar_url:(rows&&rows[0]&&rows[0].avatar_url)||null, verification_status:(rows&&rows[0]&&rows[0].verification_status)||null}));
         }catch(e){}
         if(typeof initHeaderIdentity==='function') setTimeout(initHeaderIdentity,0);
         var ok=false; for(var i=0;i<roles.length;i++){ if(ALLOWED.indexOf(roles[i])!==-1){ ok=true; break; } }
@@ -1137,6 +1137,7 @@
   <div class="th-info">
     <div class="th-name">山田商店</div>
     <div class="th-sub" data-i18n="th_sub">Sommelin インポーター管理</div>
+    <div class="th-sub" id="verifStatus" style="display:none;font-weight:700;margin-top:2px;"></div>
   </div>
   <div class="th-badge" id="roleBadge" data-i18n="role_badge">インポーター</div>
   <button id="langBtn" onclick="setLang(LANG==='ja'?'en':'ja')" style="background:rgba(255,255,255,.15);border:none;color:#fff;font-size:11px;font-weight:700;cursor:pointer;padding:6px 10px;margin-left:6px;border-radius:14px;white-space:nowrap;"></button>
@@ -1675,6 +1676,9 @@ const I18N = {
   ja: {
     page_title: 'Sommelin — インポーター管理 | 山田商店',
     th_sub: 'Sommelin インポーター管理',
+    verif_provisional: '確認中（仮許可でご利用中）',
+    verif_verified: '確認済み',
+    verif_rejected: '確認できませんでした',
     role_badge: 'インポーター',
     role_importer_badge: '🚢 インポーター',
     switch_both: '⇄ 🛒🍽 店舗に切替',
@@ -1975,6 +1979,9 @@ const I18N = {
   en: {
     page_title: 'Sommelin — Importer Admin | Yamada Shoten',
     th_sub: 'Sommelin Importer Admin',
+    verif_provisional: 'Verifying (provisional access)',
+    verif_verified: 'Verified',
+    verif_rejected: 'Could not verify',
     role_badge: 'Importer',
     role_importer_badge: '🚢 Importer',
     switch_both: '⇄ 🛒🍽 Switch to store',
@@ -2539,6 +2546,30 @@ function initHeaderIdentity(){
     ic.style.cursor='pointer'; ic.title=t('title_change_logo'); ic.style.overflow='hidden';
     ic.onclick=pickHeaderLogo;
   }
+  initVerifStatus(p.verification_status);
+}
+
+// 業務店確認ステータス（2026-07-21）: provisional=仮許可 / verified=確認済み / rejected=確認不可。
+function initVerifStatus(st){
+  const el=document.getElementById('verifStatus'); if(!el) return;
+  if(st==='approved'||st==='verified'){ el.textContent='✓ '+t('verif_verified'); el.style.color='#8CFFC0'; el.style.display='block'; }
+  else if(st==='provisional'||st==='pending'){ el.textContent='🕐 '+t('verif_provisional'); el.style.color='rgba(255,255,255,.85)'; el.style.display='block'; bizVerifySelfHeal(); }
+  else if(st==='rejected'){ el.textContent='⚠ '+t('verif_rejected'); el.style.color='#FFD08A'; el.style.display='block'; }
+  else { el.style.display='none'; }
+}
+function bizVerifyToken(){ try{ const s=JSON.parse(localStorage.getItem('sommelin_session')||'null'); return s&&s.access_token; }catch(e){ return null; } }
+// 30分に1回まで、provisionalなら再確認を叩く（自己修復・cron不要）。
+function bizVerifySelfHeal(){
+  try{
+    const last=parseInt(localStorage.getItem('somm_biz_verify_last')||'0',10);
+    if(Date.now()-last < 30*60*1000) return;
+    const tok=bizVerifyToken(); if(!tok) return;
+    localStorage.setItem('somm_biz_verify_last', String(Date.now()));
+    fetch(EV_API_BASE+'/api/business/verify',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:'{}'})
+      .then(r=>r.ok?r.json():null)
+      .then(d=>{ if(d&&d.verdict==='verified'){ const el=document.getElementById('verifStatus'); if(el){ el.textContent='✓ '+t('verif_verified'); el.style.color='#8CFFC0'; } } })
+      .catch(()=>{});
+  }catch(e){}
 }
 
 function pickHeaderLogo(){

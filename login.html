@@ -584,10 +584,10 @@ body {
 
       <!-- 表面 -->
       <div style="font-size:12px;font-weight:700;color:var(--text-sub);margin-bottom:6px;">📄 表面（必須）</div>
-      <div class="vm-upload" id="vmup-front" onclick="simulateVerifyUpload('front')">
+      <div class="vm-upload" id="vmup-front" onclick="pickCard('front')">
         <div class="vm-upload-icon" id="vmupIcon-front">📷</div>
         <div class="vm-upload-label" id="vmupLabel-front">表面を撮影・アップロード</div>
-        <div class="vm-upload-sub" id="vmupSub-front">タップしてカメラを起動</div>
+        <div class="vm-upload-sub" id="vmupSub-front">タップして写真を選ぶ</div>
       </div>
 
       <!-- 裏面（表がアップ済みになったら表示） -->
@@ -597,10 +597,10 @@ body {
           <span style="font-size:10px;background:#f0fdf4;color:#16a34a;padding:2px 7px;border-radius:8px;font-weight:700;">任意 — 精度が上がります</span>
           <span id="backCheckmark" style="color:#06C755;font-size:11px;font-weight:700;margin-left:auto;display:none;">✓ 完了</span>
         </div>
-        <div class="vm-upload" id="vmup-back" onclick="simulateVerifyUpload('back')" style="border-color:#ccc;background:#fafafa;">
+        <div class="vm-upload" id="vmup-back" onclick="pickCard('back')" style="border-color:#ccc;background:#fafafa;">
           <div class="vm-upload-icon" id="vmupIcon-back">📷</div>
           <div class="vm-upload-label" id="vmupLabel-back">裏面を撮影・アップロード</div>
-          <div class="vm-upload-sub" id="vmupSub-back">タップしてカメラを起動</div>
+          <div class="vm-upload-sub" id="vmupSub-back">タップして写真を選ぶ</div>
         </div>
       </div>
     </div>
@@ -625,6 +625,7 @@ body {
       <div class="vm-expand" id="vmexp-website">
         <input class="vm-url-input" id="vmurl-website" type="url" placeholder="https://www.example.co.jp"
                oninput="onUrlInput('website', this.value)">
+        <div class="vm-url-hint" id="vmhint-website" style="font-size:10.5px;color:#c0392b;margin-top:4px;display:none;"></div>
       </div>
     </div>
 
@@ -641,6 +642,7 @@ body {
       <div class="vm-expand" id="vmexp-gmap">
         <input class="vm-url-input" id="vmurl-gmap" type="url" placeholder="https://maps.google.com/..."
                oninput="onUrlInput('gmap', this.value)">
+        <div class="vm-url-hint" id="vmhint-gmap" style="font-size:10.5px;color:#c0392b;margin-top:4px;display:none;"></div>
       </div>
     </div>
 
@@ -657,6 +659,24 @@ body {
       <div class="vm-expand" id="vmexp-tabelog">
         <input class="vm-url-input" id="vmurl-tabelog" type="url" placeholder="https://tabelog.com/..."
                oninput="onUrlInput('tabelog', this.value)">
+        <div class="vm-url-hint" id="vmhint-tabelog" style="font-size:10.5px;color:#c0392b;margin-top:4px;display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Instagram -->
+    <div class="verify-block">
+      <div class="verify-method" id="vmethod-instagram" onclick="toggleVerify('instagram', this)">
+        <div class="vm-checkbox" id="vmcb-instagram"></div>
+        <span class="vm-icon">📸</span>
+        <div class="vm-info">
+          <div class="vm-title">Instagram URL</div>
+          <div class="vm-sub">お店・会社の公式Instagram</div>
+        </div>
+      </div>
+      <div class="vm-expand" id="vmexp-instagram">
+        <input class="vm-url-input" id="vmurl-instagram" type="url" placeholder="https://www.instagram.com/..."
+               oninput="onUrlInput('instagram', this.value)">
+        <div class="vm-url-hint" id="vmhint-instagram" style="font-size:10.5px;color:#c0392b;margin-top:4px;display:none;"></div>
       </div>
     </div>
 
@@ -722,7 +742,7 @@ body {
       <div style="display:flex;gap:8px;margin-bottom:10px;">
         <div class="form-group" style="flex:1;margin-bottom:0;">
           <label class="form-label" style="font-size:11px;">氏名</label>
-          <input class="form-input" id="cf-name" type="text" placeholder="例：田中 健一">
+          <input class="form-input" id="cf-name" type="text" placeholder="担当者のお名前">
         </div>
         <div class="form-group" style="flex:1;margin-bottom:0;">
           <label class="form-label" style="font-size:11px;">役職</label>
@@ -976,8 +996,13 @@ function applyReferralIfAny(){
 // ── 本人確認：名刺表裏（表必須）+ URL1つ以上（必須） ──
 let verifyCardFront = false;  // 名刺表面アップロード済み
 let verifyCardBack  = false;  // 名刺裏面アップロード済み
-const verifyUrlData = { website: false, gmap: false, tabelog: false };
+const verifyUrlData = { website: false, gmap: false, tabelog: false, instagram: false };
 const verifyUrlSelected = new Set();
+// 業務店確認 V2（2026-07-21）: 名刺OCRの実結果・保存パス・サムネイル用dataURL
+const API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+const cardOcr   = { front: null, back: null };  // /api/business/ocr-card の抽出結果
+const cardPath  = { front: null, back: null };  // storage保存パス
+const cardThumb = { front: null, back: null };  // 確認画面サムネイル用
 
 const roleConfig = {
   // 登録直後の遷移先。個人はオンボーディングへ、業務者は確認後それぞれの管理画面へ。
@@ -1137,44 +1162,108 @@ function toggleVerify(method, el) {
   updateVerifyReady();
 }
 
-// ── URL入力 ──
+// ── URL入力（形式チェック＋種別取り違え検知・2026-07-21） ──
+// 期待ドメイン（部分一致）。拒否はしない＝最後は本人の申告（優しく指摘するだけ）。
+const URL_EXPECT = {
+  gmap:      { hosts: ['google.', 'goo.gl', 'g.page', 'maps.app.goo.gl'], label: 'Googleマップ' },
+  tabelog:   { hosts: ['tabelog.com'], label: '食べログ' },
+  instagram: { hosts: ['instagram.com', 'instagr.am'], label: 'Instagram' },
+};
+function urlHint(method, value) {
+  const el = document.getElementById('vmhint-' + method);
+  if (!el) return true;
+  const v = value.trim();
+  if (!v) { el.style.display = 'none'; return true; }
+  let host = null;
+  try { host = new URL(v.includes('://') ? v : 'https://' + v).hostname.toLowerCase(); }
+  catch (e) { host = null; }
+  if (!host || !host.includes('.') || /\s/.test(host)) {
+    el.textContent = 'URLの形になっていないようです（例: https://…）'; el.style.display = 'block'; return false;
+  }
+  const exp = URL_EXPECT[method];
+  if (exp && !exp.hosts.some(h => host.includes(h))) {
+    el.textContent = exp.label + 'のURLではないようです。念のためご確認ください（このまま進めても構いません）';
+    el.style.display = 'block';
+    return true; // 警告のみ・進行は妨げない
+  }
+  el.style.display = 'none';
+  return true;
+}
 function onUrlInput(method, value) {
   verifyUrlData[method] = value.trim().length > 0;
-  // URL完了チェックマーク
+  urlHint(method, value);
   const anyUrl = Object.values(verifyUrlData).some(v => v);
   const urlCk = document.getElementById('urlCheckmark');
   if (urlCk) urlCk.style.display = anyUrl ? 'inline' : 'none';
   updateVerifyReady();
 }
 
-// ── 名刺アップロードシミュレーション（表/裏） ──
-function simulateVerifyUpload(side) {
-  const icon  = document.getElementById('vmupIcon-'  + side);
-  const label = document.getElementById('vmupLabel-' + side);
-  const sub   = document.getElementById('vmupSub-'   + side);
-  const area  = document.getElementById('vmup-'      + side);
-  icon.textContent  = '⏳';
-  label.textContent = 'OCR読み込み中...';
-  sub.textContent   = '';
-  setTimeout(() => {
-    icon.textContent  = '✅';
-    sub.textContent   = '読み取り成功';
-    area.classList.add('filled');
+// ── 名刺アップロード（本物・2026-07-21）: 写真選択 → /api/business/ocr-card で保存＋AI読取 ──
+function pickCard(side) {
+  let inp = document.getElementById('cardInput-' + side);
+  if (!inp) {
+    inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'image/*'; inp.id = 'cardInput-' + side; inp.style.display = 'none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change', e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) uploadCard(side, f); });
+  }
+  inp.click();
+}
+// 画像を長辺1600・JPEGに縮小（名刺の小さい文字を残しつつ通信量を抑える）
+function cardToDataUrl(file) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const sc = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      resolve(c.toDataURL('image/jpeg', 0.85));
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror = () => resolve(null);
+    img.src = URL.createObjectURL(file);
+  });
+}
+async function uploadCard(side, file) {
+  const icon = document.getElementById('vmupIcon-' + side), label = document.getElementById('vmupLabel-' + side),
+        sub = document.getElementById('vmupSub-' + side), area = document.getElementById('vmup-' + side);
+  icon.textContent = '⏳'; label.textContent = 'AIが読み取り中…'; sub.textContent = '';
+  const dataUrl = await cardToDataUrl(file);
+  if (!dataUrl) { icon.textContent = '📷'; label.textContent = 'もう一度お試しください'; return; }
+  cardThumb[side] = dataUrl;
+  try {
+    const tok = authToken();
+    const r = await fetch(API_BASE + '/api/business/ocr-card', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+      body: JSON.stringify({ image: dataUrl, side }),
+    });
+    if (r.status === 429) { icon.textContent = '📷'; label.textContent = '回数上限です。少し待ってからどうぞ'; return; }
+    if (!r.ok) throw new Error('http ' + r.status);
+    const d = await r.json();
+    cardOcr[side] = d.ocr || null;
+    cardPath[side] = d.cardPath || null;
+    icon.textContent = '✅'; area.classList.add('filled');
+    // no-lie: 実際に読めた項目数を正直に伝える。0でも画像は受付＝手入力で進める。
+    const got = d.ocr ? Object.keys(d.ocr).filter(k => k !== 'confidence' && d.ocr[k]).length : 0;
+    sub.textContent = got ? (got + '項目を読み取りました') : '画像を受け付けました（内容は次で入力できます）';
     if (side === 'front') {
-      verifyCardFront = true;
-      label.textContent = '表面のアップロード完了';
-      // 裏面セクションを表示
+      verifyCardFront = true; label.textContent = '表面 完了';
       document.getElementById('cardBackSection').style.display = 'block';
-      showToast('📇 表面を受け付けました');
+      showToast(got ? '📇 名刺を読み取りました' : '📇 表面を受け付けました');
     } else {
-      verifyCardBack = true;
-      label.textContent = '裏面のアップロード完了';
-      const ck = document.getElementById('backCheckmark');
-      if (ck) ck.style.display = 'inline';
-      showToast('📇 裏面も受け付けました。より精度が上がります！');
+      verifyCardBack = true; label.textContent = '裏面 完了';
+      const ck = document.getElementById('backCheckmark'); if (ck) ck.style.display = 'inline';
+      showToast('📇 裏面も受け付けました');
     }
     updateVerifyReady();
-  }, 1400);
+  } catch (e) {
+    // 通信失敗: 表面は「画像を受け付けた」扱いにして手入力で進めさせる（読取失敗で足止めしない）
+    icon.textContent = '📷'; label.textContent = 'もう一度お試しください'; sub.textContent = '手入力でも進めます';
+    if (side === 'front') { verifyCardFront = true; document.getElementById('cardBackSection').style.display = 'block'; }
+    else { verifyCardBack = true; }
+    updateVerifyReady();
+  }
 }
 
 // ── 送信ボタンの有効/無効を更新 ──
@@ -1201,37 +1290,47 @@ function updateVerifyReady() {
   }
 }
 
-// ── 確認画面へ（OCRデータをフォームに反映） ──
-function goToVerifyConfirm() {
-  // ── OCRシミュレーション ──
-  document.getElementById('cf-company').value  = '株式会社ビノムンディ';
-  document.getElementById('cf-name').value     = '田中 健一';
-  document.getElementById('cf-jobtitle').value = '輸入部 シニアマネージャー';
-  document.getElementById('cf-phone').value    = '03-1234-5678';
-  document.getElementById('cf-email').value    = 'tanaka@vino-mundi.co.jp';
-
-  // 裏面サムネイル更新
-  if (verifyCardBack) {
-    const tb = document.getElementById('thumbBack');
-    if (tb) {
-      tb.style.background = 'linear-gradient(135deg,#5C0E2A,#9B1B4B)';
-      tb.style.opacity    = '1';
-      tb.innerHTML = '<span style="font-size:20px;">📇</span><span style="color:white;font-size:10px;font-weight:700;">裏面 ✓</span>';
-    }
+// ── 名刺OCRの表裏をマージ（非nullを優先） ──
+function mergedOcr() {
+  const f = cardOcr.front || {}, b = cardOcr.back || {};
+  const pick = k => f[k] || b[k] || '';
+  return { company: pick('company'), name: pick('name'), jobTitle: pick('jobTitle'), phone: pick('phone'), email: pick('email') };
+}
+// 確認画面のサムネイルを実画像に
+function setThumb(id, dataUrl, doneLabel) {
+  const el = document.getElementById(id); if (!el) return;
+  if (dataUrl) {
+    el.style.opacity = '1';
+    el.style.background = 'center/cover no-repeat url(' + dataUrl + ')';
+    el.innerHTML = '<span style="background:rgba(0,0,0,.55);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;margin-top:auto;margin-bottom:6px;">' + doneLabel + '</span>';
   }
+}
 
-  // URL一覧を生成
-  const labels   = { website:'🌐 ホームページ', gmap:'📍 Googleマップ', tabelog:'🍴 食べログ' };
-  const urlList  = document.getElementById('cfUrlList');
+// ── 確認画面へ（名刺OCRの実結果をプリフィル・編集可能） ──
+function goToVerifyConfirm() {
+  const o = mergedOcr();
+  document.getElementById('cf-company').value  = o.company;
+  document.getElementById('cf-name').value     = o.name;
+  document.getElementById('cf-jobtitle').value = o.jobTitle;
+  document.getElementById('cf-phone').value    = o.phone;
+  document.getElementById('cf-email').value    = o.email;
+
+  // サムネイル（実画像）
+  setThumb('thumbFront', cardThumb.front, '表面 ✓');
+  if (verifyCardBack) setThumb('thumbBack', cardThumb.back, '裏面 ✓');
+
+  // URL一覧を生成（Instagram含む）
+  const labels  = { website:'🌐 ホームページ', gmap:'📍 Googleマップ', tabelog:'🍴 食べログ', instagram:'📸 Instagram' };
+  const urlList = document.getElementById('cfUrlList');
   urlList.innerHTML = '';
   let hasUrl = false;
-  ['website','gmap','tabelog'].forEach(key => {
+  ['website','gmap','tabelog','instagram'].forEach(key => {
     if (verifyUrlSelected.has(key)) {
       const val = document.getElementById('vmurl-' + key)?.value || '';
       const div = document.createElement('div');
       div.style.marginBottom = '10px';
       div.innerHTML = `<label class="form-label" style="font-size:11px;">${labels[key]}</label>
-        <input class="form-input" id="cf-url-${key}" type="url" value="${val}" style="font-size:13px;">`;
+        <input class="form-input" id="cf-url-${key}" type="url" value="${escAttr(val)}" style="font-size:13px;">`;
       urlList.appendChild(div);
       hasUrl = true;
     }
@@ -1242,14 +1341,16 @@ function goToVerifyConfirm() {
 
   showScreen('screenVerifyConfirm');
 }
+function escAttr(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-// ── 最終申請（AI自動確認 → 即時利用） ──
+// ── 最終申請（保存 → 仮許可 → AI自動確認を発火） ──
 function submitFinalVerify() {
-  showLoading('申請を保存中… 🤖');
+  showLoading('申請を保存中…');
   const urls = {};
-  ['website','gmap','tabelog'].forEach(k => {
+  ['website','gmap','tabelog','instagram'].forEach(k => {
     if (verifyUrlSelected.has(k)) {
-      urls[k] = ((document.getElementById('cf-url-'+k)?.value) || (document.getElementById('vmurl-'+k)?.value) || '').trim();
+      const v = ((document.getElementById('cf-url-'+k)?.value) || (document.getElementById('vmurl-'+k)?.value) || '').trim();
+      if (v) urls[k] = v;
     }
   });
   const payload = {
@@ -1260,16 +1361,34 @@ function submitFinalVerify() {
     phone: document.getElementById('cf-phone')?.value.trim() || null,
     contact_email: document.getElementById('cf-email')?.value.trim() || null,
     urls: urls,
+    card_front_path: cardPath.front,
+    card_back_path: cardPath.back,
+    ocr: mergedOcr(),
     card_front_uploaded: verifyCardFront,
     card_back_uploaded: verifyCardBack,
-    status: 'pending'
+    status: 'pending_ai'
   };
+  // profilesは verification_status を pending（＝仮許可の意味で流用。既存CHECK制約に'provisional'が
+  // 無いため。アプリ側は pending を「確認中（仮許可でご利用中）」として表示する）。会社/連絡先も更新。
+  // ※ display_name は上書きしない（名刺の担当者名でユーザーの表示名を書き換えない。田中健一問題の根治）。
+  const profileFields = { verification_status: 'pending', company: payload.company, phone: payload.phone, contact_email: payload.contact_email };
   Promise.resolve()
     .then(() => saveBusinessApplication(payload))
-    .then(() => patchProfile({ verification_status: 'pending', company: payload.company, phone: payload.phone, contact_email: payload.contact_email, display_name: payload.contact_name }))
+    .then(() => patchProfile(profileFields))
+    .then(() => { fireBusinessVerify(); })       // 申請保存後にAI確認を発火（fire-and-forget）
     .then(() => { if (addRoleMode) return addBusinessRole(selectedRole); })
     .catch(() => {})
     .then(() => { hideLoading(); showScreen('screenPending'); });
+}
+// AI自動確認を発火（サーバーが申請URLを取得→照合→verified/needs_review）。結果は待たない。
+function fireBusinessVerify() {
+  const tok = authToken(); if (!tok) return;
+  try {
+    fetch(API_BASE + '/api/business/verify', {
+      method: 'POST', keepalive: true,
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok }, body: '{}',
+    }).catch(() => {});
+  } catch (e) {}
 }
 
 // 2026-07-08追加: 既存の個人アカウントに業務ロールを追加する（addRoleMode時のみ呼ぶ）
