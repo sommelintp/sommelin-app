@@ -179,12 +179,15 @@ function init(){
     setTimeout(() => { window.location.href = 'login.html?return=' + encodeURIComponent('byo_connect.html'); }, 900);
     return;
   }
-  // アカウント表示
-  let name = null;
-  try { const p = JSON.parse(localStorage.getItem('sommelin_profile') || 'null'); name = p && p.display_name; } catch(e){}
-  if (!name) { name = (s.user && s.user.email) || (s.user && s.user.user_metadata && s.user.user_metadata.display_name) || 'あなた'; }
-  document.getElementById('acctName').textContent = name;
-  document.getElementById('acctAv').textContent = (String(name).trim()[0] || '?').toUpperCase();
+  // アカウント表示: 「どのアカウントに繋ぐか」を確認する画面なので、一意に識別できる
+  // メールアドレスを主表示にする（表示名=display_nameは業務登録等で別の値になっていることが
+  // あり、混乱の元。メールなら本人が確実に見分けられる）。
+  const email = (s.user && s.user.email) || null;
+  let profileName = null;
+  try { const p = JSON.parse(localStorage.getItem('sommelin_profile') || 'null'); profileName = p && p.display_name; } catch(e){}
+  const primary = email || profileName || 'あなた';
+  document.getElementById('acctName').textContent = primary;
+  document.getElementById('acctAv').textContent = (String(primary).trim()[0] || '?').toUpperCase();
   document.getElementById('acct').style.display = 'flex';
 }
 
