@@ -2188,6 +2188,8 @@
   <span id="storeFollowerCount" style="font-size:11px;color:var(--text-sub);white-space:nowrap;"></span>
 </div>
 <div id="storeEventsBox" style="display:none;margin:0 20px 14px;"></div>
+<!-- 業務店ペアリング（機能F Phase 2・2026-07-22・?r=店ページでのみ表示） -->
+<div id="storePairingsBox" style="display:none;margin:0 20px 14px;"></div>
 
 <!-- CLASSIC LIST VIEW -->
 <div class="classic-list" id="classicList"></div>
@@ -3080,6 +3082,8 @@ const I18N = {
     store_follow: 'このお店をフォロー', store_following: 'フォロー中', store_followers: 'フォロワー {n}人',
     store_follow_need_uid: 'フォローできませんでした', store_events_head: 'このお店のイベント', home_store_events: 'フォロー中のお店のイベント',
     ev_free: '無料', ev_signup: '申し込む',
+    store_pairings_head: 'おすすめペアリング', store_pairings_sub: '当店に来たら、ぜひこの組み合わせを',
+    pairing_estimated_tag: 'ソムリンの見立て:',
     settings_header: '設定', menu_byo: 'あなたのAIに接続', menu_subscription: 'サブスクリプション', free_plan: '無料プラン',
     menu_integrations: '連携サービス', coming_soon: '準備中', toast_integrations: '連携サービスは準備中です（近日公開）',
     ig_not_linked: '未連携', ig_modal_title: '🔗 連携サービス',
@@ -3267,6 +3271,8 @@ const I18N = {
     store_follow: 'Follow this shop', store_following: 'Following', store_followers: '{n} followers',
     store_follow_need_uid: 'Could not follow', store_events_head: 'This shop\'s events', home_store_events: 'Events from shops you follow',
     ev_free: 'Free', ev_signup: 'Sign up',
+    store_pairings_head: 'Recommended Pairings', store_pairings_sub: 'Come try this combination when you visit',
+    pairing_estimated_tag: "Sommelin's estimate:",
     settings_header: 'Settings', menu_byo: 'Connect your AI', menu_subscription: 'Subscription', free_plan: 'Free Plan',
     menu_integrations: 'Linked Services', coming_soon: 'Coming soon', toast_integrations: 'Linked services are coming soon',
     ig_not_linked: 'Not linked', ig_modal_title: '🔗 Linked Services',
@@ -4325,6 +4331,7 @@ async function loadRestaurantList(rid) {
     document.querySelectorAll('.restaurant-name').forEach(el => el.textContent = shopName);
     if (window.sommLog) sommLog('store_list_view', { r: rid });
     initStoreFollowAndEvents(rid);   // E3: フォローボタン＋この店のイベント
+    loadStorePagePairings(rid);      // 機能F Phase 2: このお店のおすすめペアリング
 
     // 来店記録（端末キャッシュ＋サーバー同期。履歴からの再訪問 nv=1 は記録しない）
     if (!new URLSearchParams(location.search).get('nv')) {
@@ -5551,6 +5558,30 @@ async function loadStorePageEvents(rid){
     box.innerHTML='<div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:8px;">📅 '+t('store_events_head')+'</div>'+items.map(e=>storeEventCard(e,false)).join('');
     box.style.display='block';
   }catch(e){ box.style.display='none'; }
+}
+// ── 業務店ペアリング（機能F Phase 2・2026-07-22）: 店が公開したペアリングだけを表示 ──
+function storePairingCard(p){
+  const scoreLine = [p.scoreText, p.starText].filter(Boolean).join(' ・ ');
+  return `<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;">
+    ${p.dishPhotoUrl ? `<img src="${escE(p.dishPhotoUrl)}" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-bottom:8px;" loading="lazy">` : ''}
+    <div style="font-size:11.5px;color:var(--text-sub);">${escE(p.dishName)}</div>
+    <div style="font-size:14px;font-weight:800;color:var(--text);margin-top:2px;">🍷 ${escE(p.wineName)}</div>
+    ${scoreLine ? `<div style="font-size:11px;color:var(--text-sub);margin-top:2px;">${escE(scoreLine)}</div>` : ''}
+    ${p.reason ? `<div style="font-size:12px;color:var(--text-sub);margin-top:6px;line-height:1.5;">${p.isEstimated ? '<span style="color:var(--burgundy);font-weight:700;">'+t('pairing_estimated_tag')+'</span> ' : ''}${escE(p.reason)}</div>` : ''}
+  </div>`;
+}
+function loadStorePagePairings(rid){
+  const box=document.getElementById('storePairingsBox'); if(!box) return;
+  fetch(CHAT_API_BASE+'/api/store-pairings/by-store?storeId='+encodeURIComponent(rid))
+    .then(r=>r.ok?r.json():null)
+    .then(d=>{
+      const items=(d&&d.items)||[];
+      if(!items.length){ box.style.display='none'; return; }
+      box.innerHTML='<div style="font-size:14px;font-weight:800;color:var(--text);font-family:var(--font-display);margin-bottom:2px;">🍷 '+t('store_pairings_head')+'</div>'
+        +'<div style="font-size:11.5px;color:var(--text-sub);margin-bottom:10px;">'+t('store_pairings_sub')+'</div>'
+        +items.map(storePairingCard).join('');
+      box.style.display='block';
+    }).catch(()=>{ box.style.display='none'; });
 }
 // ホーム: フォロー中の店の今後のイベント
 function loadHomeStoreEvents(){

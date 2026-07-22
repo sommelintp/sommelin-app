@@ -1457,6 +1457,9 @@
   <div class="tab-nav-item" id="tnav-an" onclick="switchPanel('analytics')">
     <span class="nav-icon">📈</span><span data-i18n="tab_analytics">分析</span>
   </div>
+  <div class="tab-nav-item" id="tnav-pr" onclick="switchPanel('pairings')">
+    <span class="nav-icon">🍽️</span><span data-i18n="tab_pairings">ペアリング</span>
+  </div>
 </div>
 
 <!-- ==================== アカウントシート（業務店マイページ・M1 2026-07-21） ==================== -->
@@ -1860,6 +1863,30 @@
 <div id="panelAnalytics" class="panel">
   <div id="anBody" style="padding:14px 16px 80px;">
     <div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;" data-i18n="loading">読み込み中…</div>
+  </div>
+</div>
+
+<!-- ==================== PANEL: 業務店ペアリング（機能F・2026-07-22） ==================== -->
+<div id="panelPairings" class="panel">
+  <div style="padding:14px 16px 80px;">
+    <div style="font-size:12.5px;color:var(--text-sub);line-height:1.6;margin-bottom:14px;" data-i18n="pr_intro">
+      お料理を入力（または写真から読み込み）すると、自店のワインリストから合う1本をAIが下書き提案します。お店の言葉に直して保存してください。
+    </div>
+
+    <label class="form-label" style="font-size:11px;" data-i18n="pr_dish_label">料理名（1行に1品）</label>
+    <textarea id="prDishInput" class="form-input" rows="4" data-i18n-ph="pr_dish_ph" style="margin-bottom:10px;resize:vertical;"></textarea>
+
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button onclick="prCaptureMenu()" style="flex:1;background:#fff;color:var(--burgundy);border:1.5px solid var(--burgundy);border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;" data-i18n="pr_menu_photo_btn">📷 メニュー写真から読み込む</button>
+      <button onclick="prGenerateSuggestions()" id="prGenerateBtn" style="flex:1;background:var(--burgundy);color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;" data-i18n="pr_generate_btn">提案を作る</button>
+    </div>
+
+    <div id="prSuggestions"></div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 0 4px;">
+      <span style="font-size:11px;font-weight:700;color:var(--text-sub);letter-spacing:1.2px;" data-i18n="pr_saved_title">保存済み（下書き）</span>
+    </div>
+    <div id="prSavedList"></div>
   </div>
 </div>
 
@@ -2354,6 +2381,32 @@ const I18N = {
     tab_stock: '在庫',
     tab_notes: '試飲メモ',
     tab_analytics: '分析',
+    tab_pairings: 'ペアリング',
+    pr_intro: 'お料理を入力（または写真から読み込み）すると、自店のワインリストから合う1本をAIが下書き提案します。お店の言葉に直して保存してください。',
+    pr_dish_label: '料理名（1行に1品）',
+    pr_dish_ph: '例:\nビーフシチュー\n白身魚のポワレ\nクレームブリュレ',
+    pr_menu_photo_btn: '📷 メニュー写真から読み込む',
+    pr_menu_reading: 'メニューを読み込み中…',
+    pr_generate_btn: '提案を作る',
+    pr_generating: '考え中…',
+    pr_estimated_badge: 'ソムリンの見立て',
+    pr_alt_label: '別解',
+    pr_use_alt: '別解に切り替え',
+    pr_use_primary: '第一候補に戻す',
+    pr_reason_label: '理由（編集できます）',
+    pr_save_btn: '下書き保存',
+    pr_saved_toast: '下書きに保存しました',
+    pr_save_fail: '保存に失敗しました',
+    pr_no_fit: 'このお料理に自信を持って合わせられる1本が、いまのリストにありません。',
+    pr_no_list: 'いまのワインリストが空か、掲載可能なワインがありません。まず「ワインリスト」タブでリストを登録してください。',
+    pr_saved_title: '保存済み（下書き）',
+    pr_saved_empty: 'まだ保存された下書きはありません。',
+    pr_delete_confirm: 'この下書きを削除しますか？',
+    pr_dish_required: '料理名を1つ以上入力してください。',
+    pr_read_fail: 'メニューの読み取りに失敗しました。',
+    pr_draft_badge: '下書き', pr_published_badge: '公開中',
+    pr_publish_btn: '🌐 店ページに公開する', pr_unpublish_btn: '下書きに戻す',
+    pr_published_toast: '店ページに公開しました', pr_unpublished_toast: '下書きに戻しました',
     loading: '読み込み中…',
     cancel: 'キャンセル',
     close: '閉じる',
@@ -2870,6 +2923,32 @@ const I18N = {
     tab_stock: 'Stock',
     tab_notes: 'Notes',
     tab_analytics: 'Analytics',
+    tab_pairings: 'Pairings',
+    pr_intro: 'Enter dishes (or scan your menu) and Sommelin will draft a pairing from your own wine list. Edit the wording before saving.',
+    pr_dish_label: 'Dish names (one per line)',
+    pr_dish_ph: 'e.g.\nBeef stew\nPan-seared white fish\nCrème brûlée',
+    pr_menu_photo_btn: '📷 Scan a menu photo',
+    pr_menu_reading: 'Reading menu…',
+    pr_generate_btn: 'Generate suggestions',
+    pr_generating: 'Thinking…',
+    pr_estimated_badge: "Sommelin's estimate",
+    pr_alt_label: 'Alternative',
+    pr_use_alt: 'Switch to alternative',
+    pr_use_primary: 'Back to first choice',
+    pr_reason_label: 'Reason (editable)',
+    pr_save_btn: 'Save draft',
+    pr_saved_toast: 'Saved as draft',
+    pr_save_fail: 'Failed to save',
+    pr_no_fit: "There isn't a wine on your current list we're confident pairs well with this dish.",
+    pr_no_list: 'Your wine list is empty or has no available wines. Please add wines in the "Wine List" tab first.',
+    pr_saved_title: 'Saved drafts',
+    pr_saved_empty: 'No saved drafts yet.',
+    pr_delete_confirm: 'Delete this draft?',
+    pr_dish_required: 'Please enter at least one dish.',
+    pr_read_fail: 'Failed to read the menu.',
+    pr_draft_badge: 'Draft', pr_published_badge: 'Published',
+    pr_publish_btn: '🌐 Publish to store page', pr_unpublish_btn: 'Revert to draft',
+    pr_published_toast: 'Published to your store page', pr_unpublished_toast: 'Reverted to draft',
     loading: 'Loading…',
     cancel: 'Cancel',
     close: 'Close',
@@ -3699,8 +3778,8 @@ async function loadAnalytics() {
 // PANEL SWITCHING
 // ============================================================
 function switchPanel(panel) {
-  const ID_MAP = {calendar:'cal',winelist:'wine',qr:'qr',stock:'stk',notes:'nt',analytics:'an'};
-  ['calendar','winelist','qr','stock','notes','analytics'].forEach(p => {
+  const ID_MAP = {calendar:'cal',winelist:'wine',qr:'qr',stock:'stk',notes:'nt',analytics:'an',pairings:'pr'};
+  ['calendar','winelist','qr','stock','notes','analytics','pairings'].forEach(p => {
     document.getElementById('panel' + p.charAt(0).toUpperCase() + p.slice(1))?.classList.remove('active');
     document.getElementById('tnav-' + ID_MAP[p])?.classList.remove('active');
   });
@@ -3713,6 +3792,7 @@ function switchPanel(panel) {
   if (panel === 'stock') renderStock();
   if (panel === 'notes') renderTastingNotes();
   if (panel === 'analytics') loadAnalytics();
+  if (panel === 'pairings') prLoadSavedList();
   // 在庫パネルの公開フッターは在庫タブ以外では隠す
   const pubBar = document.getElementById('stkPublishBar');
   if (pubBar && panel !== 'stock') pubBar.classList.remove('show');
@@ -5738,6 +5818,190 @@ async function tnPairing(id, btn) {
     box.style.display = 'block';
   } catch (e) { showToast(t('toast_pairing_fail')); }
   btn.disabled = false; btn.textContent = t('tn_pair_btn');
+}
+
+// ============================================================
+// 🍽 業務店ペアリング（機能F・§7③ 2026-07-22）
+//   Step2(料理入力/メニュー写真)→Step3(suggest呼び出し)→Step4(選ぶ・直す・保存)
+//   保存はドラフトのみ(status=draft)。公開(店ページ掲載)はPhase 2で別実装。
+// ============================================================
+let prLastSuggestions = []; // 直近の提案（保存時に参照。dishIndexで引く）
+let prSelectedAlt = {};     // dishIndex -> true(別解を選択中)
+
+async function prApiFetch(path, opts) {
+  opts = opts || {};
+  opts.headers = Object.assign({ 'Content-Type': 'application/json', Authorization: 'Bearer ' + (rwToken() || '') }, opts.headers || {});
+  return fetch(RW_API + path, opts);
+}
+
+// メニュー写真→料理名リスト抽出（MENU_VISION）。読み取れた行をdishInputへ追記する。
+function prCaptureMenu() {
+  let inp = document.getElementById('prMenuInput');
+  if (!inp) {
+    inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'image/*'; inp.capture = 'environment';
+    inp.id = 'prMenuInput'; inp.style.display = 'none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change', e => {
+      const f = e.target.files[0]; e.target.value = '';
+      if (f) prProcessMenuPhoto(f);
+    });
+  }
+  inp.click();
+}
+
+function prProcessMenuPhoto(file) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = async () => {
+      const c = document.createElement('canvas');
+      const sc = Math.min(1, 1568 / Math.max(img.naturalWidth, img.naturalHeight));
+      c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      const dataUrl = c.toDataURL('image/jpeg', 0.8);
+      URL.revokeObjectURL(img.src);
+      showToast(t('pr_menu_reading'));
+      try {
+        const r = await prApiFetch('/api/menu-vision', { method: 'POST', body: JSON.stringify({ image: dataUrl }) });
+        if (r.status === 429 || r.status === 403) { showToast(t('toast_rate_limit')); resolve(); return; }
+        if (!r.ok) throw 0;
+        const res = await r.json();
+        const names = res.dishNames || [];
+        if (!names.length) { showToast(t('pr_read_fail')); resolve(); return; }
+        const ta = document.getElementById('prDishInput');
+        const existing = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
+        ta.value = [...existing, ...names].join('\n');
+      } catch (e) { showToast(t('pr_read_fail')); }
+      resolve();
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+async function prGenerateSuggestions() {
+  const dishNames = document.getElementById('prDishInput').value.split('\n').map(s => s.trim()).filter(Boolean).slice(0, 20);
+  if (!dishNames.length) { showToast(t('pr_dish_required')); return; }
+  const btn = document.getElementById('prGenerateBtn');
+  btn.disabled = true; const origText = btn.textContent; btn.textContent = t('pr_generating');
+  try {
+    const r = await prApiFetch('/api/store-pairings/suggest', {
+      method: 'POST', body: JSON.stringify({ dishes: dishNames.map(dishName => ({ dishName })) }),
+    });
+    if (!r.ok) throw 0;
+    const res = await r.json();
+    prLastSuggestions = res.suggestions || [];
+    prSelectedAlt = {};
+    renderPrSuggestions();
+  } catch (e) { showToast(t('pr_save_fail')); }
+  btn.disabled = false; btn.textContent = origText;
+}
+
+function prEsc(s) { return String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function prCandidateLine(c) {
+  if (!c) return '';
+  return `<div style="font-size:14px;font-weight:800;color:var(--text);">${prEsc(c.wineName)}${c.producer ? ' <span style="font-weight:600;color:var(--text-sub);">/ ' + prEsc(c.producer) + '</span>' : ''}</div>
+    <div style="font-size:11.5px;color:var(--text-sub);margin-top:2px;">${c.iro ? prEsc(c.iro) + ' ・ ' : ''}${c.priceBottle ? '¥' + c.priceBottle.toLocaleString('ja-JP') + ' ・ ' : ''}${prEsc(c.scoreText || '')}</div>`;
+}
+
+function renderPrSuggestions() {
+  const box = document.getElementById('prSuggestions');
+  box.innerHTML = prLastSuggestions.map((s, i) => {
+    if (!s || !s.dishName) return ''; // 保存済みでprLastSuggestions[i]=nullにした要素をスキップ
+    const useAlt = !!prSelectedAlt[i];
+    const chosen = useAlt ? s.alt : s.primary;
+    if (!chosen) {
+      return `<div class="panel-section" style="margin-bottom:12px;padding:14px;">
+        <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:6px;">${prEsc(s.dishName)}</div>
+        <div style="font-size:12.5px;color:var(--text-sub);">${prEsc(s.noFitMessage || t('pr_no_fit'))}</div>
+        ${s.hint ? `<div style="font-size:11.5px;color:var(--text-sub);margin-top:4px;">${prEsc(s.hint)}</div>` : ''}
+      </div>`;
+    }
+    const reasonVal = prEsc(useAlt ? (s.alt.reason || s.reason || '') : (s.reason || ''));
+    return `<div class="panel-section" style="margin-bottom:12px;padding:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:14px;font-weight:800;color:var(--text);">${prEsc(s.dishName)}</div>
+        ${s.isEstimated ? `<span style="font-size:10px;font-weight:800;color:var(--burgundy);background:#f5ece8;border-radius:8px;padding:2px 8px;">${t('pr_estimated_badge')}</span>` : ''}
+      </div>
+      <div id="prCand-${i}">${prCandidateLine(chosen)}</div>
+      ${s.alt ? `<button onclick="prToggleAlt(${i})" style="margin-top:8px;background:#fff;color:var(--burgundy);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;">${useAlt ? t('pr_use_primary') : t('pr_use_alt') + '（' + prEsc(s.alt.wineName) + '）'}</button>` : ''}
+      <label class="form-label" style="font-size:10.5px;margin-top:10px;">${t('pr_reason_label')}</label>
+      <textarea id="prReason-${i}" class="form-input" rows="2" style="resize:vertical;font-size:12.5px;">${reasonVal}</textarea>
+      <button onclick="prSaveDraft(${i})" style="margin-top:8px;width:100%;background:var(--burgundy);color:#fff;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">${t('pr_save_btn')}</button>
+    </div>`;
+  }).join('');
+}
+
+function prToggleAlt(i) {
+  prSelectedAlt[i] = !prSelectedAlt[i];
+  renderPrSuggestions();
+}
+
+async function prSaveDraft(i) {
+  const s = prLastSuggestions[i];
+  const useAlt = !!prSelectedAlt[i];
+  const chosen = useAlt ? s.alt : s.primary;
+  if (!s || !chosen) return;
+  const reason = (document.getElementById('prReason-' + i).value || '').trim();
+  const payload = {
+    dishName: s.dishName, restaurantWineId: chosen.restaurantWineId, catalogId: chosen.catalogId,
+    wineName: chosen.wineName, reason, isEstimated: !!s.isEstimated,
+    altWine: (!useAlt && s.alt) ? { restaurantWineId: s.alt.restaurantWineId, catalogId: s.alt.catalogId, wineName: s.alt.wineName, reason: s.alt.reason } : null,
+  };
+  try {
+    const r = await prApiFetch('/api/store-pairings', { method: 'POST', body: JSON.stringify({ pairings: [payload] }) });
+    if (!r.ok) throw 0;
+    showToast(t('pr_saved_toast'));
+    prLastSuggestions[i] = null; // 保存済みは提案カードから消す
+    renderPrSuggestions();
+    prLoadSavedList();
+  } catch (e) { showToast(t('pr_save_fail')); }
+}
+
+async function prLoadSavedList() {
+  const box = document.getElementById('prSavedList');
+  if (!box) return;
+  try {
+    const r = await prApiFetch('/api/store-pairings/mine');
+    if (!r.ok) throw 0;
+    const res = await r.json();
+    const items = res.pairings || [];
+    if (!items.length) { box.innerHTML = `<div style="font-size:12.5px;color:var(--text-sub);padding:8px 0;">${t('pr_saved_empty')}</div>`; return; }
+    box.innerHTML = items.map(p => {
+      const published = p.status === 'published';
+      return `
+      <div class="panel-section" style="margin-bottom:8px;padding:12px 14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <div style="min-width:0;">
+            <div style="font-size:13px;font-weight:800;color:var(--text);">${prEsc(p.dishName)} → ${prEsc(p.wineName)}</div>
+            <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">${published ? '🌐 ' + t('pr_published_badge') : '📝 ' + t('pr_draft_badge')} ・ ${prEsc(p.reason || '')}</div>
+          </div>
+          <button onclick="prDeleteDraft('${p.id}')" style="flex-shrink:0;background:none;border:none;color:#bbb;font-size:16px;cursor:pointer;">✕</button>
+        </div>
+        <button onclick="prTogglePublish('${p.id}', ${!published})" style="margin-top:8px;background:${published ? '#fff' : 'var(--burgundy)'};color:${published ? 'var(--burgundy)' : '#fff'};border:1px solid var(--burgundy);border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:inherit;">${published ? t('pr_unpublish_btn') : t('pr_publish_btn')}</button>
+      </div>`;
+    }).join('');
+  } catch (e) { box.innerHTML = `<div style="font-size:12.5px;color:var(--text-sub);padding:8px 0;">${t('pr_saved_empty')}</div>`; }
+}
+
+async function prDeleteDraft(id) {
+  if (!confirm(t('pr_delete_confirm'))) return;
+  try {
+    const r = await prApiFetch('/api/store-pairings/' + id, { method: 'DELETE' });
+    if (!r.ok) throw 0;
+    prLoadSavedList();
+  } catch (e) { showToast(t('pr_save_fail')); }
+}
+
+async function prTogglePublish(id, publish) {
+  try {
+    const r = await prApiFetch('/api/store-pairings/' + id, {
+      method: 'PATCH', body: JSON.stringify({ status: publish ? 'published' : 'draft' }),
+    });
+    if (!r.ok) throw 0;
+    showToast(publish ? t('pr_published_toast') : t('pr_unpublished_toast'));
+    prLoadSavedList();
+  } catch (e) { showToast(t('pr_save_fail')); }
 }
 
 // ── ログアウト ──
