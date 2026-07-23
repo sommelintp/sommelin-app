@@ -1414,11 +1414,11 @@ function submitFinalVerify() {
   const profileFields = { verification_status: 'pending', company: payload.company, phone: payload.phone, contact_email: payload.contact_email };
   Promise.resolve()
     .then(() => saveBusinessApplication(payload))
-    .then(() => patchProfile(profileFields))
-    .then(() => { fireBusinessVerify(); })       // 申請保存後にAI確認を発火（fire-and-forget）
+    .then(ok => { if (!ok) throw new Error('business application save failed'); return patchProfile(profileFields); })
+    .then(ok => { if (!ok) throw new Error('profile update failed'); fireBusinessVerify(); }) // 申請保存後にAI確認を発火（fire-and-forget）
     .then(() => { if (addRoleMode) return addBusinessRole(selectedRole); })
-    .catch(() => {})
-    .then(() => { hideLoading(); showScreen('screenPending'); });
+    .then(() => { hideLoading(); showScreen('screenPending'); })
+    .catch(() => { hideLoading(); showToast('申請を保存できませんでした。通信状態を確認して、もう一度お試しください'); });
 }
 // AI自動確認を発火（サーバーが申請URLを取得→照合→verified/needs_review）。結果は待たない。
 function fireBusinessVerify() {

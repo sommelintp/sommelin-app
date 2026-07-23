@@ -474,6 +474,7 @@
 /* ===== 認証セッション（オンボーディングの配線）===== */
 const SB_URL = 'https://gkhdpzfmqraliwaiubwl.supabase.co';
 const SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+const ACCOUNT_API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
 const SESSION_KEY = 'sommelin_session';
 function getSession(){ try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e){ return null; } }
 function authToken(){ const s = getSession(); return s && s.access_token; }
@@ -525,7 +526,7 @@ const missions = [
   { id:'photo10', cat:'📸 ワインの記録',      icon:'🗂️', title:'ワインの写真を10枚アップ', desc:'10本記録したらワイン好きの証明！',           pts:10, type:'photos', milestoneCount:10, requires:'photo3' },
   { id:'shop1',   cat:'🏪 お気に入りのお店',  icon:'🏪', title:'初めて飲んだお店を登録',   desc:'どこで飲みましたか？お店の情報を教えて',      pts:10, type:'shop' },
   { id:'shop3',   cat:'🏪 お気に入りのお店',  icon:'🗺️', title:'お気に入りを3軒登録',     desc:'よく行くお店を3軒登録しよう',               pts:10, type:'shop', requires:'shop1' },
-  { id:'instagram',cat:'📱 SNS連携',         icon:'📷', title:'Instagram連携',          desc:'インスタのワイン投稿をソムリンと共有',         pts:10, type:'sns_ig' },
+  { id:'instagram',cat:'📱 SNS',             icon:'📷', title:'Instagramユーザー名を登録', desc:'推しカードの投稿に使うユーザー名を保存',       pts:10, type:'sns_ig' },
   { id:'invite',   cat:'👥 友達とつながる',   icon:'🎁', title:'友達を1人招待',           desc:'ワイン好きの友達にソムリンを紹介',            pts:10, type:'invite' },
 ];
 
@@ -743,13 +744,14 @@ function buildModalContent(m) {
   if (m.type === 'sns_ig') return ptBadge(m.pts) + `
     <div class="sns-option">
       <div class="sns-icon ig">📷</div>
-      <div class="sns-info"><div class="sns-name">Instagram</div><div class="sns-desc">インスタのワイン投稿をソムリンと共有</div></div>
+      <div class="sns-info"><div class="sns-name">Instagram</div><div class="sns-desc">推しカードの投稿に使うユーザー名を保存</div></div>
       <div class="sns-pts">+10点</div>
     </div>
     <p style="font-size:12px;color:var(--sub);text-align:center;line-height:1.6;padding:8px 0 16px;">
-      Instagramのワイン投稿から<br>好みのワインを自動学習します🤖
+      投稿に生産者の@メンションを入れやすくします。<br>Instagramへのログイン連携や投稿の自動送信は行いません。
     </p>
-    <button class="btn-primary" onclick="connectSNS('instagram')">Instagramと連携する</button>
+    <input class="big-input" id="instagramHandleInput" placeholder="@ユーザー名" maxlength="30">
+    <button class="btn-primary" id="instagramHandleBtn" onclick="connectSNS()">ユーザー名を登録する</button>
     <button class="btn-secondary" onclick="closeModal()">あとで</button>`;
 
   if (m.type === 'invite') return ptBadge(m.pts) + `
@@ -874,11 +876,26 @@ function saveShop() {
   }
 }
 
-function connectSNS(type) {
-  setTimeout(() => {
-    showToast('📷 Instagram連携完了！');
-    setTimeout(() => completeMission('instagram'), 600);
-  }, 500);
+async function connectSNS() {
+  const raw = document.getElementById('instagramHandleInput')?.value.trim();
+  const btn = document.getElementById('instagramHandleBtn');
+  const token = authToken();
+  if (!raw) { showToast('Instagramのユーザー名を入力してください'); return; }
+  if (!token) { showToast('ログイン情報を確認できませんでした'); return; }
+  if (btn) { btn.disabled = true; btn.textContent = '登録中…'; }
+  try {
+    const r = await fetch(ACCOUNT_API_BASE + '/api/account/instagram', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ handle: raw }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.message || 'save failed');
+    completeMission('instagram');
+  } catch (e) {
+    showToast(e.message || '登録に失敗しました。もう一度お試しください');
+    if (btn) { btn.disabled = false; btn.textContent = 'ユーザー名を登録する'; }
+  }
 }
 
 function myInviteLink(){

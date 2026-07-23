@@ -734,6 +734,7 @@ const I18N = {
     sb_delete: '削除',
     sb_delete_confirm: 'この在庫を削除しますか？',
     sb_deleted: '削除しました',
+    sb_update_fail: '在庫の更新に失敗しました。もう一度お試しください',
     sb_photos_n: '写真{n}枚',
     journal_loading: '読み込み中…',
     journal_empty: 'まだ記録がありません。<br>スカウターでワインを撮って「気に入った」を押すと、ここに記録されます。',
@@ -858,6 +859,7 @@ const I18N = {
     sb_delete: 'Delete',
     sb_delete_confirm: 'Delete this stock?',
     sb_deleted: 'Deleted',
+    sb_update_fail: 'Could not update the stock. Please try again.',
     sb_photos_n: '{n} photos',
     journal_loading: 'Loading…',
     journal_empty: 'No records yet.<br>Scan a wine in the Scouter and tap "I love this" to record it here.',
@@ -1199,30 +1201,47 @@ async function sbChangeStock(id, delta){
   if (!b) return;
   const newVal = (b.bottles||0) + delta;
   if (newVal < 0) return;
+  const previousRows = serverBottles.slice();
+  const previousStock = b.bottles;
   let uid=null; try{ uid=localStorage.getItem('somm_uid'); }catch(e){}
   b.bottles = newVal; // 楽観更新
   if (newVal === 0) { serverBottles = serverBottles.filter(x => String(x.id)!==String(id)); showToast(t('toast_last')); }
   else showToast(delta > 0 ? t('toast_plus1') : t('toast_minus1'));
   renderSummary(); renderCellar();
   try{
+    let response;
     if (newVal === 0) {
-      await fetch(CELLAR_API_BASE+'/api/cellar/bottles/'+encodeURIComponent(id)+'?userId='+encodeURIComponent(uid), { method:'DELETE' });
+      response = await fetch(CELLAR_API_BASE+'/api/cellar/bottles/'+encodeURIComponent(id)+'?userId='+encodeURIComponent(uid), { method:'DELETE' });
     } else {
-      await fetch(CELLAR_API_BASE+'/api/cellar/bottles/'+encodeURIComponent(id), {
+      response = await fetch(CELLAR_API_BASE+'/api/cellar/bottles/'+encodeURIComponent(id), {
         method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ userId:uid, bottles:newVal })
       });
     }
-  }catch(e){}
+    if (!response.ok) throw new Error('stock update failed: ' + response.status);
+  }catch(e){
+    b.bottles = previousStock;
+    serverBottles = previousRows;
+    renderSummary(); renderCellar();
+    await loadServerBottles();
+    showToast(t('sb_update_fail'));
+  }
 }
 async function sbDelete(id){
   if (!confirm(t('sb_delete_confirm'))) return;
   let uid=null; try{ uid=localStorage.getItem('somm_uid'); }catch(e){}
+  const previousRows = serverBottles.slice();
   serverBottles = serverBottles.filter(x => String(x.id)!==String(id));
   renderSummary(); renderCellar();
   try{
-    await fetch(CELLAR_API_BASE+'/api/cellar/bottles/'+encodeURIComponent(id)+'?userId='+encodeURIComponent(uid), { method:'DELETE' });
+    const response = await fetch(CELLAR_API_BASE+'/api/cellar/bottles/'+encodeURIComponent(id)+'?userId='+encodeURIComponent(uid), { method:'DELETE' });
+    if (!response.ok) throw new Error('stock delete failed: ' + response.status);
     showToast(t('sb_deleted'));
-  }catch(e){}
+  }catch(e){
+    serverBottles = previousRows;
+    renderSummary(); renderCellar();
+    await loadServerBottles();
+    showToast(t('sb_update_fail'));
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1349,7 +1368,7 @@ function renderCellar() {
 }
 
 /* ===== PAIRING FEEDBACK on journal (#0・2026-07-18) =====
-   飲んだワインを振り返って「何と合わせましたか？」＋5チップ（context=taste_memo）。
+   飲んだワインを振り返って「何と合わせましたか？」＋4段階（context=taste_memo）。
    taste_itemsはcatalog_idを持たないため wineName で記録（guide_id/catalog_id は null）。任意・スキップ自由。 */
 const JOURNAL_PAIRING_FB = {
   ja: {
@@ -1358,7 +1377,6 @@ const JOURNAL_PAIRING_FB = {
     dishPh: '料理を入力（例: 麻婆豆腐、生ハム）',
     verdicts: [
       { v: 'awanai',    label: '合わなかった…' },
-      { v: 'warukunai', label: '悪くなかった' },
       { v: 'bunan',     label: '無難' },
       { v: 'au',        label: '合う！' },
       { v: 'mariage',   label: 'マリアージュ✨' },
@@ -1366,11 +1384,12 @@ const JOURNAL_PAIRING_FB = {
     needDish: '合わせた料理を入れてください',
     thanks: {
       awanai:    '教えてくださってありがとうございます',
-      warukunai: '率直にありがとうございます',
       bunan:     'なるほど、記録しました',
       au:        'よかった！覚えておきます',
       mariage:   '1+1が3の組み合わせですね。大切に記録します',
     },
+    saveFailed: '記録できませんでした。もう一度お願いします。',
+    retry: '再送する',
   },
   en: {
     recBtn: 'Log a pairing',
@@ -1378,7 +1397,6 @@ const JOURNAL_PAIRING_FB = {
     dishPh: 'Enter a dish (e.g. mapo tofu, prosciutto)',
     verdicts: [
       { v: 'awanai',    label: 'Didn\'t work…' },
-      { v: 'warukunai', label: 'Not bad' },
       { v: 'bunan',     label: 'Fine' },
       { v: 'au',        label: 'Good match!' },
       { v: 'mariage',   label: 'Mariage✨' },
@@ -1386,11 +1404,12 @@ const JOURNAL_PAIRING_FB = {
     needDish: 'Please enter the dish you paired',
     thanks: {
       awanai:    'Thank you for letting me know',
-      warukunai: 'Thanks for the honesty',
       bunan:     'Got it, recorded',
       au:        'Glad to hear! I\'ll remember',
       mariage:   'That 1+1=3 pairing. I\'ll treasure it',
     },
+    saveFailed: 'I could not save that just now.',
+    retry: 'Try again',
   },
 };
 function jpDict() { return JOURNAL_PAIRING_FB[LANG] || JOURNAL_PAIRING_FB.ja; }
@@ -1417,9 +1436,13 @@ function toggleJournalPairing(id) {
   });
 }
 
-function submitJournalPairing(slot, item, verdict, dish) {
+async function submitJournalPairing(slot, item, verdict, dish) {
   const d = jpDict();
-  slot.innerHTML = `<div class="jp-thanks">${esc(d.thanks[verdict] || '')}</div>`;
+  slot.querySelectorAll('.jp-chip').forEach(el => {
+    el.style.pointerEvents = 'none';
+    el.style.opacity = '0.55';
+    el.setAttribute('aria-disabled', 'true');
+  });
   const body = {
     userId: myUid(),
     verdict,
@@ -1427,10 +1450,19 @@ function submitJournalPairing(slot, item, verdict, dish) {
     wineName: item.name ? String(item.name).slice(0, 200) : null,
     context: 'taste_memo',
   };
-  fetch(CELLAR_API_BASE + '/api/pairing-feedback', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  }).catch(e => console.warn('journal pairing-feedback failed (silent):', e));
+  try {
+    const response = await fetch(CELLAR_API_BASE + '/api/pairing-feedback', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) throw new Error('journal pairing-feedback failed: ' + response.status);
+    slot.innerHTML = `<div class="jp-thanks">${esc(d.thanks[verdict] || '')}</div>`;
+  } catch (e) {
+    console.warn('journal pairing-feedback failed:', e);
+    slot.innerHTML = `<div class="jp-thanks">${esc(d.saveFailed)} <button type="button" class="jp-chip">${esc(d.retry)}</button></div>`;
+    const retry = slot.querySelector('.jp-chip');
+    if (retry) retry.addEventListener('click', () => submitJournalPairing(slot, item, verdict, dish));
+  }
 }
 
 function renderJournal() {
