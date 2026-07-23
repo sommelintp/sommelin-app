@@ -941,7 +941,7 @@ function addBotMessage({ text, wines, chips, pairingMeta }) {
       <div class="msg-time">${nowTime()}</div>
     </div>`;
 
-  // 実銘柄を提案できた時だけ、4段階フィードバックを控えめに添える（#0・設計§2）
+  // 実銘柄を提案できた時だけ、5段階フィードバックを控えめに添える（#0・設計§2）
   if (pairingMeta && pairingMeta.candidates && pairingMeta.candidates.length) {
     renderFeedbackChips(msgEl.querySelector('.fb-slot'), pairingMeta);
   }
@@ -951,20 +951,22 @@ function addBotMessage({ text, wines, chips, pairingMeta }) {
 }
 
 /* ===== PAIRING FEEDBACK (#0・2026-07-18) =====
-   提案バブルの下に「合わせてみたら、ひとこと」の4段階を常設。押すも押さぬも自由・催促しない。
+   提案バブルの下に「合わせてみたら、ひとこと」の5段階を常設。押すも押さぬも自由・催促しない。
    複数銘柄提案時はチップ後に銘柄ピッカーを一段。POST /api/pairing-feedback（24h冪等はサーバー側）。 */
 const PAIRING_FB = {
   ja: {
     intro: '合わせてみたら、ひとことだけ聞かせてください',
     verdicts: [
-      { v: 'awanai',    label: '合わなかった…' },
+      { v: 'zenzen_dame', label: '全くダメ' },
+      { v: 'awanai',    label: '合わない' },
       { v: 'bunan',     label: '無難' },
-      { v: 'au',        label: '合う！' },
-      { v: 'mariage',   label: 'マリアージュ✨' },
+      { v: 'au',        label: '合う' },
+      { v: 'mariage',   label: 'マリアージュ' },
     ],
     pickLabel: 'どのワインでしたか？',
     outside: 'リスト外のワイン',
     thanks: {
+      zenzen_dame: '率直に教えてくださってありがとうございます。次はもっと良い組み合わせを探しますね',
       awanai:    '教えてくださってありがとうございます。次はもっと寄り添える一本を',
       bunan:     'なるほど。次はもう一歩踏み込んでみますね',
       au:        'よかった！この組み合わせ、覚えておきます',
@@ -975,14 +977,16 @@ const PAIRING_FB = {
   en: {
     intro: 'If you try the pairing, let me know in a word',
     verdicts: [
-      { v: 'awanai',    label: 'Didn\'t work…' },
+      { v: 'zenzen_dame', label: 'Terrible' },
+      { v: 'awanai',    label: 'Didn\'t work' },
       { v: 'bunan',     label: 'Fine' },
       { v: 'au',        label: 'Good match!' },
-      { v: 'mariage',   label: 'Mariage✨' },
+      { v: 'mariage',   label: 'Mariage' },
     ],
     pickLabel: 'Which wine was it?',
     outside: 'A wine not listed',
     thanks: {
+      zenzen_dame: 'Thank you for being honest. I\'ll find a much better pairing next time',
       awanai:    'Thank you for telling me. I\'ll find a closer match next time',
       bunan:     'Got it. I\'ll push a bit further next time',
       au:        'Glad to hear! I\'ll remember this pairing',
