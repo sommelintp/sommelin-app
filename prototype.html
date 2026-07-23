@@ -5065,6 +5065,8 @@ async function getAnonAccessToken() {
 let protoChatHist = [];
 let protoChatBusy = false;
 let protoPendingPhoto = null; // 送信待ちの写真dataURL（長辺1024 JPEG）
+// 2026-07-23: 写真解析結果の会話継続用コンテキスト（sommelier-chat.htmlと同じ往復パターン）。
+let protoPhotoContext = null;
 
 // ── マイページの実データ反映（2026-07-06修正: 名前・統計が固定値のハリボテだった不具合） ──
 // ニックネームは端末ローカル（onboarding.htmlで設定）。未設定なら「ゲスト」と正直に表示する。
@@ -5705,6 +5707,7 @@ async function askSomurin(text, photo) {
   try {
     const body = { messages: protoChatHist.slice(-8), userId: CHAT_UID2 };
     if (photo) body.image = photo;
+    if (protoPhotoContext) body.photoContext = protoPhotoContext;
     const token = await getAnonAccessToken();
     const r = await fetch(CHAT_API_BASE + '/api/chat', {
       method: 'POST',
@@ -5723,6 +5726,7 @@ async function askSomurin(text, photo) {
     }
     if (!r.ok) throw 0;
     const d = await r.json();
+    protoPhotoContext = d.photoContext || null;
     protoChatHist.push({ role: 'assistant', content: d.reply });
     let replyHtml = mdBold(d.reply).replace(/\n/g, '<br>');
     if (d.quota && !d.quota.premium && d.quota.remaining !== null && d.quota.remaining <= 2) {

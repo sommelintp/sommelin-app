@@ -720,6 +720,11 @@ async function getAnonAccessToken() {
 
 let chatHistory = [];   // {role:'user'|'assistant', content}
 let pendingPhoto = null; // 送信待ちの写真dataURL（長辺1024 JPEG）
+// 2026-07-23: 写真解析結果の会話継続用コンテキスト（label/iro/catalogId/confidenceのみ・
+// 数値は持たない）。サーバーが前ターンで返したものをそのまま次ターンに送り返すことで、
+// 「この中でどれが合う？」の続きの質問（例:辛さのタイプを聞かれて答える）でも
+// サーバー側が写真の内容を覚えている状態を保つ（listContextと同じ往復パターン）。
+let chatPhotoContext = null;
 
 // Phase B: 今いる店のリスト文脈。QRリンク(?store=owner_id&storeName=…)、または
 // スキャナー(スキャン済みリスト)からsessionStorage 'somm_chat_list' で受け取る。
@@ -876,6 +881,7 @@ async function sendMessage() {
     const body = { messages: chatHistory.slice(-8), userId: CHAT_UID, locale: LANG === 'en' ? 'en-US' : 'ja-JP' };
     if (photo) body.image = photo;
     if (chatListContext) body.listContext = chatListContext;
+    if (chatPhotoContext) body.photoContext = chatPhotoContext;
     const token = await getAnonAccessToken();
     const r = await fetch(CHAT_API + '/api/chat', {
       method: 'POST',
@@ -899,6 +905,7 @@ async function sendMessage() {
     if (!r.ok) throw 0;
     const d = await r.json();
     if (d.quota) { quota = d.quota; updateUsageDisplay(); }
+    chatPhotoContext = d.photoContext || null;
     chatHistory.push({ role: 'assistant', content: d.reply });
     addBotMessage({ text: d.reply, pairingMeta: d.pairingMeta || null });
   } catch (e) {
