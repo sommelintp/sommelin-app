@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>ソムリン — 銘柄詳細</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#5C0E2A">
+<style>
+:root{ --burgundy:#9B1B4B; --wine-dark:#5C0E2A; --gold:#C9973A; --bg:#F8F4EF; --text:#2C1810; --text-sub:#7A6055; --border:#E8DDD5; }
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg); color:var(--text);
+  max-width:430px; margin:0 auto; min-height:100dvh; padding:0 0 60px; }
+.top{ background:linear-gradient(135deg,var(--wine-dark),var(--burgundy)); padding:52px 16px 20px; color:#fff; }
+.top .nav{ display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+.top .nav a{ width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;
+  font-size:18px;display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0; }
+.wname{ font-size:19px; font-weight:800; line-height:1.4; }
+.wproducer{ font-size:13px; color:rgba(255,255,255,.85); margin-top:4px; text-decoration:none; display:inline-block; }
+.wcommon{ font-size:12px; color:rgba(255,255,255,.75); margin-top:8px; }
+.wrap{ padding:16px; }
+.sec{ font-size:11px; font-weight:700; color:var(--text-sub); letter-spacing:.07em; margin:14px 0 8px; }
+.vcard{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:10px; }
+.vhead{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+.vyear{ font-size:16px; font-weight:800; color:var(--burgundy); }
+.vprice{ font-size:13px; font-weight:700; color:var(--text); }
+.vrow{ display:flex; justify-content:space-between; align-items:center; margin-top:4px; }
+.vimporter{ font-size:11.5px; color:var(--text-sub); margin-top:6px; }
+.vnote{ font-size:11px; color:var(--gold); font-weight:700; margin-top:4px; }
+.vcommunity{ font-size:11px; color:var(--text-sub); margin-top:6px; }
+.techbox{ border-top:1px solid var(--border); margin-top:10px; padding-top:8px; }
+.techrow{ font-size:11.5px; color:var(--text); padding:3px 0; line-height:1.5; }
+.techrow b{ color:var(--text-sub); font-weight:700; }
+.wherebtn{ border:1px solid var(--border); background:var(--bg); border-radius:20px; padding:5px 10px;
+  font-size:11px; font-weight:700; color:var(--burgundy); cursor:pointer; font-family:inherit; margin-top:8px; }
+.wherebox{ display:none; border-top:1px solid var(--border); margin-top:10px; padding-top:8px; }
+.wherebox.show{ display:block; }
+.whererow{ font-size:12px; padding:5px 0; color:var(--text); }
+.whererow .ws{ font-size:10px; color:var(--text-sub); }
+.empty{ text-align:center; padding:40px 20px; color:var(--text-sub); }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="nav"><a href="javascript:history.length>1?history.back():location.assign('prototype.html')">‹</a></div>
+  <div class="wname" id="wname">銘柄</div>
+  <a class="wproducer" id="wproducer" href="#"></a>
+  <div class="wcommon" id="wcommon"></div>
+</div>
+
+<div class="wrap">
+  <div class="sec" id="vsec" style="display:none;">ヴィンテージ別</div>
+  <div id="list"><div class="empty">読み込み中…</div></div>
+</div>
+
+<script src="assets/wine-display.js?v=20260718"></script>
+<script>
+const API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const params = new URLSearchParams(location.search);
+const producerName = params.get('producer') || '';
+const wineName = params.get('name') || '';
+
+async function load() {
+  const listEl = document.getElementById('list');
+  document.getElementById('wname').textContent = wineName || '銘柄が指定されていません';
+  const pEl = document.getElementById('wproducer');
+  pEl.textContent = producerName;
+  pEl.href = 'producer.html?p=' + encodeURIComponent(producerName);
+  if (!producerName || !wineName) {
+    listEl.innerHTML = '<div class="empty">URLに ?producer=…&name=… を付けて開いてください</div>';
+    return;
+  }
+  try {
+    const r = await fetch(API_BASE + '/api/wine-vintages?producer=' + encodeURIComponent(producerName) + '&name=' + encodeURIComponent(wineName));
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    const vintages = d.vintages || [];
+    if (!vintages.length) {
+      listEl.innerHTML = '<div class="empty">🔍 このワインの情報が見つかりませんでした</div>';
+      return;
+    }
+    const common = d.common || {};
+    document.getElementById('wcommon').textContent = [common.iro, common.kuni, common.chiiki].filter(v => v && v !== '不明').join(' ・ ');
+    if (vintages.length >= 2) document.getElementById('vsec').style.display = 'block';
+
+    // ヴィンテージ行ごとに独立表示（設計_生産者ページ_2026-07-23.md §1: 絶対に跨いで混同しない）。
+    listEl.innerHTML = vintages.map(v => {
+      const price = v.price != null ? '¥' + Math.round(v.price).toLocaleString('ja-JP') : '';
+      const stars = window.WineDisplay ? window.WineDisplay.scoreBlock(v, { size: 13 }) : '';
+      const community = v.communityCount >= 3
+        ? `<div class="vcommunity">👥 みんなの評価 ${v.communityAvg.toFixed(1)}（${v.communityCount}件）</div>` : '';
+      const vintageNote = v.vintageNote ? `<div class="vnote">${esc(v.vintageNote)}</div>` : '';
+      const techRows = (v.techDetails || []).map(t =>
+        `<div class="techrow"><b>${esc(t.label)}:</b> ${esc(t.value)}${t.note ? ` <span style="color:var(--text-sub);">（${esc(t.note)}）</span>` : ''}</div>`
+      ).join('');
+      const tech = techRows ? `<div class="techbox">${techRows}</div>` : '';
+      const whereBtn = v.id != null ? `<button class="wherebtn" onclick="toggleWhere(${v.id}, this)">📍 どこで飲める？</button>` : '';
+      const whereBox = v.id != null ? `<div class="wherebox" id="where-${v.id}"></div>` : '';
+      return `<div class="vcard">
+        <div class="vhead">
+          <span class="vyear">${esc(v.vintageLabel)}</span>
+          ${stars}
+        </div>
+        <div class="vrow"><span class="vprice">${price}</span></div>
+        ${v.importer ? `<div class="vimporter">輸入元: ${esc(v.importer)}${v.multipleForVintage ? '（この年は複数の取扱いがあります）' : ''}</div>` : ''}
+        ${vintageNote}
+        ${community}
+        ${tech}
+        ${whereBtn}
+        ${whereBox}
+      </div>`;
+    }).join('');
+  } catch (e) {
+    listEl.innerHTML = '<div class="empty">読み込めませんでした（通信環境をご確認ください）</div>';
+  }
+}
+
+async function toggleWhere(wineId, btn) {
+  const box = document.getElementById('where-' + wineId);
+  if (box.classList.contains('show')) { box.classList.remove('show'); return; }
+  box.classList.add('show');
+  box.innerHTML = '<div class="whererow" style="color:var(--text-sub);">探しています…</div>';
+  if (window.sommLog) sommLog('wine_where_view', { wineId, from: 'wine_detail' });
+  try {
+    const r = await fetch(API_BASE + '/api/wine-places?wineId=' + wineId);
+    const d = await r.json();
+    const items = d.items || [];
+    if (!items.length) {
+      box.innerHTML = '<div class="whererow" style="color:var(--text-sub);">まだ目撃情報がありません。お店で見かけたらスカウターで記録を！</div>';
+      return;
+    }
+    box.innerHTML = items.map(it => {
+      const cat = it.category === 'shop' ? '🍷 買える' : '🍽️ 飲める';
+      const price = it.priceBottle ? ` ・ ボトル ¥${Number(it.priceBottle).toLocaleString('ja-JP')}`
+                  : it.listPrice ? ` ・ ${it.byGlass ? 'グラス' : 'ボトル'} ¥${Number(it.listPrice).toLocaleString('ja-JP')}` : '';
+      return `<div class="whererow">${esc(it.name)} <span class="ws">${cat}${price}</span></div>`;
+    }).join('');
+  } catch (e) {
+    box.innerHTML = '<div class="whererow" style="color:var(--text-sub);">読み込めませんでした</div>';
+  }
+}
+
+load();
+</script>
+<script>
+/* ===== 利用ログ（app_events・書き込み専用。読み取り不可） ===== */
+(function(){
+  var PAGE='wine_detail';
+  var U='https://gkhdpzfmqraliwaiubwl.supabase.co/rest/v1/app_events';
+  var K='sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+  var uid='na';
+  try{
+    uid=localStorage.getItem('somm_uid');
+    if(!uid){ uid=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid',uid); }
+  }catch(e){}
+  window.sommLog=function(event,meta){
+    try{
+      var role=null,auth=null;
+      try{ role=localStorage.getItem('sommelin_role')||null; }catch(e){}
+      try{ var t=JSON.parse(localStorage.getItem('sb-gkhdpzfmqraliwaiubwl-auth-token')||'null'); auth=(t&&t.user&&t.user.id)||null; }catch(e){}
+      fetch(U,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','apikey':K,'Authorization':'Bearer '+K,'Prefer':'return=minimal'},
+        body:JSON.stringify({uid:uid,auth_uid:auth,role:role,page:PAGE,event:event,meta:meta||null})}).catch(function(){});
+    }catch(e){}
+  };
+  sommLog('page_view', { producer: producerName.slice(0,60), name: wineName.slice(0,60) });
+})();
+</script>
+</body>
+</html>

@@ -2363,6 +2363,7 @@ const I18N = {
     acct_urls: '登録URL', acct_no_app: '登録情報がまだありません。「登録情報を変更」から登録できます。',
     acct_actions: '操作', acct_edit: '登録情報を変更', acct_logo: 'ロゴを変更', acct_personal: '個人モードへ',
     acct_renew_due: '次回の年次確認: {d}',
+    acct_followers: 'フォロワー {n}人',
     my_events: '自分のイベント', my_events_hint: 'お店のイベントは、あなたをフォローしているお客さんに届きます',
     ev_create_btn: '＋ イベント作成', sev_title: 'イベントを作成', sev_name: 'イベント名 ✳︎', sev_name_ph: '例: 秋の自然派ワイン会',
     sev_dates: '開催日 ✳︎（複数OK）', sev_add: '＋追加', sev_start: '開始', sev_end: '終了', sev_venue: '会場',
@@ -2905,6 +2906,7 @@ const I18N = {
     acct_urls: 'Registered URLs', acct_no_app: 'No registration info yet. You can register from "Edit registration".',
     acct_actions: 'Actions', acct_edit: 'Edit registration', acct_logo: 'Change logo', acct_personal: 'Personal mode',
     acct_renew_due: 'Next annual check: {d}',
+    acct_followers: '{n} followers',
     my_events: 'My events', my_events_hint: 'Your events reach customers who follow your shop',
     ev_create_btn: '＋ Create event', sev_title: 'Create an event', sev_name: 'Event name ✳︎', sev_name_ph: 'e.g. Autumn natural wine night',
     sev_dates: 'Date(s) ✳︎', sev_add: '＋ Add', sev_start: 'Start', sev_end: 'End', sev_venue: 'Venue',
@@ -6083,11 +6085,17 @@ function roleLabelJa(r){ return { store:'🍽️ 飲食店・ホテル', retaile
 
 async function renderAccountSheet(){
   let email=null; try{ const s=JSON.parse(localStorage.getItem('sommelin_session')||'null'); email=s&&s.user&&s.user.email; }catch(e){}
-  let d=null;
+  let d=null, followerCount=null;
   try{
     const tok=rwToken();
-    const r=await fetch(RW_API+'/api/business/me',{headers:{'Authorization':'Bearer '+(tok||'')}});
+    const uid=await rwUid();
+    // フォロワー数（イベントと通知 設計§3「店側はマイページにフォロワー数」・E2の積み残し 2026-07-23実装）
+    const [r, fr]=await Promise.all([
+      fetch(RW_API+'/api/business/me',{headers:{'Authorization':'Bearer '+(tok||'')}}),
+      uid ? fetch(RW_API+'/api/store-follow/status?storeId='+encodeURIComponent(uid)).catch(()=>null) : Promise.resolve(null),
+    ]);
     if(r.ok) d=await r.json();
+    if(fr && fr.ok){ const fd=await fr.json(); if(typeof fd.followerCount==='number') followerCount=fd.followerCount; }
   }catch(e){}
   const body=document.getElementById('acctBody');
   const acc=(d&&d.account)||{}, biz=(d&&d.business)||{}, ver=(d&&d.verification)||{};
@@ -6113,6 +6121,7 @@ async function renderAccountSheet(){
       <div style="margin-bottom:6px;">${rolesHtml}</div>
       <div style="font-size:13px;">${stChip||'<span style="color:var(--text-sub);font-size:12px;">'+t('verif_none')+'</span>'}</div>
       ${renewStr && (st==='approved'||st==='verified') ? '<div style="font-size:11px;color:var(--text-sub);margin-top:4px;">'+t('acct_renew_due').replace('{d}', renewStr)+'</div>' : ''}
+      ${followerCount!=null ? '<div style="font-size:12px;color:var(--text);margin-top:6px;font-weight:700;">🔔 '+t('acct_followers').replace('{n}', followerCount)+'</div>' : ''}
     </div>
 
     <!-- 担当者 -->

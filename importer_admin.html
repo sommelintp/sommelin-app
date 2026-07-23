@@ -1159,6 +1159,41 @@
 </div>
 
 <!-- ==================== アカウントシート（インポーターマイページ・M1 2026-07-21） ==================== -->
+<!-- 一般向けイベント作成モーダル（2026-07-23・restaurant_adminのsevと同型。作成のみ先行実装） -->
+<div id="pevBackdrop" onclick="closePublicEventModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150;"></div>
+<div id="pevSheet" style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:151;background:#fff;max-width:480px;margin:0 auto;border-radius:20px 20px 0 0;max-height:90vh;overflow-y:auto;">
+  <div style="position:sticky;top:0;background:#fff;padding:14px 18px 10px;border-bottom:1px solid var(--border,#eee);display:flex;align-items:center;justify-content:space-between;z-index:1;">
+    <div style="font-size:15px;font-weight:800;color:var(--text,#2C1810);" data-i18n="pev_title">一般向けイベントを作成</div>
+    <button onclick="closePublicEventModal()" style="background:none;border:none;font-size:20px;color:#bbb;cursor:pointer;">✕</button>
+  </div>
+  <div style="padding:14px 18px 28px;">
+    <div style="font-size:11.5px;color:var(--text-sub,#888);line-height:1.6;margin-bottom:12px;" data-i18n="pev_intro">一般のお客さま向けのイベントです（業務店向け試飲会とは別で、LINE配信はされません）。</div>
+    <label style="display:block;font-size:11px;font-weight:700;color:var(--text-sub,#888);margin-bottom:4px;" data-i18n="pev_name">イベント名 ✳︎</label>
+    <input id="pev-title" type="text" data-i18n-ph="pev_name_ph" placeholder="例: 秋の一般公開試飲会" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border,#ddd);border-radius:10px;font-size:14px;font-family:inherit;margin-bottom:12px;">
+    <label style="display:block;font-size:11px;font-weight:700;color:var(--text-sub,#888);margin-bottom:4px;" data-i18n="pev_dates">開催日 ✳︎（複数OK）</label>
+    <div style="display:flex;gap:8px;margin-bottom:6px;">
+      <input id="pev-date" type="date" style="flex:1;padding:10px 12px;border:1px solid var(--border,#ddd);border-radius:10px;font-size:14px;font-family:inherit;">
+      <button onclick="pevAddDate()" style="background:#fff;color:var(--burgundy);border:1.5px solid var(--burgundy);border-radius:10px;padding:0 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;" data-i18n="pev_add">＋追加</button>
+    </div>
+    <div id="pevDateChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <div style="flex:1;"><label style="display:block;font-size:11px;font-weight:700;color:var(--text-sub,#888);margin-bottom:4px;" data-i18n="pev_start">開始</label><input id="pev-start" type="time" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border,#ddd);border-radius:10px;font-size:14px;font-family:inherit;"></div>
+      <div style="flex:1;"><label style="display:block;font-size:11px;font-weight:700;color:var(--text-sub,#888);margin-bottom:4px;" data-i18n="pev_end">終了</label><input id="pev-end" type="time" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border,#ddd);border-radius:10px;font-size:14px;font-family:inherit;"></div>
+    </div>
+    <label style="display:block;font-size:11px;font-weight:700;color:var(--text-sub,#888);margin-bottom:4px;" data-i18n="pev_venue">会場</label>
+    <input id="pev-venue" type="text" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border,#ddd);border-radius:10px;font-size:14px;font-family:inherit;margin-bottom:12px;">
+    <label style="display:block;font-size:11px;font-weight:700;color:var(--text-sub,#888);margin-bottom:4px;" data-i18n="pev_desc">説明（任意）</label>
+    <textarea id="pev-desc" rows="3" data-i18n-ph="pev_desc_ph" placeholder="内容・参加方法など" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border,#ddd);border-radius:10px;font-size:14px;font-family:inherit;margin-bottom:12px;resize:vertical;"></textarea>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <div style="flex:1;"><label style="display:block;font-size:11px;font-weight:700;color:var(--text-sub,#888);margin-bottom:4px;" data-i18n="pev_cost">参加費（円・任意）</label><input id="pev-cost" type="number" min="0" placeholder="0" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border,#ddd);border-radius:10px;font-size:14px;font-family:inherit;"></div>
+    </div>
+    <label style="display:block;font-size:11px;font-weight:700;color:var(--text-sub,#888);margin-bottom:4px;" data-i18n="pev_url">申込URL（任意）</label>
+    <input id="pev-url" type="url" placeholder="https://..." style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border,#ddd);border-radius:10px;font-size:14px;font-family:inherit;margin-bottom:16px;">
+    <button onclick="submitPublicEvent()" id="pevSubmitBtn" style="width:100%;background:var(--burgundy);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;" data-i18n="pev_submit">この内容で作成</button>
+    <div style="font-size:10.5px;color:var(--text-sub,#888);text-align:center;margin-top:8px;" data-i18n="pev_note">一般のお客さま向けのイベント面に表示されます（業務店へのLINE配信はされません）</div>
+  </div>
+</div>
+
 <div id="acctBackdrop" onclick="closeAccountSheet()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150;"></div>
 <div id="acctSheet" style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:151;background:#fff;max-width:480px;margin:0 auto;border-radius:20px 20px 0 0;max-height:88vh;overflow-y:auto;">
   <div style="position:sticky;top:0;background:#fff;padding:14px 18px 10px;border-bottom:1px solid var(--border,#eee);display:flex;align-items:center;justify-content:space-between;z-index:1;">
@@ -1330,6 +1365,11 @@
       <button class="create-btn" onclick="openNewEventForm()" data-i18n="btn_create_event">＋ イベント作成</button>
       <button class="create-btn" onclick="startNewPost()" data-i18n="btn_create_post">＋ 投稿作成</button>
     </div>
+    <!-- 一般向けイベント（2026-07-23: 業務店向け試飲会とは別の川=一般のお客さん向け。作成機能のみ先行実装） -->
+    <div class="create-row" style="margin-top:8px;">
+      <button class="create-btn" onclick="openPublicEventModal()" data-i18n="btn_create_public_event" style="background:#fff;color:var(--burgundy);border:1.5px solid var(--burgundy);">🍷 ＋ 一般向けイベント</button>
+    </div>
+    <div id="pevList" style="margin:8px 12px 0;"></div>
 
     <!-- 配信タイプ -->
     <div class="bcast-type-toggle">
@@ -1776,6 +1816,15 @@ const I18N = {
     btab_send: '📤 配信',
     btab_history: '🕘 履歴',
     btn_create_event: '＋ イベント作成',
+    btn_create_public_event: '🍷 ＋ 一般向けイベント',
+    pev_title: '一般向けイベントを作成', pev_intro: '一般のお客さま向けのイベントです（業務店向け試飲会とは別で、LINE配信はされません）。',
+    pev_name: 'イベント名 ✳︎', pev_name_ph: '例: 秋の一般公開試飲会', pev_dates: '開催日 ✳︎（複数OK）', pev_add: '＋追加',
+    pev_start: '開始', pev_end: '終了', pev_venue: '会場', pev_desc: '説明（任意）', pev_desc_ph: '内容・参加方法など',
+    pev_cost: '参加費（円・任意）', pev_url: '申込URL（任意）', pev_submit: 'この内容で作成',
+    pev_note: '一般のお客さま向けのイベント面に表示されます（業務店へのLINE配信はされません）',
+    pev_need_title: 'イベント名を入力してください', pev_need_date: '開催日を追加してください',
+    pev_saving: '作成中…', pev_created: 'イベントを作成しました', pev_fail: '作成に失敗しました',
+    pev_list_head: '一般向けイベント', pev_delete: '削除', pev_del_confirm: 'このイベントを削除しますか？',
     btn_create_post: '＋ 投稿作成',
     bct_event: '🍷 イベント',
     bct_post: '📣 おすすめ・お知らせ',
@@ -2086,6 +2135,15 @@ const I18N = {
     btab_send: '📤 Send',
     btab_history: '🕘 History',
     btn_create_event: '＋ New event',
+    btn_create_public_event: '🍷 ＋ Public event',
+    pev_title: 'Create a public event', pev_intro: 'An event for general consumers (separate from trade tastings; no LINE broadcast).',
+    pev_name: 'Event name ✳︎', pev_name_ph: 'e.g. Autumn public tasting', pev_dates: 'Dates ✳︎ (multiple OK)', pev_add: '+ Add',
+    pev_start: 'Start', pev_end: 'End', pev_venue: 'Venue', pev_desc: 'Description (optional)', pev_desc_ph: 'Details, how to join, etc.',
+    pev_cost: 'Fee (JPY, optional)', pev_url: 'Sign-up URL (optional)', pev_submit: 'Create',
+    pev_note: 'Shown on the consumer-facing event feed (no LINE broadcast to trade shops)',
+    pev_need_title: 'Please enter an event name', pev_need_date: 'Please add at least one date',
+    pev_saving: 'Creating…', pev_created: 'Event created', pev_fail: 'Failed to create',
+    pev_list_head: 'Public events', pev_delete: 'Delete', pev_del_confirm: 'Delete this event?',
     btn_create_post: '＋ New post',
     bct_event: '🍷 Event',
     bct_post: '📣 Picks & News',
@@ -2742,6 +2800,76 @@ setTimeout(initRoleSwitcher, 1500);   // 入口ガードがrolesを更新した�
 // ── イベント作成API（backend経由・認証必須） ──
 const EV_API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
 function evAuthToken(){ try{ const s=JSON.parse(localStorage.getItem('sommelin_session')||'null'); return s&&s.access_token; }catch(e){ return null; } }
+
+// ── 一般向けイベント作成・一覧・削除（2026-07-23・restaurant_adminのsevと同型） ──
+//   /api/store-events を使用（organizer_kind='store'の一般公開イベント面＝業務店向け試飲会
+//   /api/importer-events とは別の川。LINE配信されない）。作成機能のみ先行実装（オーナー判断）。
+let pevDates = [];
+const pevEsc = s => String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function openPublicEventModal(){
+  pevDates = [];
+  ['pev-title','pev-date','pev-start','pev-end','pev-desc','pev-cost','pev-url'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  let name=''; try{ const p=JSON.parse(localStorage.getItem('sommelin_profile')||'{}'); name=p.display_name||''; }catch(e){}
+  document.getElementById('pev-venue').value=name;
+  renderPevChips();
+  document.getElementById('pevBackdrop').style.display='block';
+  document.getElementById('pevSheet').style.display='block';
+}
+function closePublicEventModal(){ document.getElementById('pevBackdrop').style.display='none'; document.getElementById('pevSheet').style.display='none'; }
+function pevAddDate(){
+  const v=document.getElementById('pev-date').value;
+  if(!v) return;
+  if(!pevDates.includes(v) && pevDates.length<14) pevDates.push(v);
+  pevDates.sort();
+  document.getElementById('pev-date').value='';
+  renderPevChips();
+}
+function pevRemoveDate(d){ pevDates=pevDates.filter(x=>x!==d); renderPevChips(); }
+function renderPevChips(){
+  const el=document.getElementById('pevDateChips');
+  el.innerHTML = pevDates.length ? pevDates.map(d=>`<span style="background:var(--burgundy-pale,#f9f0f3);color:var(--burgundy);font-size:12px;font-weight:700;border-radius:14px;padding:5px 10px;">${d} <span onclick="pevRemoveDate('${d}')" style="cursor:pointer;">✕</span></span>`).join('') : '<span style="font-size:11px;color:var(--text-sub,#888);">'+t('pev_need_date')+'</span>';
+}
+async function submitPublicEvent(){
+  const title=document.getElementById('pev-title').value.trim();
+  const pend=document.getElementById('pev-date').value; if(pend && !pevDates.includes(pend)){ pevDates.push(pend); pevDates.sort(); }
+  if(!title){ showToast(t('pev_need_title')); return; }
+  if(!pevDates.length){ showToast(t('pev_need_date')); return; }
+  const btn=document.getElementById('pevSubmitBtn'); btn.disabled=true; btn.textContent=t('pev_saving');
+  const costV=parseInt(document.getElementById('pev-cost').value,10);
+  const body={ title, eventDates:pevDates,
+    startTime:document.getElementById('pev-start').value||null, endTime:document.getElementById('pev-end').value||null,
+    venueName:document.getElementById('pev-venue').value.trim()||null, description:document.getElementById('pev-desc').value.trim()||null,
+    cost:(Number.isFinite(costV)&&costV>=0)?costV:null, registrationUrl:document.getElementById('pev-url').value.trim()||null };
+  try{
+    if(window.sommLog) sommLog('public_event_create');
+    const r=await fetch(EV_API_BASE+'/api/store-events',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(evAuthToken()||'')},body:JSON.stringify(body)});
+    if(!r.ok) throw new Error('http '+r.status);
+    showToast(t('pev_created')); closePublicEventModal(); loadPublicEvents();
+  }catch(e){ showToast(t('pev_fail')); }
+  finally{ btn.disabled=false; btn.textContent=t('pev_submit'); }
+}
+async function loadPublicEvents(){
+  const el=document.getElementById('pevList'); if(!el) return;
+  try{
+    const r=await fetch(EV_API_BASE+'/api/store-events/mine',{headers:{'Authorization':'Bearer '+(evAuthToken()||'')}});
+    if(!r.ok) throw 0;
+    const evs=(await r.json()).events||[];
+    if(!evs.length){ el.innerHTML=''; return; }
+    el.innerHTML='<div style="font-size:11px;font-weight:700;color:var(--text-sub,#888);letter-spacing:.06em;margin-bottom:6px;">'+t('pev_list_head')+'</div>'+evs.map(e=>{
+      const meta=[e.eventDate, e.startTime?e.startTime.slice(0,5):'', e.venueName].filter(Boolean).join(' ・ ');
+      return `<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;background:#fff;border:1px solid var(--border,#eee);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+        <div style="min-width:0;"><div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${pevEsc(e.title)}</div><div style="font-size:11px;color:var(--text-sub,#888);">${pevEsc(meta)}</div></div>
+        <button onclick="deletePublicEvent('${e.id}')" style="background:none;border:none;color:#c0392b;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;">${t('pev_delete')}</button>
+      </div>`;
+    }).join('');
+  }catch(e){ el.innerHTML=''; }
+}
+async function deletePublicEvent(id){
+  if(!confirm(t('pev_del_confirm'))) return;
+  try{ await fetch(EV_API_BASE+'/api/store-events/'+encodeURIComponent(id),{method:'DELETE',headers:{'Authorization':'Bearer '+(evAuthToken()||'')}}); }catch(e){}
+  loadPublicEvents();
+}
+loadPublicEvents();
 
 // ── 反響（店舗の試飲メモに書かれた自社名を検索。実データ: tasting_notes） ──
 async function loadTastingFeedback() {

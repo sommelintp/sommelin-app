@@ -34,14 +34,8 @@ body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg)
 .wrow{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:6px; }
 .wprice{ font-size:13px; font-weight:700; color:var(--burgundy); }
 .wbadge{ font-size:10px; font-weight:700; background:#FFF3D6; color:#8a6d1f; padding:2px 8px; border-radius:12px; }
-.wherebtn{ border:1px solid var(--border); background:var(--bg); border-radius:20px; padding:5px 10px;
-  font-size:11px; font-weight:700; color:var(--burgundy); cursor:pointer; font-family:inherit; }
 .wcommunity-row{ margin-top:6px; }
 .wcommunity{ font-size:11px; color:var(--text-sub); }
-.wherebox{ display:none; border-top:1px solid var(--border); margin-top:10px; padding-top:8px; }
-.wherebox.show{ display:block; }
-.whererow{ font-size:12px; padding:5px 0; color:var(--text); }
-.whererow .ws{ font-size:10px; color:var(--text-sub); }
 .empty{ text-align:center; padding:40px 20px; color:var(--text-sub); }
 .claim{ display:block; text-align:center; margin:22px 16px 0; padding:14px; background:#fff;
   border:1.5px dashed var(--border); border-radius:14px; color:var(--text-sub); font-size:12px;
@@ -102,73 +96,50 @@ async function load() {
   if (!producerName) { listEl.innerHTML = '<div class="empty">URLに ?p=生産者名 を付けて開いてください</div>'; return; }
   loadIg();
   try {
-    // 2026-07-09: Supabase直叩き(anonキーでwines.sp/osu_gbmを生取得)をやめ、
-    // バックエンド経由(sanitize済み・total/cospaLevelのみ)に統一。
-    const r = await fetch(API_BASE + '/api/producer-wines?producer=' + encodeURIComponent(producerName));
+    // 2026-07-23（生産者ページ改修）: producer-wines（ヴィンテージ行がバラバラに並ぶ）から
+    // producer-catalog（銘柄グループ単位）へ切替。設計_生産者ページ_2026-07-23.md §2。
+    // 各グループの評価は「最新ヴィンテージの評価」1本のみ＝平均等の代表値は作らない（no-lie）。
+    const r = await fetch(API_BASE + '/api/producer-catalog?producer=' + encodeURIComponent(producerName));
     if (!r.ok) throw 0;
     const d = await r.json();
-    const rows = d.items || [];
-    if (!rows.length) {
+    const groups = d.groups || [];
+    if (!groups.length) {
       listEl.innerHTML = '<div class="empty">🔍 この生産者のワインはまだ掲載されていません</div>';
       return;
     }
     // ヘッダー・統計（表記はブランド控えめ: SPという言葉は出さない。平均等の内部指標は出さない）
     const regions = {};
-    rows.forEach(w => { const k = [w.kuni, w.chiiki].filter(v => v && v !== '不明').join(' '); if (k) regions[k] = (regions[k]||0)+1; });
+    groups.forEach(g => { const k = [g.kuni, g.chiiki].filter(v => v && v !== '不明').join(' '); if (k) regions[k] = (regions[k]||0)+1; });
     const topRegion = Object.entries(regions).sort((a,b)=>b[1]-a[1])[0];
     document.getElementById('pregion').textContent = topRegion ? topRegion[0] : '';
-    document.getElementById('stCount').textContent = (d.stats && d.stats.count) || rows.length;
+    document.getElementById('stCount').textContent = (d.stats && d.stats.count) || groups.length;
     document.getElementById('stGood').textContent = ((d.stats && d.stats.goodCount) || 0) + '本';
     document.getElementById('stats').style.display = 'flex';
 
-    listEl.innerHTML = '<div class="sec">掲載ワイン（評価順）</div>' + rows.map(w => {
+    listEl.innerHTML = '<div class="sec">掲載ワイン（銘柄一覧）</div>' + groups.map(g => {
+      const w = g.latest;
       const price = w.price != null ? '¥' + Math.round(w.price).toLocaleString('ja-JP') : '';
-      // AJ-8(2026-07-14): カード全体をタップ可能に。詳細は既存のワイン検索画面に任せる
       // 表示体系第4版(2026-07-16): 味スコア＋ソムスター（WineDisplay.scoreBlockに一元化）
       const stars = window.WineDisplay ? window.WineDisplay.scoreBlock(w, { size: 12 }) : '';
       // AJ-11(2026-07-14): フォロワー機能はまだ無いため「みんなの評価」（全ユーザー平均・3件未満は非表示=no-lie）から。
       const community = w.communityCount >= 3
         ? `<span class="wcommunity">👥 みんなの評価 ${w.communityAvg.toFixed(1)}（${w.communityCount}件）</span>` : '';
-      const detailUrl = 'wine_search.html?q=' + encodeURIComponent(w.name || '');
-      return `<div class="wcard" onclick="if(window.sommLog)sommLog('producer_wine_tap',{n:'${esc(w.name||'').replace(/'/g,'')}'});location.href='${detailUrl}'" style="cursor:pointer;">
-        <div class="wname">${esc(w.name)}${w.vintage && w.vintage!=='NV' ? ' ' + esc(w.vintage) : ''} <span style="float:right;color:var(--text-sub);font-weight:400;">›</span></div>
-        <div class="wmeta">${esc([w.iro, w.kuni, w.chiiki].filter(v => v && v !== '不明').join(' ・ '))}</div>
+      const detailUrl = 'wine.html?producer=' + encodeURIComponent(producerName) + '&name=' + encodeURIComponent(g.name);
+      const vintageBadge = g.vintageCount >= 2 ? `<span class="wbadge">${g.vintageCount}ヴィンテージ掲載</span>` : '';
+      const latestNote = g.vintageCount >= 2 && g.latestVintage != null ? `（${g.latestVintage}年の評価）` : '';
+      return `<div class="wcard" onclick="if(window.sommLog)sommLog('producer_wine_tap',{n:'${esc(g.name||'').replace(/'/g,'')}'});location.href='${detailUrl}'" style="cursor:pointer;">
+        <div class="wname">${esc(g.name)} <span style="float:right;color:var(--text-sub);font-weight:400;">›</span></div>
+        <div class="wmeta">${esc([g.iro, g.kuni, g.chiiki].filter(v => v && v !== '不明').join(' ・ '))} ${vintageBadge}</div>
         <div class="wrow">
           <span class="wprice">${price}</span>
           ${stars}
-          ${w.id != null ? `<button class="wherebtn" onclick="event.stopPropagation();toggleWhere(${w.id}, this)">📍 どこで飲める？</button>` : ''}
         </div>
+        ${latestNote ? `<div class="wcommunity-row"><span class="wcommunity">${latestNote}</span></div>` : ''}
         ${community ? `<div class="wcommunity-row">${community}</div>` : ''}
-        ${w.id != null ? `<div class="wherebox" id="where-${w.id}" onclick="event.stopPropagation()"></div>` : ''}
       </div>`;
     }).join('');
   } catch (e) {
     listEl.innerHTML = '<div class="empty">読み込めませんでした（通信環境をご確認ください）</div>';
-  }
-}
-
-async function toggleWhere(wineId, btn) {
-  const box = document.getElementById('where-' + wineId);
-  if (box.classList.contains('show')) { box.classList.remove('show'); return; }
-  box.classList.add('show');
-  box.innerHTML = '<div class="whererow" style="color:var(--text-sub);">探しています…</div>';
-  if (window.sommLog) sommLog('wine_where_view', { wineId, from: 'producer' });
-  try {
-    const r = await fetch(API_BASE + '/api/wine-places?wineId=' + wineId);
-    const d = await r.json();
-    const items = d.items || [];
-    if (!items.length) {
-      box.innerHTML = '<div class="whererow" style="color:var(--text-sub);">まだ目撃情報がありません。お店で見かけたらスカウターで記録を！</div>';
-      return;
-    }
-    box.innerHTML = items.map(it => {
-      const cat = it.category === 'shop' ? '🍷 買える' : '🍽️ 飲める';
-      const price = it.priceBottle ? ` ・ ボトル ¥${Number(it.priceBottle).toLocaleString('ja-JP')}`
-                  : it.listPrice ? ` ・ ${it.byGlass ? 'グラス' : 'ボトル'} ¥${Number(it.listPrice).toLocaleString('ja-JP')}` : '';
-      return `<div class="whererow">${esc(it.name)} <span class="ws">${cat}${price}</span></div>`;
-    }).join('');
-  } catch (e) {
-    box.innerHTML = '<div class="whererow" style="color:var(--text-sub);">読み込めませんでした</div>';
   }
 }
 
