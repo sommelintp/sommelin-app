@@ -518,6 +518,7 @@ const I18N = {
     oshi_back: '戻る',
     oshi_saved: '気に入ったワインに保存しました🍷',
     oshi_fail: '保存に失敗しました。通信環境をご確認ください',
+    oshi_share_record_fail: '共有は完了しましたが、共有履歴の保存に失敗しました',
     oshi_ask_title: 'この美味しかった気持ち、みんなに伝えませんか？',
     oshi_ask_sub: 'アプリ内で他のソムリンユーザーにおすすめしたり、Instagramで生産者・友達に届けたりできます',
     oshi_ask_go: '📸 推しカードを作ってInstagramでシェア',
@@ -537,7 +538,7 @@ const I18N = {
     oshi_card_retake: '📷 撮り直す',
     oshi_card_showscore: '⭐ 点数を載せる',
     oshi_card_make: '🎨 カードを作る',
-    oshi_ig_confirmed: 'タグ付けを設定しました',
+    oshi_ig_confirmed: '投稿用の@メンションを設定しました',
     oshi_ig_invalid: 'ハンドルの形式が正しくありません',
     oshi_making: 'カードを作成中…',
     oshi_share: '📤 Instagramでシェア',
@@ -601,7 +602,7 @@ const I18N = {
     back_catch_failed: '読み取りに失敗しました。もう一度お試しください',
     back_xp_gained: '🎉 +{n} XP を獲得！',
     similar_heading: '近い系統のおすすめ（ソムリン実データ）',
-    ig_notify_confirmed: '✓ @{n} にお知らせが届きます',
+    ig_notify_confirmed: '✓ 投稿に @{n} を付けられます',
     change_label: '変更',
     ig_confirm_q: 'この生産者のInstagramはこちらですか？',
     ig_view_profile: '@{n} のプロフィールを見る ↗',
@@ -614,7 +615,7 @@ const I18N = {
     ig_manual_if_known: '知っていたら入力する',
     ig_manual_placeholder: '@なし、または instagram.com/... のURL',
     save_label: '保存',
-    store_notify_suffix: '・@{n}にお知らせが届きます',
+    store_notify_suffix: '・投稿に @{n} を付けられます',
     store_where_q: '📍 どこで飲みましたか？（任意）',
     store_search_placeholder: 'お店の名前で検索',
     store_ig_placeholder: 'お店のInstagramが分かれば（任意）',
@@ -733,6 +734,7 @@ const I18N = {
     oshi_back: 'Back',
     oshi_saved: 'Saved to your favorite wines 🍷',
     oshi_fail: 'Failed to save. Please check your connection.',
+    oshi_share_record_fail: 'The share was completed, but its activity could not be recorded.',
     oshi_ask_title: 'Want to spread the word?',
     oshi_ask_sub: 'Recommend it to other Sommelin users, or share a fan card on Instagram with the producer and friends.',
     oshi_ask_go: '📸 Create a fan card & share on Instagram',
@@ -752,7 +754,7 @@ const I18N = {
     oshi_card_retake: '📷 Retake',
     oshi_card_showscore: '⭐ Show my score',
     oshi_card_make: '🎨 Create card',
-    oshi_ig_confirmed: 'Tag saved',
+    oshi_ig_confirmed: 'Mention saved for your post',
     oshi_ig_invalid: 'That doesn\'t look like a valid handle',
     oshi_making: 'Creating your card…',
     oshi_share: '📤 Share on Instagram',
@@ -816,7 +818,7 @@ const I18N = {
     back_catch_failed: 'Reading failed. Please try again.',
     back_xp_gained: '🎉 +{n} XP earned!',
     similar_heading: 'Similar wines you might like (real Sommelin data)',
-    ig_notify_confirmed: '✓ @{n} will be notified',
+    ig_notify_confirmed: '✓ You can add @{n} to your post',
     change_label: 'Change',
     ig_confirm_q: 'Is this the producer\'s Instagram?',
     ig_view_profile: 'View @{n}\'s profile ↗',
@@ -829,7 +831,7 @@ const I18N = {
     ig_manual_if_known: 'Enter it if you know it',
     ig_manual_placeholder: '@handle, or an instagram.com/... URL',
     save_label: 'Save',
-    store_notify_suffix: ' · @{n} will be notified',
+    store_notify_suffix: ' · You can add @{n} to your post',
     store_where_q: '📍 Where did you have this? (optional)',
     store_search_placeholder: 'Search by venue name',
     store_ig_placeholder: 'Venue\'s Instagram, if known (optional)',
@@ -2124,8 +2126,6 @@ async function oshiMakeCard(){
     document.getElementById('oshiOverlay').classList.add('on');
     closeSheet();
     if(window.sommLog) sommLog('oshi_card_open',{hasHandle:!!oshiHandle});
-    if(oshiLikeId){ fetch(API_BASE+'/api/wine-like/shared',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({likeId:oshiLikeId,userId:UID})}).catch(()=>{}); }
   }catch(e){ toast(t('oshi_fail')); }
 }
 
@@ -2156,6 +2156,16 @@ async function oshiDoShare(){
     const file=new File([oshiCardBlob],'sommelin-oshi.png',{type:'image/png'});
     if(navigator.canShare && navigator.canShare({files:[file]})){
       await navigator.share({files:[file]});
+      // Web Share APIは共有先や実投稿の完了を返さない。共有シートを完了した事実だけを記録する。
+      if(oshiLikeId){
+        try{
+          const r = await fetch(API_BASE+'/api/wine-like/shared',{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({likeId:oshiLikeId,userId:UID})});
+          if(!r.ok) toast(t('oshi_share_record_fail'));
+        }catch(e){
+          toast(t('oshi_share_record_fail'));
+        }
+      }
       return;
     }
   }catch(e){ if(e && e.name==='AbortError') return; }
