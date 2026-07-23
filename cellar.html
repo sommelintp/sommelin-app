@@ -1368,7 +1368,7 @@ function renderCellar() {
 }
 
 /* ===== PAIRING FEEDBACK on journal (#0・2026-07-18) =====
-   飲んだワインを振り返って「何と合わせましたか？」＋4段階（context=taste_memo）。
+   飲んだワインを振り返って「何と合わせましたか？」＋5段階（context=taste_memo）。
    taste_itemsはcatalog_idを持たないため wineName で記録（guide_id/catalog_id は null）。任意・スキップ自由。 */
 const JOURNAL_PAIRING_FB = {
   ja: {
@@ -1376,13 +1376,15 @@ const JOURNAL_PAIRING_FB = {
     intro: 'このワイン、何と合わせましたか？',
     dishPh: '料理を入力（例: 麻婆豆腐、生ハム）',
     verdicts: [
-      { v: 'awanai',    label: '合わなかった…' },
+      { v: 'zenzen_dame', label: '全くダメ' },
+      { v: 'awanai',    label: '合わない' },
       { v: 'bunan',     label: '無難' },
-      { v: 'au',        label: '合う！' },
-      { v: 'mariage',   label: 'マリアージュ✨' },
+      { v: 'au',        label: '合う' },
+      { v: 'mariage',   label: 'マリアージュ' },
     ],
     needDish: '合わせた料理を入れてください',
     thanks: {
+      zenzen_dame: '率直に教えてくださってありがとうございます',
       awanai:    '教えてくださってありがとうございます',
       bunan:     'なるほど、記録しました',
       au:        'よかった！覚えておきます',
@@ -1396,13 +1398,15 @@ const JOURNAL_PAIRING_FB = {
     intro: 'What did you pair this wine with?',
     dishPh: 'Enter a dish (e.g. mapo tofu, prosciutto)',
     verdicts: [
-      { v: 'awanai',    label: 'Didn\'t work…' },
+      { v: 'zenzen_dame', label: 'Terrible' },
+      { v: 'awanai',    label: 'Didn\'t work' },
       { v: 'bunan',     label: 'Fine' },
       { v: 'au',        label: 'Good match!' },
-      { v: 'mariage',   label: 'Mariage✨' },
+      { v: 'mariage',   label: 'Mariage' },
     ],
     needDish: 'Please enter the dish you paired',
     thanks: {
+      zenzen_dame: 'Thank you for being honest',
       awanai:    'Thank you for letting me know',
       bunan:     'Got it, recorded',
       au:        'Glad to hear! I\'ll remember',

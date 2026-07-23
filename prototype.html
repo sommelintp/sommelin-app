@@ -598,7 +598,7 @@
 
   .feedback-buttons {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 6px;
   }
 
@@ -2852,6 +2852,9 @@
     <div class="feedback-section">
       <div class="feedback-title" data-i18n="fb_title">今夜このワインを飲んだ料理との相性は？</div>
       <div class="feedback-buttons">
+        <button class="feedback-btn" onclick="giveFeedback(this,'zenzen_dame')">
+          <span class="fb-emoji">💥</span><span data-i18n="fb_terrible">全くダメ</span>
+        </button>
         <button class="feedback-btn" onclick="giveFeedback(this,'no_match')">
           <span class="fb-emoji">🚫</span><span data-i18n="fb_no_match">合わない</span>
         </button>
@@ -3111,7 +3114,8 @@ const I18N = {
     sub_li1: 'AIソムリエ相談の無制限利用（現在は月5回まで無料）', sub_li2: 'より詳細なテイスト分析・おすすめ精度の向上', sub_li3: 'マイセラーの本数上限の解放',
     // ワイン詳細・フィードバック
     mariage_section: 'MARIAGE — 相性の良い料理', fb_title: '今夜このワインを飲んだ料理との相性は？',
-    fb_no_match: '合わない', fb_neutral: '無難', fb_match: '合う', fb_mariage: 'マリアージュ',
+    fb_terrible: '全くダメ', fb_no_match: '合わない', fb_neutral: '無難', fb_match: '合う', fb_mariage: 'マリアージュ',
+    fb_reply_terrible: '率直に教えてくださってありがとうございます。次はもっと良い組み合わせを探しますね。',
     fb_reply_no_match: 'そうでしたか…次はもっと合う組み合わせを探しますね。',
     fb_reply_neutral: 'なるほど。もう少し冒険的な組み合わせもご提案できますよ！',
     fb_reply_match: 'よかったです！その組み合わせ、いいですね 😊',
@@ -3300,7 +3304,8 @@ const I18N = {
     sub_li1: 'Unlimited AI sommelier chat (currently 5 free per month)', sub_li2: 'Deeper taste analysis and better recommendations', sub_li3: 'Higher bottle limit for My Cellar',
     // Wine detail / feedback
     mariage_section: 'MARIAGE — Perfect Pairings', fb_title: "How did this wine pair with tonight's dish?",
-    fb_no_match: 'No match', fb_neutral: 'So-so', fb_match: 'Good', fb_mariage: 'Mariage',
+    fb_terrible: 'Terrible', fb_no_match: 'No match', fb_neutral: 'So-so', fb_match: 'Good', fb_mariage: 'Mariage',
+    fb_reply_terrible: "Thank you for being honest. I'll find a much better pairing next time.",
     fb_reply_no_match: "I see… I'll look for a better match next time.",
     fb_reply_neutral: 'Got it. I can suggest more adventurous pairings, too!',
     fb_reply_match: "Wonderful! I'll make a note of it 😊",
@@ -4915,6 +4920,7 @@ function giveFeedback(btn, type) {
   document.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   const msgs = {
+    zenzen_dame: t('fb_reply_terrible'),
     no_match: t('fb_reply_no_match'),
     neutral: t('fb_reply_neutral'),
     match: t('fb_reply_match'),
