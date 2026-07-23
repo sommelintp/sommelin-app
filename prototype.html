@@ -5705,7 +5705,7 @@ async function askSomurin(text, photo) {
   const msgs = document.getElementById('chatMessages');
   const thinkingEl = msgs.lastElementChild;
   try {
-    const body = { messages: protoChatHist.slice(-8), userId: CHAT_UID2 };
+    const body = { messages: protoChatHist.slice(-8), userId: CHAT_UID2, stream: true };
     if (photo) body.image = photo;
     if (protoPhotoContext) body.photoContext = protoPhotoContext;
     const token = await getAnonAccessToken();
@@ -5714,6 +5714,12 @@ async function askSomurin(text, photo) {
       headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { Authorization: 'Bearer ' + token } : {}),
       body: JSON.stringify(body)
     });
+    // V2ストリーミング（設計_体感最速化_2026-07-23 §4）: SSEなら「考え中…」バブルへ逐次描画。
+    // SSEでない応答（killスイッチ・エラー系）は従来のJSON処理へ＝完全互換。
+    if (r.ok && (r.headers.get('content-type') || '').includes('text/event-stream') && r.body) {
+      await protoChatStream(r, thinkingEl);
+      return;
+    }
     thinkingEl.remove();
     if (r.status === 429) { addChatMsg('somurin', t('chat_busy')); return; }
     if (r.status === 403) {
@@ -5739,6 +5745,54 @@ async function askSomurin(text, photo) {
   } finally {
     protoChatBusy = false;
   }
+}
+
+// V2ストリーミング受信（sommelier-chat.htmlのhandleChatStreamと同型）。「考え中…」バブルへ
+// 逐次描画し、done時に正本（meta.reply）でaddChatMsgに置き換える（quota注記等の最終描画を複製しない）。
+async function protoChatStream(r, thinkingEl) {
+  const bubble = thinkingEl.querySelector('.msg-bubble') || thinkingEl;
+  let acc = '', meta = null, errored = false;
+  const render = () => {
+    bubble.innerHTML = mdBold(acc).replace(/\n/g, '<br>');
+    const msgs = document.getElementById('chatMessages');
+    msgs.scrollTop = msgs.scrollHeight;
+  };
+  const reader = r.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '';
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf = (buf + dec.decode(value, { stream: true })).replace(/\r\n/g, '\n');
+      let sep;
+      while ((sep = buf.indexOf('\n\n')) >= 0) {
+        const frame = buf.slice(0, sep); buf = buf.slice(sep + 2);
+        const evm = frame.match(/^event: (.+)$/m);
+        const dl = frame.split('\n').find(l => l.startsWith('data:'));
+        if (!evm || !dl) continue;
+        let d; try { d = JSON.parse(dl.slice(5)); } catch (e) { continue; }
+        const ev = evm[1];
+        if (ev === 'delta') { acc += d.t; render(); }
+        else if (ev === 'status') { if (!acc) { bubble.innerHTML = '<span style="color:#999;font-size:12px;">' + (d.t || '') + '</span>'; } }
+        else if (ev === 'replace') { acc = d.text || ''; render(); }
+        else if (ev === 'meta') { meta = d; }
+        else if (ev === 'error') { errored = true; }
+      }
+    }
+  } catch (e) { errored = true; }
+
+  thinkingEl.remove();
+  const finalReply = (meta && meta.reply) || acc.trim();
+  if (errored && !finalReply) { addChatMsg('somurin', t('chat_fail')); return; }
+  if (meta) protoPhotoContext = meta.photoContext || null;
+  protoChatHist.push({ role: 'assistant', content: finalReply });
+  let replyHtml = mdBold(finalReply).replace(/\n/g, '<br>');
+  const q = meta && meta.quota;
+  if (q && !q.premium && q.remaining !== null && q.remaining <= 2) {
+    replyHtml += `<br><span style="font-size:11px;color:var(--gold);font-weight:600;">${t('chat_remaining').replace('{n}', q.remaining)}</span>`;
+  }
+  addChatMsg('somurin', replyHtml);
 }
 
 function addChatMsg(from, text, photo) {

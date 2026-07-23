@@ -2190,6 +2190,9 @@ function showApiUnset(){
 }
 
 // ── リストモード: /api/identify-list（1枚＝1回。複数ページは撮るたび累積） ──
+// ── リスト読み（2026-07-23 ストリーミング化・設計_体感最速化_ストリーミング_2026-07-23.md §3） ──
+// 新経路: /api/identify-list-stream（SSE）で「読めた行から順次表示→照合が追いかけて✅/味スコア」。
+// 失敗・非対応時は旧 /api/identify-list（一括）へ自動フォールバック＝壊れても今日の動作に戻るだけ。
 async function identifyList(dataUrl, opts){
   opts=opts||{};
   if(window.sommLog) sommLog('scan',{mode:'list'});
@@ -2197,37 +2200,119 @@ async function identifyList(dataUrl, opts){
   if(API_BASE.includes('★')){ showApiUnset(); return; }
   busy=true; setShoot(true); showStatus(true); setStatus(t('status_analyzing_list'));
   try{
-    const r=await fetch(API_BASE+'/api/identify-list',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ image:dataUrl, userId:UID, locale: (LANG==='en'?'en-US':'ja-JP') })
-    });
-    if(r.status===429||r.status===403){ showStatus(false); toast(t('toast_rate_limit')); return; }
-    if(!r.ok) throw new Error('http '+r.status);
-    const res=await r.json();
-    showStatus(false);
-    if(!res.items || !res.items.length){
-      // おまかせでリストと判定→実は非リストだった＝棚だった可能性。推測せず2チップで聞き直す（§3.1救済）。
-      if(opts.fromAuto && res.isWineList===false){
-        askDocType(dataUrl, lastShotCanvas, null);
-        return;
-      }
-      toast(res.isWineList===false?t('list_not_found'):t('list_unreadable'));
-      return;
-    }
-    listPages++;
-    listItems=listItems.concat(res.items);
-    lastListScanId=res.scanId||lastListScanId;
-    listHasTaste=!!(res.summary&&res.summary.hasTasteProfile);
-    saveArena(); updateArenaBadge();   // 土俵に反映（sessionStorage保持＋バッジ更新）
-    renderListSheet();
-    openSheet();
+    const done=await identifyListStream(dataUrl, opts);
+    if(done) return;                    // ストリーム成功（後始末はstream側で済み）
+    await identifyListLegacy(dataUrl, opts);   // 501/接続不可など→一括へ
   }catch(e){
     showStatus(false);
     toast(t('toast_analyze_failed'));
   }finally{
     busy=false; setShoot(false);
   }
+}
+
+// SSE受信。成功したらtrue、フォールバックすべきならfalse（throwは呼び出し側で共通処理）。
+async function identifyListStream(dataUrl, opts){
+  let r;
+  try{
+    r=await fetch(API_BASE+'/api/identify-list-stream',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ image:dataUrl, userId:UID, locale: (LANG==='en'?'en-US':'ja-JP') })
+    });
+  }catch(e){ return false; }            // ネットワーク層の失敗→一括へ
+  if(r.status===429||r.status===403){ showStatus(false); toast(t('toast_rate_limit')); return true; }
+  if(!r.ok || !r.body || !(r.headers.get('content-type')||'').includes('text/event-stream')) return false;
+
+  const streamBase=listItems.length;    // 複数ページ累積の続き位置
+  let sheetOpened=false, gotMeta=null, gotError=null, itemCount=0;
+  const pendingShape=inp=>({ input:inp, _pending:true,
+    match:{status:'reading', matchScore:0, wine:null},
+    sommelin:{isPick:false, level:null, reason:null},
+    personalFit:{label:null, score:null, reasons:[], basedOn:'coldStart'}, priceDelta:null });
+
+  const onEvent=(ev, d)=>{
+    if(ev==='item'){
+      itemCount++;
+      listItems[streamBase+d.index]=pendingShape(d.input||{});
+      if(!sheetOpened){ showStatus(false); renderListSheet(); openSheet(); sheetOpened=true; }
+      else renderListSheet();
+    }else if(ev==='match'){
+      if(d.item) listItems[streamBase+d.index]=d.item;
+      if(sheetOpened) renderListSheet();
+    }else if(ev==='meta'){ gotMeta=d; }
+    else if(ev==='error'){ gotError=d; }
+  };
+
+  // fetchストリームをSSEフレームに分解（EventSourceはPOST不可のためreaderで自前パース）
+  const reader=r.body.getReader();
+  const dec=new TextDecoder();
+  let buf='';
+  while(true){
+    const {done, value}=await reader.read();
+    if(done) break;
+    buf=(buf+dec.decode(value,{stream:true})).replace(/\r\n/g,'\n');
+    let sep;
+    while((sep=buf.indexOf('\n\n'))>=0){
+      const frame=buf.slice(0,sep); buf=buf.slice(sep+2);
+      const evm=frame.match(/^event: (.+)$/m);
+      const dl=frame.split('\n').find(l=>l.startsWith('data:'));
+      if(!evm||!dl) continue;
+      let d; try{ d=JSON.parse(dl.slice(5)); }catch(e){ continue; }
+      try{ onEvent(evm[1], d); }catch(e){}
+    }
+  }
+
+  // 後始末（一括版と同じ状態遷移）
+  showStatus(false);
+  // 途中で終わってpendingが残ったら「読み取れなかった」ではなく行ごと落とす（水増し表示をしない）
+  listItems=listItems.filter(it=>it && !it._pending);
+  if(gotError || itemCount===0){
+    const notList=gotMeta && gotMeta.isWineList===false;
+    if(opts.fromAuto && notList){ askDocType(dataUrl, lastShotCanvas, null); return true; }
+    if(sheetOpened) closeSheet();
+    toast(notList?t('list_not_found'):t('list_unreadable'));
+    return true;
+  }
+  listPages++;
+  if(gotMeta){
+    lastListScanId=gotMeta.scanId||lastListScanId;
+    listHasTaste=!!(gotMeta.summary&&gotMeta.summary.hasTasteProfile);
+    if(gotMeta.timing && window.sommLog) sommLog('scan_list_timing', { ...gotMeta.timing });
+  }
+  saveArena(); updateArenaBadge();   // 土俵に反映（sessionStorage保持＋バッジ更新）
+  renderListSheet();
+  if(!sheetOpened) openSheet();
+  return true;
+}
+
+// 旧・一括読み（フォールバック維持。中身は従来のidentifyList本体そのまま）
+async function identifyListLegacy(dataUrl, opts){
+  const r=await fetch(API_BASE+'/api/identify-list',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ image:dataUrl, userId:UID, locale: (LANG==='en'?'en-US':'ja-JP') })
+  });
+  if(r.status===429||r.status===403){ showStatus(false); toast(t('toast_rate_limit')); return; }
+  if(!r.ok) throw new Error('http '+r.status);
+  const res=await r.json();
+  showStatus(false);
+  if(!res.items || !res.items.length){
+    // おまかせでリストと判定→実は非リストだった＝棚だった可能性。推測せず2チップで聞き直す（§3.1救済）。
+    if(opts.fromAuto && res.isWineList===false){
+      askDocType(dataUrl, lastShotCanvas, null);
+      return;
+    }
+    toast(res.isWineList===false?t('list_not_found'):t('list_unreadable'));
+    return;
+  }
+  listPages++;
+  listItems=listItems.concat(res.items);
+  lastListScanId=res.scanId||lastListScanId;
+  listHasTaste=!!(res.summary&&res.summary.hasTasteProfile);
+  saveArena(); updateArenaBadge();   // 土俵に反映（sessionStorage保持＋バッジ更新）
+  renderListSheet();
+  openSheet();
 }
 
 // リスト行のスコア（並べ替え用）: 好み度＋おすすめ度（第4版: ソムスター基準）
@@ -2249,9 +2334,11 @@ function liRow(it, hit){
   const badges=[];
   if(it.personalFit && it.personalFit.label && it.personalFit.score>=40) badges.push(`<span class="b1">❤️ ${esc(it.personalFit.label)}</span>`);
   if(it.priceDelta!=null && Math.abs(it.priceDelta)>=15) badges.push(`<span class="b3">${t('price_delta_template').replace('{sign}',it.priceDelta>0?'+':'').replace('{n}',it.priceDelta)}</span>`);
-  const right=w
-    ? ((window.WineDisplay&&WineDisplay.scoreBlock)?WineDisplay.scoreBlock(w,{size:11,lang:LANG}):'')
-    : `<span class="un">${t('label_unlisted')}</span>`;
+  const right=it._pending
+    ? `<span class="un">⋯ ${t('list_pending_label')}</span>`
+    : (w
+      ? ((window.WineDisplay&&WineDisplay.scoreBlock)?WineDisplay.scoreBlock(w,{size:11,lang:LANG}):'')
+      : `<span class="un">${t('label_unlisted')}</span>`);
   return `<div class="li-row${hit?' hit':''}">
     <div><div class="ln">${esc(trunc(name,34))}</div>
          ${meta.length?`<div class="lr">${esc(meta.join('　'))}</div>`:''}
@@ -2260,18 +2347,21 @@ function liRow(it, hit){
 }
 
 function renderListSheet(){
-  const known=listItems.filter(i=>i.match&&i.match.status==='known').length;
-  const top=[...listItems].filter(i=>liScore(i)>0).sort((a,b)=>liScore(b)-liScore(a)).slice(0,3);
+  // ストリーム中はlistItemsをindex代入で埋めるため、疎配列の穴を非破壊にスキップして描画
+  // （破壊的に詰めるとstream側のindex参照とズレるので絶対にここでは詰めない）。
+  const rows=listItems.filter(Boolean);
+  const known=rows.filter(i=>i.match&&i.match.status==='known').length;
+  const top=[...rows].filter(i=>liScore(i)>0).sort((a,b)=>liScore(b)-liScore(a)).slice(0,3);
   const placeHtml = listPlace
     ? `<div class="sh-meta">${t('list_place_recorded').replace('{n}', esc(listPlace.name))}</div>`
     : `<div class="sh-btns" style="margin-bottom:10px"><button class="sh-sub" style="flex:1;text-align:left" onclick="openPlacePicker()">${t('place_record_cta')}<span style="font-weight:500;color:#999">${t('place_record_note')}</span></button></div>`;
   document.getElementById('sheetBody').innerHTML=`
-    <div class="sh-pill" style="background:var(--burgundy)">${t('list_summary').replace('{p}',listPages).replace('{c}',listItems.length).replace('{k}',known)}</div>
+    <div class="sh-pill" style="background:var(--burgundy)">${t('list_summary').replace('{p}',listPages).replace('{c}',rows.length).replace('{k}',known)}</div>
     ${placeHtml}
     ${listHasTaste?'':`<div class="sh-meta">${t('taste_prompt')}</div>`}
     ${top.length?`<div class="cand-h">${t('this_list_recommend_heading')}</div>${top.map(it=>liRow(it,true)).join('')}`:''}
     <div class="cand-h">${t('all_items_heading')}</div>
-    ${listItems.map(it=>liRow(it, false)).join('')}
+    ${rows.map(it=>liRow(it, false)).join('')}
     <div class="sh-meta">${t('data_note')}</div>
     <div class="sh-btns">
       <button class="sh-main" onclick="closeSheet()">${t('next_page_btn')}</button>

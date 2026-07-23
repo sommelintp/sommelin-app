@@ -878,7 +878,7 @@ async function sendMessage() {
   isBotTyping = true;
 
   try {
-    const body = { messages: chatHistory.slice(-8), userId: CHAT_UID, locale: LANG === 'en' ? 'en-US' : 'ja-JP' };
+    const body = { messages: chatHistory.slice(-8), userId: CHAT_UID, locale: LANG === 'en' ? 'en-US' : 'ja-JP', stream: true };
     if (photo) body.image = photo;
     if (chatListContext) body.listContext = chatListContext;
     if (chatPhotoContext) body.photoContext = chatPhotoContext;
@@ -888,6 +888,12 @@ async function sendMessage() {
       headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { Authorization: 'Bearer ' + token } : {}),
       body: JSON.stringify(body)
     });
+    // V2ストリーミング（設計_体感最速化_2026-07-23 §4）: SSEなら逐次描画へ。
+    // SSEでない応答（killスイッチ・エラー系）は従来のJSON処理へそのまま流れる＝完全互換。
+    if (r.ok && (r.headers.get('content-type') || '').includes('text/event-stream') && r.body) {
+      await handleChatStream(r);
+      return;
+    }
     hideTyping();
     if (r.status === 429) { addBotMessage({ text: t('err_rate_limit') }); return; }
     if (r.status === 403) {
@@ -914,6 +920,63 @@ async function sendMessage() {
   } finally {
     isBotTyping = false;
   }
+}
+
+// V2ストリーミング受信（設計_体感最速化_2026-07-23 §4）。deltaを仮バブルへ逐次描画し、
+// done時に正本（meta.reply）でaddBotMessageに置き換える＝quota注記・提案フィードバックチップ等の
+// 既存の最終描画ロジックを一切複製しない。
+async function handleChatStream(r) {
+  hideTyping();
+  const wrap = document.getElementById('msgWrap');
+  const msgEl = document.createElement('div');
+  msgEl.className = 'msg-bot';
+  msgEl.innerHTML = `
+    <div class="msg-bot-avatar">🍷</div>
+    <div class="msg-bot-body">
+      <div class="bot-bubble"><span class="stream-text"></span><span class="stream-status" style="display:block;font-size:11px;color:#999;margin-top:6px;"></span></div>
+    </div>`;
+  wrap.appendChild(msgEl);
+  const textEl = msgEl.querySelector('.stream-text');
+  const statusEl = msgEl.querySelector('.stream-status');
+
+  let acc = '', meta = null, errored = false;
+  const render = () => { textEl.innerHTML = mdBold(acc).replace(/\n/g, '<br>'); scrollBottom(); };
+
+  const reader = r.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '';
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf = (buf + dec.decode(value, { stream: true })).replace(/\r\n/g, '\n');
+      let sep;
+      while ((sep = buf.indexOf('\n\n')) >= 0) {
+        const frame = buf.slice(0, sep); buf = buf.slice(sep + 2);
+        const evm = frame.match(/^event: (.+)$/m);
+        const dl = frame.split('\n').find(l => l.startsWith('data:'));
+        if (!evm || !dl) continue;
+        let d; try { d = JSON.parse(dl.slice(5)); } catch (e) { continue; }
+        const ev = evm[1];
+        if (ev === 'delta') { acc += d.t; statusEl.textContent = ''; render(); }
+        else if (ev === 'status') { statusEl.textContent = d.t || ''; scrollBottom(); }
+        else if (ev === 'replace') { acc = d.text || ''; render(); }
+        else if (ev === 'meta') { meta = d; }
+        else if (ev === 'error') { errored = true; }
+      }
+    }
+  } catch (e) { errored = true; }
+
+  // 仮バブルを正本描画に置き換え
+  msgEl.remove();
+  const finalReply = (meta && meta.reply) || acc.trim();
+  if (errored && !finalReply) { addBotMessage({ text: t('err_generic') }); return; }
+  if (meta) {
+    if (meta.quota) { quota = meta.quota; updateUsageDisplay(); }
+    chatPhotoContext = meta.photoContext || null;
+  }
+  chatHistory.push({ role: 'assistant', content: finalReply });
+  addBotMessage({ text: finalReply, pairingMeta: (meta && meta.pairingMeta) || null });
 }
 
 /* ===== MESSAGE BUILDERS ===== */
