@@ -5037,6 +5037,11 @@ const ANON_SB_URL = 'https://gkhdpzfmqraliwaiubwl.supabase.co';
 const ANON_SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
 async function getAnonAccessToken() {
   try {
+    // ログイン済みなら、そのアカウントのJWTを優先する。試験運用のadmin判定と結び付けるため。
+    const account = JSON.parse(localStorage.getItem('sommelin_session') || 'null');
+    if (account && account.access_token && (!account.expires_at || account.expires_at * 1000 > Date.now() + 60000)) {
+      return account.access_token;
+    }
     const raw = localStorage.getItem('somm_anon_session');
     let sess = raw ? JSON.parse(raw) : null;
     if (sess && sess.expires_at && sess.expires_at * 1000 > Date.now() + 60000) return sess.access_token;
