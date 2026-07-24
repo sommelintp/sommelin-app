@@ -291,6 +291,8 @@ body{
 .oshi-ig-manual input{flex:1;border:1.5px solid #eee;border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:inherit;box-sizing:border-box;}
 .oshi-store-input{width:100%;border:1.5px solid #eee;border-radius:8px;padding:8px 10px;font-size:12.5px;font-family:inherit;box-sizing:border-box;}
 .oshi-store-input+.oshi-store-input{margin-top:8px;}
+.oshi-nearby-btn{width:100%;padding:10px;margin:2px 0 8px;border:1.5px solid #eee;border-radius:10px;background:#fff;color:var(--burgundy);font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+.oshi-nearby-status{font-size:11.5px;color:#888;padding:2px 0 8px;}
 .oshi-store-list{margin-top:8px;display:flex;flex-direction:column;gap:6px;}
 .oshi-store-item{padding:8px 10px;border:1.5px solid #eee;border-radius:8px;cursor:pointer;background:#fff;text-align:left;}
 .oshi-store-item:active{background:#faf7f4;}
@@ -632,6 +634,8 @@ const I18N = {
     store_where_q: '📍 どこで飲みましたか？（任意）',
     store_search_placeholder: 'お店の名前で検索',
     store_ig_placeholder: 'お店のInstagramが分かれば（任意）',
+    store_nearby_btn: '📍 近くのお店から選ぶ',
+    nearby_loading: '近くのお店を探しています…',
     backend_unset_title: 'バックエンド未設定',
     backend_unset_desc: 'Cloud RunのURLが未設定です。<br>scouter.html の API_BASE を設定するか、<br><code>?api=https://…run.app</code> を付けて開いてください。',
     list_not_found: 'ワインリストが見つかりませんでした',
@@ -852,6 +856,8 @@ const I18N = {
     store_where_q: '📍 Where did you have this? (optional)',
     store_search_placeholder: 'Search by venue name',
     store_ig_placeholder: 'Venue\'s Instagram, if known (optional)',
+    store_nearby_btn: '📍 Choose a nearby venue',
+    nearby_loading: 'Looking for nearby venues…',
     backend_unset_title: 'Backend not configured',
     backend_unset_desc: 'The Cloud Run URL is not set.<br>Set API_BASE in scouter.html, or<br>open with <code>?api=https://…run.app</code>.',
     list_not_found: 'No wine list was found',
@@ -1645,6 +1651,7 @@ let oshiPhotoDataUrl=null, oshiShowScore=false; // 2026-07-09: 推しカードv2
 let oshiCardStyle=(function(){ try{ return localStorage.getItem('somm_card_style')==='overlay'?'overlay':'framed'; }catch(e){ return 'framed'; } })();
 let oshiIgSuggestion=null, oshiIgStatus='none', oshiIgPollTimer=null, oshiIgManualOpen=false; // 生産者IGのオンデマンド解決
 let oshiStoreQuery='', oshiStoreResults=[], oshiStoreSelected=null, oshiStoreManualOpen=false, oshiStoreSearchTimer=null; // 2026-07-10: 推しカードD-1「どこで飲みましたか」
+let oshiNearbyStatus='idle', oshiNearbyItems=[]; // 2026-07-24 P1: 位置情報→近隣店候補（GPS→Google Places）
 const OSHI_OFFICIAL_IG='sommelin';   // ソムリン公式IGハンドル（@なし）。設定するとカード・キャプションに載る
 const OSHI_APP_URL='https://sommelintp.github.io/sommelin-app/';
 
@@ -1668,6 +1675,7 @@ function oshiStart(){
   oshiPhotoDataUrl=scanPhotoDataUrl(); oshiShowScore=false;
   oshiIgSuggestion=null; oshiIgStatus='none'; oshiIgManualOpen=false;
   oshiStoreQuery=''; oshiStoreResults=[]; oshiStoreSelected=null; oshiStoreResolved=null;
+  oshiNearbyStatus='idle'; oshiNearbyItems=[];
   if(oshiStoreSearchTimer){ clearTimeout(oshiStoreSearchTimer); oshiStoreSearchTimer=null; }
   if(oshiIgPollTimer){ clearInterval(oshiIgPollTimer); oshiIgPollTimer=null; }
   document.getElementById('sheetBody').innerHTML=`
@@ -1961,6 +1969,7 @@ function oshiCardSetup(){
       </div>
     </div>`;
   oshiMaybePollIg();
+  oshiNearbyMaybeAuto();
 }
 
 // ── 生産者IG確認ブロック（信頼度3段階: active=確定済み／pending=AI提案・要確認／searching・none） ──
@@ -2063,10 +2072,57 @@ function oshiStoreBlockHtml(){
   }
   return `<div class="oshi-ig-block">
     <div class="oshi-ig-q">${t('store_where_q')}</div>
+    <button class="oshi-nearby-btn" id="oshiNearbyBtn" onclick="oshiNearbyStart()" style="display:${oshiNearbyStatus==='idle'?'':'none'}">${t('store_nearby_btn')}</button>
+    <div id="oshiNearbyResults">${oshiNearbyResultsHtml()}</div>
     <input type="text" id="oshiStoreNameInput" class="oshi-store-input" placeholder="${escAttr(t('store_search_placeholder'))}" value="${escAttr(oshiStoreQuery)}" oninput="oshiStoreOnInput(this.value)">
     <div id="oshiStoreResults">${oshiStoreResultsHtml()}</div>
     <input type="text" id="oshiStoreIgInput" class="oshi-store-input" placeholder="${escAttr(t('store_ig_placeholder'))}">
   </div>`;
+}
+// ── 位置候補（P1・2026-07-24）: fetchNearbyPlacesを店ブロックで使う薄いラッパー ──
+function oshiNearbyResultsHtml(){
+  if(oshiNearbyStatus==='loading') return `<div class="oshi-nearby-status">${t('nearby_loading')}</div>`;
+  if(oshiNearbyStatus==='denied') return `<div class="oshi-nearby-status">${t('geoloc_failed')}</div>`;
+  if(oshiNearbyStatus==='unsupported') return `<div class="oshi-nearby-status">${t('geoloc_unsupported')}</div>`;
+  if(oshiNearbyStatus==='empty') return `<div class="oshi-nearby-status">${t('no_nearby_stores')}</div>`;
+  if(oshiNearbyStatus==='fetch_failed') return `<div class="oshi-nearby-status">${t('search_failed_manual')}</div>`;
+  if(oshiNearbyStatus==='done' && oshiNearbyItems.length){
+    return `<div class="oshi-store-list">${oshiNearbyItems.map((p,i)=>`
+      <div class="oshi-store-item" onclick="oshiNearbyPick(${i})">
+        <div class="oshi-store-item-name">📍 ${esc(p.name)}</div>
+        <div class="oshi-store-item-ig">${t('approx_distance').replace('{n}',p.dist)}</div>
+      </div>`).join('')}</div>`;
+  }
+  return '';
+}
+// タップ起動（許可ダイアログは呼び出された時だけ出る）。既に候補が出ている時の再タップは再検索。
+function oshiNearbyStart(){
+  oshiNearbyStatus='loading'; oshiRenderNearby();
+  fetchNearbyPlaces(
+    (items)=>{ oshiNearbyItems=items; oshiNearbyStatus='done'; oshiRenderNearby(); },
+    (reason)=>{ oshiNearbyStatus=reason; oshiRenderNearby(); }
+  );
+}
+function oshiRenderNearby(){
+  const el=document.getElementById('oshiNearbyResults'); if(el) el.innerHTML=oshiNearbyResultsHtml();
+  const btn=document.getElementById('oshiNearbyBtn'); if(btn) btn.style.display=(oshiNearbyStatus==='idle')?'':'none';
+}
+// 候補タップで確定。§1の設計原則: 自動確定は絶対にしない（ライブラリ写真の位置=撮影場所とは
+// 限らない・自宅でスキャンした場合など）。placeIdはP2(店IGクラウド)で使う準備として保持。
+function oshiNearbyPick(i){
+  const p=oshiNearbyItems[i]; if(!p) return;
+  oshiStoreSelected={ name:p.name, ig:null, placeId:p.id||null };
+  oshiStoreQuery=p.name; oshiStoreResults=[];
+  if(window.sommLog) sommLog('oshi_store_attach',{matched:true,hasIg:false,manualIg:false,source:'nearby'});
+  oshiRenderStoreBlock();
+}
+// カード作成画面を開いた瞬間、位置情報が既に許可済みなら黙って候補を出す（未許可なら何もしない
+// ＝タップされるまで許可を求めない）。iOS Safariはgeoの権限問い合わせを実質サポートしないため、
+// その場合はfalseのままでボタンからのタップ起動にフォールバックする（安全側）。
+async function oshiNearbyMaybeAuto(){
+  if(oshiStoreSelected || oshiStoreResolved) return;
+  const granted=await geoAlreadyGranted();
+  if(granted) oshiNearbyStart();
 }
 function oshiStoreResultsHtml(){
   if(!oshiStoreResults.length) return '';
@@ -2461,7 +2517,36 @@ function consultListInChat(){
   location.href = 'sommelier-chat.html';
 }
 
-// ── 「このお店を記録」（みんなのワイン地図。GPS→OSM候補 or 店名手入力→backend保存） ──
+// ── 位置情報→近隣店候補（Google Places由来・/api/places/nearby）。2026-07-24: 「このお店を記録」
+//    (openPlacePicker)と推しカード店ブロック(oshiStoreBlockHtml)で共通利用する単一ソース。
+//    GPS取得はタップ起動が前提＝呼び出し側が「タップされた瞬間」だけに呼ぶこと（画面表示だけで
+//    許可ダイアログを出さない）。onCandidates(items,loc) / onError(reason) のコールバック方式。
+function fetchNearbyPlaces(onCandidates, onError){
+  if(!navigator.geolocation){ onError('unsupported'); return; }
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const loc={ lat:pos.coords.latitude, lng:pos.coords.longitude };
+    try{
+      const r=await fetch(API_BASE+'/api/places/nearby?lat='+loc.lat+'&lng='+loc.lng);
+      const d=await r.json();
+      if(!d.items || !d.items.length){ onError('empty', loc); return; }
+      onCandidates(d.items, loc);
+    }catch(e){ onError('fetch_failed', loc); }
+  }, ()=>onError('denied'), { timeout:8000, maximumAge:60000 });
+}
+// 位置情報が既に許可済みかどうか（許可を求めずに調べる）。iOS Safariはgeolocationの
+// Permissions APIを実質サポートしないため、非対応時は常にfalse＝タップ起動にフォールバックする
+// （安全側。「許可済みなら自動で出す」が効かないだけで、タップすれば従来通り動く）。
+async function geoAlreadyGranted(){
+  try{
+    if(navigator.permissions && navigator.permissions.query){
+      const st=await navigator.permissions.query({name:'geolocation'});
+      return st.state==='granted';
+    }
+  }catch(e){}
+  return false;
+}
+
+// ── 「このお店を記録」（みんなのワイン地図。GPS→Google Places候補 or 店名手入力→backend保存） ──
 // list=リストモード（リスト一覧シートから開く）／bottle=棚モード（frozenBarのボタンから開く）
 let _ppItems=[], _ppLoc=null, _ppMode='list';
 
@@ -2481,33 +2566,21 @@ function openPlacePicker(){
     </div>
     <div class="sh-btns">${backBtn}</div>`;
   openSheet();
-  if(!navigator.geolocation){
-    document.getElementById('ppBody').innerHTML=`<div class="cand-h">${t('geoloc_unsupported')}</div>`;
-    return;
-  }
-  navigator.geolocation.getCurrentPosition(async pos=>{
-    _ppLoc={ lat:pos.coords.latitude, lng:pos.coords.longitude };
-    try{
-      const r=await fetch(API_BASE+'/api/places/nearby?lat='+_ppLoc.lat+'&lng='+_ppLoc.lng);
-      const d=await r.json();
-      const box=document.getElementById('ppBody'); if(!box) return;
-      if(!d.items || !d.items.length){
-        box.innerHTML=`<div class="cand-h">${t('no_nearby_stores')}</div>`;
-        return;
-      }
-      _ppItems=d.items;
-      box.innerHTML=`<div class="cand-h">${t('nearby_stores_heading')}</div>`+d.items.map((p,i)=>`
-        <div class="cand-row" onclick="reportPlacePick(${i})">
-          <div><div class="cn">${esc(p.name)}</div><div class="cr">${t('approx_distance').replace('{n}',p.dist)}</div></div>
-          <div class="cc">›</div></div>`).join('');
-    }catch(e){
-      const box=document.getElementById('ppBody');
-      if(box) box.innerHTML=`<div class="cand-h">${t('search_failed_manual')}</div>`;
-    }
-  }, err=>{
-    const box=document.getElementById('ppBody');
-    if(box) box.innerHTML=`<div class="cand-h">${t('geoloc_failed')}</div>`;
-  }, { timeout:8000, maximumAge:60000 });
+  fetchNearbyPlaces((items, loc)=>{
+    _ppLoc=loc; _ppItems=items;
+    const box=document.getElementById('ppBody'); if(!box) return;
+    box.innerHTML=`<div class="cand-h">${t('nearby_stores_heading')}</div>`+items.map((p,i)=>`
+      <div class="cand-row" onclick="reportPlacePick(${i})">
+        <div><div class="cn">${esc(p.name)}</div><div class="cr">${t('approx_distance').replace('{n}',p.dist)}</div></div>
+        <div class="cc">›</div></div>`).join('');
+  }, reason=>{
+    const box=document.getElementById('ppBody'); if(!box) return;
+    const key = reason==='unsupported' ? 'geoloc_unsupported'
+      : reason==='denied' ? 'geoloc_failed'
+      : reason==='empty' ? 'no_nearby_stores'
+      : 'search_failed_manual';
+    box.innerHTML=`<div class="cand-h">${t(key)}</div>`;
+  });
 }
 
 function listReportItems(){
