@@ -411,7 +411,7 @@
   <div class="msg-bot">
     <div class="msg-bot-avatar">🍷</div>
     <div class="msg-bot-body">
-      <div class="bot-bubble bot-bubble--intro" data-i18n="intro_message">こんにちは！私はソムリンAIです 🍷
+      <div class="bot-bubble bot-bubble--intro" id="introBubble" data-i18n="intro_message">こんにちは！私はソムリンAIです 🍷
 
 ソムリエ認定を受けた知識と豊富なワインデータをもとに、お店に最適なワインをご提案します。
 
@@ -508,7 +508,7 @@ const I18N = {
     db_label: 'ワインデータ',
     db_loading: '読み込み中…',
     date_today: '今日',
-    intro_message: 'こんにちは！私はソムリンAIです 🍷\n\nソムリエ認定を受けた知識と豊富なワインデータをもとに、お店に最適なワインをご提案します。\n\nたとえば：\n・「魚料理に合う白ワインを3本」\n・「¥3,000以下のスパークリング」\n・「ブルゴーニュのピノ・ノワール」\n\nなど、お気軽にどうぞ！',
+    intro_message: 'こんにちは、ソムリン君です 🍷\n\n📷 ボトルや棚、お料理の写真を送れば、その場でお調べします\n🔍 お店のワインリストを撮れば、その中から選んでご提案します\n言葉で「予算3千円の泡」のように聞くだけでもOKです\n\nさあ、今日はどんな一本を探しましょうか🍷',
     chip_red: '🍷 赤ワイン',
     chip_red_q: '赤ワインのおすすめを教えて',
     chip_white: '🥂 白ワイン',
@@ -586,7 +586,7 @@ const I18N = {
     db_label: 'Wine data',
     db_loading: 'Loading…',
     date_today: 'Today',
-    intro_message: 'Hello! I\'m Sommelin AI 🍷\n\nDrawing on certified sommelier knowledge and a rich wine database, I\'ll suggest the perfect wines for you.\n\nFor example:\n- "3 white wines that go with fish"\n- "Sparkling wine under ¥3,000"\n- "Pinot Noir from Burgundy"\n\nAsk me anything!',
+    intro_message: 'Hello, I\'m Sommelin 🍷\n\n📷 Send a photo of a bottle, shelf, or dish and I\'ll look it up\n🔍 Shoot a restaurant\'s wine list and I\'ll pick from it for you\nOr just type — "a sparkling under $30" works too\n\nSo, what shall we find for you today? 🍷',
     chip_red: '🍷 Red',
     chip_red_q: 'Recommend some red wines',
     chip_white: '🥂 White',
@@ -797,19 +797,49 @@ function removePendingPhoto() {
   document.getElementById('photoPreviewRow').classList.remove('on');
 }
 
+/* ===== 季節の挨拶（G1・2026-07-24） ===== */
+// 直近見せたバリアントidをlocalStorageに保持（直近40件）→次回リクエストで避けてもらう。
+function greetingSeen() {
+  try { return JSON.parse(localStorage.getItem('somm_greet_seen') || '[]'); } catch (e) { return []; }
+}
+function applyGreeting(g) {
+  const el = document.getElementById('introBubble');
+  if (!el || !g) return;
+  const parts = [g.hookLine, (g.tips || []).join('\n'), g.invite].filter(Boolean);
+  const text = parts.join('\n\n');
+  el.removeAttribute('data-i18n');   // i18n再適用で静的文言に戻されないようにする
+  el.innerHTML = mdBold(text).replace(/\n/g, '<br>');
+  // 見せたidを記録（部分id配列で保持＝hook/tips/invite個別に避けられる）
+  try {
+    const seen = greetingSeen();
+    const next = [...seen, ...(g.partIds || [g.id])].filter(Boolean);
+    localStorage.setItem('somm_greet_seen', JSON.stringify(next.slice(-40)));
+  } catch (e) {}
+}
+
 /* ===== INIT ===== */
 window.addEventListener('load', () => {
   document.getElementById('initTime').textContent = nowTime();
   updateUsageDisplay();
   initListContext();
 
-  // サーバーから実残数を取得（月次・匿名認証トークン単位で共通）
+  // サーバーから実残数＋季節の挨拶を取得（月次・匿名認証トークン単位で共通）。
+  // seen=直近見せた挨拶バリアントid（絶対に同じを出さない＝サーバーが避けて返す・G1）。
+  const seen = greetingSeen();
+  const qs = '?userId=' + encodeURIComponent(CHAT_UID)
+    + '&locale=' + (LANG === 'en' ? 'en' : 'ja')
+    + (seen.length ? '&seen=' + encodeURIComponent(seen.join(',')) : '');
   getAnonAccessToken().then(token =>
-    fetch(CHAT_API + '/api/chat-quota?userId=' + encodeURIComponent(CHAT_UID), {
+    fetch(CHAT_API + '/api/chat-quota' + qs, {
       headers: token ? { Authorization: 'Bearer ' + token } : {},
     })
   ).then(r => r.ok ? r.json() : null)
-    .then(q => { if (q && !q.error) { quota = q; updateUsageDisplay(); } })
+    .then(q => {
+      if (q && !q.error) {
+        quota = q; updateUsageDisplay();
+        if (q.greeting) applyGreeting(q.greeting);
+      }
+    })
     .catch(() => {});
 
   // wines_data.js の読み込み確認 & DB情報バー更新
