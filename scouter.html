@@ -434,7 +434,10 @@ body{
   <img id="oshiCardImg" alt="推しカード">
   <div class="oshi-hint" id="oshiHint"></div>
   <div class="oshi-actions">
-    <button class="a1" id="oshiShareBtn" onclick="oshiDoShare()"></button>
+    <!-- 2026-07-24: 生産者IG判明時はストーリーズ(主役・@のみコピー)/フィード(従来通り全文)の2択。
+         未判明時はoshiShareStoryBtnを隠し、oshiShareBtnが唯一のシェアボタンとして従来通り動く。 -->
+    <button class="a1" id="oshiShareStoryBtn" onclick="oshiDoShare('story')" style="display:none"></button>
+    <button class="a1" id="oshiShareBtn" onclick="oshiDoShare('feed')"></button>
     <button class="a2" id="oshiStyleSwitchBtn" onclick="oshiSwitchStyle()"></button>
     <button class="a2" id="oshiCopyBtn" onclick="oshiCopyCaption()"></button>
     <button class="a2" id="oshiCloseBtn" onclick="oshiCloseOverlay()"></button>
@@ -557,11 +560,14 @@ const I18N = {
     oshi_ig_invalid: 'ハンドルの形式が正しくありません',
     oshi_making: 'カードを作成中…',
     oshi_share: '📤 Instagramでシェア',
+    oshi_share_story: '📸 ストーリーズでシェア',
+    oshi_share_feed: '📷 フィードでシェア',
     oshi_copy: '📋 キャプションをコピー',
     oshi_close: '閉じる',
-    oshi_hint_mention: 'キャプションはコピー済み。投稿に貼り付けると @メンション で生産者に通知が届きます。ストーリーズの場合は@メンションスティッカーでタグ付けしてください',
+    oshi_hint_mention: '📸 ストーリーズは@生産者だけをコピー・📷 フィードはキャプション全文をコピーします。貼り付けた後は候補をタップしてメンションを確定してください',
     oshi_hint_nohandle: 'キャプションはコピー済み。投稿に貼り付けてシェアしてください',
     oshi_cap_copied: 'キャプションをコピーしました',
+    toast_story_copied: '@{n} をコピーしました。文字やメンションスティッカーに貼り付けて、出てきた候補をタップしてください',
     oshi_share_unsupported: 'この端末では直接共有できません。画像を長押しで保存してInstagramに投稿してください',
     nav_home: 'ホーム',
     nav_search: '探す',
@@ -779,10 +785,13 @@ const I18N = {
     oshi_ig_invalid: 'That doesn\'t look like a valid handle',
     oshi_making: 'Creating your card…',
     oshi_share: '📤 Share on Instagram',
+    oshi_share_story: '📸 Share to Story',
+    oshi_share_feed: '📷 Share to Feed',
     oshi_copy: '📋 Copy caption',
     oshi_close: 'Close',
-    oshi_hint_mention: 'Caption copied. Paste it into your post — the @mention notifies the producer. On Stories, add a mention sticker to tag them.',
+    oshi_hint_mention: '📸 Story copies just the @producer handle · 📷 Feed copies the full caption. After pasting, tap the suggested match to confirm the mention.',
     oshi_hint_nohandle: 'Caption copied. Paste it into your post and share.',
+    toast_story_copied: 'Copied @{n}. Paste it into text or a mention sticker, then tap the suggestion that appears.',
     oshi_cap_copied: 'Caption copied',
     oshi_share_unsupported: 'Direct share is not available here. Long-press the image to save it, then post on Instagram.',
     nav_home: 'Home',
@@ -2235,7 +2244,15 @@ async function oshiMakeCard(){
     const img=document.getElementById('oshiCardImg');
     img.src=URL.createObjectURL(blob);
     document.getElementById('oshiHint').textContent=t(oshiHandle?'oshi_hint_mention':'oshi_hint_nohandle');
-    document.getElementById('oshiShareBtn').textContent=t('oshi_share');
+    // 2026-07-24: 生産者IG判明時はストーリーズ(主役)/フィード(従来)の2択。未判明時は従来の単一ボタン。
+    const storyBtn=document.getElementById('oshiShareStoryBtn'), feedBtn=document.getElementById('oshiShareBtn');
+    if(oshiHandle){
+      storyBtn.style.display=''; storyBtn.textContent=t('oshi_share_story');
+      feedBtn.className='a2'; feedBtn.textContent=t('oshi_share_feed');
+    }else{
+      storyBtn.style.display='none';
+      feedBtn.className='a1'; feedBtn.textContent=t('oshi_share');
+    }
     document.getElementById('oshiCopyBtn').textContent=t('oshi_copy');
     document.getElementById('oshiCloseBtn').textContent=t('oshi_close');
     // スタイル切替は写真ありの時だけ（クラシック版にはパターンが無い）
@@ -2268,12 +2285,19 @@ function oshiBuildCaption(info){
 }
 
 // Step5: 共有（Web Share API。非対応端末は保存を案内）
-async function oshiDoShare(){
-  try{ await navigator.clipboard.writeText(oshiCaption); }catch(e){}
-  if(window.sommLog) sommLog('oshi_share',{hasHandle:!!oshiHandle});
+// dest='story': @ハンドルだけをコピー（ストーリーのメンションスティッカーへの手打ちを消す・
+//   2026-07-24 Fable設計「ボタン＝行き先。クリップボードは出発時に積む」）。
+// dest='feed'（既定・ハンドル未判明時は常にこちら）: 従来通りキャプション全文（@入り）をコピー。
+// 各ボタンが押された瞬間に自分の中身をコピーし直すため、複数ボタンを行き来しても上書き事故がない。
+async function oshiDoShare(dest){
+  const isStory = dest==='story' && !!oshiHandle;
+  const textToCopy = isStory ? '@'+oshiHandle : oshiCaption;
+  try{ await navigator.clipboard.writeText(textToCopy); }catch(e){}
+  if(window.sommLog) sommLog('oshi_share',{hasHandle:!!oshiHandle, dest:isStory?'story':'feed'});
   try{
     const file=new File([oshiCardBlob],'sommelin-oshi.png',{type:'image/png'});
     if(navigator.canShare && navigator.canShare({files:[file]})){
+      if(isStory) toast(t('toast_story_copied').replace('{n}', oshiHandle));
       await navigator.share({files:[file]});
       // Web Share APIは共有先や実投稿の完了を返さない。共有シートを完了した事実だけを記録する。
       if(oshiLikeId){
@@ -2288,7 +2312,7 @@ async function oshiDoShare(){
       return;
     }
   }catch(e){ if(e && e.name==='AbortError') return; }
-  toast(t('oshi_share_unsupported'));
+  toast(isStory ? t('toast_story_copied').replace('{n}', oshiHandle) : t('oshi_share_unsupported'));
 }
 async function oshiCopyCaption(){
   try{ await navigator.clipboard.writeText(oshiCaption); toast(t('oshi_cap_copied')); }
