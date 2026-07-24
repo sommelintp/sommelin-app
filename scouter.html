@@ -71,9 +71,12 @@ body{
 .aTop-title .t2{font-size:10px;color:rgba(255,255,255,.65);margin-top:1px;}
 .aTop-sp{width:36px;flex-shrink:0;}
 
-/* bottom controls（下ナビ分だけ底上げ。2026-07-08: スカウター使用中に他画面へ移動できなくなる不具合対応） */
-.aBot{position:absolute;bottom:calc(62px + env(safe-area-inset-bottom));left:0;right:0;z-index:30;padding:14px 0 12px;
-  background:linear-gradient(0deg,rgba(0,0,0,.8),rgba(0,0,0,.45) 60%,transparent);
+/* bottom controls。2026-07-08: 下ナビ分だけ底上げ（スカウター使用中に他画面へ移動できなくなる不具合対応）。
+   2026-07-24 オーナーFB: 旧実装は bottom:62px 固定で浮かせていたが、実際の下ナビ高さ(約50px+セーフエリア)と
+   ズレて「暗くもなくタブでもない生カメラの帯」が露出しキモかった。→ bottom:0 まで伸ばし padding-bottom で
+   コントロール位置は据え置き。暗いグラデが最下部(タブバーの裏)まで連続し、隙間の生カメラ露出を解消。 */
+.aBot{position:absolute;bottom:0;left:0;right:0;z-index:30;padding:14px 0 calc(74px + env(safe-area-inset-bottom));
+  background:linear-gradient(0deg,rgba(0,0,0,.82) 0%,rgba(0,0,0,.8) 45%,rgba(0,0,0,.5) 72%,transparent 100%);
   display:flex;flex-direction:column;align-items:center;gap:12px;}
 
 /* 常時表示の下ナビ（プロトタイプ側と同じ4タブ）。2026-07-12: パーミッション画面
@@ -378,7 +381,8 @@ body{
     <a href="prototype.html" title="ホーム">‹</a>
     <!-- titleは applyI18n() 内で t('nav_home') に更新される -->
 
-    <div class="aTop-title"><div class="t1" data-i18n="scouter_title">スカウター</div><div class="t2" id="subTxt" data-i18n="sub_default">ラベルを枠に入れて撮影</div></div>
+    <!-- t1(「スカウター」)と休憩中の説明副題は撤去(2026-07-24 オーナーFB「いらない」)。#subTxtは動的ステータス(解析中/○本読み取り中/タップで詳細)専用として温存＝休憩時は空。 -->
+    <div class="aTop-title"><div class="t2" id="subTxt" data-i18n="sub_default"></div></div>
     <div class="aTop-sp"></div>
   </div>
 
@@ -458,7 +462,7 @@ const I18N = {
     err_title: 'カメラを起動できません',
     err_desc: '設定でカメラを許可するか、「写真から読み取る」をお試しください。',
     scouter_title: 'スカウター',
-    sub_default: 'ラベルを枠に入れて撮影',
+    sub_default: '',
     mode_auto: '✨ おまかせ',
     mode_bottle: '🍾 ボトル・棚',
     mode_list: '📋 リスト',
@@ -466,9 +470,9 @@ const I18N = {
     shoot_hint_list: 'ワインリストを撮影（複数ページOK）',
     shoot_hint_auto: 'ボトルでもリストでも、撮るだけ',
     from_photo_label: '📁 写真から',
-    sub_list: 'リストモード',
-    sub_bottle: '撮るだけで全ボトル評価',
-    sub_auto: 'ボトルもリストも撮るだけ',
+    sub_list: '',
+    sub_bottle: '',
+    sub_auto: '',
     arena_badge: '📋 リスト照合中: {n}本',
     toast_arena_cleared: 'リスト照合を外しました',
     ask_doc_type: 'この写真、どちらとして読みますか？',
@@ -513,7 +517,7 @@ const I18N = {
     cellar_add_saved: '🍾 マイセラーに追加しました',
     cellar_add_fail: '追加に失敗しました。通信環境をご確認ください',
     oshi_rate_title: 'このワイン、何点でしたか？',
-    oshi_rate_sub: '10点満点・0.1刻み。あなたの「気に入ったワインリスト」に保存されます',
+    oshi_rate_sub: '100点満点・1点刻み。あなたの「気に入ったワインリスト」に保存されます',
     oshi_save: '❤️ この評価で保存', oshi_saving: '保存中…',
     oshi_back: '戻る',
     oshi_saved: '気に入ったワインに保存しました🍷',
@@ -674,7 +678,7 @@ const I18N = {
     err_title: 'Can\'t start the camera',
     err_desc: 'Please allow camera access in settings, or try "Scan from a photo" instead.',
     scouter_title: 'Scouter',
-    sub_default: 'Frame the label to scan',
+    sub_default: '',
     mode_auto: '✨ Auto',
     mode_bottle: '🍾 Bottle / Shelf',
     mode_list: '📋 List',
@@ -682,9 +686,9 @@ const I18N = {
     shoot_hint_list: 'Photograph the wine list (multiple pages OK)',
     shoot_hint_auto: 'Bottle or list — just shoot',
     from_photo_label: '📁 From photo',
-    sub_list: 'List mode',
-    sub_bottle: 'Score every bottle at a glance',
-    sub_auto: 'Bottle or list — just shoot',
+    sub_list: '',
+    sub_bottle: '',
+    sub_auto: '',
     arena_badge: '📋 List loaded: {n}',
     toast_arena_cleared: 'List reference removed',
     ask_doc_type: 'How should we read this photo?',
@@ -729,7 +733,7 @@ const I18N = {
     cellar_add_saved: '🍾 Added to your cellar',
     cellar_add_fail: 'Could not add. Please check your connection.',
     oshi_rate_title: 'How would you rate this wine?',
-    oshi_rate_sub: 'Out of 10, in 0.1 steps. Saved to your "wines I loved" list.',
+    oshi_rate_sub: 'Out of 100, in 1-point steps. Saved to your "wines I loved" list.',
     oshi_save: '❤️ Save my rating', oshi_saving: 'Saving…',
     oshi_back: 'Back',
     oshi_saved: 'Saved to your favorite wines 🍷',
@@ -1055,6 +1059,16 @@ function cropTile(canvas, rect, maxEdge){
   return c.toDataURL('image/jpeg', 0.85);
 }
 function clamp01(n){ const x=Number(n); return Number.isFinite(x)?Math.min(1,Math.max(0,x)):0; }
+
+// 推しカード用: 実際に撮ったそのボトルを既定の写真にする（2026-07-24 オーナーFB「撮ったボトルの
+// 写真が載ってないのはだめ」）。detect boxはボトルぴったりで窮屈なので、余白を持たせて切り抜く。
+function bottleCropDataUrl(b, maxEdge){
+  if(!lastShotCanvas || !b || !b.box) return null;
+  const pad=0.3;
+  const rect={ cx:b.box.cx, cy:b.box.cy,
+    w:Math.min(1, b.box.w*(1+pad*2)), h:Math.min(1, b.box.h*(1+pad*2)) };
+  return cropTile(lastShotCanvas, rect, maxEdge||1200);
+}
 // 並列実行（同時実行上限つき）。thunkの配列を受け、全完了を待つ。
 async function runWithConcurrency(thunks, limit){
   let idx=0;
@@ -1611,12 +1625,15 @@ let oshiStoreQuery='', oshiStoreResults=[], oshiStoreSelected=null, oshiStoreMan
 const OSHI_OFFICIAL_IG='sommelin';   // ソムリン公式IGハンドル（@なし）。設定するとカード・キャプションに載る
 const OSHI_APP_URL='https://sommelintp.github.io/sommelin-app/';
 
+// 推しカードは生産者へ届く想定のため、ワイン名・生産者名は横文字（原語）を優先する
+// （2026-07-24 オーナー方針）。未登録銘柄はvisionが読んだ表記をそのまま使う（ラベルが
+// 欧文なら元々横文字）。横文字データが無い登録銘柄だけカタカナにフォールバック。
 function oshiWineInfo(){
   const b=curOshiBottle||{}; const w=b.match&&b.match.wine; const id=b.identification||{};
   return {
     w,
-    name:    w ? w.name    : ([id.producer,id.wine].filter(Boolean).join(' ')||'このワイン'),
-    producer:w ? w.producer: (id.producer||''),
+    name:    w ? (w.nameEn||w.name)         : ([id.producer,id.wine].filter(Boolean).join(' ')||'このワイン'),
+    producer:w ? (w.producerEn||w.producer) : (id.producer||''),
     vintage: (w ? w.vintage : id.vintage)||'',
   };
 }
@@ -1625,7 +1642,7 @@ function oshiWineInfo(){
 function oshiStart(){
   const info=oshiWineInfo();
   oshiRating=8.0;
-  oshiPhotoDataUrl=null; oshiShowScore=false;
+  oshiPhotoDataUrl=bottleCropDataUrl(curOshiBottle); oshiShowScore=false;
   oshiIgSuggestion=null; oshiIgStatus='none'; oshiIgManualOpen=false;
   oshiStoreQuery=''; oshiStoreResults=[]; oshiStoreSelected=null; oshiStoreResolved=null;
   if(oshiStoreSearchTimer){ clearTimeout(oshiStoreSearchTimer); oshiStoreSearchTimer=null; }

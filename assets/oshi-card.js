@@ -12,11 +12,25 @@
     return new Promise(res=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=()=>res(null); im.src=src; });
   }
   function trunc(s,n){ s=String(s||''); return s.length>n?s.slice(0,n-1)+'…':s; }
+  // 語境界（スペース）で折り返す。単語単体がmaxWを超える場合だけ文字単位に落ちる
+  // （2026-07-24: 横文字ワイン名が単語の途中で切れて読みにくかった不具合の修正）。
+  // 日本語・カタカナはスペースを含まないため全体が1語扱いになり、従来通り文字単位で折れる
+  // （CJKは文字間で改行するのが正しい組版であり、単語境界を強制する必要がない）。
   function wrap(ctx,text,maxW,maxLines){
     maxLines=maxLines||3;
+    const fits=s=>ctx.measureText(s).width<=maxW;
+    const words=String(text).split(/\s+/).filter(Boolean);
     const out=[]; let line='';
-    for(const ch of String(text)){
-      if(ctx.measureText(line+ch).width>maxW && line){ out.push(line); line=ch; } else line+=ch;
+    for(const word of words){
+      const trial=line?line+' '+word:word;
+      if(fits(trial)){ line=trial; continue; }
+      if(line){ out.push(line); line=''; }
+      if(fits(word)){ line=word; continue; }
+      let sub='';
+      for(const ch of word){
+        if(sub && !fits(sub+ch)){ out.push(sub); sub=ch; } else sub+=ch;
+      }
+      line=sub;
     }
     if(line) out.push(line);
     return out.slice(0,maxLines);
