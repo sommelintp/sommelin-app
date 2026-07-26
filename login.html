@@ -132,6 +132,15 @@ body {
   transition: opacity 0.15s; margin-bottom: 12px;
 }
 .btn-line:active { opacity: 0.85; }
+.btn-google {
+  width: 100%; background: #fff; color: #3c4043;
+  border: 1.5px solid #dadce0; border-radius: 14px; padding: 15px;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  font-family: inherit; display: flex; align-items: center;
+  justify-content: center; gap: 10px;
+  transition: opacity 0.15s; margin-bottom: 12px;
+}
+.btn-google:active { opacity: 0.7; }
 .btn-primary {
   width: 100%; background: var(--burgundy); color: white;
   border: none; border-radius: 14px; padding: 15px;
@@ -843,6 +852,16 @@ body {
       LINEでログイン
     </button>
 
+    <button class="btn-google" onclick="googleLogin()">
+      <svg width="18" height="18" viewBox="0 0 18 18">
+        <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.84 2.09-1.8 2.73v2.27h2.92c1.7-1.57 2.68-3.88 2.68-6.64z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.27c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.34C2.44 15.98 5.48 18 9 18z"/>
+        <path fill="#FBBC05" d="M3.97 10.71c-.18-.54-.28-1.11-.28-1.71s.1-1.17.28-1.71V4.95H.96A8.997 8.997 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.34z"/>
+        <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.59-2.59C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.95l3.01 2.34C4.68 5.16 6.66 3.58 9 3.58z"/>
+      </svg>
+      Googleでログイン
+    </button>
+
     <div class="divider">またはメールアドレスで</div>
 
     <div class="form-group">
@@ -992,6 +1011,42 @@ function applyReferralIfAny(){
     })
     .catch(()=>{});
 }
+
+// ── Googleログインからの復帰処理（2026-07-26）: /auth/v1/authorizeはURLフラグメント
+// (#access_token=...)にトークンを付けて戻す。ユーザーオブジェクトはフラグメントに
+// 含まれないため /auth/v1/user で別途取得し、既存のsaveSession()と同じ形（メール
+// ログインのGoTrueレスポンスと同一シェイプ）に整えてから保存する＝他の全コードは無改修で動く。
+(function handleGoogleCallback(){
+  if (!location.hash.includes('access_token=')) return;
+  const params = new URLSearchParams(location.hash.slice(1));
+  const accessToken = params.get('access_token');
+  const refreshToken = params.get('refresh_token');
+  if (!accessToken) return;
+  // URLからトークンを消す（ブラウザ履歴・共有URL・リロードでの再送・漏洩を防ぐ）
+  history.replaceState(null, '', location.pathname + location.search);
+  showLoading('ログイン中…');
+  fetch(SB_URL + '/auth/v1/user', {
+    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + accessToken },
+  }).then(r => { if (!r.ok) throw new Error('user fetch failed'); return r.json(); })
+    .then(user => {
+      const expiresIn = Number(params.get('expires_in')) || 3600;
+      saveSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        expires_in: expiresIn,
+        expires_at: Math.floor(Date.now() / 1000) + expiresIn,
+        token_type: params.get('token_type') || 'bearer',
+        user,
+      });
+      hideLoading();
+      const role = sessionRole();
+      try { localStorage.setItem('sommelin_role', role); } catch (e) {}
+      showToast('ログインしました ✓');
+      const ret = returnDest();   // BYO接続等からの遷移なら元のページへ戻す（メールログインと同じ流儀）
+      setTimeout(() => { window.location.href = ret || destForRole(role); }, 700);
+    })
+    .catch(() => { hideLoading(); showToast('ログインに失敗しました。もう一度お試しください'); });
+})();
 
 // ── 本人確認：名刺表裏（表必須）+ URL1つ以上（必須） ──
 let verifyCardFront = false;  // 名刺表面アップロード済み
@@ -1455,6 +1510,15 @@ function goToDashboard() {
 // ── LINE ログイン（既存ユーザー） ──
 function lineLogin() {
   showToast('LINEログインは準備中です。メールアドレスでログインしてください');
+}
+
+// ── Google ログイン（Supabase Auth外部プロバイダ・2026-07-26。
+//    パスワードを自前で持たない方針＝セキュリティ監査P2対応） ──
+function googleLogin() {
+  // 現在のクエリ(?return=/?ref=)を維持したままGoogleへ。認証後は同じURLへ
+  // #access_token=...形式のフラグメント付きで戻ってくる（下のhandleGoogleCallback参照）。
+  const redirectTo = location.origin + location.pathname + location.search;
+  location.href = SB_URL + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(redirectTo);
 }
 
 // ── メールログイン ──

@@ -642,6 +642,8 @@ const I18N = {
     store_ig_placeholder: 'お店のInstagramが分かれば（任意）',
     store_nearby_btn: '📍 近くのお店から選ぶ',
     nearby_loading: '近くのお店を探しています…',
+    store_ig_confirm_q: 'このお店のInstagramはこちらですか？',
+    store_ig_not_found: 'このお店のInstagramは見つかりませんでした。知っていたら入力してください',
     backend_unset_title: 'バックエンド未設定',
     backend_unset_desc: 'Cloud RunのURLが未設定です。<br>scouter.html の API_BASE を設定するか、<br><code>?api=https://…run.app</code> を付けて開いてください。',
     list_not_found: 'ワインリストが見つかりませんでした',
@@ -867,6 +869,8 @@ const I18N = {
     store_ig_placeholder: 'Venue\'s Instagram, if known (optional)',
     store_nearby_btn: '📍 Choose a nearby venue',
     nearby_loading: 'Looking for nearby venues…',
+    store_ig_confirm_q: 'Is this the venue\'s Instagram?',
+    store_ig_not_found: 'Could not find this venue\'s Instagram. Enter it if you know it.',
     backend_unset_title: 'Backend not configured',
     backend_unset_desc: 'The Cloud Run URL is not set.<br>Set API_BASE in scouter.html, or<br>open with <code>?api=https://…run.app</code>.',
     list_not_found: 'No wine list was found',
@@ -1661,6 +1665,7 @@ let oshiCardStyle=(function(){ try{ return localStorage.getItem('somm_card_style
 let oshiIgSuggestion=null, oshiIgStatus='none', oshiIgPollTimer=null, oshiIgManualOpen=false; // 生産者IGのオンデマンド解決
 let oshiStoreQuery='', oshiStoreResults=[], oshiStoreSelected=null, oshiStoreManualOpen=false, oshiStoreSearchTimer=null; // 2026-07-10: 推しカードD-1「どこで飲みましたか」
 let oshiNearbyStatus='idle', oshiNearbyItems=[]; // 2026-07-24 P1: 位置情報→近隣店候補（GPS→Google Places）
+let oshiPlaceIgStatus='none', oshiPlaceIgSuggestion=null; // 2026-07-24 P2: 位置候補で選んだ店のIG状態（/api/place-ig）
 const OSHI_OFFICIAL_IG='sommelin';   // ソムリン公式IGハンドル（@なし）。設定するとカード・キャプションに載る
 const OSHI_APP_URL='https://sommelintp.github.io/sommelin-app/';
 
@@ -1685,6 +1690,7 @@ function oshiStart(){
   oshiIgSuggestion=null; oshiIgStatus='none'; oshiIgManualOpen=false;
   oshiStoreQuery=''; oshiStoreResults=[]; oshiStoreSelected=null; oshiStoreResolved=null;
   oshiNearbyStatus='idle'; oshiNearbyItems=[];
+  oshiPlaceIgStatus='none'; oshiPlaceIgSuggestion=null;
   if(oshiStoreSearchTimer){ clearTimeout(oshiStoreSearchTimer); oshiStoreSearchTimer=null; }
   if(oshiIgPollTimer){ clearInterval(oshiIgPollTimer); oshiIgPollTimer=null; }
   document.getElementById('sheetBody').innerHTML=`
@@ -2074,10 +2080,31 @@ async function oshiSubmitManualIg(){
 function oshiStoreBlockHtml(){
   if(oshiStoreSelected){
     const s=oshiStoreSelected;
-    return `<div class="oshi-ig-block">
-      <div class="oshi-ig-row"><span>📍 ${esc(s.name)}${s.ig?t('store_notify_suffix').replace('{n}', esc(s.ig)):''}</span>
-        <button class="oshi-ig-link" style="padding:0" onclick="oshiStoreClear()">${t('change_label')}</button></div>
-    </div>`;
+    const changeRow=`<div class="oshi-ig-row"><span>📍 ${esc(s.name)}${s.ig?t('store_notify_suffix').replace('{n}', esc(s.ig)):''}</span>
+        <button class="oshi-ig-link" style="padding:0" onclick="oshiStoreClear()">${t('change_label')}</button></div>`;
+    // P2(2026-07-24): 位置候補で選んだ店(placeId有)だけ、クラウド蓄積のIG確認/手入力を出す。
+    // テキスト検索の登録店はs.igが既に/api/storesで解決済みなのでここを通らない。
+    if(s.placeId && !s.ig && oshiPlaceIgStatus==='pending' && oshiPlaceIgSuggestion){
+      const h=oshiPlaceIgSuggestion.handle;
+      return `<div class="oshi-ig-block">${changeRow}
+        <div class="oshi-ig-q" style="margin-top:8px">${t('store_ig_confirm_q')}</div>
+        <a class="oshi-ig-profile" href="https://instagram.com/${escAttr(h)}" target="_blank" rel="noopener">${t('ig_view_profile').replace('{n}', esc(h))}</a>
+        <div class="oshi-ig-actions">
+          <button class="oshi-ig-yes" onclick="oshiPlaceIgConfirm('${escAttr(h)}')">${t('ig_yes')}</button>
+          <button class="oshi-ig-no" onclick="oshiPlaceIgReject('${escAttr(h)}')">${t('ig_no')}</button>
+        </div>
+      </div>`;
+    }
+    if(s.placeId && !s.ig && oshiPlaceIgStatus==='none'){
+      return `<div class="oshi-ig-block">${changeRow}
+        <div class="oshi-ig-q" style="margin-top:8px">${t('store_ig_not_found')}</div>
+        <div class="oshi-ig-manual">
+          <input type="text" id="oshiPlaceIgManualInput" placeholder="${escAttr(t('ig_manual_placeholder'))}">
+          <button class="oshi-ig-yes" style="flex:none;padding:9px 14px;" onclick="oshiPlaceIgSuggestManual()">${t('save_label')}</button>
+        </div>
+      </div>`;
+    }
+    return `<div class="oshi-ig-block">${changeRow}</div>`;
   }
   return `<div class="oshi-ig-block">
     <div class="oshi-ig-q">${t('store_where_q')}</div>
@@ -2122,8 +2149,62 @@ function oshiNearbyPick(i){
   const p=oshiNearbyItems[i]; if(!p) return;
   oshiStoreSelected={ name:p.name, ig:null, placeId:p.id||null };
   oshiStoreQuery=p.name; oshiStoreResults=[];
+  oshiPlaceIgStatus='none'; oshiPlaceIgSuggestion=null;
   if(window.sommLog) sommLog('oshi_store_attach',{matched:true,hasIg:false,manualIg:false,source:'nearby'});
   oshiRenderStoreBlock();
+  if(p.id) oshiResolvePlaceIg(p.id);
+}
+// P2(2026-07-24): 選んだ店(placeId)のIGをクラウド蓄積から解決する。/api/storesで既に
+// IGが付いてくるテキスト検索の登録店はplaceIdを持たないため、ここは呼ばれない。
+async function oshiResolvePlaceIg(placeId){
+  try{
+    const r=await fetch(API_BASE+'/api/place-ig?placeId='+encodeURIComponent(placeId));
+    const d=r.ok?await r.json():{igStatus:'none'};
+    if(d.igStatus==='active' && d.handle){
+      oshiPlaceIgStatus='active';
+      if(oshiStoreSelected && oshiStoreSelected.placeId===placeId) oshiStoreSelected.ig=d.handle;
+    }else if(d.igStatus==='pending' && d.suggestion && d.suggestion.handle){
+      oshiPlaceIgStatus='pending'; oshiPlaceIgSuggestion=d.suggestion;
+    }else{
+      oshiPlaceIgStatus='none';
+    }
+  }catch(e){ oshiPlaceIgStatus='none'; }
+  oshiRenderStoreBlock();
+}
+// 表示されたpending候補への「合ってます」確認。今作っているこのカードには即座に反映する
+// （クラウド側の閾値到達＝将来の他ユーザーへの自動提示とは別軸。本人の申告は今すぐ使ってよい）。
+async function oshiPlaceIgConfirm(handle){
+  if(!oshiStoreSelected || !oshiStoreSelected.placeId) return;
+  try{
+    await fetch(API_BASE+'/api/place-ig',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({placeId:oshiStoreSelected.placeId, handle, action:'confirm', userId:UID})});
+  }catch(e){}
+  oshiStoreSelected.ig=handle; oshiPlaceIgStatus='active'; oshiPlaceIgSuggestion=null;
+  oshiRenderStoreBlock(); toast(t('oshi_ig_confirmed'));
+}
+async function oshiPlaceIgReject(handle){
+  if(!oshiStoreSelected || !oshiStoreSelected.placeId) return;
+  try{
+    await fetch(API_BASE+'/api/place-ig',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({placeId:oshiStoreSelected.placeId, handle, action:'reject', userId:UID})});
+  }catch(e){}
+  oshiPlaceIgStatus='none'; oshiPlaceIgSuggestion=null;
+  oshiRenderStoreBlock();
+}
+// 手入力での新規提案（クラウドソーシングの起点）。産地IGの手入力(oshiSubmitManualIg)と対。
+async function oshiPlaceIgSuggestManual(){
+  if(!oshiStoreSelected || !oshiStoreSelected.placeId) return;
+  const val=(document.getElementById('oshiPlaceIgManualInput')||{}).value||'';
+  const handle=val.trim(); if(!handle) return;
+  try{
+    const r=await fetch(API_BASE+'/api/place-ig',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({placeId:oshiStoreSelected.placeId, handle, action:'suggest', userId:UID})});
+    const d=r.ok?await r.json():null;
+    if(d && d.handle){
+      oshiStoreSelected.ig=d.handle; oshiPlaceIgStatus=(d.status==='active')?'active':'pending'; oshiPlaceIgSuggestion=null;
+      oshiRenderStoreBlock(); toast(t('oshi_ig_confirmed'));
+    }else toast(t('oshi_ig_invalid'));
+  }catch(e){ toast(t('oshi_ig_invalid')); }
 }
 // カード作成画面を開いた瞬間、位置情報が既に許可済みなら黙って候補を出す（未許可なら何もしない
 // ＝タップされるまで許可を求めない）。iOS Safariはgeoの権限問い合わせを実質サポートしないため、
