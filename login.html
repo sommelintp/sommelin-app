@@ -1613,15 +1613,22 @@ function submitFinalVerify() {
   Promise.resolve()
     .then(() => saveBusinessApplication(payload))
     .then(ok => { if (!ok) throw new Error('business application save failed'); return patchProfile(profileFields); })
-    .then(ok => { if (!ok) throw new Error('profile update failed'); fireBusinessVerify(); }) // 申請保存後にAI確認を発火（fire-and-forget）
+    .then(ok => { if (!ok) throw new Error('profile update failed'); })
     // 2026-07-27: 業務ロールを付ける前に招待を消費する（サーバーはconsume済みの
     // 招待が無いとadd-roleを受け付けない。順序を逆にするとロール付与が弾かれる）。
     .then(() => { if (addRoleMode) return consumeInvite(); })
     .then(() => { if (addRoleMode) return addBusinessRole(selectedRole); })
+    // AI確認は「招待を消費した後」に撃つ（§6-B）。先に撃つと、サーバー側ではまだ
+    // business_invites.used_by が立っておらず、招待が見つからない＝「招待者の申告 vs
+    // 実際の登録内容」を突き合わせられず、承認画面に何も渡らない。
+    // （新規登録の経路は登録時点で消費済みなので、どちらの経路でもここが正しい位置）
+    .then(() => { fireBusinessVerify(); })   // fire-and-forget（結果は待たない）
     .then(() => { hideLoading(); showScreen('screenPending'); })
     .catch(() => { hideLoading(); showToast('申請を保存できませんでした。通信状態を確認して、もう一度お試しください'); });
 }
-// AI自動確認を発火（サーバーが申請URLを取得→照合→verified/needs_review）。結果は待たない。
+// AIの突き合わせを発火（§6-B）。サーバーが「招待者の申告 vs 実際の登録内容 vs 申請URL先」を
+// 突き合わせ、気になる点を business_invites.ai_flags に書いて承認者に見せる。
+// **ここで許可が下りることはない。** 本許可は招待者の承認だけ。結果は待たない。
 function fireBusinessVerify() {
   const tok = authToken(); if (!tok) return;
   try {

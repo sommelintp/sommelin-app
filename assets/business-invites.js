@@ -113,6 +113,8 @@
       from_card: '名刺の読み取りから入力',
       ai_title: 'AIの指摘（参考）',
       ai_note: 'AIは疑わしい点を挙げることしかできません。承認できるのは人だけです。',
+      ai_none: '気になる点は挙がりませんでした。ただし、これは「承認してよい」という意味ではありません。判断はご自身で。',
+      ai_failed: 'AIの確認が最後まで実行できませんでした（指摘が無かったわけではありません）。',
       decide_note_ph: '判断のメモ（任意・記録に残ります）',
       approve: '承認する',
       reject: '否認する',
@@ -206,6 +208,8 @@
       from_card: 'Entered from a scanned business card',
       ai_title: 'AI observations (for reference)',
       ai_note: 'The AI can only raise doubts. Only a person can approve.',
+      ai_none: 'Nothing was flagged. That is not the same as "safe to approve" — the judgement is yours.',
+      ai_failed: 'The AI check did not complete (this does not mean there was nothing to flag).',
       decide_note_ph: 'Note on your decision (optional, kept on record)',
       approve: 'Approve',
       reject: 'Reject',
@@ -388,20 +392,40 @@
   }
 
   // AIの指摘。並べるのは「疑い」だけ。承認を勧める文言はここに絶対に出さない。
+  // サーバー側(business.js §6-B)が返す形: {concerns:[{level,field,text}], aiFailed, urlsChecked}
+  // 旧い形（配列 / {flags} / {reasons}）も一応読む。
+  function aiConcerns(f) {
+    if (!f) return [];
+    var src = Array.isArray(f) ? f
+      : Array.isArray(f.concerns) ? f.concerns
+      : Array.isArray(f.flags) ? f.flags
+      : Array.isArray(f.reasons) ? f.reasons
+      : (typeof f === 'string' ? [f] : []);
+    return src.map(function (x) {
+      if (typeof x === 'string') return { level: 'note', text: x };
+      return { level: (x && x.level === 'high') ? 'high' : 'note', text: (x && (x.text || x.message || x.reason)) || '' };
+    }).filter(function (c) { return c.text; });
+  }
   function aiBlock(inv) {
     var f = inv.aiFlags;
-    if (!f) return '';
-    var lines = [];
-    if (Array.isArray(f)) lines = f.map(function (x) { return typeof x === 'string' ? x : JSON.stringify(x); });
-    else if (Array.isArray(f.flags)) lines = f.flags.map(function (x) { return typeof x === 'string' ? x : (x && (x.message || x.reason)) || JSON.stringify(x); });
-    else if (Array.isArray(f.reasons)) lines = f.reasons.slice();
-    else if (typeof f === 'string') lines = [f];
-    else lines = [JSON.stringify(f)];
-    lines = lines.filter(Boolean);
-    if (!lines.length) return '';
+    if (!f) return '';                       // まだAIが走っていない＝何も言わない
+    var list = aiConcerns(f);
+    var failed = !!(f && f.aiFailed);
+    var body;
+    if (failed) {
+      // 動かなかったことを「指摘なし」に見せない。承認者にはその区別が要る。
+      body = '<div class="si-ai-failed">' + T('ai_failed') + '</div>';
+    } else if (!list.length) {
+      // ここが一番危ない表示。「指摘なし」は承認の推薦ではない、と必ず添える。
+      body = '<div class="si-ai-none">' + T('ai_none') + '</div>';
+    } else {
+      body = '<ul class="si-ai-list">' + list.map(function (c) {
+        return '<li class="' + (c.level === 'high' ? 'si-ai-high' : 'si-ai-note') + '">' +
+          (c.level === 'high' ? '⚠ ' : '') + esc(c.text) + '</li>';
+      }).join('') + '</ul>';
+    }
     return '<div class="si-ai"><div class="si-ai-title">🤖 ' + T('ai_title') + '</div>' +
-      '<ul class="si-ai-list">' + lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>' +
-      '<div class="si-ai-note">' + T('ai_note') + '</div></div>';
+      body + '<div class="si-ai-note">' + T('ai_note') + '</div></div>';
   }
 
   // ════════════════════════════════════════════════════════════
@@ -779,7 +803,10 @@
       '.si-ai{margin-top:9px;background:#f7f7fa;border:1px solid #e6e6ee;border-radius:10px;padding:9px 11px;}',
       '.si-ai-title{font-size:11px;font-weight:800;color:#5a5a7a;margin-bottom:4px;}',
       '.si-ai-list{margin:0;padding-left:16px;font-size:11.5px;color:#444;line-height:1.6;}',
+      '.si-ai-high{color:#a54b00;font-weight:700;}',
       '.si-ai-note{font-size:10px;color:#8a8aa0;margin-top:5px;line-height:1.5;}',
+      '.si-ai-none{font-size:11.5px;color:#666;line-height:1.6;}',
+      '.si-ai-failed{font-size:11.5px;color:#8a5a00;line-height:1.6;}',
       /* 決定 */
       '.si-note-input{width:100%;margin-top:10px;border:1px solid #e2d7db;border-radius:10px;padding:9px 11px;font-size:13px;font-family:inherit;resize:vertical;box-sizing:border-box;color:#2C1810;background:#fff;}',
       '.si-actions{display:flex;gap:8px;margin-top:9px;}',
