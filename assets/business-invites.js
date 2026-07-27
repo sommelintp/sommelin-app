@@ -123,6 +123,18 @@
       reject_confirm: '{who} を否認します。\n\n・この人は業務店として利用できなくなります\n・調査対象として記録されます\n\n否認しますか？',
       approved_done: '承認しました',
       rejected_done: '否認しました',
+      // §6-C 督促とエスカレーション
+      waited: '{n}日お待たせしています',
+      reminded_note: '{d} に「承認をお待ちしています」の通知をお送りしました。',
+      reminded_note_owner: '{d} に招待者へ督促を送りましたが、反応がありません。',
+      memo_label_owner: '招待者が招待時に書いたメモ',
+      cmp_left_owner: '招待者の申告',
+      owner_section: 'オーナーとして対応が必要',
+      owner_section_sub: '招待者に督促しても反応が無かった分です。あなたが代わりに判断できます',
+      owner_title: '招待者が反応していません',
+      owner_lead: '招待者は「{who}」です。登録から{n}日、承認も否認もされていません。本来は招待者が責任を持って判断する場面ですが、この分についてはあなたが引き受けられます。',
+      owner_consequence: 'あなたが承認すると、責任は招待者ではなくあなたが引き受けたことになります（記録に残ります）。招待した人の記録そのものは書き換わりません。',
+      owner_approve_confirm: '{who} を、招待者に代わって承認します。\n\n・この人は正式な業務店になります\n・招待者ではなく、あなたが責任を引き受けた記録が残ります\n\n先に招待者へ連絡してみましたか？\n\n承認しますか？',
       deciding: '送信中…',
       err_generic: '通信に失敗しました。時間をおいてお試しください',
       loading: '読み込み中…',
@@ -218,6 +230,17 @@
       reject_confirm: 'Reject {who}.\n\n• They will not be able to use the trade features\n• The case is recorded for review\n\nReject?',
       approved_done: 'Approved',
       rejected_done: 'Rejected',
+      waited: 'waiting {n} days',
+      reminded_note: 'A reminder was sent on {d}.',
+      reminded_note_owner: 'The inviter was reminded on {d} but has not responded.',
+      memo_label_owner: 'The note the inviter wrote',
+      cmp_left_owner: 'What the inviter declared',
+      owner_section: 'Needs you as the owner',
+      owner_section_sub: 'The inviter was reminded but never responded. You can decide instead',
+      owner_title: 'The inviter has not responded',
+      owner_lead: 'The inviter is "{who}". {n} days after registration there is still no decision. This is normally the inviter\'s call, but you may take this one on.',
+      owner_consequence: 'If you approve, the responsibility is recorded as yours, not the inviter\'s. The record of who invited them is not rewritten.',
+      owner_approve_confirm: 'Approve {who} in place of the inviter.\n\n• They become a verified trade account\n• The record will show that you, not the inviter, took responsibility\n\nHave you tried contacting the inviter first?\n\nApprove?',
       deciding: 'Sending…',
       err_generic: 'Connection failed. Please try again later.',
       loading: 'Loading…',
@@ -269,6 +292,13 @@
     var s = d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate();
     if (withTime) s += ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
     return s;
+  }
+  // 「何日待たせているか」。承認画面で一番効く数字なので独立させる。
+  function daysSince(iso) {
+    if (!iso) return null;
+    var ms = Date.now() - new Date(iso).getTime();
+    if (isNaN(ms)) return null;
+    return Math.max(0, Math.floor(ms / 86400000));
   }
   function daysLeft(iso) {
     if (!iso) return null;
@@ -335,7 +365,8 @@
 
   // 招待時の申告 vs 実際の登録内容。並べるのが目的なので、
   // 片方が空でも行そのものは消さない（「書かなかった」も情報）。
-  function compareBlock(inv) {
+  // owner=true のときは他人の招待を見ているので、「あなたの申告」と書いてはいけない。
+  function compareBlock(inv, owner) {
     var hint = inv.hint || {};
     var who = inv.invitee || {};
     // 業態は配列 vs 単一。申告した業態が実際のロールに含まれるかで見る
@@ -361,7 +392,7 @@
     ].indexOf('diff') !== -1;
 
     return '<div class="si-cmp">' +
-      '<div class="si-cmp-head"><div>' + T('cmp_left') + '</div><div>' + T('cmp_right') + '</div></div>' +
+      '<div class="si-cmp-head"><div>' + T(owner ? 'cmp_left_owner' : 'cmp_left') + '</div><div>' + T('cmp_right') + '</div></div>' +
       rows +
     '</div>' +
     '<div class="si-why">' + T('why') + (anyDiff ? '<br>' + T('why_diff') : '') + '</div>';
@@ -444,21 +475,31 @@
   }
 
   // 承認待ちカード（この画面の主役。一覧の上に単独で出す）
-  function pendingCard(inv) {
+  // owner=true … オーナーが招待者に代わって引き受ける分（§6-C エスカレーション済み）
+  function pendingCard(inv, owner) {
     var who = inv.invitee || {};
-    return '<div class="si-card si-card-wait" id="si-inv-' + esc(inv.id) + '">' +
-      '<div class="si-card-head">' + stateChip('awaiting_decision') +
+    var waited = daysSince(inv.usedAt);
+    // 待たせている日数は必ず見せる。「いつ登録したか」より「何日止めているか」の方が動く理由になる。
+    var waitChip = (waited != null && waited >= 1)
+      ? '<span class="si-waited' + (waited >= 7 ? ' si-waited-long' : '') + '">' + T('waited', { n: waited }) + '</span>' : '';
+    return '<div class="si-card si-card-wait' + (owner ? ' si-card-owner' : '') + '" id="si-inv-' + esc(inv.id) + '">' +
+      '<div class="si-card-head">' + stateChip('awaiting_decision') + waitChip +
         '<span class="si-when">' + T('used_at') + ' ' + fmtDate(inv.usedAt, true) + '</span></div>' +
-      '<div class="si-pending-title">' + T('pending_title') + '</div>' +
-      '<div class="si-pending-lead">' + T('pending_lead') + '</div>' +
+      '<div class="si-pending-title">' + T(owner ? 'owner_title' : 'pending_title') + '</div>' +
+      '<div class="si-pending-lead">' + (owner
+        ? T('owner_lead', { who: esc(inv.inviterName || '—'), n: daysSince(inv.usedAt) })
+        : T('pending_lead')) + '</div>' +
+      // 督促を出したかどうかは招待者にも見えていたほうがいい（急に来た通知の理由が分かる）
+      (inv.remindedAt ? '<div class="si-reminded">' +
+        T(owner ? 'reminded_note_owner' : 'reminded_note', { d: fmtDate(inv.remindedAt) }) + '</div>' : '') +
 
-      '<div class="si-memo"><div class="si-memo-label">' + T('memo_label') + '</div>' +
+      '<div class="si-memo"><div class="si-memo-label">' + T(owner ? 'memo_label_owner' : 'memo_label') + '</div>' +
         '<div class="si-memo-body' + (inv.note ? '' : ' si-memo-empty') + '">' +
           (inv.note ? esc(inv.note) : T('memo_none')) + '</div></div>' +
 
       (who.hasApplication === false ? '<div class="si-warn">' + T('no_app') + '</div>' : '') +
 
-      compareBlock(inv) +
+      compareBlock(inv, owner) +
       referenceBlock(inv) +
       aiBlock(inv) +
 
@@ -469,11 +510,11 @@
       // ※押せなくはしない。塞ぐのはサーバーの仕事で、ここは見た目の正直さの問題。
       '<div class="si-actions">' +
         '<button class="si-btn si-btn-approve' + (who.hasApplication === false ? ' si-btn-approve-weak' : '') + '"' +
-          ' onclick="SommInvites.decide(\'' + esc(inv.id) + '\',true)">' + T('approve') + '</button>' +
-        '<button class="si-btn si-btn-reject" onclick="SommInvites.decide(\'' + esc(inv.id) + '\',false)">' + T('reject') + '</button>' +
+          ' onclick="SommInvites.decide(\'' + esc(inv.id) + '\',true,' + (owner ? 'true' : 'false') + ')">' + T('approve') + '</button>' +
+        '<button class="si-btn si-btn-reject" onclick="SommInvites.decide(\'' + esc(inv.id) + '\',false,' + (owner ? 'true' : 'false') + ')">' + T('reject') + '</button>' +
       '</div>' +
       // 何が起きるかは押す前に見えていること。confirmは反射で閉じられる。
-      '<div class="si-consequence">' + T('consequence') + '</div>' +
+      '<div class="si-consequence">' + T(owner ? 'owner_consequence' : 'consequence') + '</div>' +
     '</div>';
   }
 
@@ -521,7 +562,15 @@
       '<div class="si-h">' + T('section') + '</div>' +
       '<div class="si-h-sub">' + T('section_sub') + '</div>' +
 
-      (pending.length ? pending.map(pendingCard).join('') : '') +
+      (pending.length ? pending.map(function (i) { return pendingCard(i, false); }).join('') : '') +
+
+      // オーナーが引き受ける分（§6-C）。自分の招待の下に、別の見出しで分ける ──
+      // ここは「自分が招いた人」ではないので、同じ束に混ぜると誰の責任か分からなくなる。
+      (escalated.length
+        ? '<div class="si-h si-h-owner">' + T('owner_section') + '</div>' +
+          '<div class="si-h-sub">' + T('owner_section_sub') + '</div>' +
+          escalated.map(function (i) { return pendingCard(i, true); }).join('')
+        : '') +
 
       '<div class="si-quota">' +
         '<div><div class="si-quota-label">' + T('quota') + '</div>' +
@@ -657,16 +706,18 @@
   }
 
   // ── 承認／否認（本許可。取り消せないので、何が起きるかを先に見せる） ──
-  async function decide(id, approve) {
-    var inv = (data.invites || []).filter(function (i) { return i.id === id; })[0] || {};
+  // owner=true … エスカレーション済みをオーナーが引き受ける（別エンドポイント）
+  async function decide(id, approve, owner) {
+    var pool = owner ? escalated : (data.invites || []);
+    var inv = pool.filter(function (i) { return i.id === id; })[0] || {};
     var who = whoLabel(inv);
-    if (!confirm(T(approve ? 'approve_confirm' : 'reject_confirm', { who: who }))) return;
+    if (!confirm(T(approve ? (owner ? 'owner_approve_confirm' : 'approve_confirm') : 'reject_confirm', { who: who }))) return;
     var noteEl = document.getElementById('si-note-' + id);
     var card = document.getElementById('si-inv-' + id);
     var btns = card ? card.querySelectorAll('button') : [];
     for (var i = 0; i < btns.length; i++) { btns[i].disabled = true; }
     try {
-      await call('/api/business/invites/' + encodeURIComponent(id) + '/decide', {
+      await call('/api/business/invites/' + encodeURIComponent(id) + (owner ? '/decide-escalated' : '/decide'), {
         method: 'POST',
         body: JSON.stringify({ approve: !!approve, note: (noteEl && noteEl.value.trim()) || null }),
       });
@@ -697,7 +748,7 @@
   }
 
   // ── 読み込み ──
-  var mountEl = null, opts = {}, data = { invites: [], quota: {} };
+  var mountEl = null, opts = {}, data = { invites: [], quota: {} }, escalated = [];
   async function load() {
     try {
       data = await call('/api/business/invites', {});
@@ -706,6 +757,14 @@
       return;
     }
     render();
+    // オーナーが引き受ける分は管理者だけに出す。失敗しても本体の表示は壊さない。
+    if ((opts.roles || []).indexOf('admin') !== -1) {
+      try {
+        var d = await call('/api/business/invites/escalated', {});
+        escalated = d.invites || [];
+        if (escalated.length) render();
+      } catch (e) { /* 管理者でなければ403。表示しないだけ */ }
+    }
   }
 
   function mount(el, options) {
@@ -766,6 +825,11 @@
       /* 承認カード */
       '.si-card{border-radius:14px;padding:14px;margin-bottom:12px;}',
       '.si-card-wait{background:#fffdf7;border:1.5px solid #f0c26a;}',
+      '.si-card-owner{background:#fdf8f9;border-color:#d9a3b4;}',
+      '.si-h-owner{color:#9B1B4B;margin-top:20px;}',
+      '.si-waited{font-size:10px;font-weight:800;color:#8a5a00;background:#fdecc8;border-radius:20px;padding:3px 9px;white-space:nowrap;}',
+      '.si-waited-long{color:#b02525;background:#fde8e8;}',
+      '.si-reminded{font-size:10.5px;color:#8a7a7f;background:#fff;border:1px solid #eee;border-radius:8px;padding:6px 9px;margin-bottom:9px;line-height:1.5;}',
       '.si-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}',
       '.si-when{font-size:10.5px;color:#999;}',
       '.si-pending-title{font-size:15px;font-weight:800;color:#2C1810;}',
