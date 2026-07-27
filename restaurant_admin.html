@@ -1424,6 +1424,9 @@
 <script src="assets/oshi-card.js?v=20260722"></script>
 <script src="assets/wine-display.js?v=20260718"></script>
 <script src="assets/arena-utils.js?v=1"></script>
+<!-- 招待の発行・一覧・承認（SommInvites）。承認画面の実体は共有アセット側に1つだけ置く
+     （importer_admin.htmlにも同じものが要る。書き写すと必ず片方が古くなる） -->
+<script src="assets/business-invites.js?v=20260727"></script>
 </head>
 <body>
 
@@ -6153,6 +6156,10 @@ async function renderAccountSheet(){
 
     ${!ver.hasApplication ? '<div style="font-size:12px;color:var(--text-sub);background:#fff6e6;border-radius:10px;padding:10px 12px;margin-top:12px;">'+t('acct_no_app')+'</div>' : ''}
 
+    <!-- 招待（発行・一覧・承認）。承認待ちがあれば一番上に出る。
+         ログアウト等の操作より前に置く＝承認は「用事」であって設定ではない -->
+    <div id="bizInviteMount"></div>
+
     <!-- 操作 -->
     <div style="font-size:11px;font-weight:800;color:var(--text-sub);letter-spacing:.06em;margin:18px 0 8px;">${t('acct_actions')}</div>
     <button onclick="renewBusinessInfo()" style="width:100%;background:var(--burgundy);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:8px;">✏️ ${t('acct_edit')}</button>
@@ -6163,9 +6170,37 @@ async function renderAccountSheet(){
     </div>
     <button onclick="sommelinLogout()" style="width:100%;background:#fff;color:#c0392b;border:1px solid var(--border);border-radius:12px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">⏻ ${t('menu_logout')}</button>
   `;
+
+  // 招待セクションを差し込む（assets/business-invites.js）。
+  // verificationStatus と roles は「押しても無駄です」を先に伝えるためだけに渡す親切で、
+  // 発行できるかの判定はサーバー側。adminは未approvedでも発行できる免除があるため、
+  // ここで状態を見てボタンを塞ぐと、オーナー本人の運用が止まる。
+  if (window.SommInvites) {
+    SommInvites.mount(document.getElementById('bizInviteMount'), { verificationStatus: st, roles: acc.roles || [] });
+  }
 }
 // 登録情報の変更＝前回値プリフィルで再確認フローへ（M2で本実装。今は登録フローへ誘導）
 function renewBusinessInfo(){ location.href='login.html?renew=1'; }
+
+// ── 承認待ちのバッジ（👤ボタン） ──
+// 督促（§6-C）が未実装のうちは、アカウントシートを自分から開かないと承認待ちに
+// 気づけない。開かせるための最小の合図をヘッダーに出しておく。
+async function markPendingInvites(){
+  try{
+    if(!window.SommInvites) return;
+    const n = await SommInvites.pendingCount();
+    const btn = document.querySelector('.top-header button[aria-label="アカウント"]');
+    if(!btn || !n) return;
+    btn.style.position='relative';
+    if(document.getElementById('inviteBadge')) return;
+    const b=document.createElement('span');
+    b.id='inviteBadge';
+    b.textContent = n > 9 ? '9+' : String(n);
+    b.style.cssText='position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#e0245e;color:#fff;font-size:10px;font-weight:800;line-height:17px;text-align:center;box-shadow:0 0 0 2px var(--wine-dark);';
+    btn.appendChild(b);
+  }catch(e){}
+}
+setTimeout(markPendingInvites, 2000);   // 入口ガードがトークンを整えた後に一度だけ
 
 // ── 店イベント作成・一覧・削除（E2 2026-07-21） ──
 let sevDates = [];
