@@ -86,6 +86,8 @@ body{
   </div>
 </div>
 
+<!-- 2026-07-27 セキュリティ監査対応: getAnonAccessToken/authFetch/linkDeviceIfLoggedInの単一ソース -->
+<script src="assets/somm-auth.js"></script>
 <script>
 const API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
 const UID = (() => { try {
@@ -93,6 +95,7 @@ const UID = (() => { try {
   if (!u) { u = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid', u); }
   return u;
 } catch(e){ return ''; } })();
+if (window.linkDeviceIfLoggedIn) linkDeviceIfLoggedIn(UID);
 
 let allReviewers = [];
 let followedIds = new Set();
@@ -131,7 +134,7 @@ async function toggleFollow(reviewerId, btn) {
   const willFollow = !followedIds.has(reviewerId);
   btn.disabled = true;
   try {
-    const r = await fetch(API_BASE + '/api/reviewers/follow', {
+    const r = await authFetch(API_BASE + '/api/reviewers/follow', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ uid: UID, reviewerId, follow: willFollow })
     });
@@ -147,7 +150,7 @@ async function toggleFollow(reviewerId, btn) {
 
 async function loadReviewers() {
   try {
-    const r = await fetch(API_BASE + '/api/reviewers?limit=50');
+    const r = await authFetch(API_BASE + '/api/reviewers?limit=50');
     const d = await r.json();
     allReviewers = d.items || [];
   } catch (e) { allReviewers = []; }
@@ -157,7 +160,7 @@ async function loadReviewers() {
 async function loadFollowingPicks() {
   const box = document.getElementById('followBox');
   try {
-    const r = await fetch(API_BASE + '/api/reviewers/following?uid=' + encodeURIComponent(UID));
+    const r = await authFetch(API_BASE + '/api/reviewers/following?uid=' + encodeURIComponent(UID));
     const d = await r.json();
     followedIds = new Set(d.reviewerIds || []);
     renderList(); // フォロー状態の反映

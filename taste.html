@@ -120,6 +120,8 @@ body{
 
 <div id="toast"></div>
 
+<!-- 2026-07-27 セキュリティ監査対応: getAnonAccessToken/authFetchの単一ソース -->
+<script src="assets/somm-auth.js"></script>
 <script>
 // ===== i18n =====
 const I18N = {
@@ -261,7 +263,7 @@ function showProfile(p){
 
 async function loadProfile(){
   try{
-    const r=await fetch(API_BASE+'/api/taste/summary?userId='+encodeURIComponent(UID));
+    const r=await authFetch(API_BASE+'/api/taste/summary?userId='+encodeURIComponent(UID));
     if(r.ok){ const p = await r.json(); showProfile(p); }
     else { window._lastProfile=null; document.getElementById('profVal').textContent=t('profile_dash'); }
   }catch(e){ window._lastProfile=null; document.getElementById('profVal').textContent=t('profile_offline'); }
@@ -338,7 +340,7 @@ async function saveToFilter(){
   const savedSet=new Set(); // 実際に保存できたものだけ後で除去（未保存の入力＝評価・コメントを消さない）
   for(const it of toSave){
     try{
-      const r=await fetch(API_BASE+'/api/filters/items',{
+      const r=await authFetch(API_BASE+'/api/filters/items',{
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ uid:UID, wine:{ name:it.name, producer:it.producer, iro:it.iro, kuni:it.kuni, chiiki:it.chiiki, vintage:it.vintage, price:it.price, wineId:it.wineId }, rating:it.rating, comment:it.comment })
       });
@@ -366,7 +368,7 @@ async function handleFiles(files){
     const dataUrl=await toDataUrl(files[i]);
     if(!dataUrl){ continue; }
     try{
-      const r=await fetch(API_BASE+'/api/taste/upload',{
+      const r=await authFetch(API_BASE+'/api/taste/upload',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ image:dataUrl, userId:UID, source:SOURCE, locale: (LANG==='en'?'en-US':'ja-JP') })

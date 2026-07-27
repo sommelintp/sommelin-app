@@ -654,6 +654,8 @@ body {
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
+<!-- 2026-07-27 セキュリティ監査対応: getAnonAccessToken/authFetch/linkDeviceIfLoggedInの単一ソース -->
+<script src="assets/somm-auth.js"></script>
 <script>
 /* ===== 多言語対応（i18n）。scouter.htmlと同方式・somm_lang共有。言語切替UIはホームのマイページ側 ===== */
 const I18N = {
@@ -951,7 +953,7 @@ function saveCellar(){ try { localStorage.setItem(CELLAR_KEY, JSON.stringify(cel
 function syncWineToServer(w){
   let uid=null; try{ uid=localStorage.getItem('somm_uid'); }catch(e){}
   if(!uid) return;
-  fetch(CELLAR_API_BASE+'/api/cellar',{
+  authFetch(CELLAR_API_BASE+'/api/cellar',{
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ userId:uid, clientRowId:String(w.id), cellarId:w.cellarId||null, name:w.name, vintage:w.vintage,
       region:w.region, producer:w.producer, cat:w.cat, bottles:w.bottles, note:w.note, isPublic: !!w.isPublic })
@@ -969,7 +971,7 @@ async function loadCellarsFromServer(){
   const uid = myUid();
   if(!uid) return;
   try{
-    const r = await fetch(CELLAR_API_BASE+'/api/cellars?userId='+encodeURIComponent(uid));
+    const r = await authFetch(CELLAR_API_BASE+'/api/cellars?userId='+encodeURIComponent(uid));
     if(!r.ok) return;
     const { items } = await r.json();
     cellars = Array.isArray(items) ? items : [];
@@ -1038,14 +1040,14 @@ async function createOrRenameCellar(){
   if(!name){ showToast(t('cellar_name_required')); return; }
   try{
     if(cellarModalRenameId){
-      const r = await fetch(CELLAR_API_BASE+'/api/cellars/'+encodeURIComponent(cellarModalRenameId), {
+      const r = await authFetch(CELLAR_API_BASE+'/api/cellars/'+encodeURIComponent(cellarModalRenameId), {
         method:'PATCH', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ userId:uid, name })
       });
       if(!r.ok) throw new Error('rename failed');
       showToast(t('cellar_renamed'));
     } else {
-      const r = await fetch(CELLAR_API_BASE+'/api/cellars', {
+      const r = await authFetch(CELLAR_API_BASE+'/api/cellars', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ userId:uid, name })
       });
@@ -1064,7 +1066,7 @@ async function deleteCellarById(id){
   if(!uid) return;
   if(!confirm(t('cellar_delete_confirm'))) return;
   try{
-    const r = await fetch(CELLAR_API_BASE+'/api/cellars/'+encodeURIComponent(id)+'?userId='+encodeURIComponent(uid), { method:'DELETE' });
+    const r = await authFetch(CELLAR_API_BASE+'/api/cellars/'+encodeURIComponent(id)+'?userId='+encodeURIComponent(uid), { method:'DELETE' });
     if(r.status === 409){ showToast(t('cellar_not_empty')); return; }
     if(!r.ok) throw new Error('delete failed');
     if(currentCellarId === id) currentCellarId = null;
@@ -1099,7 +1101,7 @@ function toggleCellarPublic(id){
   renderCellar();
   let uid=null; try{ uid=localStorage.getItem('somm_uid'); }catch(e){}
   if(!uid) return;
-  fetch(CELLAR_API_BASE+'/api/cellar/visibility',{
+  authFetch(CELLAR_API_BASE+'/api/cellar/visibility',{
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ userId:uid, clientRowId:String(w.id), isPublic: !!w.isPublic })
   }).catch(()=>{});
@@ -1110,7 +1112,7 @@ async function loadCellarFromServer(){
   let uid=null; try{ uid=localStorage.getItem('somm_uid'); }catch(e){}
   if(!uid) return;
   try{
-    const r = await fetch(CELLAR_API_BASE+'/api/cellar?userId='+encodeURIComponent(uid));
+    const r = await authFetch(CELLAR_API_BASE+'/api/cellar?userId='+encodeURIComponent(uid));
     if(!r.ok) return;
     const { items } = await r.json();
     if(!Array.isArray(items) || !items.length) return;
@@ -1143,7 +1145,7 @@ async function loadServerBottles(){
   let uid=null; try{ uid=localStorage.getItem('somm_uid'); }catch(e){}
   if(!uid) return;
   try{
-    const r = await fetch(CELLAR_API_BASE+'/api/cellar/bottles?userId='+encodeURIComponent(uid));
+    const r = await authFetch(CELLAR_API_BASE+'/api/cellar/bottles?userId='+encodeURIComponent(uid));
     if(!r.ok) return;
     const { items } = await r.json();
     serverBottles = Array.isArray(items) ? items : [];
@@ -1211,9 +1213,9 @@ async function sbChangeStock(id, delta){
   try{
     let response;
     if (newVal === 0) {
-      response = await fetch(CELLAR_API_BASE+'/api/cellar/bottles/'+encodeURIComponent(id)+'?userId='+encodeURIComponent(uid), { method:'DELETE' });
+      response = await authFetch(CELLAR_API_BASE+'/api/cellar/bottles/'+encodeURIComponent(id)+'?userId='+encodeURIComponent(uid), { method:'DELETE' });
     } else {
-      response = await fetch(CELLAR_API_BASE+'/api/cellar/bottles/'+encodeURIComponent(id), {
+      response = await authFetch(CELLAR_API_BASE+'/api/cellar/bottles/'+encodeURIComponent(id), {
         method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ userId:uid, bottles:newVal })
       });
     }
@@ -1233,7 +1235,7 @@ async function sbDelete(id){
   serverBottles = serverBottles.filter(x => String(x.id)!==String(id));
   renderSummary(); renderCellar();
   try{
-    const response = await fetch(CELLAR_API_BASE+'/api/cellar/bottles/'+encodeURIComponent(id)+'?userId='+encodeURIComponent(uid), { method:'DELETE' });
+    const response = await authFetch(CELLAR_API_BASE+'/api/cellar/bottles/'+encodeURIComponent(id)+'?userId='+encodeURIComponent(uid), { method:'DELETE' });
     if (!response.ok) throw new Error('stock delete failed: ' + response.status);
     showToast(t('sb_deleted'));
   }catch(e){
@@ -1255,7 +1257,7 @@ async function loadJournal(){
   const uid = myUid();
   if(!uid){ journalLoaded = true; renderJournal(); return; }
   try{
-    const r = await fetch(CELLAR_API_BASE+'/api/taste/list?userId='+encodeURIComponent(uid));
+    const r = await authFetch(CELLAR_API_BASE+'/api/taste/list?userId='+encodeURIComponent(uid));
     if(!r.ok) throw 0;
     const d = await r.json();
     journal = Array.isArray(d.items) ? d.items : [];
@@ -1279,7 +1281,7 @@ async function journalDelete(id){
   const uid = myUid();
   if (!uid) return;
   try{
-    const r = await fetch(CELLAR_API_BASE+'/api/taste/list/'+encodeURIComponent(id)+'?userId='+encodeURIComponent(uid), { method:'DELETE' });
+    const r = await authFetch(CELLAR_API_BASE+'/api/taste/list/'+encodeURIComponent(id)+'?userId='+encodeURIComponent(uid), { method:'DELETE' });
     if(!r.ok) throw 0;
     journal = journal.filter(j => String(j.id) !== String(id));
     renderJournal();
@@ -1455,7 +1457,7 @@ async function submitJournalPairing(slot, item, verdict, dish) {
     context: 'taste_memo',
   };
   try {
-    const response = await fetch(CELLAR_API_BASE + '/api/pairing-feedback', {
+    const response = await authFetch(CELLAR_API_BASE + '/api/pairing-feedback', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
@@ -1675,7 +1677,7 @@ async function saveWine() {
   const btn = document.querySelector('#addModal .save-btn');
   if (btn) { btn.disabled = true; btn.style.opacity = '.55'; }
   try {
-    const r = await fetch(CELLAR_API_BASE + '/api/cellar/bottles', {
+    const r = await authFetch(CELLAR_API_BASE + '/api/cellar/bottles', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         userId: uid, cellarId,

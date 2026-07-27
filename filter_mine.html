@@ -87,6 +87,8 @@ input[type=text]{ width:100%; border:1.5px solid var(--border); border-radius:10
 
 <div id="toast"></div>
 
+<!-- 2026-07-27 セキュリティ監査対応: getAnonAccessToken/authFetch/linkDeviceIfLoggedInの単一ソース -->
+<script src="assets/somm-auth.js"></script>
 <script>
 const API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
 const UID = (() => { try {
@@ -94,6 +96,7 @@ const UID = (() => { try {
   if (!u) { u = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid', u); }
   return u;
 } catch(e){ return ''; } })();
+if (window.linkDeviceIfLoggedIn) linkDeviceIfLoggedIn(UID);
 const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2600); }
 
@@ -107,7 +110,7 @@ function starsHtml(n) {
 
 async function load() {
   try {
-    const r = await fetch(API_BASE + '/api/filters/mine?uid=' + encodeURIComponent(UID));
+    const r = await authFetch(API_BASE + '/api/filters/mine?uid=' + encodeURIComponent(UID));
     if (!r.ok) throw 0;
     const d = await r.json();
     myFilters = d.filters || [];
@@ -174,7 +177,7 @@ function renderCurrent() {
 
 async function toggleItem(itemId, included) {
   try {
-    const r = await fetch(API_BASE + '/api/filters/items/' + itemId, {
+    const r = await authFetch(API_BASE + '/api/filters/items/' + itemId, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ uid: UID, included })
     });
@@ -191,7 +194,7 @@ async function saveSettings() {
   const instagram = document.getElementById('fIg').value.trim();
   if (!name) return toast('フィルター名を入力してください');
   try {
-    const r = await fetch(API_BASE + '/api/filters/' + currentId, {
+    const r = await authFetch(API_BASE + '/api/filters/' + currentId, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ uid: UID, name, instagram })
     });
@@ -207,7 +210,7 @@ async function createNew() {
   const name = prompt('新しいフィルターの名前は？', 'マイフィルター2');
   if (!name) return;
   try {
-    const r = await fetch(API_BASE + '/api/filters', {
+    const r = await authFetch(API_BASE + '/api/filters', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ uid: UID, name })
     });

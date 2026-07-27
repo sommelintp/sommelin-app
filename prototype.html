@@ -3640,7 +3640,7 @@ async function loadVisitsFromServer(){
   let uid=null; try{ uid=localStorage.getItem('somm_uid'); }catch(e){}
   if(!uid) return;
   try{
-    const r = await fetch(CHAT_API_BASE+'/api/visits?userId='+encodeURIComponent(uid));
+    const r = await authFetch(CHAT_API_BASE+'/api/visits?userId='+encodeURIComponent(uid));
     if(!r.ok) return;
     const { items } = await r.json();
     if(!Array.isArray(items) || !items.length) return;
@@ -3966,7 +3966,7 @@ function openStore(type, id, name, lat, lng) {
 async function loadTopPlaces() {
   topPlacesLoaded = true;
   try {
-    const r = await fetch(CHAT_API_BASE + '/api/top-places?limit=50');
+    const r = await authFetch(CHAT_API_BASE + '/api/top-places?limit=50');
     if (!r.ok) throw 0;
     const d = await r.json();
     topPlacesData = d.items || [];
@@ -4037,7 +4037,7 @@ async function openWineMap(wineId, wineName) {
   modal.style.display = 'block';
   body.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;">' + t('searching') + '</div>';
   try {
-    const r = await fetch(CHAT_API_BASE + '/api/wine-places?wineId=' + encodeURIComponent(wineId));
+    const r = await authFetch(CHAT_API_BASE + '/api/wine-places?wineId=' + encodeURIComponent(wineId));
     if (!r.ok) throw 0;
     const d = await r.json();
     const items = (d.items || []);
@@ -4216,7 +4216,7 @@ async function loadTopWines() {
     if (rankVintageMin) qs.set('vintageMin', rankVintageMin);
     if (rankVintageMax) qs.set('vintageMax', rankVintageMax);
     if (rankSweet) qs.set('sweet', rankSweet);
-    const r = await fetch(CHAT_API_BASE + '/api/top-wines?' + qs.toString());
+    const r = await authFetch(CHAT_API_BASE + '/api/top-wines?' + qs.toString());
     if (!r.ok) throw 0;
     const d = await r.json();
     if (!d.items || !d.items.length) throw 0;
@@ -4347,7 +4347,7 @@ async function loadRestaurantList(rid) {
       } catch (e) {}
       try {
         const _vuid = localStorage.getItem('somm_uid');
-        if (_vuid) fetch(CHAT_API_BASE + '/api/visits', {
+        if (_vuid) authFetch(CHAT_API_BASE + '/api/visits', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: _vuid, rid, name: shopName })
         }).catch(() => {});
@@ -5062,6 +5062,14 @@ async function getAnonAccessToken() {
   } catch (e) { return null; }
 }
 
+// 2026-07-27 セキュリティ監査対応: 個人データ系APIにJWTを添付する共通ラッパー
+async function authFetch(url, opts) {
+  opts = opts || {};
+  const token = await getAnonAccessToken();
+  const headers = Object.assign({}, opts.headers || {}, token ? { Authorization: 'Bearer ' + token } : {});
+  return fetch(url, Object.assign({}, opts, { headers }));
+}
+
 let protoChatHist = [];
 let protoChatBusy = false;
 let protoPendingPhoto = null; // 送信待ちの写真dataURL（長辺1024 JPEG）
@@ -5085,7 +5093,7 @@ function initMypageIdentity(){
   }
   if (revEl) revEl.textContent = '0';
   if (winesEl && CHAT_UID2) {
-    fetch(CHAT_API_BASE + '/api/taste/summary?userId=' + encodeURIComponent(CHAT_UID2))
+    authFetch(CHAT_API_BASE + '/api/taste/summary?userId=' + encodeURIComponent(CHAT_UID2))
       .then(r => r.ok ? r.json() : null)
       .then(d => { winesEl.textContent = (d && d.count != null) ? String(d.count) : '0'; })
       .catch(() => { winesEl.textContent = '0'; });
@@ -5228,7 +5236,7 @@ function openWineHistory() {
   const subEl = document.getElementById('wineHistorySubtitle');
   if (!CHAT_UID2) { box.innerHTML = ''; return; }
   box.innerHTML = '<div style="text-align:center;padding:30px 16px;color:var(--text-sub);font-size:13px;">' + t('loading') + '</div>';
-  fetch(CHAT_API_BASE + '/api/taste/list?userId=' + encodeURIComponent(CHAT_UID2))
+  authFetch(CHAT_API_BASE + '/api/taste/list?userId=' + encodeURIComponent(CHAT_UID2))
     .then(r => r.ok ? r.json() : null)
     .then(d => {
       const items = (d && d.items) || [];
@@ -5269,7 +5277,7 @@ async function deleteWineHistoryItem(ev, id) {
   if (!id || !CHAT_UID2) return;
   if (!confirm(t('delete_wine_confirm'))) return;
   try {
-    const r = await fetch(CHAT_API_BASE + '/api/taste/list/' + encodeURIComponent(id) + '?userId=' + encodeURIComponent(CHAT_UID2), { method: 'DELETE' });
+    const r = await authFetch(CHAT_API_BASE + '/api/taste/list/' + encodeURIComponent(id) + '?userId=' + encodeURIComponent(CHAT_UID2), { method: 'DELETE' });
     if (!r.ok) throw new Error('http ' + r.status);
     // 楽観的にDOMから該当行を除去し、リストを再取得しないで済ませる
     const row = document.querySelector('.wine-history-row[data-id="' + CSS.escape(String(id)) + '"]');
@@ -5328,7 +5336,7 @@ function saveInstagramHandle() {
   if (!session || !session.access_token) { msgEl.textContent = t('ig_login_required'); return; }
   if (!raw) { msgEl.textContent = t('ig_invalid'); return; }
   msgEl.textContent = t('ig_saving');
-  fetch(CHAT_API_BASE + '/api/account/instagram', {
+  authFetch(CHAT_API_BASE + '/api/account/instagram', {
     method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
     body: JSON.stringify({ handle: raw }),
   })
@@ -5353,7 +5361,7 @@ function disconnectInstagram() {
   const session = accSession();
   if (!session || !session.access_token) return;
   if (!confirm(t('ig_disconnect_confirm'))) return;
-  fetch(CHAT_API_BASE + '/api/account/instagram', {
+  authFetch(CHAT_API_BASE + '/api/account/instagram', {
     method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
     body: JSON.stringify({ handle: null }),
   }).then(r => {
@@ -5382,7 +5390,7 @@ function openProfileEdit() {
   const handleBtn = document.getElementById('profileHandleSaveBtn');
   handleInput.style.display = ''; handleBtn.style.display = ''; handleLocked.style.display = 'none';
   if (!CHAT_UID2) return;
-  fetch(CHAT_API_BASE + '/api/profile/me?userId=' + encodeURIComponent(CHAT_UID2))
+  authFetch(CHAT_API_BASE + '/api/profile/me?userId=' + encodeURIComponent(CHAT_UID2))
     .then(r => r.ok ? r.json() : null)
     .then(d => {
       if (d && d.handle) {
@@ -5408,7 +5416,7 @@ function saveProfileHandle() {
     msgEl.textContent = t('handle_invalid');
     return;
   }
-  fetch(CHAT_API_BASE + '/api/profile/handle', {
+  authFetch(CHAT_API_BASE + '/api/profile/handle', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId: CHAT_UID2, handle: v }),
   })
@@ -5464,7 +5472,7 @@ const COUNTRY_FLAGS = {
 };
 function initMypageXp(){
   if (!CHAT_UID2) return;
-  fetch(CHAT_API_BASE + '/api/xp?userId=' + encodeURIComponent(CHAT_UID2))
+  authFetch(CHAT_API_BASE + '/api/xp?userId=' + encodeURIComponent(CHAT_UID2))
     .then(r => r.ok ? r.json() : null)
     .then(d => {
       if (!d) return;
@@ -5500,7 +5508,7 @@ function loadHomeCellarPreview() {
   homeCellarLoaded = true;
   const box = document.getElementById('homeCellarPreview');
   if (!box || !CHAT_UID2) return;
-  fetch(CHAT_API_BASE + '/api/cellar?userId=' + encodeURIComponent(CHAT_UID2))
+  authFetch(CHAT_API_BASE + '/api/cellar?userId=' + encodeURIComponent(CHAT_UID2))
     .then(r => r.ok ? r.json() : null)
     .then(d => {
       const items = ((d && d.items) || []).filter(it => it.bottles == null || it.bottles > 0).slice(0, 8);
@@ -5531,7 +5539,7 @@ async function initStoreFollowAndEvents(rid){
   // フォロー状態
   try{
     const uid = sommUidLocal();
-    const r = await fetch(CHAT_API_BASE+'/api/store-follow/status?storeId='+encodeURIComponent(rid)+(uid?'&uid='+encodeURIComponent(uid):''));
+    const r = await authFetch(CHAT_API_BASE+'/api/store-follow/status?storeId='+encodeURIComponent(rid)+(uid?'&uid='+encodeURIComponent(uid):''));
     if(r.ok){ const d=await r.json(); curStoreFollowing=!!d.following; renderStoreFollowBtn(d.followerCount); }
     if(bar) bar.style.display='flex';
   }catch(e){}
@@ -5551,7 +5559,7 @@ async function toggleStoreFollow(){
   const next = !curStoreFollowing;
   curStoreFollowing = next; renderStoreFollowBtn();   // 楽観更新
   try{
-    const r=await fetch(CHAT_API_BASE+'/api/store-follow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid, storeProfileId:curStoreRid, follow:next})});
+    const r=await authFetch(CHAT_API_BASE+'/api/store-follow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid, storeProfileId:curStoreRid, follow:next})});
     if(r.ok){ const d=await r.json(); renderStoreFollowBtn(d.followerCount); }
   }catch(e){ curStoreFollowing=!next; renderStoreFollowBtn(); }
 }
@@ -5570,7 +5578,7 @@ function storeEventCard(e, withStore){
 async function loadStorePageEvents(rid){
   const box=document.getElementById('storeEventsBox'); if(!box) return;
   try{
-    const r=await fetch(CHAT_API_BASE+'/api/store-events/by-store?storeId='+encodeURIComponent(rid));
+    const r=await authFetch(CHAT_API_BASE+'/api/store-events/by-store?storeId='+encodeURIComponent(rid));
     if(!r.ok){ box.style.display='none'; return; }
     const items=(await r.json()).items||[];
     if(!items.length){ box.style.display='none'; return; }
@@ -5591,7 +5599,7 @@ function storePairingCard(p){
 }
 function loadStorePagePairings(rid){
   const box=document.getElementById('storePairingsBox'); if(!box) return;
-  fetch(CHAT_API_BASE+'/api/store-pairings/by-store?storeId='+encodeURIComponent(rid))
+  authFetch(CHAT_API_BASE+'/api/store-pairings/by-store?storeId='+encodeURIComponent(rid))
     .then(r=>r.ok?r.json():null)
     .then(d=>{
       const items=(d&&d.items)||[];
@@ -5606,7 +5614,7 @@ function loadStorePagePairings(rid){
 function loadHomeStoreEvents(){
   const box=document.getElementById('homeStoreEvents'); if(!box) return;
   const uid=sommUidLocal(); if(!uid){ box.style.display='none'; return; }
-  fetch(CHAT_API_BASE+'/api/store-events/feed?userId='+encodeURIComponent(uid))
+  authFetch(CHAT_API_BASE+'/api/store-events/feed?userId='+encodeURIComponent(uid))
     .then(r=>r.ok?r.json():null)
     .then(d=>{
       const items=(d&&d.items)||[];
@@ -5627,7 +5635,7 @@ function loadHomeFeed() {
   const box = document.getElementById('homeFeedList');
   const coldMsg = document.getElementById('homeFeedColdMsg');
   if (!box || !CHAT_UID2) return;
-  fetch(CHAT_API_BASE + '/api/feed?userId=' + encodeURIComponent(CHAT_UID2) + '&limit=30')
+  authFetch(CHAT_API_BASE + '/api/feed?userId=' + encodeURIComponent(CHAT_UID2) + '&limit=30')
     .then(r => r.ok ? r.json() : null)
     .then(d => {
       if (!d || !d.items) { box.innerHTML = ''; return; }
@@ -5709,7 +5717,7 @@ async function askSomurin(text, photo) {
     if (photo) body.image = photo;
     if (protoPhotoContext) body.photoContext = protoPhotoContext;
     const token = await getAnonAccessToken();
-    const r = await fetch(CHAT_API_BASE + '/api/chat', {
+    const r = await authFetch(CHAT_API_BASE + '/api/chat', {
       method: 'POST',
       headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { Authorization: 'Bearer ' + token } : {}),
       body: JSON.stringify(body)

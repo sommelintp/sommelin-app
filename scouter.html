@@ -337,6 +337,8 @@ body{
 <script src="assets/oshi-card.js?v=20260724e"></script>
 <script src="assets/wine-display.js?v=20260718"></script>
 <script src="assets/arena-utils.js?v=1"></script>
+<!-- 2026-07-27 セキュリティ監査対応: getAnonAccessToken/authFetch/linkDeviceIfLoggedInの単一ソース -->
+<script src="assets/somm-auth.js"></script>
 </head>
 <body>
 
@@ -1173,7 +1175,7 @@ async function identifyShelf(dataUrl, fullCanvas, opts){
   showStatus(true); setStatus(t('status_detecting'));
   try{
     // Phase 1: detect（Haiku・箱＋docType）
-    const dr=await fetch(API_BASE+'/api/identify-shelf-detect',{
+    const dr=await authFetch(API_BASE+'/api/identify-shelf-detect',{
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ image:dataUrl, userId:UID, locale: (LANG==='en'?'en-US':'ja-JP') })
     });
@@ -1240,7 +1242,7 @@ async function runTileRead(det, dataUrl, fullCanvas){
         tileIndex:idx, tileCount:tiles.length, rect:tile.rect, readSource:'house',
         locale:(LANG==='en'?'en-US':'ja-JP') };
       if(arena.length) body.arena=arena;   // §2: 土俵優先照合
-      const rr=await fetch(API_BASE+'/api/identify-shelf-read',{
+      const rr=await authFetch(API_BASE+'/api/identify-shelf-read',{
         method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
       });
       if(!rr.ok) throw new Error('read http '+rr.status);
@@ -1614,7 +1616,7 @@ async function identifyBack(b, dataUrl){
   b._backPending=true; renderShelfCard(b);
   try{
     const w=b.match && b.match.wine;
-    const r=await fetch(API_BASE+'/api/identify-back',{
+    const r=await authFetch(API_BASE+'/api/identify-back',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ image:dataUrl, userId:UID, scanId: shelfRes&&shelfRes.scanId||null, catalogId: w&&w.catalogId||null, locale: (LANG==='en'?'en-US':'ja-JP') })
@@ -1639,7 +1641,7 @@ async function loadSimilar(b){
     const w=b.match.wine; const id=b.identification||{};
     const q=w ? ('wineId='+w.id)
               : ('color='+encodeURIComponent(id.color||'')+'&country='+encodeURIComponent(id.country||''));
-    const r=await fetch(API_BASE+'/api/similar?'+q);
+    const r=await authFetch(API_BASE+'/api/similar?'+q);
     if(!r.ok) return;
     const d=await r.json();
     const box=document.getElementById('simBox');
@@ -1752,11 +1754,11 @@ async function cellarAddStart(){
   const info=cellarWineInfo();
   // セラー一覧を取得（無ければ既定セラーを作る）
   try{
-    const r=await fetch(API_BASE+'/api/cellars?userId='+encodeURIComponent(UID));
+    const r=await authFetch(API_BASE+'/api/cellars?userId='+encodeURIComponent(UID));
     const d=r.ok?await r.json():{items:[]};
     cellarAddList=(d.items||[]);
     if(!cellarAddList.length){
-      const cr=await fetch(API_BASE+'/api/cellars',{method:'POST',headers:{'Content-Type':'application/json'},
+      const cr=await authFetch(API_BASE+'/api/cellars',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({userId:UID,name:(LANG==='en'?'My Cellar':'マイセラー'),emoji:'🍾'})});
       if(cr.ok){ const cd=await cr.json(); if(cd.cellar) cellarAddList=[cd.cellar]; }
     }
@@ -1849,7 +1851,7 @@ async function cellarAddSubmit(){
   if(cellarAddBackPhoto) photos.push({dataUrl:cellarAddBackPhoto,role:'back'});
   try{
     if(window.sommLog) sommLog('cellar_add',{fromScouter:true});
-    const r=await fetch(API_BASE+'/api/cellar/bottles',{
+    const r=await authFetch(API_BASE+'/api/cellar/bottles',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ userId:UID, cellarId, catalogId:info.catalogId,
         name:info.name, producer:info.producer||null, vintage:info.vintage||null,
@@ -1879,7 +1881,7 @@ async function oshiSave(){
     // AJ-3: 撮影画像＋ボトル枠も送る（バックエンドが切り抜いて飲んだワイン履歴のサムネイルに使う）
     const frozenSrc=(document.getElementById('frozenImg')||{}).src||'';
     const scanImage=frozenSrc.startsWith('data:')?frozenSrc:null;
-    const r=await fetch(API_BASE+'/api/wine-like',{
+    const r=await authFetch(API_BASE+'/api/wine-like',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({userId:UID, wineId:w?w.id:null, catalogId:w?w.catalog_id:null, identification:b.identification||null, rating:oshiRating,
         image:scanImage, box:(scanImage&&b.box)||null})});
@@ -1932,7 +1934,7 @@ async function oshiSaveToFilter(){
   const comment=(document.getElementById('oshiFilterComment')||{}).value||'';
   btn.disabled=true;
   try{
-    const r=await fetch(API_BASE+'/api/filters/items',{
+    const r=await authFetch(API_BASE+'/api/filters/items',{
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ uid:UID,
         wine:{ name:info.name, producer:info.producer, iro:info.w&&info.w.iro, kuni:info.w&&info.w.kuni,
@@ -2037,7 +2039,7 @@ function oshiMaybePollIg(){
     tries++;
     if(tries>10){ clearInterval(oshiIgPollTimer); oshiIgPollTimer=null; return; }
     try{
-      const r=await fetch(API_BASE+'/api/producer-ig?producer='+encodeURIComponent(info.producer));
+      const r=await authFetch(API_BASE+'/api/producer-ig?producer='+encodeURIComponent(info.producer));
       if(!r.ok) return;
       const d=await r.json();
       if(d.igStatus==='searching') return;
@@ -2052,14 +2054,14 @@ function oshiMaybePollIg(){
 async function oshiConfirmIg(handle){
   const info=oshiWineInfo();
   try{
-    const r=await fetch(API_BASE+'/api/producer-ig/confirm',{method:'POST',headers:{'Content-Type':'application/json'},
+    const r=await authFetch(API_BASE+'/api/producer-ig/confirm',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({producer:info.producer,handle,action:'confirm'})});
     if(r.ok){ oshiHandle=handle; oshiIgStatus='active'; oshiIgSuggestion=null; oshiIgManualOpen=false; oshiRenderIgBlock(); toast(t('oshi_ig_confirmed')); }
   }catch(e){}
 }
 async function oshiRejectIg(handle){
   const info=oshiWineInfo();
-  try{ await fetch(API_BASE+'/api/producer-ig/confirm',{method:'POST',headers:{'Content-Type':'application/json'},
+  try{ await authFetch(API_BASE+'/api/producer-ig/confirm',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({producer:info.producer,handle,action:'reject'})}); }catch(e){}
   oshiIgSuggestion=null; oshiIgStatus='none'; oshiRenderIgBlock();
 }
@@ -2068,7 +2070,7 @@ async function oshiSubmitManualIg(){
   const val=(document.getElementById('oshiIgManualInput')||{}).value||'';
   if(!val.trim()) return;
   try{
-    const r=await fetch(API_BASE+'/api/producer-ig/confirm',{method:'POST',headers:{'Content-Type':'application/json'},
+    const r=await authFetch(API_BASE+'/api/producer-ig/confirm',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({producer:info.producer,handle:val.trim(),action:'replace'})});
     const d=r.ok?await r.json():null;
     if(d && d.handle){ oshiHandle=d.handle; oshiIgStatus='active'; oshiIgSuggestion=null; oshiIgManualOpen=false; oshiRenderIgBlock(); toast(t('oshi_ig_confirmed')); }
@@ -2158,7 +2160,7 @@ function oshiNearbyPick(i){
 // IGが付いてくるテキスト検索の登録店はplaceIdを持たないため、ここは呼ばれない。
 async function oshiResolvePlaceIg(placeId){
   try{
-    const r=await fetch(API_BASE+'/api/place-ig?placeId='+encodeURIComponent(placeId));
+    const r=await authFetch(API_BASE+'/api/place-ig?placeId='+encodeURIComponent(placeId));
     const d=r.ok?await r.json():{igStatus:'none'};
     if(d.igStatus==='active' && d.handle){
       oshiPlaceIgStatus='active';
@@ -2176,7 +2178,7 @@ async function oshiResolvePlaceIg(placeId){
 async function oshiPlaceIgConfirm(handle){
   if(!oshiStoreSelected || !oshiStoreSelected.placeId) return;
   try{
-    await fetch(API_BASE+'/api/place-ig',{method:'POST',headers:{'Content-Type':'application/json'},
+    await authFetch(API_BASE+'/api/place-ig',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({placeId:oshiStoreSelected.placeId, handle, action:'confirm', userId:UID})});
   }catch(e){}
   oshiStoreSelected.ig=handle; oshiPlaceIgStatus='active'; oshiPlaceIgSuggestion=null;
@@ -2185,7 +2187,7 @@ async function oshiPlaceIgConfirm(handle){
 async function oshiPlaceIgReject(handle){
   if(!oshiStoreSelected || !oshiStoreSelected.placeId) return;
   try{
-    await fetch(API_BASE+'/api/place-ig',{method:'POST',headers:{'Content-Type':'application/json'},
+    await authFetch(API_BASE+'/api/place-ig',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({placeId:oshiStoreSelected.placeId, handle, action:'reject', userId:UID})});
   }catch(e){}
   oshiPlaceIgStatus='none'; oshiPlaceIgSuggestion=null;
@@ -2197,7 +2199,7 @@ async function oshiPlaceIgSuggestManual(){
   const val=(document.getElementById('oshiPlaceIgManualInput')||{}).value||'';
   const handle=val.trim(); if(!handle) return;
   try{
-    const r=await fetch(API_BASE+'/api/place-ig',{method:'POST',headers:{'Content-Type':'application/json'},
+    const r=await authFetch(API_BASE+'/api/place-ig',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({placeId:oshiStoreSelected.placeId, handle, action:'suggest', userId:UID})});
     const d=r.ok?await r.json():null;
     if(d && d.handle){
@@ -2230,7 +2232,7 @@ function oshiStoreOnInput(v){
 }
 async function oshiStoreSearch(q){
   try{
-    const r=await fetch(API_BASE+'/api/stores?q='+encodeURIComponent(q));
+    const r=await authFetch(API_BASE+'/api/stores?q='+encodeURIComponent(q));
     const d=r.ok?await r.json():{items:[]};
     oshiStoreResults=d.items||[];
   }catch(e){ oshiStoreResults=[]; }
@@ -2383,7 +2385,7 @@ async function oshiDoShare(dest){
       // Web Share APIは共有先や実投稿の完了を返さない。共有シートを完了した事実だけを記録する。
       if(oshiLikeId){
         try{
-          const r = await fetch(API_BASE+'/api/wine-like/shared',{method:'POST',headers:{'Content-Type':'application/json'},
+          const r = await authFetch(API_BASE+'/api/wine-like/shared',{method:'POST',headers:{'Content-Type':'application/json'},
             body:JSON.stringify({likeId:oshiLikeId,userId:UID})});
           if(!r.ok) toast(t('oshi_share_record_fail'));
         }catch(e){
@@ -2439,7 +2441,7 @@ async function identifyList(dataUrl, opts){
 async function identifyListStream(dataUrl, opts){
   let r;
   try{
-    r=await fetch(API_BASE+'/api/identify-list-stream',{
+    r=await authFetch(API_BASE+'/api/identify-list-stream',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ image:dataUrl, userId:UID, locale: (LANG==='en'?'en-US':'ja-JP') })
@@ -2512,7 +2514,7 @@ async function identifyListStream(dataUrl, opts){
 
 // 旧・一括読み（フォールバック維持。中身は従来のidentifyList本体そのまま）
 async function identifyListLegacy(dataUrl, opts){
-  const r=await fetch(API_BASE+'/api/identify-list',{
+  const r=await authFetch(API_BASE+'/api/identify-list',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ image:dataUrl, userId:UID, locale: (LANG==='en'?'en-US':'ja-JP') })
@@ -2631,7 +2633,7 @@ function fetchNearbyPlaces(onCandidates, onError){
   navigator.geolocation.getCurrentPosition(async pos=>{
     const loc={ lat:pos.coords.latitude, lng:pos.coords.longitude };
     try{
-      const r=await fetch(API_BASE+'/api/places/nearby?lat='+loc.lat+'&lng='+loc.lng);
+      const r=await authFetch(API_BASE+'/api/places/nearby?lat='+loc.lat+'&lng='+loc.lng);
       const d=await r.json();
       if(!d.items || !d.items.length){ onError('empty', loc); return; }
       onCandidates(d.items, loc);
@@ -2721,7 +2723,7 @@ async function sendPlaceReport(place){
   try{
     const items = _ppMode==='list' ? listReportItems() : shelfReportItems();
     const scanId = _ppMode==='list' ? lastListScanId : (shelfRes&&shelfRes.scanId);
-    const r=await fetch(API_BASE+'/api/report-place',{
+    const r=await authFetch(API_BASE+'/api/report-place',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ place, items, scanId })
