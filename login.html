@@ -1203,9 +1203,18 @@ function emailRegister() {
   if (pw !== pw2)    { markError('reg-pw2');   showToast('パスワードが一致しません'); return; }
 
   showLoading('アカウントを作成中…');
-  sbSignUp(email, pw, { role: selectedRole }).then(res => {
+  // 2026-07-27 再監査P0対応: roleはメタデータで送っても無視される（登録時は必ずindividual固定・
+  // 自己申告でadminになれた穴の封鎖）。業務ロールは登録後に /api/account/add-role
+  // （store/retailer/importerのみ許可・adminを弾くサーバー実装）を通して付与する。
+  // display_nameは権限に関係ないのでメタデータのままでよい。
+  sbSignUp(email, pw, {}).then(res => {
     try { localStorage.setItem('sommelin_role', selectedRole); } catch(e){}
     if (res.access_token) applyReferralIfAny();
+    if (res.access_token && roleConfig[selectedRole].biz) {
+      // 業務ロールの付与はサーバー経由。失敗しても申請フロー自体は続行できる
+      // （業務店確認が通るまで実権限は出ないため、ここでの失敗は致命的ではない）。
+      addBusinessRole(selectedRole);
+    }
     hideLoading();
     if (!res.access_token) {
       // メール確認ONの設定の場合（確認メールで認証後にログイン）
@@ -1482,7 +1491,10 @@ function submitFinalVerify() {
   // profilesは verification_status を pending（＝仮許可の意味で流用。既存CHECK制約に'provisional'が
   // 無いため。アプリ側は pending を「確認中（仮許可でご利用中）」として表示する）。会社/連絡先も更新。
   // ※ display_name は上書きしない（名刺の担当者名でユーザーの表示名を書き換えない。田中健一問題の根治）。
-  const profileFields = { verification_status: 'pending', company: payload.company, phone: payload.phone, contact_email: payload.contact_email };
+  // 2026-07-27 再監査P0対応: verification_status は権限系の列なので本人からは更新できない
+  // （DBトリガーで据え置かれる）。「確認中（仮許可）」への遷移は fireBusinessVerify() が
+  // 叩く /api/business/verify の中でサーバーが立てる。ここでは会社/連絡先だけ更新する。
+  const profileFields = { company: payload.company, phone: payload.phone, contact_email: payload.contact_email };
   Promise.resolve()
     .then(() => saveBusinessApplication(payload))
     .then(ok => { if (!ok) throw new Error('business application save failed'); return patchProfile(profileFields); })
