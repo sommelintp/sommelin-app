@@ -6032,7 +6032,17 @@ function initHeaderIdentity(){
   const nameEl=document.querySelector('.top-header-rest');
   if(nameEl && p.display_name) nameEl.textContent=p.display_name;
   const ic=document.querySelector('.top-header-icon');
-  if(ic && p.avatar_url){ ic.innerHTML='<img src="'+p.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" alt="logo">'; ic.style.overflow='hidden'; }
+  // 2026-07-27 再監査P2対応: URLを文字列連結でinnerHTMLに入れると " で属性を抜けられ、
+  // onerror= 等を注入できる（localStorageのトークンが盗まれる）。要素を組み立ててsrcに入れる。
+  if(ic && p.avatar_url){
+    ic.textContent='';
+    const img=document.createElement('img');
+    img.src=p.avatar_url;
+    img.alt='logo';
+    img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:inherit;';
+    ic.appendChild(img);
+    ic.style.overflow='hidden';
+  }
   // ※ヘッダー全体タップ＝アカウントシート。ロゴ変更はシート内から（アイコン単独onclickは廃止）
   initVerifStatus(p.verification_status);
 }

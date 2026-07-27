@@ -2622,7 +2622,17 @@ function initHeaderIdentity(){
   const nameEl=document.querySelector('.th-name');
   if(nameEl && p.display_name) nameEl.textContent=p.display_name;
   const ic=document.querySelector('.th-icon');
-  if(ic && p.avatar_url){ ic.innerHTML='<img src="'+p.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" alt="logo">'; ic.style.overflow='hidden'; }
+  // 2026-07-27 再監査P2対応: URLを文字列連結でinnerHTMLに入れると " で属性を抜けられ、
+  // onerror= 等を注入できる（localStorageのトークンが盗まれる）。要素を組み立ててsrcに入れる。
+  if(ic && p.avatar_url){
+    ic.textContent='';
+    const img=document.createElement('img');
+    img.src=p.avatar_url;
+    img.alt='logo';
+    img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:inherit;';
+    ic.appendChild(img);
+    ic.style.overflow='hidden';
+  }
   // ※ヘッダー全体タップ＝アカウントシート。ロゴ変更はシート内から
   initVerifStatus(p.verification_status);
 }
@@ -2682,6 +2692,12 @@ async function renderAccountSheet(){
   }catch(e){}
   const body=document.getElementById('acctBody');
   const acc=(d&&d.account)||{}, biz=(d&&d.business)||{}, ver=(d&&d.verification)||{};
+  // 反響検索は自社名でのみ行える（2026-07-27 P1対応: 他社名で検索して競合の反響を
+  // 覗ける状態だったため、サーバー側で自社に固定した）。入力欄に自社名を入れておく。
+  try{
+    const fbEl=document.getElementById('fbImporterName');
+    if(fbEl && !fbEl.value && biz.company) fbEl.value=biz.company;
+  }catch(e){}
   const st=acc.verificationStatus;
   let stChip='';
   if(st==='approved'||st==='verified') stChip='<span style="color:#16a34a;font-weight:800;">✓ '+t('verif_verified')+'</span>';
