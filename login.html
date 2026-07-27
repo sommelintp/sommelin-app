@@ -415,6 +415,33 @@ body {
 <!-- ================================================
      画面①-b 業種選択（業務者のみ）
      ================================================ -->
+<!-- 業務登録には招待が必要（2026-07-27・完全招待制）。
+     招待リンクが無い/失効している場合にここへ止める。個人登録は従来どおり誰でもできる。 -->
+<div class="screen" id="screenInviteRequired">
+  <div class="hero" style="padding:32px 24px 24px;">
+    <button class="pg-back" style="position:absolute;top:16px;left:16px;z-index:2;" onclick="showScreen('screenRole')">‹</button>
+    <div class="hero-logo" style="margin-bottom:8px;">
+      <div class="hero-icon" style="width:42px;height:42px;border-radius:12px;font-size:24px;display:flex;align-items:center;justify-content:center;">✉️</div>
+      <div class="hero-name" style="font-size:22px;">Sommelin</div>
+    </div>
+  </div>
+  <div class="body-pad" style="padding-top:24px;">
+    <div class="pg-lead">業務でのご利用は招待制です</div>
+    <div class="pg-sub" id="inviteBlockedReason">
+      ソムリンに登録済みの飲食店・酒販店・インポーターからの招待リンクが必要です。
+    </div>
+    <div style="background:var(--burgundy-pale);border-radius:14px;padding:16px;margin:18px 0;font-size:13px;line-height:1.8;color:var(--text);">
+      すでにソムリンをお使いの取引先（インポーター・酒販店・レストラン）に、
+      <strong>招待リンクの発行</strong>をご依頼ください。受け取ったリンクを開くと、この画面から先へ進めます。
+    </div>
+    <div style="font-size:12px;color:var(--text-sub);line-height:1.7;margin-bottom:22px;">
+      招待した方が登録内容を確認する仕組みのため、どなたからの紹介かが分かる形でのご登録をお願いしています。
+    </div>
+    <button class="btn-primary" onclick="choosePath('individual')">個人（ワイン愛好家）として登録する</button>
+    <button class="btn-outline" style="margin-top:10px;" onclick="showScreen('screenLogin')">既にアカウントをお持ちの方はログイン</button>
+  </div>
+</div>
+
 <div class="screen" id="screenBizType">
   <div class="pg-header">
     <button class="pg-back" id="bizTypeBackBtn" onclick="showScreen('screenRole')">‹</button>
@@ -1015,6 +1042,9 @@ let addRoleMode = false; // 2026-07-08追加: 既存の個人アカウントに�
 })();
 
 // サインアップ成功直後に呼ぶ（同一端末で二重登録されないよう成功後にconsumeする）
+// 2026-07-27: 業務登録では呼ばない。業務の招待の鎖はサーバーが招待トークンから確定するため
+// （クライアントがinvited_byを書けると自己招待・有名インポーター詐称で鎖を偽装できる）。
+// 個人ユーザーの「お友達を招待」は従来どおりこの経路のまま。
 function applyReferralIfAny(){
   let ref = null;
   try { ref = localStorage.getItem('somm_ref'); } catch(e){}
@@ -1024,6 +1054,71 @@ function applyReferralIfAny(){
       if (ok) { try { localStorage.removeItem('somm_ref'); } catch(e){} if (window.sommLog) sommLog('ref_applied', { ref }); }
     })
     .catch(()=>{});
+}
+
+// ── 業務登録の招待（2026-07-27・完全招待制） ────────────────────────
+// 設計: 招待=入口 / 招待者の承認=本許可 / AIは降格専用。
+// ?invite=<生トークン> を保存し、業務導線に入る前に生死を確認する。
+// ここでの確認は「親切なUI」であって鍵ではない。実際の鍵はサーバー側
+// （/api/account/add-role が消費済みの招待を要求する）。画面だけ閉じても
+// curlで直接叩けば通ってしまうため、両方を揃えて初めて招待制になる。
+const INVITE_KEY = 'somm_invite';
+let inviteState = { token: null, valid: false, inviterName: null, reason: 'none' };
+
+(function captureInvite(){
+  try {
+    const t = new URLSearchParams(location.search).get('invite');
+    // 紹介(?ref=)と違い招待は1人1枚・使い切りなので、新しいリンクで上書きしてよい
+    if (t) localStorage.setItem(INVITE_KEY, t);
+  } catch(e){}
+})();
+
+function storedInvite(){ try { return localStorage.getItem(INVITE_KEY); } catch(e){ return null; } }
+function clearStoredInvite(){ try { localStorage.removeItem(INVITE_KEY); } catch(e){} }
+
+// 招待の生死をサーバーに問い合わせる。消費はしない。
+// 返るのは有効性・招待者名・期限だけ（招待時メモは返らない＝写して登録できない）。
+async function checkInvite(){
+  const t = storedInvite();
+  if (!t) { inviteState = { token: null, valid: false, reason: 'none' }; return inviteState; }
+  try {
+    const r = await fetch(API_BASE + '/api/business/invites/preview?token=' + encodeURIComponent(t));
+    const j = await r.json();
+    inviteState = { token: t, valid: !!j.valid, inviterName: j.inviterName || null,
+                    reason: j.reason || null, message: j.message || null };
+  } catch(e) {
+    // 通信できないときに「招待が無い」と断定しない（正しい招待を持つ人を締め出さないため）
+    inviteState = { token: t, valid: false, reason: 'network', message: '通信エラーです。電波の良い場所で再度お試しください。' };
+  }
+  return inviteState;
+}
+
+// 登録直後にサーバーへ招待を消費させる。invited_byを決めるのはサーバーだけ。
+async function consumeInvite(){
+  const t = storedInvite();
+  if (!t) return { ok: false };
+  const tok = authToken();
+  if (!tok) return { ok: false };
+  try {
+    const r = await fetch(API_BASE + '/api/business/invites/consume', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+      body: JSON.stringify({ token: t }),
+    });
+    const j = await r.json();
+    if (r.ok && j.ok) { clearStoredInvite(); if (window.sommLog) sommLog('invite_consumed', {}); return { ok: true, inviterName: j.inviterName || null }; }
+    return { ok: false, message: j.message || null };
+  } catch(e) { return { ok: false }; }
+}
+
+function showInviteBlocked(inv){
+  const el = document.getElementById('inviteBlockedReason');
+  if (el) {
+    el.textContent = (inv && inv.message)
+      ? inv.message + ' 有効な招待リンクをお持ちの方は、そのリンクからもう一度お進みください。'
+      : 'ソムリンに登録済みの飲食店・酒販店・インポーターからの招待リンクが必要です。';
+  }
+  showScreen('screenInviteRequired');
 }
 
 // ── Googleログインからの復帰処理（2026-07-26）: /auth/v1/authorizeはURLフラグメント
@@ -1111,13 +1206,15 @@ function showScreen(id) {
 }
 
 // ── 最初の2択（業務 or 個人）──
-function choosePath(path) {
-  if (path === 'individual') {
-    chooseRole('individual');
-  } else {
-    // 業務 → 業種選択サブ画面へ
-    showScreen('screenBizType');
-  }
+async function choosePath(path) {
+  if (path === 'individual') { chooseRole('individual'); return; }
+  // 業務 → 招待の確認を挟んでから業種選択サブ画面へ（2026-07-27・完全招待制）
+  showLoading('招待を確認中…');
+  const inv = await checkInvite();
+  hideLoading();
+  if (!inv.valid) { showInviteBlocked(inv); return; }
+  if (inv.inviterName) showToast(inv.inviterName + ' さんからの招待です ✓');
+  showScreen('screenBizType');
 }
 
 // ── 役割選択（業種決定後に呼ばれる）──
@@ -1184,7 +1281,15 @@ function chooseRole(role) {
   if (hint) hint.style.display = 'none';
   const backBtn = document.getElementById('bizTypeBackBtn');
   if (backBtn) backBtn.onclick = () => { window.location.href = 'prototype.html'; };
-  showScreen('screenBizType');
+  // 2026-07-27: 既存アカウントへの業務ロール追加も招待が必要（ここが抜けると
+  // 「個人で登録 → 後から業務ロールを追加」で招待制を素通りできてしまう）。
+  showLoading('招待を確認中…');
+  checkInvite().then(inv => {
+    hideLoading();
+    if (!inv.valid) { showInviteBlocked(inv); return; }
+    if (inv.inviterName) showToast(inv.inviterName + ' さんからの招待です ✓');
+    showScreen('screenBizType');
+  });
 })();
 
 // ── LINE 登録 ──
@@ -1207,10 +1312,20 @@ function emailRegister() {
   // 自己申告でadminになれた穴の封鎖）。業務ロールは登録後に /api/account/add-role
   // （store/retailer/importerのみ許可・adminを弾くサーバー実装）を通して付与する。
   // display_nameは権限に関係ないのでメタデータのままでよい。
-  sbSignUp(email, pw, {}).then(res => {
+  sbSignUp(email, pw, {}).then(async res => {
     try { localStorage.setItem('sommelin_role', selectedRole); } catch(e){}
-    if (res.access_token) applyReferralIfAny();
-    if (res.access_token && roleConfig[selectedRole].biz) {
+    const isBiz = roleConfig[selectedRole].biz;
+    // 個人の「お友達を招待」だけがこの経路。業務の鎖はサーバーが招待トークンから確定する。
+    if (res.access_token && !isBiz) applyReferralIfAny();
+    if (res.access_token && isBiz) {
+      // 招待の消費が先。サーバーはconsume済みの招待が無いとadd-roleを受け付けない。
+      const consumed = await consumeInvite();
+      if (!consumed.ok) {
+        hideLoading();
+        showToast(consumed.message || '招待リンクを確認できませんでした。もう一度リンクからお進みください');
+        showInviteBlocked({ message: consumed.message });
+        return;
+      }
       // 業務ロールの付与はサーバー経由。失敗しても申請フロー自体は続行できる
       // （業務店確認が通るまで実権限は出ないため、ここでの失敗は致命的ではない）。
       addBusinessRole(selectedRole);
@@ -1499,6 +1614,9 @@ function submitFinalVerify() {
     .then(() => saveBusinessApplication(payload))
     .then(ok => { if (!ok) throw new Error('business application save failed'); return patchProfile(profileFields); })
     .then(ok => { if (!ok) throw new Error('profile update failed'); fireBusinessVerify(); }) // 申請保存後にAI確認を発火（fire-and-forget）
+    // 2026-07-27: 業務ロールを付ける前に招待を消費する（サーバーはconsume済みの
+    // 招待が無いとadd-roleを受け付けない。順序を逆にするとロール付与が弾かれる）。
+    .then(() => { if (addRoleMode) return consumeInvite(); })
     .then(() => { if (addRoleMode) return addBusinessRole(selectedRole); })
     .then(() => { hideLoading(); showScreen('screenPending'); })
     .catch(() => { hideLoading(); showToast('申請を保存できませんでした。通信状態を確認して、もう一度お試しください'); });
