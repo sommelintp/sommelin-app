@@ -3881,8 +3881,8 @@ function renderAdminEventList() {
           <div class="ev-date-w">${LANG === 'ja' ? i18nDow(ev.date.getDay()) + '曜' : i18nDow(ev.date.getDay())}</div>
         </div>
         <div class="ev-body">
-          <div class="ev-name">${ev.name}</div>
-          <div class="ev-meta">⏰ ${ev.time} ・ 📍 ${ev.venue.split('（')[0]} <span class="ev-type-tag ${ev.type}">${ev.typeLabel}${ev.isOnline ? t('online_suffix') : ''}</span></div>
+          <div class="ev-name">${evEsc(ev.name)}</div>
+          <div class="ev-meta">⏰ ${evEsc(ev.time)} ・ 📍 ${evEsc(ev.venue.split('（')[0])} <span class="ev-type-tag ${ev.type}">${ev.typeLabel}${ev.isOnline ? t('online_suffix') : ''}</span></div>
           ${adminRsvpActionHtml(ev)}
         </div>
       </div>`;
@@ -4261,6 +4261,7 @@ function renderWineTable(cat, search) {
 
   const stockClass = s => s === 0 ? 'zero' : s <= 3 ? 'low' : 'ok';
   const stockLabel = s => s === 0 ? t('stock_none') : t('stock_label').replace('{n}', s);
+  const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
   const labelThumb = w => {
     if (w.hasLabel) {
@@ -4270,7 +4271,7 @@ function renderWineTable(cat, search) {
       const fgColors = { sparkling:'#6B3FA0', white:'#1d4ed8', red:'#9B1B4B', rose:'#be185d', orange:'#92400e' };
       return `<div class="wine-label-thumb scanned" onclick="openWineModal('${w.id}')" title="${t('thumb_scanned_title')}" style="background:linear-gradient(160deg,#fff8f4,#fceee8);">
         <span class="label-emoji">${catEmoji[w.cat]}</span>
-        <span class="label-name">${w.name.split(' ').slice(0,3).join(' ')}</span>
+        <span class="label-name">${esc(w.name.split(' ').slice(0,3).join(' '))}</span>
         <span class="label-cam-badge">📷</span>
       </div>`;
     }
@@ -4281,8 +4282,8 @@ function renderWineTable(cat, search) {
     <div class="wine-row ${w.available ? '' : 'unavailable'}" style="padding:10px 12px 10px 14px;">
       ${labelThumb(w)}
       <div class="wine-row-info">
-        <div class="wine-row-name">${w.name} ${w.vintage}</div>
-        <div class="wine-row-sub">${w.producer} · ${w.region}</div>
+        <div class="wine-row-name">${esc(w.name)} ${esc(w.vintage)}</div>
+        <div class="wine-row-sub">${esc(w.producer)} · ${esc(w.region)}</div>
       </div>
       <div style="text-align:right;flex-shrink:0;">
         <div class="wine-row-price">G ¥${w.priceGlass.toLocaleString()}</div>
@@ -4676,13 +4677,14 @@ window._bulkWines = [];
 function renderBulkList(wines) {
   window._bulkWines = wines;
   const list = document.getElementById('bulkWineList');
+  const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   list.innerHTML = wines.map((w, i) => `
     <div class="bulk-wine-row" onclick="toggleBulkCheck(${i}, this)">
       <div class="bulk-check checked" id="bcheck-${i}">✓</div>
       <span class="bulk-wine-emoji">${w.emoji}</span>
       <div class="bulk-wine-info">
-        <div class="bulk-wine-name">${w.name} <span style="font-weight:400;color:var(--text-sub);">${w.vintage}</span></div>
-        <div class="bulk-wine-meta">${w.producer} · ${w.region} · ${w.grapes}</div>
+        <div class="bulk-wine-name">${esc(w.name)} <span style="font-weight:400;color:var(--text-sub);">${esc(w.vintage)}</span></div>
+        <div class="bulk-wine-meta">${esc(w.producer)} · ${esc(w.region)} · ${esc(w.grapes)}</div>
         <div style="display:inline-block;margin-top:3px;font-size:10px;font-weight:700;color:#15803d;background:#dcfce7;padding:1px 7px;border-radius:6px;">${t('bulk_accuracy').replace('{n}', w.confidence)}</div>
       </div>
     </div>`).join('');
@@ -5086,13 +5088,14 @@ function renderStock() {
       <div style="font-size:36px;margin-bottom:12px;">📦</div>
       ${t('stk_empty')}</div>`;
   } else {
+    const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     list.innerHTML = items.map(it => {
       const pl = stockPriceLabel(it);
       return `
       <div class="inv-card${it.available ? '' : ' out-of-stock'}" id="inv-${it.id}">
         <div class="inv-info">
-          <div class="inv-name">${it.name}</div>
-          <div class="inv-meta">${it.vintage || ''}　${it.region || ''}</div>
+          <div class="inv-name">${esc(it.name)}</div>
+          <div class="inv-meta">${esc(it.vintage || '')}　${esc(it.region || '')}</div>
           <div class="inv-price">¥${(pl.price||0).toLocaleString()}　<span style="font-size:11px;font-weight:500;color:var(--text-sub);">${pl.type} · ${t('n_bottles').replace('{n}', it.stock || 0)}</span></div>
         </div>
         <div class="inv-right">
@@ -5488,7 +5491,7 @@ async function tnProcessFiles(files) {
           ref_price: w ? w.price : null,
           // 表示体系第4版: 味スコア＋ソムスター（DB計算値の素通し）
           tasteScore100: w ? w.tasteScore100 : null,
-          tasteScoreInternal: w ? w.tasteScoreInternal : null,
+          tasteRank: w ? w.tasteRank : null,
           somStar: w ? w.somStar : null,
           somPct: w ? w.somPct : null,
           rating: null,
