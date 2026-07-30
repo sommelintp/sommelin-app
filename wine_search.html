@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title data-i18n="page_title">ワイン検索 — ソムリン</title>
 <meta name="robots" content="noindex">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,8 +11,7 @@
   <style>
     :root {
       /* 2026-07-10: --burgundy/--goldはsommelin-ui.cssのブランドトークンに一本化。
-         --wine-darkはsommelin-ui.css未定義（あちらは--wine-deep）のためこのまま残す */
-      --wine-dark: #5C0E2A;
+         2026-07-30: --wine-darkもsommelin-ui.cssに定義済みのためローカル定義を撤去 */
       --gold-light: #F5E6C8;
       --bg: #FDFAF7;
       --text: #2C1810;
@@ -327,7 +326,7 @@
       flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
       text-decoration: none; color: #7a5560; font-size: 10.5px; padding: 4px 0;
     }
-    .search-nav a.on { color: var(--burgundy, #9B1B4B); font-weight: 700; }
+    .search-nav a.on { color: var(--burgundy); font-weight: 700; }
     .search-nav .ic { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
   </style>
   <link rel="stylesheet" href="assets/sommelin-ui.css?v=20260730">
@@ -666,7 +665,7 @@ function techDetailsHtml(details){
   if(!details||!details.length) return '';
   const rows=details.map(d=>`
     <div style="padding:8px 0;border-top:1px solid #f0e6ea;">
-      <div style="font-size:10.5px;font-weight:800;color:#9B1B4B;">${escHtml(d.label)}</div>
+      <div style="font-size:10.5px;font-weight:800;color:var(--wine);">${escHtml(d.label)}</div>
       <div style="font-size:12px;color:#4a3a3a;line-height:1.6;margin-top:2px;">${escHtml(d.value)}</div>
       ${d.note?`<div style="font-size:9.5px;color:#aaa;margin-top:2px;">${escHtml(d.note)}</div>`:''}
     </div>`).join('');
@@ -697,7 +696,7 @@ async function loadMaster(q){
     }).join('');
   }
   el.innerHTML=`
-    <div class="sec-head">${t('rating_cospa_head')}<span class="sec-badge" style="background:#9B1B4B18;color:#9B1B4B;">master</span></div>
+    <div class="sec-head">${t('rating_cospa_head')}<span class="sec-badge" style="background:var(--burgundy-pale);color:var(--wine);">master</span></div>
     <div class="label-rule" style="margin:0 0 10px;"></div>
     <div style="background:#fff;border:1px solid #f0e6ea;border-radius:14px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.04);">
       <div style="display:flex;gap:10px;align-items:flex-start;">
@@ -922,7 +921,7 @@ function showQuickModal(title, msg) {
   m.innerHTML = `<div style="background:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:24px 20px 36px;">
     <div style="font-size:15px;font-weight:800;color:#2C1810;margin-bottom:8px;">${title}</div>
     <div style="font-size:13px;color:#555;line-height:1.75;white-space:pre-line;margin-bottom:20px;">${msg}</div>
-    <button onclick="this.closest('[style]').remove()" style="width:100%;padding:14px;background:#9B1B4B;color:#fff;font-size:14px;font-weight:800;border:none;border-radius:14px;cursor:pointer;">${t('close_btn')}</button>
+    <button onclick="this.closest('[style]').remove()" style="width:100%;padding:14px;background:var(--wine);color:#fff;font-size:14px;font-weight:800;border:none;border-radius:14px;cursor:pointer;">${t('close_btn')}</button>
   </div>`;
   document.body.appendChild(m);
   m.addEventListener('click', e => { if(e.target===m) m.remove(); });

@@ -2,25 +2,29 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ソムリン — 銘柄詳細</title>
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#5C0E2A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
 <style>
-:root{ --burgundy:#9B1B4B; --wine-dark:#5C0E2A; --gold:#C9973A; --bg:#F8F4EF; --text:#2C1810; --text-sub:#7A6055; --border:#E8DDD5; }
+/* 2026-07-30: --burgundy/--wine-dark/--gold/--text/--text-sub/--borderはsommelin-ui.cssのトークンに一本化 */
+:root{ --bg:var(--paper); }
 *{ box-sizing:border-box; margin:0; padding:0; }
 body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg); color:var(--text);
   max-width:430px; margin:0 auto; min-height:100dvh; padding:0 0 60px; }
-.top{ background:linear-gradient(135deg,var(--wine-dark),var(--burgundy)); padding:52px 16px 20px; color:#fff; }
+.top{ background:linear-gradient(135deg,var(--wine-dark),var(--burgundy)); border-bottom:1px solid var(--foil); padding:52px 16px 20px; color:#fff; }
 .top .nav{ display:flex; align-items:center; gap:12px; margin-bottom:14px; }
-.top .nav a{ width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;
+.top .nav a{ width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;
   font-size:18px;display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0; }
-.wname{ font-size:19px; font-weight:800; line-height:1.4; }
+.wname{ font-family:var(--font-display); font-size:19px; font-weight:700; line-height:1.4; }
 .wproducer{ font-size:13px; color:rgba(255,255,255,.85); margin-top:4px; text-decoration:none; display:inline-block; }
 .wcommon{ font-size:12px; color:rgba(255,255,255,.75); margin-top:8px; }
 .wrap{ padding:16px; }
 .sec{ font-size:11px; font-weight:700; color:var(--text-sub); letter-spacing:.07em; margin:14px 0 8px; }
-.vcard{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:10px; }
+.vcard{ background:#fff; border:1px solid var(--border); border-radius:var(--r-card); box-shadow:var(--shadow-card); padding:14px; margin-bottom:10px; }
 .vhead{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
 .vyear{ font-size:16px; font-weight:800; color:var(--burgundy); }
 .vprice{ font-size:13px; font-weight:700; color:var(--text); }
@@ -31,7 +35,7 @@ body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg)
 .techbox{ border-top:1px solid var(--border); margin-top:10px; padding-top:8px; }
 .techrow{ font-size:11.5px; color:var(--text); padding:3px 0; line-height:1.5; }
 .techrow b{ color:var(--text-sub); font-weight:700; }
-.wherebtn{ border:1px solid var(--border); background:var(--bg); border-radius:20px; padding:5px 10px;
+.wherebtn{ border:1px solid var(--border); background:var(--bg); border-radius:var(--r-pill); padding:5px 10px;
   font-size:11px; font-weight:700; color:var(--burgundy); cursor:pointer; font-family:inherit; margin-top:8px; }
 .wherebox{ display:none; border-top:1px solid var(--border); margin-top:10px; padding-top:8px; }
 .wherebox.show{ display:block; }
@@ -39,6 +43,8 @@ body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg)
 .whererow .ws{ font-size:10px; color:var(--text-sub); }
 .empty{ text-align:center; padding:40px 20px; color:var(--text-sub); }
 </style>
+<!-- sommelin-ui.css: ブランドトークン（インライン<style>より後に読み込み、トークンを勝たせる） -->
+<link rel="stylesheet" href="assets/sommelin-ui.css?v=20260730">
 </head>
 <body>
 

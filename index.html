@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Sommelin — ワインをもっとスマートに</title>
 <meta name="description" content="ワインリスト管理・試飲会情報配信・飲酒記録をひとつのアプリで完結。飲食店・インポーター・個人向け、LINE連携のワイン業務支援アプリ「ソムリン」。ラベルをカメラで撮るだけで自動入力、QRコードでお客様にリストを共有できます。">
 <link rel="canonical" href="https://sommelintp.github.io/sommelin-app/index.html">
@@ -34,23 +34,20 @@
   "url": "https://sommelintp.github.io/sommelin-app/index.html"
 }
 </script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --burgundy: #9B1B4B;
-  --wine-dark: #5C0E2A;
-  --burgundy-pale: #f9f0f3;
-  --gold: #C9973A;
+  /* 2026-07-30: --burgundy/--burgundy-pale/--gold/--text/--text-sub/--border/
+     --wine-dark/--line-green はsommelin-ui.cssのブランドトークンに一本化 */
   --gold-light: #fdf6e8;
-  --line-green: #06C755;
-  --text: #2C1A1D;
-  --text-sub: #7A5A62;
-  --border: #ecdde2;
-  --bg: #F5F3F0;
+  --bg: var(--paper);
   --white: #ffffff;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  font-family: -apple-system, 'Hiragino Sans', 'Yu Gothic', sans-serif;
+  font-family: var(--font-body);
   background: var(--bg);
   color: var(--text);
   max-width: 430px;
@@ -85,12 +82,12 @@ body {
   color: white;
   letter-spacing: 0.5px;
 }
-.logo-text span { color: var(--gold); }
+.logo-text span { color: var(--foil-pale); }
 .header-login {
   background: rgba(255,255,255,0.15);
   color: white;
   border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 20px;
+  border-radius: var(--r-pill);
   padding: 7px 18px;
   font-size: 13px;
   font-weight: 700;
@@ -100,7 +97,7 @@ body {
 
 /* ── HERO ── */
 .hero {
-  background: linear-gradient(170deg, var(--wine-dark) 0%, #7A1535 55%, #9B2B4B 100%);
+  background: linear-gradient(170deg, var(--wine-dark) 0%, var(--wine) 55%, var(--wine-bright) 100%);
   padding: 40px 24px 48px;
   text-align: center;
   position: relative;
@@ -139,8 +136,9 @@ body {
 }
 .logo-icon * { display: none; }
 .hero h1 {
+  font-family: var(--font-display);
   font-size: 24px;
-  font-weight: 900;
+  font-weight: 700;
   color: white;
   line-height: 1.4;
   margin-bottom: 12px;
@@ -149,7 +147,7 @@ body {
 }
 .hero h1 em {
   font-style: normal;
-  color: var(--gold);
+  color: var(--foil-pale);
 }
 .hero-sub {
   font-size: 13px;
@@ -170,7 +168,7 @@ body {
   background: var(--line-green);
   color: white;
   border: none;
-  border-radius: 28px;
+  border-radius: var(--r-pill);
   padding: 16px 24px;
   font-size: 15px;
   font-weight: 800;
@@ -187,7 +185,7 @@ body {
   background: rgba(255,255,255,0.15);
   color: white;
   border: 1px solid rgba(255,255,255,0.35);
-  border-radius: 28px;
+  border-radius: var(--r-pill);
   padding: 14px 24px;
   font-size: 14px;
   font-weight: 700;
@@ -212,8 +210,9 @@ section { padding: 36px 20px; }
   margin-bottom: 8px;
 }
 .section-title {
+  font-family: var(--font-display);
   font-size: 20px;
-  font-weight: 900;
+  font-weight: 700;
   color: var(--text);
   line-height: 1.4;
   margin-bottom: 6px;
@@ -231,7 +230,7 @@ section { padding: 36px 20px; }
 .type-card {
   background: var(--burgundy-pale);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--r-card);
   padding: 20px;
   display: flex;
   gap: 16px;
@@ -245,7 +244,7 @@ section { padding: 36px 20px; }
 .type-icon {
   width: 52px;
   height: 52px;
-  border-radius: 14px;
+  border-radius: var(--r-card);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -279,7 +278,7 @@ section { padding: 36px 20px; }
 .feature-list { display: flex; flex-direction: column; gap: 16px; }
 .feature-item {
   background: white;
-  border-radius: 16px;
+  border-radius: var(--r-card);
   padding: 20px;
   display: flex;
   gap: 16px;
@@ -295,7 +294,7 @@ section { padding: 36px 20px; }
   align-items: center;
   justify-content: center;
   background: var(--burgundy-pale);
-  border-radius: 12px;
+  border-radius: var(--r-chip);
 }
 .feature-body {}
 .feature-title {
@@ -362,9 +361,9 @@ section { padding: 36px 20px; }
 
 /* ── LINE BANNER ── */
 .line-banner {
-  background: linear-gradient(135deg, #05a847 0%, #06C755 100%);
+  background: linear-gradient(135deg, var(--line-green-dark) 0%, var(--line-green) 100%);
   margin: 0 20px;
-  border-radius: 20px;
+  border-radius: var(--r-sheet);
   padding: 24px 20px;
   text-align: center;
   color: white;
@@ -382,9 +381,9 @@ section { padding: 36px 20px; }
 }
 .btn-line {
   background: white;
-  color: #06C755;
+  color: var(--line-green);
   border: none;
-  border-radius: 24px;
+  border-radius: var(--r-pill);
   padding: 14px 28px;
   font-size: 14px;
   font-weight: 800;
@@ -409,7 +408,7 @@ section { padding: 36px 20px; }
 .demo-card {
   background: white;
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--r-card);
   padding: 18px 14px;
   text-align: center;
   text-decoration: none;
@@ -424,7 +423,7 @@ section { padding: 36px 20px; }
 .demo-card-icon {
   width: 48px;
   height: 48px;
-  border-radius: 12px;
+  border-radius: var(--r-chip);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -440,7 +439,7 @@ section { padding: 36px 20px; }
   font-size: 10px;
   color: var(--burgundy);
   background: var(--burgundy-pale);
-  border-radius: 10px;
+  border-radius: var(--r-chip);
   padding: 2px 8px;
   font-weight: 700;
 }
@@ -458,7 +457,7 @@ footer {
   margin-bottom: 6px;
   letter-spacing: 1px;
 }
-.footer-logo span { color: var(--gold); }
+.footer-logo span { color: var(--foil-pale); }
 .footer-tagline {
   font-size: 11px;
   color: rgba(255,255,255,0.5);
@@ -502,14 +501,15 @@ footer {
   gap: 10px;
   background: var(--burgundy);
   color: white;
-  border-radius: 28px;
+  border-radius: var(--r-pill);
   padding: 16px 24px;
   font-size: 15px;
   font-weight: 800;
   text-decoration: none;
-  box-shadow: 0 8px 24px rgba(155,27,75,0.4);
+  box-shadow: var(--shadow-float);
 }
 </style>
+<link rel="stylesheet" href="assets/sommelin-ui.css?v=20260730">
 </head>
 <body>
 
@@ -724,7 +724,7 @@ footer {
   <div class="line-banner">
     <h3>🍷 LINEで試飲会情報を受け取ろう</h3>
     <p>国内インポーターが登録する試飲会・セミナー情報をLINEでお知らせ。見逃しがなくなります。</p>
-    <a href="https://line.me/R/ti/p/@sommelin_official" target="_blank" rel="noopener" class="btn-line">
+    <a href="https://lin.ee/oe6bcON" target="_blank" rel="noopener" class="btn-line">
       <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2C5.58 2 2 5.36 2 9.5c0 2.18.94 4.15 2.45 5.54L3.5 18l3.19-1.06A8.2 8.2 0 0010 17c4.42 0 8-3.36 8-7.5S14.42 2 10 2z" fill="#06C755"/></svg>
       LINEで友だち追加
     </a>
@@ -738,12 +738,12 @@ footer {
   <p class="section-desc">各画面のプロトタイプを直接確認できます。</p>
   <div class="demo-grid">
     <a href="restaurant_admin.html" class="demo-card">
-      <div class="demo-card-icon" style="background:#f9f0f3;">🏪</div>
+      <div class="demo-card-icon" style="background:var(--burgundy-pale);">🏪</div>
       <div class="demo-card-title">店舗管理画面</div>
       <div class="demo-card-badge">Bistrot Lumière</div>
     </a>
     <a href="importer_admin.html" class="demo-card">
-      <div class="demo-card-icon" style="background:#fdf6e8;">📦</div>
+      <div class="demo-card-icon" style="background:var(--gold-light);">📦</div>
       <div class="demo-card-title">インポーター管理</div>
       <div class="demo-card-badge">山田商店</div>
     </a>

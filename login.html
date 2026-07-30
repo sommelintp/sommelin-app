@@ -2,21 +2,15 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Sommelin — はじめる</title>
 <meta name="robots" content="noindex">
 <style>
 :root {
-  --burgundy: #9B1B4B;
-  --wine-dark: #5C0E2A;
-  --burgundy-pale: #f9f0f3;
-  --text: #2C1A1D;
-  --text-sub: #7A5A62;
-  --bg: #F5F3F0;
+  /* 2026-07-30: --burgundy/--burgundy-pale/--gold/--text/--text-sub/--border/
+     --wine-dark/--line-green はsommelin-ui.cssのブランドトークンに一本化（このstyle直後で読込） */
+  --bg: var(--paper, #F5F3F0);
   --white: #fff;
-  --border: #ecdde2;
-  --gold: #C9973A;
-  --line-green: #06C755;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -67,13 +61,14 @@ body {
   width: 56px; height: 56px; background: white; border-radius: 16px;
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  color: var(--burgundy);
 }
-.hero-name { color: white; font-size: 30px; font-weight: 800; letter-spacing: 1px; }
+.hero-name { color: white; font-size: 30px; font-weight: 700; letter-spacing: 1px; font-family: var(--font-display); }
 .hero-tagline { color: rgba(255,255,255,0.8); font-size: 13px; position: relative; }
 
 /* ── BODY PAD ── */
 .body-pad { flex: 1; padding: 28px 20px 48px; }
-.pg-lead { font-size: 20px; font-weight: 900; color: var(--text); margin-bottom: 6px; }
+.pg-lead { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 6px; font-family: var(--font-display); letter-spacing: 0.02em; }
 .pg-sub  { font-size: 13px; color: var(--text-sub); line-height: 1.7; margin-bottom: 24px; }
 
 /* ── ROLE CARDS ── */
@@ -87,7 +82,7 @@ body {
 .role-card:active { border-color: var(--burgundy); background: var(--burgundy-pale); transform: scale(0.98); }
 .role-card.selected { border-color: var(--burgundy); background: var(--burgundy-pale); }
 .role-icon {
-  width: 54px; height: 54px; border-radius: 14px;
+  width: 54px; height: 54px; border-radius: var(--r-card);
   display: flex; align-items: center; justify-content: center;
   font-size: 26px; flex-shrink: 0;
 }
@@ -124,7 +119,7 @@ body {
 /* ── BUTTONS ── */
 .btn-line {
   width: 100%; background: var(--line-green); color: white;
-  border: none; border-radius: 14px; padding: 16px;
+  border: none; border-radius: var(--r-card); padding: 16px;
   font-size: 16px; font-weight: 800; cursor: pointer;
   font-family: inherit; display: flex; align-items: center;
   justify-content: center; gap: 10px;
@@ -134,7 +129,7 @@ body {
 .btn-line:active { opacity: 0.85; }
 .btn-google {
   width: 100%; background: #fff; color: #3c4043;
-  border: 1.5px solid #dadce0; border-radius: 14px; padding: 15px;
+  border: 1.5px solid #dadce0; border-radius: var(--r-card); padding: 15px;
   font-size: 15px; font-weight: 700; cursor: pointer;
   font-family: inherit; display: flex; align-items: center;
   justify-content: center; gap: 10px;
@@ -143,14 +138,14 @@ body {
 .btn-google:active { opacity: 0.7; }
 .btn-primary {
   width: 100%; background: var(--burgundy); color: white;
-  border: none; border-radius: 14px; padding: 15px;
+  border: none; border-radius: var(--r-card); padding: 15px;
   font-size: 15px; font-weight: 800; cursor: pointer;
   font-family: inherit; transition: opacity 0.15s; margin-top: 4px;
 }
 .btn-primary:active { opacity: 0.85; }
 .btn-outline {
   width: 100%; background: white; color: var(--burgundy);
-  border: 2px solid var(--burgundy); border-radius: 14px; padding: 14px;
+  border: 2px solid var(--burgundy); border-radius: var(--r-card); padding: 14px;
   font-size: 14px; font-weight: 800; cursor: pointer;
   font-family: inherit; transition: all 0.15s; margin-top: 10px;
 }
@@ -198,7 +193,7 @@ body {
 /* ── VERIFY UPLOAD ── */
 .verify-methods { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
 .verify-method {
-  background: white; border: 2px solid var(--border); border-radius: 14px;
+  background: white; border: 2px solid var(--border); border-radius: var(--r-card);
   padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 14px;
   transition: all 0.15s;
 }
@@ -210,7 +205,7 @@ body {
 .verify-method .vm-sub   { font-size: 11px; color: var(--text-sub); }
 .verify-method .vm-check { font-size: 18px; color: var(--burgundy); }
 .upload-area {
-  border: 2px dashed var(--border); border-radius: 14px;
+  border: 2px dashed var(--border); border-radius: var(--r-card);
   padding: 28px 20px; text-align: center; cursor: pointer;
   background: var(--bg); transition: all 0.15s; margin-bottom: 14px;
 }
@@ -230,7 +225,7 @@ body {
   0%,100% { opacity:1; transform:scale(1); }
   50%      { opacity:0.5; transform:scale(1.3); }
 }
-.pending-title { font-size: 22px; font-weight: 900; color: var(--text); margin-bottom: 10px; }
+.pending-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 10px; font-family: var(--font-display); letter-spacing: 0.02em; }
 .pending-sub { font-size: 14px; color: var(--text-sub); line-height: 1.7; margin-bottom: 28px; }
 .pending-timeline {
   width: 100%; background: white; border: 1px solid var(--border);
@@ -282,19 +277,19 @@ body {
 .verify-progress {
   display: flex; align-items: center; gap: 12px;
   background: white; border: 1.5px solid var(--border);
-  border-radius: 14px; padding: 12px 16px; margin-bottom: 16px;
+  border-radius: var(--r-card); padding: 12px 16px; margin-bottom: 16px;
 }
 .vp-track { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
 .vp-fill  { height: 100%; border-radius: 4px; background: var(--burgundy); transition: width 0.4s ease; width: 0%; }
-.vp-fill.done { background: #06C755; }
+.vp-fill.done { background: var(--line-green); }
 .vp-label { font-size: 13px; font-weight: 800; color: var(--text); white-space: nowrap; }
 .vp-label span { color: var(--burgundy); font-size: 18px; }
-.vp-label.done span { color: #06C755; }
+.vp-label.done span { color: var(--line-green); }
 
 .verify-block { margin-bottom: 10px; }
 .verify-method {
   background: white; border: 2px solid var(--border);
-  border-radius: 14px; padding: 14px 16px;
+  border-radius: var(--r-card); padding: 14px 16px;
   cursor: pointer; display: flex; align-items: center; gap: 13px;
   transition: all 0.15s;
 }
@@ -313,7 +308,7 @@ body {
 .vm-expand {
   display: none;
   background: var(--burgundy-pale); border: 2px solid var(--burgundy);
-  border-top: none; border-bottom-left-radius: 14px; border-bottom-right-radius: 14px;
+  border-top: none; border-bottom-left-radius: var(--r-card); border-bottom-right-radius: var(--r-card);
   padding: 14px 16px;
 }
 .vm-expand.open { display: block; animation: expandDown 0.2s ease; }
@@ -328,7 +323,7 @@ body {
 .vm-upload-label { font-size: 12px; font-weight: 700; color: var(--text-sub); }
 .vm-upload-sub   { font-size: 10px; color: var(--text-sub); margin-top: 2px; }
 .vm-url-input {
-  width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
+  width: 100%; border: 1.5px solid var(--border); border-radius: var(--r-chip);
   padding: 11px 14px; font-size: 14px; font-family: inherit;
   color: var(--text); outline: none; background: white;
 }
@@ -352,6 +347,10 @@ body {
 .step-dot.done { background: var(--burgundy); }
 .step-dot.active { background: var(--burgundy); width: 22px; border-radius: 4px; }
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/sommelin-ui.css?v=20260730">
 </head>
 <body>
 
@@ -363,11 +362,11 @@ body {
     <div class="hero-logo">
       <div class="hero-icon">
         <svg viewBox="0 0 40 40" width="38" height="38" fill="none">
-          <path d="M10 6 L30 6 L26 22 Q20 30 20 34 L14 34 Q14 30 16 22 Z" fill="none" stroke="#9B1B4B" stroke-width="2" stroke-linejoin="round"/>
-          <path d="M10 15 L30 15" stroke="#9B1B4B" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
-          <path d="M10 16 L30 15 L28 22 Q20 28 16 22 Z" fill="rgba(155,27,75,0.12)"/>
-          <line x1="20" y1="34" x2="20" y2="38" stroke="#9B1B4B" stroke-width="2" stroke-linecap="round"/>
-          <line x1="14" y1="38" x2="26" y2="38" stroke="#9B1B4B" stroke-width="2" stroke-linecap="round"/>
+          <path d="M10 6 L30 6 L26 22 Q20 30 20 34 L14 34 Q14 30 16 22 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M10 15 L30 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+          <path d="M10 16 L30 15 L28 22 Q20 28 16 22 Z" fill="currentColor" fill-opacity="0.12"/>
+          <line x1="20" y1="34" x2="20" y2="38" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="14" y1="38" x2="26" y2="38" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
       </div>
       <div class="hero-name">Sommelin</div>
@@ -521,10 +520,10 @@ body {
     <div class="hero-logo" style="margin-bottom:8px;">
       <div class="hero-icon" style="width:42px;height:42px;border-radius:12px;">
         <svg viewBox="0 0 40 40" width="30" height="30" fill="none">
-          <path d="M10 6 L30 6 L26 22 Q20 30 20 34 L14 34 Q14 30 16 22 Z" fill="none" stroke="#9B1B4B" stroke-width="2" stroke-linejoin="round"/>
-          <path d="M10 16 L30 15 L28 22 Q20 28 16 22 Z" fill="rgba(155,27,75,0.2)"/>
-          <line x1="20" y1="34" x2="20" y2="38" stroke="#9B1B4B" stroke-width="2" stroke-linecap="round"/>
-          <line x1="14" y1="38" x2="26" y2="38" stroke="#9B1B4B" stroke-width="2" stroke-linecap="round"/>
+          <path d="M10 6 L30 6 L26 22 Q20 30 20 34 L14 34 Q14 30 16 22 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M10 16 L30 15 L28 22 Q20 28 16 22 Z" fill="currentColor" fill-opacity="0.2"/>
+          <line x1="20" y1="34" x2="20" y2="38" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="14" y1="38" x2="26" y2="38" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
       </div>
       <div class="hero-name" style="font-size:22px;">Sommelin</div>
@@ -644,8 +643,8 @@ body {
       <div id="cardBackSection" style="display:none;margin-top:12px;">
         <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--text-sub);margin-bottom:6px;">
           🔄 裏面
-          <span style="font-size:10px;background:#f0fdf4;color:#16a34a;padding:2px 7px;border-radius:8px;font-weight:700;">任意 — 精度が上がります</span>
-          <span id="backCheckmark" style="color:#06C755;font-size:11px;font-weight:700;margin-left:auto;display:none;">✓ 完了</span>
+          <span style="font-size:10px;background:#f0fdf4;color:var(--ok);padding:2px 7px;border-radius:8px;font-weight:700;">任意 — 精度が上がります</span>
+          <span id="backCheckmark" style="color:var(--line-green);font-size:11px;font-weight:700;margin-left:auto;display:none;">✓ 完了</span>
         </div>
         <div class="vm-upload" id="vmup-back" onclick="pickCard('back')" style="border-color:#ccc;background:#fafafa;">
           <div class="vm-upload-icon" id="vmupIcon-back">📷</div>
@@ -659,7 +658,7 @@ body {
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
       <span style="font-size:14px;font-weight:800;color:var(--text);">🔗 URLを1つ以上入力</span>
       <span style="background:var(--burgundy);color:white;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;letter-spacing:0.5px;">必須</span>
-      <span id="urlCheckmark" style="color:#06C755;font-size:12px;font-weight:700;margin-left:auto;display:none;">✓ 完了</span>
+      <span id="urlCheckmark" style="color:var(--line-green);font-size:12px;font-weight:700;margin-left:auto;display:none;">✓ 完了</span>
     </div>
 
     <!-- ホームページ -->
@@ -763,13 +762,13 @@ body {
       <span style="font-size:24px;">✨</span>
       <div>
         <div id="cfBannerTitle" style="font-size:13px;font-weight:800;color:#15803d;">AIが名刺から情報を読み取りました</div>
-        <div id="cfBannerSub" style="font-size:11px;color:#16a34a;margin-top:2px;">内容を確認・修正してから申請してください</div>
+        <div id="cfBannerSub" style="font-size:11px;color:var(--ok);margin-top:2px;">内容を確認・修正してから申請してください</div>
       </div>
     </div>
 
     <!-- 名刺サムネイル（renew時は非表示） -->
     <div id="cfThumbs" style="display:flex;gap:10px;margin-bottom:16px;">
-      <div id="thumbFront" style="flex:1;height:72px;background:linear-gradient(135deg,#9B1B4B,#C84B6B);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;">
+      <div id="thumbFront" style="flex:1;height:72px;background:linear-gradient(135deg,var(--wine),#C84B6B);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;">
         <span style="font-size:20px;">📇</span>
         <span style="color:white;font-size:10px;font-weight:700;">表面 ✓</span>
       </div>
@@ -831,13 +830,13 @@ body {
   <div class="pending-center">
     <div class="pending-icon" style="font-size:60px;margin-bottom:8px;">✅</div>
     <div class="pending-title" style="font-size:20px;">申請を受け付けました！</div>
-    <div style="font-size:15px;font-weight:700;color:#06C755;margin-bottom:8px;">すぐにご利用いただけます</div>
+    <div style="font-size:15px;font-weight:700;color:var(--line-green);margin-bottom:8px;">すぐにご利用いただけます</div>
     <div class="pending-sub">バックグラウンドでAIが自動確認を行っています。<br>問題がある場合のみ後日ご連絡します。</div>
 
     <div class="pending-timeline" style="margin:20px 0 24px;">
       <div class="pt-row">
-        <div class="pt-dot" style="background:#06C755;"></div>
-        <div class="pt-text"><strong>申請受付・即時利用可能</strong> <span style="color:#06C755;">✓ 完了</span></div>
+        <div class="pt-dot" style="background:var(--line-green);"></div>
+        <div class="pt-text"><strong>申請受付・即時利用可能</strong> <span style="color:var(--line-green);">✓ 完了</span></div>
       </div>
       <div class="pt-row">
         <div class="pt-dot" style="background:var(--gold);animation:pulse 1.5s infinite;"></div>
@@ -871,10 +870,10 @@ body {
     <div class="hero-logo">
       <div class="hero-icon">
         <svg viewBox="0 0 40 40" width="38" height="38" fill="none">
-          <path d="M10 6 L30 6 L26 22 Q20 30 20 34 L14 34 Q14 30 16 22 Z" fill="none" stroke="#9B1B4B" stroke-width="2" stroke-linejoin="round"/>
-          <path d="M10 16 L30 15 L28 22 Q20 28 16 22 Z" fill="rgba(155,27,75,0.15)"/>
-          <line x1="20" y1="34" x2="20" y2="38" stroke="#9B1B4B" stroke-width="2" stroke-linecap="round"/>
-          <line x1="14" y1="38" x2="26" y2="38" stroke="#9B1B4B" stroke-width="2" stroke-linecap="round"/>
+          <path d="M10 6 L30 6 L26 22 Q20 30 20 34 L14 34 Q14 30 16 22 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M10 16 L30 15 L28 22 Q20 28 16 22 Z" fill="currentColor" fill-opacity="0.15"/>
+          <line x1="20" y1="34" x2="20" y2="38" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="14" y1="38" x2="26" y2="38" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
       </div>
       <div class="hero-name">Sommelin</div>

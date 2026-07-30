@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title data-i18n="doc_title">ソムリン スカウター — 撮るだけでワインがわかる</title>
 <meta name="robots" content="noindex">
 
@@ -39,13 +39,13 @@ body{
 .perm-em{font-size:58px;margin-bottom:16px;}
 .perm-title{font-family:var(--font-display);font-size:26px;font-weight:700;margin-bottom:8px;line-height:1.3;}
 .perm-desc{font-size:13px;color:rgba(255,255,255,.72);line-height:1.8;margin-bottom:22px;}
-.perm-feats{text-align:left;width:100%;background:rgba(255,255,255,.1);border-radius:14px;padding:14px 16px;margin-bottom:24px;}
+.perm-feats{text-align:left;width:100%;background:rgba(255,255,255,.1);border-radius:var(--r-card);padding:14px 16px;margin-bottom:24px;}
 .pf{font-size:13px;color:rgba(255,255,255,.85);padding:5px 0;line-height:1.7;}
-.perm-main{width:100%;padding:16px;background:#fff;color:var(--burgundy);font-size:16px;font-weight:800;border:none;border-radius:16px;cursor:pointer;margin-bottom:12px;}
+.perm-main{width:100%;padding:16px;background:#fff;color:var(--burgundy);font-size:16px;font-weight:800;border:none;border-radius:var(--r-card);cursor:pointer;margin-bottom:12px;}
 .perm-sub{background:none;border:none;color:rgba(255,255,255,.6);font-size:13px;cursor:pointer;text-decoration:underline;}
 .perm-note{font-size:10px;color:rgba(255,255,255,.45);margin-top:14px;line-height:1.6;}
 .lang-toggle{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);
-  color:#fff;font-size:12px;font-weight:700;padding:6px 12px;border-radius:20px;cursor:pointer;}
+  color:#fff;font-size:12px;font-weight:700;padding:6px 12px;border-radius:var(--r-pill);cursor:pointer;}
 
 /* ── SCAN VIEW ── */
 #scanview{position:fixed;inset:0;max-width:430px;margin:0 auto;display:none;}
@@ -167,36 +167,36 @@ body{
 #backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:80;opacity:0;pointer-events:none;transition:opacity .3s;}
 #backdrop.on{opacity:1;pointer-events:all;}
 #sheet{position:fixed;bottom:0;left:50%;max-width:430px;width:100%;transform:translateX(-50%) translateY(108%);
-  background:#fff;border-radius:22px 22px 0 0;z-index:90;padding-bottom:calc(76px + env(safe-area-inset-bottom));color:#2C1810;
+  background:#fff;border-radius:var(--r-sheet) var(--r-sheet) 0 0;z-index:90;padding-bottom:calc(76px + env(safe-area-inset-bottom));color:var(--wine-ink);
   transition:transform .36s cubic-bezier(.34,1.56,.64,1);max-height:90dvh;overflow-y:auto;}
 #sheet.on{transform:translateX(-50%) translateY(0);}
 /* 裏ラベル撮影（AE-2） */
 .back-box{margin:10px 0;padding:10px 12px;border:1px dashed rgba(114,47,55,.35);border-radius:12px;background:rgba(114,47,55,.04);}
 .back-box.done{border-style:solid;background:rgba(46,125,50,.06);border-color:rgba(46,125,50,.35);}
-.back-cta{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px;border:none;border-radius:10px;
+.back-cta{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px;border:none;border-radius:var(--r-chip);
   background:var(--burgundy,#722f37);color:#fff;font-size:14px;font-weight:700;cursor:pointer;}
-.back-xp{background:#f6c344;color:#5a3d00;border-radius:999px;padding:2px 8px;font-size:12px;font-weight:800;}
-.back-hint{margin-top:6px;font-size:11.5px;color:#8a7a6e;text-align:center;}
+.back-xp{background:#f6c344;color:#5a3d00;border-radius:var(--r-pill);padding:2px 8px;font-size:12px;font-weight:800;}
+.back-hint{margin-top:6px;font-size:11.5px;color:var(--text-sub);text-align:center;}
 .back-title{font-size:13px;font-weight:700;color:#2e7d32;margin-bottom:4px;}
 .back-rows{font-size:12.5px;color:#4a3f38;line-height:1.7;}
 .sh-handle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:12px auto;}
-.sh-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:800;color:#fff;margin:0 20px 8px;}
+.sh-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:var(--r-pill);font-size:11px;font-weight:800;color:#fff;margin:0 20px 8px;}
 .sh-name{font-family:var(--font-display);font-size:22px;font-weight:700;padding:0 20px;line-height:1.3;}
 .sh-vintage-badge{display:inline-block;font-size:12px;font-weight:700;color:var(--burgundy);
   background:var(--burgundy-pale,#f7e6ee);border-radius:8px;padding:1px 7px;vertical-align:middle;margin-left:2px;}
 .sh-producer{font-size:13px;font-weight:600;color:#555;padding:4px 20px 0;}
 .sh-region{font-size:12px;color:#888;padding:2px 20px 12px;}
 .sh-importer{font-size:12.5px;color:#5a4a4d;padding:2px 20px 10px;}
-.sh-importer b{color:#2C1810;}
+.sh-importer b{color:var(--wine-ink);}
 .sh-backlist{display:inline-block;margin:0 0 10px 16px;padding:6px 12px;border:none;background:none;color:var(--burgundy);
   font-size:13px;font-weight:800;cursor:pointer;}
 /* 結果一覧シート（タスクD） */
 .rl-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:4px 20px 12px;
-  font-family:var(--font-display);font-size:19px;font-weight:700;color:#2C1810;}
+  font-family:var(--font-display);font-size:19px;font-weight:700;color:var(--wine-ink);}
 .rl-count{font-family:var(--font);font-size:12px;font-weight:700;color:#8a7a7d;white-space:nowrap;}
 .rl-list{display:flex;flex-direction:column;gap:8px;padding:0 12px 4px;}
 .rl-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 12px;border:1px solid #efe6e8;
-  border-radius:14px;background:#fff;cursor:pointer;font:inherit;color:inherit;}
+  border-radius:var(--r-card);background:#fff;cursor:pointer;font:inherit;color:inherit;}
 .rl-row:active{background:#faf5f6;}
 .rl-dim{opacity:.55;cursor:default;}
 .rl-badge{flex:0 0 auto;min-width:46px;height:40px;display:flex;align-items:center;justify-content:center;
@@ -205,7 +205,7 @@ body{
 .rl-unlisted{border-color:#5bd08a;color:#1f7a4d;background:#effaf3;}
 .rl-pending,.rl-unread{border-color:#ddd;color:#999;background:#f6f2f3;}
 .rl-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px;}
-.rl-title{font-size:14.5px;font-weight:700;color:#2C1810;line-height:1.25;overflow:hidden;text-overflow:ellipsis;}
+.rl-title{font-size:14.5px;font-weight:700;color:var(--wine-ink);line-height:1.25;overflow:hidden;text-overflow:ellipsis;}
 .rl-vin{font-size:11px;color:#8a7a7d;font-weight:700;}
 .rl-sub{font-size:12px;color:#8a7a7d;line-height:1.25;overflow:hidden;text-overflow:ellipsis;}
 .rl-arrow{flex:0 0 auto;color:#c9b8bb;font-size:20px;font-weight:700;}
@@ -215,7 +215,7 @@ body{
 .sh-cell{flex:1;text-align:center;}
 .sh-cell .v{font-size:26px;font-weight:900;line-height:1.1;}
 .sh-cell .l{font-size:10px;color:#999;margin-top:3px;}
-.cospa-badge{margin:14px 16px;border-radius:14px;padding:14px 16px;color:#fff;text-align:center;}
+.cospa-badge{margin:14px 16px;border-radius:var(--r-card);padding:14px 16px;color:#fff;text-align:center;}
 .cospa-badge .stars{font-size:22px;letter-spacing:2px;}
 .cospa-badge .lbl{font-size:14px;font-weight:800;margin-top:4px;}
 .cospa-badge .sub{font-size:11px;opacity:.9;margin-top:4px;}
@@ -226,12 +226,12 @@ body{
 .fit-ribbon .fr2{font-weight:600;color:#a3547a;}
 /* 2026-07-12（#22）: 評価の多軸化バッジ。style-noteは控えめな金縁、vintage-noteはさらに軽い注記 */
 .style-note{margin:0 16px 6px;border:1.5px solid var(--gold,#C9973A);color:#8a6a1a;
-  border-radius:10px;padding:7px 12px;font-size:11.5px;font-weight:700;text-align:center;}
+  border-radius:var(--r-chip);padding:7px 12px;font-size:11.5px;font-weight:700;text-align:center;}
 .vintage-note{margin:0 16px 10px;color:#888;font-size:11px;text-align:center;line-height:1.5;}
 /* list result rows */
-.li-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 16px 8px;padding:10px 12px;background:#f7f5f3;border-radius:10px;}
+.li-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 16px 8px;padding:10px 12px;background:#f7f5f3;border-radius:var(--r-chip);}
 .li-row.hit{background:#fdf6ee;border:1px solid #ecd9bd;}
-.li-row .ln{font-size:13px;font-weight:700;color:#2C1810;line-height:1.4;}
+.li-row .ln{font-size:13px;font-weight:700;color:var(--wine-ink);line-height:1.4;}
 .li-row .lr{font-size:11px;color:#999;margin-top:2px;}
 .li-row .lb{font-size:10px;font-weight:800;margin-top:3px;display:flex;gap:6px;flex-wrap:wrap;}
 .li-row .lb .b1{color:#7d1240;background:#f8e3ec;border-radius:8px;padding:1px 7px;}
@@ -243,36 +243,36 @@ body{
 .sh-style{margin:0 16px 12px;background:#f6f2ee;border-left:3px solid var(--gold);border-radius:0 12px 12px 0;padding:10px 14px;font-size:12px;color:#5a4634;line-height:1.7;}
 .sh-style .dc{font-size:10px;color:#a08b74;margin-top:4px;}
 .sh-btns{display:flex;gap:10px;padding:0 16px;}
-.sh-main{flex:1;padding:14px;background:var(--burgundy);color:#fff;font-size:14px;font-weight:800;border:none;border-radius:14px;cursor:pointer;}
-.sh-sub{padding:14px 16px;background:#f5f3f0;color:#555;font-size:13px;border:none;border-radius:14px;cursor:pointer;}
+.sh-main{flex:1;padding:14px;background:var(--burgundy);color:#fff;font-size:14px;font-weight:800;border:none;border-radius:var(--r-card);cursor:pointer;}
+.sh-sub{padding:14px 16px;background:#f5f3f0;color:#555;font-size:13px;border:none;border-radius:var(--r-card);cursor:pointer;}
 
 /* ── 推し活（❤️気に入った→評価→生産者へ届ける） ── */
 .sh-like{display:block;width:calc(100% - 32px);margin:0 16px 10px;padding:14px;
-  background:linear-gradient(135deg,#C9973A,#a8781f);color:#fff;font-size:14px;font-weight:800;
-  border:none;border-radius:14px;cursor:pointer;}
+  background:linear-gradient(135deg,var(--gold),#a8781f);color:#fff;font-size:14px;font-weight:800;
+  border:none;border-radius:var(--r-card);cursor:pointer;}
 .oshi-step{padding:4px 20px 0;}
 .oshi-title{font-size:17px;font-weight:800;margin:6px 0 2px;}
 .oshi-sub{font-size:12px;color:#888;margin-bottom:10px;line-height:1.5;}
 .oshi-score{text-align:center;font-size:54px;font-weight:800;color:var(--burgundy);line-height:1;margin:10px 0 0;}
 .oshi-score small{font-size:16px;color:#aaa;font-weight:700;}
-.oshi-stars{text-align:center;font-size:19px;letter-spacing:3px;margin:4px 0 2px;color:#C9973A;}
+.oshi-stars{text-align:center;font-size:19px;letter-spacing:3px;margin:4px 0 2px;color:var(--gold);}
 .oshi-slider{width:100%;margin:10px 0 6px;accent-color:var(--burgundy);height:34px;}
-.oshi-channel{border:1.5px solid #eee;border-radius:14px;padding:14px;margin-bottom:12px;}
+.oshi-channel{border:1.5px solid #eee;border-radius:var(--r-card);padding:14px;margin-bottom:12px;}
 .oshi-channel-head{font-weight:800;font-size:14px;margin-bottom:2px;}
 .oshi-channel-sub{font-size:11.5px;color:#888;margin-bottom:8px;line-height:1.5;}
-.oshi-comment{width:100%;box-sizing:border-box;border:1.5px solid #eee;border-radius:10px;padding:9px 11px;
+.oshi-comment{width:100%;box-sizing:border-box;border:1.5px solid #eee;border-radius:var(--r-chip);padding:9px 11px;
   font-size:13px;font-family:inherit;resize:none;min-height:44px;margin-bottom:8px;}
 .oshi-filter-btn{width:100%;padding:11px;border:none;border-radius:12px;background:var(--burgundy);
   color:#fff;font-weight:800;font-size:13.5px;cursor:pointer;}
 .oshi-filter-btn:disabled{opacity:.5;}
 .oshi-filter-done{color:var(--burgundy);font-weight:800;font-size:13px;text-align:center;padding:6px 0;}
-.oshi-photo-retake{display:block;margin:8px auto 0;padding:9px 16px;border:1.5px solid #ddd;border-radius:20px;background:#fff;color:#555;font-size:12.5px;font-weight:700;cursor:pointer;}
+.oshi-photo-retake{display:block;margin:8px auto 0;padding:9px 16px;border:1.5px solid #ddd;border-radius:var(--r-pill);background:#fff;color:#555;font-size:12.5px;font-weight:700;cursor:pointer;}
 .oshi-score-row{display:flex;align-items:center;justify-content:space-between;background:#faf7f4;border-radius:12px;padding:13px 16px;margin:16px 0 6px;cursor:pointer;}
 /* カードのパターン選択（2026-07-24: 額装/写真全面） */
-.oshi-style-seg{display:flex;background:#faf7f4;border:1.5px solid #eee;border-radius:14px;padding:4px;margin:14px 0 0;}
+.oshi-style-seg{display:flex;background:#faf7f4;border:1.5px solid #eee;border-radius:var(--r-card);padding:4px;margin:14px 0 0;}
 .oshi-style-seg button{flex:1;border:none;background:none;color:#8a7360;font-size:13px;font-weight:700;padding:9px 8px;border-radius:10px;cursor:pointer;font-family:inherit;}
 .oshi-style-seg button.on{background:var(--burgundy);color:#fff;}
-.oshi-score-row span:first-child{font-size:13.5px;font-weight:700;color:#2C1810;}
+.oshi-score-row span:first-child{font-size:13.5px;font-weight:700;color:var(--wine-ink);}
 .oshi-switch{position:relative;display:inline-block;width:44px;height:26px;flex-shrink:0;}
 .oshi-switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1;}
 .oshi-switch-track{position:absolute;inset:0;background:#ddd;border-radius:14px;transition:background .2s;}
@@ -280,8 +280,8 @@ body{
 .oshi-switch input:checked ~ .oshi-switch-track{background:var(--burgundy);}
 .oshi-switch input:checked ~ .oshi-switch-track::after{transform:translateX(18px);}
 .oshi-ig-block{background:#faf7f4;border-radius:12px;padding:13px 15px;margin:14px 0;text-align:left;}
-.oshi-ig-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:700;color:#2C1810;}
-.oshi-ig-q{font-size:12.5px;font-weight:700;color:#2C1810;margin-bottom:8px;}
+.oshi-ig-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:700;color:var(--wine-ink);}
+.oshi-ig-q{font-size:12.5px;font-weight:700;color:var(--wine-ink);margin-bottom:8px;}
 .oshi-ig-profile{display:inline-block;font-size:12.5px;color:var(--burgundy);font-weight:700;text-decoration:underline;margin-bottom:10px;}
 .oshi-ig-actions{display:flex;gap:8px;}
 .oshi-ig-yes{flex:1;padding:9px;border:none;border-radius:10px;background:var(--burgundy);color:#fff;font-weight:800;font-size:12.5px;cursor:pointer;}
@@ -296,21 +296,21 @@ body{
 .oshi-store-list{margin-top:8px;display:flex;flex-direction:column;gap:6px;}
 .oshi-store-item{padding:8px 10px;border:1.5px solid #eee;border-radius:8px;cursor:pointer;background:#fff;text-align:left;}
 .oshi-store-item:active{background:#faf7f4;}
-.oshi-store-item-name{font-size:12.5px;font-weight:700;color:#2C1810;}
+.oshi-store-item-name{font-size:12.5px;font-weight:700;color:var(--wine-ink);}
 .oshi-store-item-ig{font-size:11px;color:var(--burgundy);margin-top:1px;}
 #oshiOverlay{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.85);display:none;
   align-items:center;justify-content:center;flex-direction:column;padding:16px;}
 #oshiOverlay.on{display:flex;}
-#oshiOverlay img{max-height:52dvh;max-width:82%;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.6);}
+#oshiOverlay img{max-height:52dvh;max-width:82%;border-radius:var(--r-card);box-shadow:0 10px 40px rgba(0,0,0,.6);}
 .oshi-hint{color:rgba(255,255,255,.85);font-size:11px;line-height:1.6;margin:10px 0 4px;max-width:86%;text-align:center;}
 .oshi-actions{display:flex;flex-direction:column;gap:8px;width:86%;max-width:340px;margin-top:8px;}
-.oshi-actions .a1{padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#C9973A,#a8781f);
+.oshi-actions .a1{padding:14px;border:none;border-radius:var(--r-card);background:linear-gradient(135deg,var(--gold),#a8781f);
   color:#fff;font-weight:800;font-size:14px;cursor:pointer;}
-.oshi-actions .a2{padding:11px;border:1.5px solid rgba(255,255,255,.5);border-radius:14px;
+.oshi-actions .a2{padding:11px;border:1.5px solid rgba(255,255,255,.5);border-radius:var(--r-card);
   background:rgba(255,255,255,.12);color:#fff;font-weight:700;font-size:13px;cursor:pointer;}
 .cand-h{font-size:11px;color:#999;margin:10px 16px 6px;font-weight:700;}
-.cand-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 16px 8px;padding:10px 12px;background:#f7f5f3;border-radius:10px;cursor:pointer;}
-.cand-row .cn{font-size:13px;font-weight:700;color:#2C1810;}
+.cand-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 16px 8px;padding:10px 12px;background:#f7f5f3;border-radius:var(--r-chip);cursor:pointer;}
+.cand-row .cn{font-size:13px;font-weight:700;color:var(--wine-ink);}
 .cand-row .cr{font-size:11px;color:#999;margin-top:2px;}
 .cand-row .cw{font-size:10px;color:var(--burgundy);margin-top:3px;}
 .cand-row .cc{font-size:11px;font-weight:800;color:var(--burgundy);white-space:nowrap;text-align:right;}
@@ -319,7 +319,7 @@ body{
 .idcard{margin:6px 16px 12px;background:#faf8f6;border:1px solid #eee5dc;border-radius:12px;padding:12px 14px;}
 .idrow{display:flex;gap:10px;font-size:12px;padding:3px 0;line-height:1.6;}
 .idrow .k{color:#a09383;width:64px;flex-shrink:0;}
-.idrow .v{color:#2C1810;font-weight:600;word-break:break-word;}
+.idrow .v{color:var(--wine-ink);font-weight:600;word-break:break-word;}
 
 /* toast */
 #toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%) translateY(16px);background:rgba(15,15,15,.92);color:#fff;
@@ -955,11 +955,13 @@ applyI18n();
 
 <script>
 // ── backend（ビジョンAI）。キーは backend のみ・フロントには置かない ──
-// Cloud Run の URL を下に設定（?api=https://... で上書き可・端末に保存されます）
+// Cloud Run の URL。?api=/localStorage での差し替えはローカル開発時のみ有効（本番は固定）
 const API_BASE = (()=>{
+  const prod = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+  if(location.hostname!=='localhost' && location.hostname!=='127.0.0.1') return prod;
   const p = new URLSearchParams(location.search).get('api');
   if(p){ localStorage.setItem('somm_api_base', p.replace(/\/$/,'')); }
-  return localStorage.getItem('somm_api_base') || 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+  return localStorage.getItem('somm_api_base') || prod;
 })();
 
 // ── Supabase（ユーザー操作の記録のみ。publishable キー＝anon・RLSでinsert限定） ──
@@ -1917,7 +1919,7 @@ function oshiAskShare(){
       <div class="oshi-channel" style="text-align:left">
         <div class="oshi-channel-head">${t('oshi_ig_head')}</div>
         <div class="oshi-channel-sub">${t('oshi_ig_sub')}</div>
-        <button class="oshi-filter-btn" style="background:linear-gradient(135deg,#C9973A,#a8781f)" onclick="oshiCardSetup()">${t('oshi_ask_go')}</button>
+        <button class="oshi-filter-btn" style="background:linear-gradient(135deg,var(--gold),#a8781f)" onclick="oshiCardSetup()">${t('oshi_ask_go')}</button>
       </div>
 
       <div class="sh-btns" style="padding:2px 0 10px">

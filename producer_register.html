@@ -2,13 +2,13 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ソムリン — 生産者の公式アカウント申請</title>
 <meta name="description" content="ワイン生産者・ワイナリー様向け、ソムリン公式アカウントの申請ページです。ユーザーからの「推し活」メンションが届くようになり、ファンとのつながりを可視化できます。">
 <link rel="canonical" href="https://sommelintp.github.io/sommelin-app/producer_register.html">
 <meta name="theme-color" content="#5C0E2A">
 <style>
-:root{ --burgundy:#9B1B4B; --wine-dark:#5C0E2A; --gold:#C9973A; --bg:#F8F4EF; --text:#2C1810; --text-sub:#7A6055; --border:#E8DDD5; }
+:root{ --burgundy:var(--wine,#9B1B4B); --wine-dark:#5C0E2A; --gold:var(--foil,#C9973A); --bg:var(--paper,#F8F4EF); --text:var(--wine-ink,#2C1810); --text-sub:#7A6055; --border:var(--line,#E8DDD5); }
 *{ box-sizing:border-box; margin:0; padding:0; }
 body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg); color:var(--text);
   max-width:430px; margin:0 auto; min-height:100dvh; padding:0 0 60px; }
@@ -41,6 +41,7 @@ textarea{ min-height:90px; resize:vertical; }
   padding:10px 20px; border-radius:20px; font-size:13px; font-weight:700; opacity:0; transition:all .3s; z-index:400; white-space:nowrap; }
 #toast.on{ opacity:1; }
 </style>
+<link rel="stylesheet" href="assets/sommelin-ui.css?v=20260730">
 </head>
 <body>
 

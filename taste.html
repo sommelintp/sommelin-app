@@ -2,12 +2,15 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ソムリン — 好みのワインを登録</title>
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#5C0E2A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
 <style>
-:root{ --burgundy:#9B1B4B; --wine-dark:#5C0E2A; --gold:#C9973A; }
+/* 2026-07-30: --burgundy/--wine-dark/--goldはsommelin-ui.cssのトークンに一本化 */
 *{ box-sizing:border-box; margin:0; padding:0; }
 body{
   font-family:-apple-system,'Hiragino Sans',sans-serif;
@@ -16,9 +19,9 @@ body{
   padding:0 0 40px;
 }
 .top{padding:52px 16px 6px;display:flex;align-items:center;gap:12px;}
-.top a{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;
+.top a{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;
   font-size:18px;display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0;}
-.top .t1{font-size:17px;font-weight:800;}
+.top .t1{font-family:var(--font-display);font-size:17px;font-weight:700;}
 .top .t2{font-size:11px;color:rgba(255,255,255,.6);margin-top:1px;}
 .top .titles{flex:1;}
 .lang-toggle{background:rgba(255,255,255,.12);border:none;color:#fff;font-size:12px;font-weight:700;
@@ -63,21 +66,23 @@ body{
 /* フィルター確認カード */
 .fsection{margin-top:18px;}
 .fsection-head{font-size:12px;font-weight:800;color:rgba(255,255,255,.85);margin-bottom:8px;}
-.fcard{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:12px 14px;margin-bottom:8px;}
+.fcard{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:var(--r-card);padding:12px 14px;margin-bottom:8px;}
 .fcard .fn{font-size:13px;font-weight:700;line-height:1.4;}
 .fcard .fr{font-size:11px;color:rgba(255,255,255,.55);margin-top:2px;}
 .frow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;}
 .fstars{font-size:20px;letter-spacing:2px;cursor:pointer;}
 .fstar{color:rgba(255,255,255,.25);}
-.fstar.on{color:var(--gold);}
+.fstar.on{color:var(--foil-pale);} /* ダーク背景上の金はfoil-pale（デザインシステム） */
 .fcheck{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,.75);cursor:pointer;white-space:nowrap;}
-.fcomment{width:100%;margin-top:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:10px;
+.fcomment{width:100%;margin-top:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:var(--r-chip);
   padding:8px 10px;font-size:12px;color:#fff;font-family:inherit;resize:none;min-height:36px;}
 .fcomment::placeholder{color:rgba(255,255,255,.4);}
 .fsavebtn{width:100%;padding:14px;background:var(--gold);color:#3d2a05;font-size:14px;font-weight:800;
-  border:none;border-radius:14px;cursor:pointer;margin-top:6px;}
+  border:none;border-radius:var(--r-card);cursor:pointer;margin-top:6px;}
 .fsavebtn:disabled{opacity:.5;}
 </style>
+<!-- sommelin-ui.css: ブランドトークン（インライン<style>より後に読み込み、トークンを勝たせる） -->
+<link rel="stylesheet" href="assets/sommelin-ui.css?v=20260730">
 </head>
 <body>
 
@@ -231,11 +236,13 @@ function setLang(l) {
   if (window.sommLog) sommLog('lang_switch', { lang: l });
 }
 
-// scouter.html と同じ設定を共有（?api= 上書き・匿名ID）
+// scouter.html と同じ設定を共有（匿名ID）。?api=/localStorage での差し替えはローカル開発時のみ有効（本番は固定）
 const API_BASE = (()=>{
+  const prod = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+  if(location.hostname!=='localhost' && location.hostname!=='127.0.0.1') return prod;
   const p = new URLSearchParams(location.search).get('api');
   if(p){ localStorage.setItem('somm_api_base', p.replace(/\/$/,'')); }
-  return localStorage.getItem('somm_api_base') || 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+  return localStorage.getItem('somm_api_base') || prod;
 })();
 const UID=(()=>{ let u=localStorage.getItem('somm_uid');
   if(!u){ u=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid',u); }

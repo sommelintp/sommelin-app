@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ソムリン君を育てよう — Sommelin</title>
 <meta name="robots" content="noindex">
 
@@ -47,20 +47,15 @@
 </script>
 <style>
   :root {
-    --burgundy: #9B1B4B;
-    --wine-dark: #5C0E2A;
-    --gold: #C9973A;
+    /* --burgundy/--wine-dark/--gold/--line-green/--text/--border は sommelin-ui.css に一本化 */
     --gold-light: #F5E6C8;
-    --line-green: #06C755;
-    --bg: #F8F4EF;
+    --bg: var(--paper);
     --card: #FFFFFF;
-    --text: #2C1810;
-    --sub: #7A6055;
-    --border: #E8DDD5;
+    --sub: var(--text-sub);
   }
   * { box-sizing:border-box; margin:0; padding:0; }
   body {
-    font-family: -apple-system,'Hiragino Sans',sans-serif;
+    font-family: var(--font-body);
     background: var(--bg);
     min-height:100dvh;
     max-width:430px;
@@ -116,7 +111,8 @@
     0%{transform:scale(1)} 40%{transform:scale(1.4) rotate(-5deg)} 70%{transform:scale(0.95)} 100%{transform:scale(1)}
   }
   .sommelin-title {
-    color: var(--gold); font-size: 14px; font-weight: 800;
+    font-family: var(--font-display);
+    color: var(--foil-pale); font-size: 14px; font-weight: 700;
     letter-spacing: 0.05em; margin-top: 8px;
     text-shadow: 0 1px 4px rgba(0,0,0,0.3); position:relative; z-index:1;
   }
@@ -134,7 +130,7 @@
     display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
   }
   .score-label { color: rgba(255,255,255,0.7); font-size: 12px; }
-  .score-num { color: #fff; font-size: 22px; font-weight: 800; }
+  .score-num { color: #fff; font-size: 22px; font-weight: 700; font-family: var(--font-display); }
   .score-num span { font-size: 13px; color: rgba(255,255,255,0.6); font-weight: 400; }
   .progress-track {
     height: 10px; background: rgba(255,255,255,0.15); border-radius: 5px; overflow: hidden;
@@ -151,7 +147,7 @@
   }
   .stage-ticks { display:flex; justify-content:space-between; margin-top:5px; padding:0 2px; }
   .stage-tick { font-size:9px; color:rgba(255,255,255,0.45); line-height:1; }
-  .stage-tick.reached { color:var(--gold); font-weight:700; }
+  .stage-tick.reached { color:var(--foil-pale); font-weight:700; }
 
   /* ===== CONTENT ===== */
   .content { padding: 16px 16px 0; }
@@ -161,13 +157,13 @@
   .section-head:first-child { margin-top:0; }
   .section-icon { font-size:18px; }
   .section-title { font-size:14px; font-weight:800; color:var(--text); }
-  .section-pts { margin-left:auto; font-size:11px; color:var(--sub); background:var(--border); border-radius:20px; padding:2px 8px; }
+  .section-pts { margin-left:auto; font-size:11px; color:var(--sub); background:var(--border); border-radius:var(--r-pill); padding:2px 8px; }
 
   /* ===== MISSION CARD ===== */
   .mission-card {
-    background:var(--card); border-radius:14px; padding:14px; margin-bottom:8px;
+    background:var(--card); border-radius:var(--r-card); padding:14px; margin-bottom:8px;
     display:flex; align-items:center; gap:12px;
-    box-shadow:0 1px 4px rgba(0,0,0,0.06); cursor:pointer;
+    box-shadow:var(--shadow-card); cursor:pointer;
     transition:transform 0.15s,box-shadow 0.15s; border:1.5px solid transparent; position:relative; overflow:hidden;
   }
   .mission-card:active { transform:scale(0.98); box-shadow:0 1px 2px rgba(0,0,0,0.08); }
@@ -188,7 +184,7 @@
   .mission-right { flex-shrink:0; display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
   .mission-pts {
     background:var(--gold-light); color:#8A5F1A; font-size:12px; font-weight:800;
-    border-radius:20px; padding:3px 10px; white-space:nowrap;
+    border-radius:var(--r-pill); padding:3px 10px; white-space:nowrap;
   }
   .mission-card.done .mission-pts { background:rgba(6,199,85,0.15); color:#1A7A40; }
   .mission-check { font-size:18px; display:none; }
@@ -213,7 +209,7 @@
   }
   .modal-overlay.open { opacity:1; pointer-events:auto; }
   .modal-sheet {
-    background:var(--card); border-radius:24px 24px 0 0;
+    background:var(--card); border-radius:var(--r-sheet) var(--r-sheet) 0 0;
     padding:0 0 40px; width:100%; max-width:430px;
     transform:translateY(100%); transition:transform 0.35s cubic-bezier(0.32,0.72,0,1);
     max-height:90dvh; overflow-y:auto;
@@ -221,7 +217,7 @@
   .modal-overlay.open .modal-sheet { transform:translateY(0); }
   .modal-handle { width:40px; height:4px; background:var(--border); border-radius:2px; margin:12px auto 0; }
   .modal-header { padding:16px 20px 0; display:flex; align-items:center; justify-content:space-between; }
-  .modal-title { font-size:18px; font-weight:800; color:var(--text); }
+  .modal-title { font-size:18px; font-weight:700; color:var(--text); font-family:var(--font-display); }
   .modal-close {
     width:32px; height:32px; border-radius:50%; background:var(--bg); border:none; cursor:pointer;
     display:flex; align-items:center; justify-content:center; font-size:16px; color:var(--sub);
@@ -231,7 +227,7 @@
   /* ===== PHOTO GRID ===== */
   .photo-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-bottom:16px; }
   .photo-cell {
-    aspect-ratio:1; border-radius:10px; background:var(--bg);
+    aspect-ratio:1; border-radius:var(--r-chip); background:var(--bg);
     border:2px dashed var(--border); display:flex; flex-direction:column;
     align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s;
     font-size:11px; color:var(--sub); gap:3px; overflow:hidden; position:relative;
@@ -243,7 +239,7 @@
   .photo-upload-note { font-size:12px; color:var(--sub); text-align:center; margin-bottom:16px; line-height:1.5; }
   .photo-milestone-row { display:flex; gap:6px; margin-bottom:16px; }
   .photo-milestone {
-    flex:1; background:var(--bg); border-radius:10px; padding:8px;
+    flex:1; background:var(--bg); border-radius:var(--r-chip); padding:8px;
     text-align:center; border:1.5px solid var(--border); transition:all 0.3s;
   }
   .photo-milestone.reached { background:rgba(6,199,85,0.1); border-color:rgba(6,199,85,0.4); }
@@ -262,7 +258,7 @@
   .form-input:focus { border-color:var(--burgundy); }
   .shop-type-row { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
   .shop-type-chip {
-    border:1.5px solid var(--border); border-radius:20px; padding:6px 12px;
+    border:1.5px solid var(--border); border-radius:var(--r-pill); padding:6px 12px;
     font-size:12px; cursor:pointer; transition:all 0.15s; background:var(--card); color:var(--text);
   }
   .shop-type-chip.sel { background:var(--burgundy); color:#fff; border-color:var(--burgundy); }
@@ -270,7 +266,7 @@
   /* ===== CHIPS ===== */
   .chip-grid { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
   .choice-chip {
-    border:1.5px solid var(--border); border-radius:20px; padding:7px 14px;
+    border:1.5px solid var(--border); border-radius:var(--r-pill); padding:7px 14px;
     font-size:13px; cursor:pointer; transition:all 0.15s; background:var(--card); color:var(--text); font-weight:600;
   }
   .choice-chip.sel { background:var(--burgundy); color:#fff; border-color:var(--burgundy); }
@@ -293,7 +289,7 @@
 
   /* ===== SNS ===== */
   .sns-option {
-    display:flex; align-items:center; gap:14px; background:var(--bg); border-radius:14px;
+    display:flex; align-items:center; gap:14px; background:var(--bg); border-radius:var(--r-card);
     padding:14px; margin-bottom:10px; cursor:pointer; border:1.5px solid var(--border); transition:all 0.2s;
   }
   .sns-option:hover { border-color:var(--burgundy); }
@@ -308,7 +304,7 @@
 
   /* ===== INVITE ===== */
   .invite-box {
-    background:var(--bg); border-radius:14px; border:1.5px dashed var(--border);
+    background:var(--bg); border-radius:var(--r-card); border:1.5px dashed var(--border);
     padding:20px; text-align:center; margin-bottom:14px;
   }
   .invite-code { font-size:28px; font-weight:800; letter-spacing:8px; color:var(--burgundy); margin:12px 0; }
@@ -317,7 +313,7 @@
   .btn-primary {
     width:100%; padding:14px;
     background:linear-gradient(135deg,var(--wine-dark),var(--burgundy));
-    color:#fff; border:none; border-radius:14px;
+    color:#fff; border:none; border-radius:var(--r-card);
     font-size:15px; font-weight:800; cursor:pointer; font-family:inherit;
     transition:opacity 0.2s; box-shadow:0 4px 12px rgba(155,27,75,0.35);
   }
@@ -325,12 +321,12 @@
   .btn-primary:disabled { opacity:0.4; cursor:not-allowed; }
   .btn-secondary {
     width:100%; padding:13px; background:none; border:1.5px solid var(--border);
-    border-radius:14px; font-size:14px; color:var(--sub); cursor:pointer; font-family:inherit; margin-top:8px;
+    border-radius:var(--r-card); font-size:14px; color:var(--sub); cursor:pointer; font-family:inherit; margin-top:8px;
   }
 
   /* ===== BIG INPUT ===== */
   .big-input {
-    width:100%; border:2px solid var(--border); border-radius:14px;
+    width:100%; border:2px solid var(--border); border-radius:var(--r-card);
     padding:14px 16px; font-size:18px; font-family:inherit; color:var(--text);
     background:var(--bg); outline:none; margin-bottom:14px;
     text-align:center; font-weight:700; transition:border-color 0.2s;
@@ -357,7 +353,7 @@
   .lvup-splash.show { opacity:1; pointer-events:auto; }
   .lvup-box {
     background:linear-gradient(135deg,var(--wine-dark),var(--burgundy));
-    border-radius:24px; padding:32px 28px; text-align:center;
+    border-radius:var(--r-sheet); padding:32px 28px; text-align:center;
     margin:20px; box-shadow:0 16px 48px rgba(0,0,0,0.4);
     animation:splash-in 0.5s cubic-bezier(0.34,1.56,0.64,1);
   }
@@ -365,14 +361,14 @@
   .lvup-emoji { font-size:72px; margin-bottom:12px; display:block; animation:spin-in 0.6s ease-out; }
   @keyframes spin-in { from{transform:rotate(-30deg) scale(0)} to{transform:rotate(0) scale(1)} }
   .lvup-stars { font-size:24px; letter-spacing:6px; margin-bottom:6px; }
-  .lvup-lv-label { color:var(--gold); font-size:12px; font-weight:800; letter-spacing:0.15em; margin-bottom:6px; }
-  .lvup-title { color:#fff; font-size:22px; font-weight:800; margin-bottom:8px; }
+  .lvup-lv-label { color:var(--foil-pale); font-size:12px; font-weight:800; letter-spacing:0.15em; margin-bottom:6px; }
+  .lvup-title { color:#fff; font-size:22px; font-weight:700; margin-bottom:8px; font-family:var(--font-display); }
   .lvup-desc { color:rgba(255,255,255,0.75); font-size:13px; line-height:1.5; margin-bottom:20px; }
 
   /* ===== TOAST ===== */
   .toast {
     position:fixed; top:-60px; left:50%; transform:translateX(-50%);
-    background:#1A3A2A; color:#fff; padding:10px 20px; border-radius:30px;
+    background:#1A3A2A; color:#fff; padding:10px 20px; border-radius:var(--r-pill);
     font-size:13px; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,0.3);
     transition:top 0.35s cubic-bezier(0.34,1.2,0.64,1); z-index:300; white-space:nowrap;
   }
@@ -380,24 +376,28 @@
 
   /* ===== COMPLETE ===== */
   .complete-banner {
-    background:linear-gradient(135deg,#1A4A2A,#1E6B3A); border-radius:20px;
+    background:linear-gradient(135deg,#1A4A2A,#1E6B3A); border-radius:var(--r-sheet);
     padding:24px; text-align:center; margin:20px 16px 0; display:none;
   }
   .complete-banner.visible { display:block; }
-  .complete-banner h2 { color:var(--gold); font-size:22px; margin-bottom:8px; }
+  .complete-banner h2 { color:var(--foil-pale); font-size:22px; margin-bottom:8px; font-family:var(--font-display); }
   .complete-banner p { color:rgba(255,255,255,0.85); font-size:13px; line-height:1.6; }
 
   /* pt badge */
   .pt-badge-wrap { text-align:center; margin-bottom:16px; }
   .pt-badge {
     background:var(--gold-light); color:#8A5F1A; font-size:13px; font-weight:800;
-    border-radius:20px; padding:5px 14px; display:inline-block;
+    border-radius:var(--r-pill); padding:5px 14px; display:inline-block;
   }
 
   .modal-sheet::-webkit-scrollbar { width:3px; }
   .modal-sheet::-webkit-scrollbar-track { background:transparent; }
   .modal-sheet::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/sommelin-ui.css?v=20260730">
 </head>
 <body>
 
@@ -433,7 +433,7 @@
 <div class="content" id="missionContent"></div>
 
 <!-- 常時表示のスキップ（未完了でもホームへ進める＝行き止まり防止） -->
-<button onclick="enterApp()" style="position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:60;background:rgba(255,255,255,.96);color:#9B1B4B;border:1px solid #9B1B4B;border-radius:24px;padding:9px 20px;font-size:13px;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.12);cursor:pointer;">スキップしてはじめる →</button>
+<button onclick="enterApp()" style="position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:60;background:rgba(255,255,255,.96);color:var(--wine);border:1px solid var(--wine);border-radius:var(--r-pill);padding:9px 20px;font-size:13px;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.12);cursor:pointer;">スキップしてはじめる →</button>
 
 <!-- COMPLETE BANNER -->
 <div class="complete-banner" id="completeBanner">

@@ -2,30 +2,34 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>試飲会 参加申込 — ソムリン</title>
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#5C0E2A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
 <style>
-:root{ --burgundy:#9B1B4B; --wine-dark:#5C0E2A; --gold:#C9973A; --bg:#F8F4EF; --text:#2C1810; --text-sub:#7A6055; --border:#E8DDD5; }
+/* 2026-07-30: --burgundy/--wine-dark/--gold/--text/--text-sub/--borderはsommelin-ui.cssのトークンに一本化 */
+:root{ --bg:var(--paper); }
 *{ box-sizing:border-box; margin:0; padding:0; }
 body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg); color:var(--text);
   max-width:430px; margin:0 auto; min-height:100dvh; padding:0 0 60px; }
-.top{ background:linear-gradient(135deg,var(--wine-dark),var(--burgundy)); padding:52px 16px 24px; color:#fff; }
+.top{ background:linear-gradient(135deg,var(--wine-dark),var(--burgundy)); border-bottom:1px solid var(--foil); padding:52px 16px 24px; color:#fff; }
 .eyebrow{ font-size:11px; font-weight:700; letter-spacing:.1em; color:rgba(255,255,255,.7); text-transform:uppercase; margin-bottom:8px; }
-.etitle{ font-size:20px; font-weight:800; line-height:1.4; }
+.etitle{ font-family:var(--font-display); font-size:20px; font-weight:700; line-height:1.4; }
 .emeta{ margin-top:14px; display:flex; flex-direction:column; gap:6px; font-size:13px; color:rgba(255,255,255,.9); }
 .emeta .row{ display:flex; align-items:flex-start; gap:8px; }
 .emeta .row .ico{ flex-shrink:0; width:18px; }
 
 .body{ padding:18px 16px; }
-.card{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:14px; }
+.card{ background:#fff; border:1px solid var(--border); border-radius:var(--r-card); box-shadow:var(--shadow-card); padding:16px; margin-bottom:14px; }
 .desc{ font-size:13px; line-height:1.8; color:var(--text); white-space:pre-wrap; }
 
 .section-head{ font-size:12px; font-weight:800; color:var(--text-sub); letter-spacing:.06em; margin:4px 0 10px; }
 .field{ margin-bottom:12px; }
 .field label{ display:block; font-size:12px; font-weight:700; color:var(--text-sub); margin-bottom:5px; }
-.field input{ width:100%; padding:11px 12px; border-radius:10px; border:1px solid var(--border); background:#fff; color:var(--text); font-size:14px; font-family:inherit; }
+.field input{ width:100%; padding:11px 12px; border-radius:var(--r-chip); border:1px solid var(--border); background:#fff; color:var(--text); font-size:14px; font-family:inherit; }
 .field input:focus{ outline:2px solid var(--gold); outline-offset:1px; }
 .field .hint{ font-size:11px; color:var(--text-sub); margin-top:4px; }
 
@@ -38,11 +42,13 @@ body{ font-family:-apple-system,'Hiragino Sans',sans-serif; background:var(--bg)
 .msg .title{ font-size:17px; font-weight:800; margin-bottom:8px; }
 .msg .desc{ font-size:13px; color:var(--text-sub); line-height:1.7; }
 .msg .cancel-link{ display:inline-block; margin-top:18px; font-size:12px; color:var(--text-sub); text-decoration:underline; }
-.msg .ext-link{ display:inline-block; margin-top:18px; padding:12px 24px; background:var(--burgundy); color:#fff; border-radius:10px; text-decoration:none; font-size:14px; font-weight:700; }
+.msg .ext-link{ display:inline-block; margin-top:18px; padding:12px 24px; background:var(--burgundy); color:#fff; border-radius:var(--r-chip); text-decoration:none; font-size:14px; font-weight:700; }
 
 .gone{ display:none !important; }
 .consent{ font-size:11px; color:var(--text-sub); line-height:1.7; margin-top:10px; }
 </style>
+<!-- sommelin-ui.css: ブランドトークン（インライン<style>より後に読み込み、トークンを勝たせる） -->
+<link rel="stylesheet" href="assets/sommelin-ui.css?v=20260730">
 </head>
 <body>
 

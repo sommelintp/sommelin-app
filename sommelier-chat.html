@@ -2,25 +2,20 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ソムリンAI — ワインソムリエ</title>
 <meta name="robots" content="noindex">
 <style>
   :root {
     /* 2026-07-10: --burgundy/--gold/--text/--text-sub/--borderはsommelin-ui.cssの
-       ブランドトークンに一本化。--wine-dark/--bg/--card-bgはsommelin-ui.css未定義
-       （あちらは--wine-deep/--paper系）のためこのまま残す。
+       ブランドトークンに一本化。2026-07-30: トークン拡張(v1.1)により--wine-dark・
+       ワインタイプ4色もあちらへ一本化し、ここでの再定義を撤去。
        --lineはsommelin-ui.cssでは「紙のhairline色」の意味で使われるため衝突を避け
-       --status-online（LINEオンライン表示の緑ドット）に改名 */
-    --wine-dark: #5C0E2A;
+       --status-online（LINEオンライン表示の緑ドット）に改名 → var(--line-green)参照 */
     --gold-light: #F5E6C8;
-    --status-online: #06C755;
-    --bg: #F8F4EF;
+    --status-online: var(--line-green);
+    --bg: var(--paper);
     --card-bg: #FFFFFF;
-    --red-wine: #9B1B4B;
-    --white-wine: #C9973A;
-    --sparkling-wine: #3D7AB5;
-    --rose-wine: #D4698A;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -67,7 +62,7 @@
 
   .usage-badge {
     background: rgba(255,255,255,0.12); border: 1px solid rgba(201,151,58,0.5);
-    border-radius: 20px; padding: 4px 10px; text-align: center;
+    border-radius: var(--r-pill); padding: 4px 10px; text-align: center;
     cursor: pointer; transition: background 0.2s;
   }
   .usage-badge:hover { background: rgba(255,255,255,0.22); }
@@ -118,7 +113,7 @@
 
   .date-chip {
     text-align: center; color: var(--text-sub); font-size: 11px;
-    background: rgba(0,0,0,0.06); border-radius: 20px;
+    background: rgba(0,0,0,0.06); border-radius: var(--r-pill);
     padding: 3px 12px; align-self: center; margin: 4px 0;
   }
 
@@ -169,7 +164,7 @@
 
   .wine-cat-badge {
     display: inline-block; font-size: 9px; font-weight: 700;
-    padding: 2px 6px; border-radius: 20px; margin-bottom: 4px; color: #fff;
+    padding: 2px 6px; border-radius: var(--r-pill); margin-bottom: 4px; color: #fff;
   }
   .badge-red { background: var(--red-wine); }
   .badge-white { background: var(--white-wine); }
@@ -179,7 +174,7 @@
   .wine-name { font-family: var(--font-display); font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.4; margin-bottom: 3px; }
   .wine-producer { font-size: 11px; color: var(--text-sub); margin-bottom: 3px; }
   .wine-meta { font-size: 11px; color: var(--text-sub); display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
-  .wine-meta-chip { background: var(--bg); border-radius: 20px; padding: 1px 6px; font-size: 10px; }
+  .wine-meta-chip { background: var(--bg); border-radius: var(--r-pill); padding: 1px 6px; font-size: 10px; }
   .wine-price-row { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
   .wine-price { font-size: 15px; font-weight: 700; color: var(--burgundy); }
   .wine-rank { font-size: 11px; color: var(--gold); font-weight: 600; }
@@ -188,7 +183,7 @@
   .quick-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   .chip {
     background: var(--card-bg); border: 1.5px solid var(--border);
-    border-radius: 20px; padding: 6px 12px; font-size: 12px;
+    border-radius: var(--r-pill); padding: 6px 12px; font-size: 12px;
     color: var(--burgundy); font-weight: 600; cursor: pointer;
     transition: all 0.15s; white-space: nowrap;
   }
@@ -200,7 +195,7 @@
   .fb-chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .fb-chip {
     background: var(--card-bg); border: 1.5px solid var(--border);
-    border-radius: 20px; padding: 5px 11px; font-size: 12px;
+    border-radius: var(--r-pill); padding: 5px 11px; font-size: 12px;
     color: var(--burgundy); font-weight: 600; cursor: pointer;
     transition: all 0.15s; white-space: nowrap;
   }
@@ -273,7 +268,7 @@
   .suggestions-row::-webkit-scrollbar { display: none; }
   .suggestion-pill {
     background: var(--bg); border: 1.5px solid var(--border);
-    border-radius: 20px; padding: 5px 12px; font-size: 11px;
+    border-radius: var(--r-pill); padding: 5px 12px; font-size: 11px;
     color: var(--text-sub); white-space: nowrap; cursor: pointer;
     flex-shrink: 0; transition: all 0.15s; font-weight: 600;
   }
@@ -309,7 +304,7 @@
   .attach-btn:hover { border-color: var(--burgundy); color: var(--burgundy); }
   .photo-preview-row { display: none; align-items: center; gap: 8px; padding: 0 0 8px; }
   .photo-preview-row.on { display: flex; }
-  .photo-preview-row img { width: 48px; height: 48px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); }
+  .photo-preview-row img { width: 48px; height: 48px; object-fit: cover; border-radius: var(--r-chip); border: 1px solid var(--border); }
   .photo-preview-remove {
     width: 22px; height: 22px; border-radius: 50%; border: none; background: rgba(0,0,0,0.5);
     color: #fff; font-size: 13px; cursor: pointer; line-height: 1;
@@ -324,7 +319,7 @@
   }
   .modal-overlay.open { opacity: 1; pointer-events: auto; }
   .modal-sheet {
-    background: var(--card-bg); border-radius: 24px 24px 0 0;
+    background: var(--card-bg); border-radius: var(--r-sheet) var(--r-sheet) 0 0;
     padding: 24px 20px 32px; width: 100%; max-width: 430px;
     transform: translateY(100%);
     transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
@@ -335,14 +330,14 @@
   .modal-sub { font-size: 13px; color: var(--text-sub); text-align: center; margin-bottom: 20px; }
   .modal-plan-list { display: flex; flex-direction: column; gap: 10px; }
   .modal-plan {
-    border: 2px solid var(--border); border-radius: 14px; padding: 14px 16px;
+    border: 2px solid var(--border); border-radius: var(--r-card); padding: 14px 16px;
     display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s;
   }
   .modal-plan.popular-plan { border-color: var(--gold); background: var(--gold-light); }
   .modal-plan-icon { font-size: 28px; flex-shrink: 0; }
   .modal-plan-info { flex: 1; }
   .modal-plan-name { font-size: 15px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 6px; }
-  .popular-tag { font-size: 9px; background: var(--gold); color: #fff; border-radius: 20px; padding: 2px 6px; font-weight: 800; }
+  .popular-tag { font-size: 9px; background: var(--gold); color: #fff; border-radius: var(--r-pill); padding: 2px 6px; font-weight: 800; }
   .modal-plan-desc { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
   .modal-plan-price { font-size: 16px; font-weight: 800; color: var(--burgundy); text-align: right; flex-shrink: 0; }
   .modal-plan-price span { display: block; font-size: 10px; font-weight: 400; color: var(--text-sub); }
@@ -363,7 +358,7 @@
   }
   .chat-nav a {
     flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
-    text-decoration: none; color: #7a5560; font-size: 10.5px; padding: 4px 0;
+    text-decoration: none; color: var(--text-sub); font-size: 10.5px; padding: 4px 0;
   }
   .chat-nav a.on { color: var(--burgundy, #9B1B4B); font-weight: 700; }
   .chat-nav .ic { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
@@ -372,8 +367,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/sommelin-ui.css?v=20260730">
-<!-- ワインDBは外部ファイルから読み込み（update_wines.py で自動更新可能） -->
-<script src="wines_data.js"></script>
 </head>
 <body>
 
@@ -395,7 +388,7 @@
 
 <!-- DB INFO BAR -->
 <div class="db-bar" id="dbBar">
-  <span data-i18n="db_label">ワインデータ</span> <span class="db-bar-count" id="dbCount" data-i18n="db_loading">読み込み中…</span>
+  <span data-i18n="db_label">銘柄データベース</span> <span class="db-bar-count" id="dbCount" data-i18n="db_ready">連携中</span>
 </div>
 
 <!-- LIST CONTEXT BAR（Phase B: 今いる店のリストで相談中） -->
@@ -505,8 +498,8 @@ const I18N = {
     header_name: 'ソムリンAI',
     status_online: 'オンライン',
     usage_label: '残り回数',
-    db_label: 'ワインデータ',
-    db_loading: '読み込み中…',
+    db_label: '銘柄データベース',
+    db_ready: '連携中',
     date_today: '今日',
     intro_message: 'こんにちは、ソムリン君です 🍷\n\n📷 ボトルや棚、お料理の写真を送れば、その場でお調べします\n🔍 お店のワインリストを撮れば、その中から選んでご提案します\n言葉で「予算3千円の泡」のように聞くだけでもOKです\n\nさあ、今日はどんな一本を探しましょうか🍷',
     chip_red: '🍷 赤ワイン',
@@ -553,13 +546,6 @@ const I18N = {
     plan_premium_desc: 'AIチャット無制限。価格・開始時期は決まり次第お知らせします',
     plan_premium_price: '近日<span>公開</span>',
     modal_close: '閉じる',
-    cat_short_red: '赤',
-    cat_short_white: '白',
-    cat_short_sparkling: '泡',
-    cat_short_rose: 'ロゼ',
-    db_count: '{n}本 ({cats})',
-    status_online_full: 'オンライン — {n}本 更新:{date}',
-    db_error: '⚠️ データ読み込みエラー',
     photo_default_q: 'この写真について教えて',
     err_rate_limit: '少し混み合っています。しばらくしてからもう一度どうぞ 🙏',
     err_photo: '写真がうまく読み込めませんでした。別の写真でもう一度お試しください 🙏',
@@ -583,8 +569,8 @@ const I18N = {
     header_name: 'Sommelin AI',
     status_online: 'Online',
     usage_label: 'chats left',
-    db_label: 'Wine data',
-    db_loading: 'Loading…',
+    db_label: 'Wine catalog',
+    db_ready: 'connected',
     date_today: 'Today',
     intro_message: 'Hello, I\'m Sommelin 🍷\n\n📷 Send a photo of a bottle, shelf, or dish and I\'ll look it up\n🔍 Shoot a restaurant\'s wine list and I\'ll pick from it for you\nOr just type — "a sparkling under $30" works too\n\nSo, what shall we find for you today? 🍷',
     chip_red: '🍷 Red',
@@ -631,13 +617,6 @@ const I18N = {
     plan_premium_desc: 'Unlimited AI chat. Pricing and launch date to be announced.',
     plan_premium_price: 'Coming<span>soon</span>',
     modal_close: 'Close',
-    cat_short_red: 'Red ',
-    cat_short_white: 'White ',
-    cat_short_sparkling: 'Spk ',
-    cat_short_rose: 'Rosé ',
-    db_count: '{n} wines ({cats})',
-    status_online_full: 'Online — {n} wines, updated {date}',
-    db_error: '⚠️ Failed to load data',
     photo_default_q: 'Tell me about this photo',
     err_rate_limit: 'We\'re a bit busy right now. Please try again in a moment 🙏',
     err_photo: 'We couldn\'t read that photo. Please try another one 🙏',
@@ -679,7 +658,14 @@ let quota = { premium: false, limit: FREE_LIMIT, used: null, remaining: null }; 
 let isBotTyping = false;
 
 // ── 実AIチャット（backend /api/chat = Claude Haiku。キーはbackendのみ） ──
-const CHAT_API = (localStorage.getItem('somm_api_base') || 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app');
+// Cloud Run の URL。?api=/localStorage での差し替えはローカル開発時のみ有効（本番は固定）
+const CHAT_API = (() => {
+  const prod = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+  if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') return prod;
+  const p = new URLSearchParams(location.search).get('api');
+  if (p) { localStorage.setItem('somm_api_base', p.replace(/\/$/, '')); }
+  return localStorage.getItem('somm_api_base') || prod;
+})();
 const CHAT_UID = (() => { try {
   let u = localStorage.getItem('somm_uid');
   if (!u) { u = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid', u); }
@@ -841,23 +827,6 @@ window.addEventListener('load', () => {
       }
     })
     .catch(() => {});
-
-  // wines_data.js の読み込み確認 & DB情報バー更新
-  if (typeof wineDB !== 'undefined' && wineDB.length > 0) {
-    const stats = typeof wineStats !== 'undefined' ? wineStats : null;
-    const total = wineDB.length;
-    const cats = wineDB.reduce((a, w) => { a[w.cat] = (a[w.cat]||0)+1; return a; }, {});
-    const catStr = Object.entries({red:t('cat_short_red'),white:t('cat_short_white'),sparkling:t('cat_short_sparkling'),rose:t('cat_short_rose')})
-      .filter(([k]) => cats[k])
-      .map(([k,v]) => `${v}${cats[k]}`)
-      .join(' / ');
-    document.getElementById('dbCount').textContent = t('db_count').replace('{n}', total).replace('{cats}', catStr);
-    const updatedAt = stats?.updatedAt || '---';
-    document.getElementById('headerStatus').textContent = t('status_online_full').replace('{n}', total).replace('{date}', updatedAt);
-  } else {
-    document.getElementById('dbCount').textContent = t('db_error');
-    document.getElementById('dbCount').style.color = '#FF5A5F';
-  }
 });
 
 function nowTime() {
@@ -963,7 +932,7 @@ async function handleChatStream(r) {
   msgEl.innerHTML = `
     <div class="msg-bot-avatar">🍷</div>
     <div class="msg-bot-body">
-      <div class="bot-bubble"><span class="stream-text"></span><span class="stream-status" style="display:block;font-size:11px;color:#999;margin-top:6px;"></span></div>
+      <div class="bot-bubble"><span class="stream-text"></span><span class="stream-status" style="display:block;font-size:11px;color:var(--text-sub);margin-top:6px;"></span></div>
     </div>`;
   wrap.appendChild(msgEl);
   const textEl = msgEl.querySelector('.stream-text');
@@ -1226,7 +1195,7 @@ function showTyping() {
   const el = document.createElement('div');
   el.className = 'typing-indicator'; el.id = 'typingEl';
   el.innerHTML = `
-    <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#5C0E2A,#9B1B4B);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🍷</div>
+    <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--wine-dark),var(--burgundy));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🍷</div>
     <div class="typing-bubble">
       <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
     </div>`;

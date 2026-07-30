@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Sommelin — インポーター管理 | 山田商店</title>
 <meta name="robots" content="noindex">
 
@@ -56,20 +56,11 @@
 })();
 </script>
 <style>
+  /* 2026-07-30: --burgundy/--burgundy-pale/--wine-dark/--text/--text-sub/--border/--gold/--line-green系はsommelin-ui.cssのトークンに一本化 */
   :root {
-    --burgundy: #9B1B4B;
-    --wine-dark: #5C0E2A;
-    --burgundy-pale: #f9f0f3;
-    --text: #2C1A1D;
-    --text-sub: #7A5A62;
-    --bg: #F5F3F0;
+    --bg: var(--paper);
     --white: #ffffff;
-    --border: #ecdde2;
-    --gold: #C9973A;
-    --green: #16a34a;
-    --line-green: #06C755;
-    --line-green-dark: #019A40;
-    --line-green-pale: #e8faf0;
+    --green: var(--ok);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -139,7 +130,7 @@
   .event-card {
     margin: 12px 12px 0;
     background: white;
-    border-radius: 14px;
+    border-radius: var(--r-card);
     border: 1.5px solid var(--border);
     padding: 14px 16px;
     display: flex; align-items: flex-start; gap: 12px;
@@ -173,7 +164,7 @@
   .mode-selector {
     margin: 12px 12px 0;
     background: white;
-    border-radius: 14px;
+    border-radius: var(--r-card);
     border: 1.5px solid var(--border);
     overflow: hidden;
   }
@@ -314,7 +305,7 @@
 
   .excluded-badge {
     font-size: 10px; font-weight: 700;
-    background: #fee2e2; color: #dc2626;
+    background: var(--danger-bg); color: #dc2626;
     padding: 2px 7px; border-radius: 8px;
     border: 1px solid #fca5a5;
   }
@@ -394,7 +385,7 @@
     width: 100%;
     background: linear-gradient(135deg, var(--line-green) 0%, #04a847 100%);
     color: white; border: none;
-    border-radius: 14px; padding: 15px;
+    border-radius: var(--r-card); padding: 15px;
     font-size: 15px; font-weight: 800;
     cursor: pointer; font-family: inherit;
     display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -412,7 +403,7 @@
   }
   .ctx-menu-bg.open { display: flex; }
   .ctx-menu {
-    background: white; border-radius: 20px 20px 0 0;
+    background: white; border-radius: var(--r-sheet) var(--r-sheet) 0 0;
     width: 100%; max-width: 430px;
     padding: 20px 20px 40px;
     animation: slideUp 0.2s ease;
@@ -442,7 +433,7 @@
   }
   .confirm-bg.open { display: flex; }
   .confirm-modal {
-    background: white; border-radius: 20px;
+    background: white; border-radius: var(--r-sheet);
     padding: 28px 24px; width: 100%; max-width: 380px;
     animation: popIn 0.2s ease;
     text-align: center;
@@ -531,7 +522,7 @@
   .done-label { font-size: 16px; color: var(--text-sub); }
   .done-stats {
     display: flex; gap: 20px;
-    background: var(--line-green-pale); border-radius: 14px;
+    background: var(--line-green-pale); border-radius: var(--r-card);
     padding: 14px 24px; margin: 8px 0;
   }
   .done-stat { text-align: center; }
@@ -540,7 +531,7 @@
   .done-back-btn {
     width: 100%; margin-top: 12px;
     background: var(--wine-dark); color: white;
-    border: none; border-radius: 14px;
+    border: none; border-radius: var(--r-card);
     padding: 15px; font-size: 15px; font-weight: 700;
     cursor: pointer; font-family: inherit;
   }
@@ -563,7 +554,7 @@
   .gcal-sync-bar {
     margin: 12px 12px 0;
     background: white; border: 1.5px solid #bfdbfe;
-    border-radius: 14px; padding: 12px 16px;
+    border-radius: var(--r-card); padding: 12px 16px;
     display: flex; align-items: center; gap: 12px;
   }
   .gcal-sync-info { flex: 1; }
@@ -595,7 +586,7 @@
   /* カレンダーグリッド */
   .cal-imp-wrap {
     margin: 10px 12px 0;
-    background: white; border-radius: 14px;
+    background: white; border-radius: var(--r-card);
     border: 1px solid var(--border); overflow: hidden;
   }
   .cal-imp-header {
@@ -691,7 +682,7 @@
   .imp-ev-btn.saved { background: var(--burgundy); color: #fff; }
 
   /* ===== att sheet タブ ===== */
-  .att-tabs { display:flex; border-bottom:2px solid #E8E4DF; margin:0 0 14px; }
+  .att-tabs { display:flex; border-bottom:2px solid var(--border); margin:0 0 14px; }
   .att-tab {
     flex:1; padding:9px 0; font-size:12px; font-weight:700;
     border:none; background:none; color:var(--text-sub); cursor:pointer;
@@ -702,7 +693,7 @@
   /* ===== ワインリストカード ===== */
   .wine-list-card {
     background:white; border-radius:12px; padding:13px 14px;
-    margin-bottom:8px; box-shadow:0 1px 6px rgba(0,0,0,.06);
+    margin-bottom:8px; box-shadow:var(--shadow-card);
     display:flex; align-items:center; gap:10px;
   }
   .wl-rank {
@@ -719,13 +710,13 @@
   /* LINE配信ボタン */
   .line-send-btn {
     width:100%; padding:13px 0; margin-bottom:10px;
-    background:#06C755; color:white; border:none; border-radius:12px;
+    background:var(--line-green); color:white; border:none; border-radius:12px;
     font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;
     display:flex; align-items:center; justify-content:center; gap:8px;
     transition:opacity .15s;
   }
   .line-send-btn:active { opacity:.85; }
-  .line-send-btn.secondary { background:#E8F5E9; color:#2E7D32; }
+  .line-send-btn.secondary { background:var(--line-green-pale); color:var(--line-green-dark); }
 
   /* ===== アンケート結果 ===== */
   .survey-header {
@@ -739,7 +730,7 @@
 
   .survey-wine-card {
     background:white; border-radius:12px; padding:14px;
-    margin-bottom:8px; box-shadow:0 1px 6px rgba(0,0,0,.06);
+    margin-bottom:8px; box-shadow:var(--shadow-card);
   }
   .sw-top { display:flex; align-items:flex-start; gap:10px; margin-bottom:8px; }
   .sw-rank-badge {
@@ -763,8 +754,8 @@
 
   /* ===== ソムリンレポート ===== */
   .sommelin-report-section {
-    background: linear-gradient(135deg, #5C0E2A 0%, #9B1B4B 100%);
-    border-radius:14px; padding:16px; margin-top:14px; margin-bottom:14px;
+    background: linear-gradient(135deg, var(--wine-dark) 0%, var(--wine) 100%);
+    border-radius:var(--r-card); padding:16px; margin-top:14px; margin-bottom:14px;
   }
   .sr-header { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
   .sr-icon { font-size:28px; }
@@ -819,7 +810,7 @@
   }
   .picker-bg.open { display:flex; }
   .picker-sheet {
-    background:#F5F3F0; border-radius:20px 20px 0 0;
+    background:var(--bg); border-radius:var(--r-sheet) var(--r-sheet) 0 0;
     width:100%; max-width:430px; max-height:80vh;
     display:flex; flex-direction:column; animation:slideUp .25s ease;
   }
@@ -854,7 +845,7 @@
   }
   .att-sheet-bg.open { display:flex; }
   .att-sheet {
-    background:#F5F3F0; border-radius:20px 20px 0 0;
+    background:var(--bg); border-radius:var(--r-sheet) var(--r-sheet) 0 0;
     width:100%; max-width:430px; max-height:90vh;
     display:flex; flex-direction:column;
     animation:slideUp .25s ease;
@@ -878,7 +869,7 @@
   .att-stat {
     flex:1; background:white; border-radius:12px;
     padding:12px 14px; text-align:center;
-    box-shadow:0 1px 4px rgba(0,0,0,.06);
+    box-shadow:var(--shadow-card);
   }
   .att-stat-num { font-size:24px; font-weight:800; color:var(--burgundy); line-height:1; }
   .att-stat-label { font-size:11px; color:var(--text-sub); margin-top:4px; }
@@ -907,7 +898,7 @@
   .att-card {
     background:white; border-radius:12px;
     padding:12px 14px; margin-bottom:8px;
-    box-shadow:0 1px 6px rgba(0,0,0,.06);
+    box-shadow:var(--shadow-card);
     display:flex; align-items:flex-start; gap:10px;
   }
   .att-num {
@@ -924,7 +915,7 @@
   .att-foot {
     display:flex; align-items:center; justify-content:space-between;
     margin-top:6px; padding-top:6px;
-    border-top:1px solid #F0EDE8;
+    border-top:1px solid var(--border);
   }
   .att-count { font-size:13px; font-weight:700; color:var(--burgundy); }
   .att-date { font-size:10px; color:var(--text-sub); }
@@ -944,7 +935,7 @@
   }
   .mail-confirm-bg.open { display:flex; }
   .mail-confirm-box {
-    background:white; border-radius:20px;
+    background:white; border-radius:var(--r-sheet);
     padding:24px 22px; width:calc(100% - 40px); max-width:360px;
     animation:slideUp .2s ease;
   }
@@ -1001,7 +992,7 @@
   /* 投稿コンポーザー */
   .composer-card {
     margin:12px 12px 0; background:white;
-    border-radius:14px; border:1.5px solid var(--border); padding:14px 16px;
+    border-radius:var(--r-card); border:1.5px solid var(--border); padding:14px 16px;
   }
   .composer-textarea {
     width:100%; border:1.5px solid var(--border); border-radius:10px;
@@ -1075,17 +1066,17 @@
   /* ===== カタログパネル ===== */
   .cat-stats {
     display:flex;margin:16px 16px 12px;background:var(--white);
-    border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(92,14,42,.08);
+    border-radius:var(--r-card);overflow:hidden;box-shadow:var(--shadow-card);
   }
   .cat-stat { flex:1;text-align:center;padding:14px 8px;border-right:1px solid var(--border); }
   .cat-stat:last-child { border:none; }
   .cat-snum { font-size:22px;font-weight:900;color:var(--burgundy); }
-  .cat-ok { color:#16a34a; }
+  .cat-ok { color:var(--ok); }
   .cat-ng { color:#dc2626; }
   .cat-slbl { font-size:10px;color:var(--text-sub);margin-top:2px; }
   .cat-add-card {
-    margin:0 16px 12px;background:var(--white);border-radius:14px;
-    padding:16px;box-shadow:0 1px 4px rgba(92,14,42,.08);
+    margin:0 16px 12px;background:var(--white);border-radius:var(--r-card);
+    padding:16px;box-shadow:var(--shadow-card);
   }
   .cat-add-title { font-size:13px;font-weight:800;color:var(--burgundy);margin-bottom:12px; }
   .cat-input {
@@ -1108,8 +1099,8 @@
   }
   .cat-act-btn.cat-line { background:var(--line-green);color:white;border-color:var(--line-green); }
   .cat-card {
-    background:var(--white);border-radius:14px;padding:14px;
-    margin-bottom:10px;box-shadow:0 1px 4px rgba(92,14,42,.07);
+    background:var(--white);border-radius:var(--r-card);padding:14px;
+    margin-bottom:10px;box-shadow:var(--shadow-card);
   }
   .cat-card.unavail { opacity:.55; }
   .cat-card-top { display:flex;align-items:flex-start;gap:10px; }
@@ -1123,11 +1114,13 @@
     padding:5px 10px;border-radius:20px;border:none;cursor:pointer;
     font-size:11px;font-weight:800;
   }
-  .cat-toggle.avail { background:#dcfce7;color:#16a34a; }
-  .cat-toggle.unavl { background:#fee2e2;color:#dc2626; }
+  .cat-toggle.avail { background:#dcfce7;color:var(--ok); }
+  .cat-toggle.unavl { background:var(--danger-bg);color:#dc2626; }
   .cat-del { background:none;border:none;color:var(--text-sub);font-size:15px;cursor:pointer;padding:0; }
   .cat-desc { font-size:12px;color:var(--text-sub);margin-top:8px;line-height:1.6;padding-top:8px;border-top:1px solid var(--border); }
 </style>
+<!-- sommelin-ui.css: ブランドトークン（インライン<style>より後に読み込み、トークンを勝たせる） -->
+<link rel="stylesheet" href="assets/sommelin-ui.css?v=20260730">
 <!-- 招待の発行・一覧・承認（SommInvites）。restaurant_admin.html と同じ実体を読む -->
 <script src="assets/business-invites.js?v=20260727"></script>
 </head>

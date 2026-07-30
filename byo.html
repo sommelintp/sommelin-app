@@ -7,7 +7,7 @@
   売り文句＋番号付き手順＋接続URLコピー。ソムリンMCPサーバーへ「あなたのAI」を繋ぐ入口。
 -->
 <style>
-  :root{ --burgundy:#9B1B4B; --burgundy-d:#7a123a; --bg:#fbf7f4; --text:#2C1810; --sub:#8a7a7d; --border:#ecdfe3; }
+  :root{ --burgundy:var(--wine,#9B1B4B); --burgundy-d:var(--wine-dark,#7a123a); --bg:var(--paper,#fbf7f4); --text:var(--wine-ink,#2C1810); --sub:var(--text-sub,#8a7a7d); --border:var(--line,#ecdfe3); }
   *{ box-sizing:border-box; }
   body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; }
   .wrap{ max-width:480px; margin:0 auto; padding:calc(20px + env(safe-area-inset-top)) 20px 60px; }
@@ -34,6 +34,7 @@
   .toast{ position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(16px); background:rgba(15,15,15,.92); color:#fff; padding:10px 20px; border-radius:20px; font-size:13px; font-weight:700; opacity:0; transition:all .3s; pointer-events:none; }
   .toast.on{ opacity:1; transform:translateX(-50%) translateY(0); }
 </style>
+<link rel="stylesheet" href="assets/sommelin-ui.css?v=20260730">
 
 <div class="wrap">
   <div class="top">
