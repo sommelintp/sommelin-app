@@ -82,6 +82,7 @@ async function load(){
 
 function yen(usd){ const rate = Number(document.getElementById('rateSel').value); return '¥' + Math.round(usd * rate).toLocaleString(); }
 function usd(v){ return '$' + v.toFixed(v < 1 ? 3 : 2); }
+const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 function renderAll(){
   if (!lastData) return;
@@ -103,11 +104,11 @@ function renderAll(){
     const dayRows = byDay[day];
     const dayCost = dayRows.reduce((s,r)=>s+r.costUsd,0);
     html += `<div class="day-block">
-      <div class="day-head"><span>${day}</span><span class="day-cost">${usd(dayCost)}（${yen(dayCost)}）</span></div>
+      <div class="day-head"><span>${esc(day)}</span><span class="day-cost">${usd(dayCost)}（${yen(dayCost)}）</span></div>
       <table>
         <tr><th>機能</th><th class="num">回数</th><th class="num">入力tok</th><th class="num">出力tok</th><th class="num">費用</th></tr>
         ${dayRows.map(r => `<tr>
-          <td>${FEATURE_JA[r.feature]||r.feature}<div class="model-tag">${r.model}</div></td>
+          <td>${esc(FEATURE_JA[r.feature]||r.feature)}<div class="model-tag">${esc(r.model)}</div></td>
           <td class="num">${r.calls}</td>
           <td class="num">${(r.inputTokens + r.cacheReadTokens + r.cacheWriteTokens).toLocaleString()}</td>
           <td class="num">${r.outputTokens.toLocaleString()}</td>

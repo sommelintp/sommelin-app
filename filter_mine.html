@@ -129,7 +129,7 @@ async function load() {
 
 function renderPicker() {
   const box = document.getElementById('fpicker');
-  box.innerHTML = myFilters.map(f => `<div class="fpick ${f.id===currentId?'on':''}" onclick="selectFilter('${f.id}')">${f.emoji||'🍷'} ${esc(f.name)}</div>`).join('')
+  box.innerHTML = myFilters.map(f => `<div class="fpick ${f.id===currentId?'on':''}" onclick="selectFilter('${f.id}')">${esc(f.emoji||'🍷')} ${esc(f.name)}</div>`).join('')
     + `<div class="fpick add" onclick="createNew()">＋ 新規</div>`;
 }
 

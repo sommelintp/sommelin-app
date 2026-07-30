@@ -1413,6 +1413,11 @@
       💡 LINE配信は無料枠（月あたり一定通数）まで無料、超過分は従量課金です。将来、無料枠＋有料プランを用意予定。
     </div>
 
+    <!-- 準備中案内（この配信UIは未接続。宛先リストはサンプル） -->
+    <div class="line-billing-note" style="background:#fff4e5;border-color:#f0c98c;color:#8a5a1a;" data-i18n="note_bcast_preparing">
+      🚧 LINE一括配信は現在準備中です。表示中の店舗リストはサンプルで、実際の送信は行われません。
+    </div>
+
     <!-- 配信モード -->
     <div class="section-head" style="margin-top:14px;" data-i18n="head_choose_recipients">配信先を選ぶ</div>
     <div class="mode-selector">
@@ -1839,6 +1844,7 @@ const I18N = {
     post_person_zero: '+0名',
     plus_n: '+{n}名',
     note_line_billing: '💡 LINE配信は無料枠（月あたり一定通数）まで無料、超過分は従量課金です。将来、無料枠＋有料プランを用意予定。',
+    note_bcast_preparing: '🚧 LINE一括配信は現在準備中です。表示中の店舗リストはサンプルで、実際の送信は行われません。',
     head_choose_recipients: '配信先を選ぶ',
     head_bcast_mode: '配信モード',
     mode_all: 'すべて',
@@ -2158,6 +2164,7 @@ const I18N = {
     post_person_zero: '+0',
     plus_n: '+{n}',
     note_line_billing: '💡 LINE broadcasts are free up to a monthly quota; overages are pay-as-you-go. Free and paid plans are planned.',
+    note_bcast_preparing: '🚧 LINE bulk broadcast is under preparation. The store list shown is sample data and no messages will actually be sent.',
     head_choose_recipients: 'Choose recipients',
     head_bcast_mode: 'Broadcast mode',
     mode_all: 'All',
@@ -2446,6 +2453,8 @@ applyI18n();
 // ============================================================
 // データ
 // ============================================================
+function esc(s) { return String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
 const stores = [
   { id:'s01', name:'Bistrot Lumière',       icon:'🏰', area:'恵比寿',  type:'フレンチ',     lineConnected:true,  lastSent:'2026-05-01', excluded:false, isNew:false },
   { id:'s02', name:'La Cave de Tanaka',     icon:'🍽️', area:'代官山',  type:'ワインバー',   lineConnected:true,  lastSent:'2026-05-01', excluded:false, isNew:false },
@@ -3371,9 +3380,9 @@ function renderImpEventList() {
         <div class="imp-ev-date-w">${fmtDowLong(ev.date)}</div>
       </div>
       <div class="imp-ev-body">
-        <div class="imp-ev-name">${ev.name}</div>
-        <div class="imp-ev-meta">⏰ ${ev.time} &nbsp;|&nbsp; 📍 ${ev.venue}</div>
-        <span class="imp-ev-organizer ${orgCls}">${ev.mine ? t('org_own') : '🏢 ' + (ev.organizer || t('org_other'))}</span>
+        <div class="imp-ev-name">${esc(ev.name)}</div>
+        <div class="imp-ev-meta">⏰ ${esc(ev.time)} &nbsp;|&nbsp; 📍 ${esc(ev.venue)}</div>
+        <span class="imp-ev-organizer ${orgCls}">${ev.mine ? t('org_own') : '🏢 ' + (esc(ev.organizer) || t('org_other'))}</span>
         ${rsvpBadge}
       </div>
       <div class="imp-ev-actions">${actionBtns}</div>
@@ -3464,10 +3473,10 @@ function renderAttTab(tab) {
         <div class="att-card">
           <div class="att-num">${i + 1}</div>
           <div class="att-info">
-            <div class="att-store">${r.store}</div>
-            <div class="att-person">${r.name}　${r.title}</div>
-            <div class="att-email">${r.email}</div>
-            ${r.note ? `<div class="att-note">📝 ${r.note}</div>` : ''}
+            <div class="att-store">${esc(r.store)}</div>
+            <div class="att-person">${esc(r.name)}　${esc(r.title)}</div>
+            <div class="att-email">${esc(r.email)}</div>
+            ${r.note ? `<div class="att-note">📝 ${esc(r.note)}</div>` : ''}
             <div class="att-foot">
               <span class="att-count">${tfmt('n_people', { n: r.count })}</span>
               <span class="att-date">${tfmt('reg_at', { d: r.at })}</span>
@@ -3539,14 +3548,14 @@ function renderAttTab(tab) {
       <div class="survey-wine-card">
         <div class="sw-top">
           <div class="sw-rank-badge ${rankCls[i]}">${i < 3 ? medals[i] : i+1}</div>
-          <div class="sw-name">${r.name}</div>
+          <div class="sw-name">${esc(r.name)}</div>
           <div>
             <div class="sw-score">${r.avg.toFixed(1)}</div>
             <div class="sw-votes">${tfmt('n_votes', { n: r.votes })}</div>
           </div>
         </div>
         <div class="sw-comments">
-          ${r.comments.slice(0,2).map(c => `<div class="sw-comment">${qw(c)}</div>`).join('')}
+          ${r.comments.slice(0,2).map(c => `<div class="sw-comment">${qw(esc(c))}</div>`).join('')}
         </div>
       </div>`).join('');
 
@@ -3563,7 +3572,7 @@ function renderAttTab(tab) {
         <div class="sr-preview-label">${t('line_preview_label')}</div>
         <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.9);margin-bottom:8px;">
           ${t('report_head')}<br>
-          <span style="font-weight:400;font-size:10px;opacity:.7;">${ev.name}</span>
+          <span style="font-weight:400;font-size:10px;opacity:.7;">${esc(ev.name)}</span>
         </div>
         ${s.results.slice(0,3).map((r, i) => `
           <div class="sr-preview-item">
@@ -3878,8 +3887,8 @@ function renderBroadcastEventCard() {
     </div>
     <div class="ev-info">
       <span class="ev-tag">🍷 ${dispEvType(ev.typeLabel || '試飲会')}</span>
-      <div class="ev-name">${ev.name}</div>
-      <div class="ev-meta">⏰ ${ev.time} &nbsp;|&nbsp; 📍 ${ev.venue}</div>
+      <div class="ev-name">${esc(ev.name)}</div>
+      <div class="ev-meta">⏰ ${esc(ev.time)} &nbsp;|&nbsp; 📍 ${esc(ev.venue)}</div>
     </div>
     <button class="ev-change-btn" aria-label="${t('aria_change_event')}" onclick="openEventPicker()">${t('btn_change')}</button>`;
 }
@@ -3894,11 +3903,11 @@ function openEventPicker() {
   } else {
     body.innerHTML = list.map(ev => {
       const sel = selectedBroadcastEvent && ev.id === selectedBroadcastEvent.id;
-      const meta = `${fmtMDW(ev.date)} · ${ev.time} · 📍 ${ev.venue}`;
-      const org = ev.mine ? t('org_own') : '🏢 ' + (ev.organizer || t('org_other'));
+      const meta = `${fmtMDW(ev.date)} · ${esc(ev.time)} · 📍 ${esc(ev.venue)}`;
+      const org = ev.mine ? t('org_own') : '🏢 ' + (esc(ev.organizer) || t('org_other'));
       return `<div class="picker-item${sel ? ' selected' : ''}" onclick="selectBroadcastEvent('${ev.id}')">
         <div class="picker-item-main">
-          <div class="picker-item-title">${ev.name}</div>
+          <div class="picker-item-title">${esc(ev.name)}</div>
           <div class="picker-item-meta">${meta}　${org}</div>
         </div>
         ${sel ? '<span class="picker-item-check">✓</span>' : ''}
@@ -4103,7 +4112,7 @@ function updateFooter() {
   const personCount = (broadcastType === 'post' && postToPersons) ? connectedPersonCount() : 0;
   const total = storeCount + personCount;
   document.getElementById('sfCount').textContent  = total;
-  document.getElementById('sfSendBtn').disabled   = total === 0;
+  document.getElementById('sfSendBtn').disabled   = true; // 準備中: 実配信APIが未接続のため送信は常に無効
   const lineTotal = allLineIds.length;
   document.getElementById('sfSub').textContent = personCount
     ? tfmt('sf_sub_mixed', { s: storeCount, p: personCount })
@@ -4160,8 +4169,8 @@ function renderStoreList() {
       <div class="sr-check" onclick="toggleStore('${s.id}')">${isSelected?'✓':''}</div>
       <div class="sr-icon">${s.icon}</div>
       <div class="sr-info">
-        <div class="sr-name">${s.name} ${newBadge}</div>
-        <div class="sr-meta">📍 ${dispArea(s.area)} &nbsp;·&nbsp; ${dispType(s.type)}${s.note ? ` &nbsp;·&nbsp; 📝 ${s.note}` : ''}</div>
+        <div class="sr-name">${esc(s.name)} ${newBadge}</div>
+        <div class="sr-meta">📍 ${esc(dispArea(s.area))} &nbsp;·&nbsp; ${esc(dispType(s.type))}${s.note ? ` &nbsp;·&nbsp; 📝 ${esc(s.note)}` : ''}</div>
       </div>
       <div class="sr-right">
         <span class="line-badge${noLine?' no':''}">${noLine ? t('badge_not_linked') : t('badge_line')}</span>
@@ -4286,6 +4295,7 @@ function todayISO() {
 }
 
 function openConfirm() {
+  showToast(t('note_bcast_preparing')); return; // 準備中: 実配信APIが未接続
   const storeCount  = selectedIds.size;
   const personCount = (broadcastType === 'post' && postToPersons) ? connectedPersonCount() : 0;
   const total = storeCount + personCount;
@@ -4585,10 +4595,10 @@ function renderCatalog() {
   list.innerHTML = items.map(it => `
     <div class="cat-card${it.available ? '' : ' unavail'}">
       <div class="cat-card-top">
-        ${it.photo ? `<img class="cat-thumb" src="${it.photo}" alt="">` : '<div class="cat-badge">🍷</div>'}
+        ${it.photo ? `<img class="cat-thumb" src="${esc(it.photo)}" alt="">` : '<div class="cat-badge">🍷</div>'}
         <div class="cat-cinfo">
-          <div class="cat-cname">${it.name}</div>
-          <div class="cat-cmeta">${it.producer}　${it.vintage}　${it.region}</div>
+          <div class="cat-cname">${esc(it.name)}</div>
+          <div class="cat-cmeta">${esc(it.producer)}　${esc(it.vintage)}　${esc(it.region)}</div>
           <div class="cat-cprice">¥${(it.price||0).toLocaleString()}</div>
         </div>
         <div class="cat-cright">

@@ -60,27 +60,17 @@
        - ソムスター: somStar（★1-5）＝この価格ならどれくらいおすすめか（コスパ込み）
        - somStar null = 星なしが正常（母集団外・SP足切り）。旧starsHtmlと同じく
          空スロットも「収集中」も出さない。
-       - 100点到達はtasteScoreInternalでランク分け:
-           ≥120 レジェンド / ≥110 ゴールド / ≥100 シルバー
-     アプリ側で計算は一切しない（DB計算値の表示のみ）。
-
-     【この3つの数字を「SPの値」と読み違えないこと】
-     100/110/120は内部スコアの閾値であって、SPそのものではない。SP→内部スコアの
-     換算はDB側(scoring_config)が持つ。2026-07-28のv1.5.0で100点の到達点が
-     SP8.0→8.5に上がったが、換算式も一緒に動いた（内部スコア=100+20×(SP-8.5)）ため、
-     ここは変更不要のまま シルバーSP8.5〜/ゴールドSP9.0〜/レジェンドSP9.5〜 になる。
-     採点方法は今後も変わる[[sommelin-scoring-method-volatile]]。SPの数字を見て
-     ここを「直す」と、かえって二重管理になり表示がDBとずれる。
-     該当銘柄数もここには書かない（DBを更新するたび古くなるため）。
+       - 100点到達の称号はサーバーが返すランク名 tasteRank（Silver/Gold/Legend）
+         で演出を分ける（2026-07-30: 内部スコアの閾値判定をフロントから撤去）。
+     アプリ側で計算は一切しない（DB計算値の表示のみ）。ランクの判定・SP換算は
+     DB/サーバー側が持ち、閾値の数値をここに書かない。採点方法は今後も変わる
+     [[sommelin-scoring-method-volatile]]ため、フロントはランク名を読むだけ。
      ═══════════════════════════════════════════════════════════ */
 
-  function rankOf(tasteScoreInternal){
-    if (tasteScoreInternal == null) return null;
-    const v = Number(tasteScoreInternal);
-    if (v >= 120) return 'legend';
-    if (v >= 110) return 'gold';
-    if (v >= 100) return 'silver';
-    return null;
+  function rankOf(tasteRank){
+    if (tasteRank == null) return null;
+    const key = String(tasteRank).toLowerCase();
+    return RANK_STYLES[key] ? key : null;
   }
 
   // 100点ランクの意匠。基本チップは落ち着いたバーガンディ淡色、
@@ -101,7 +91,7 @@
   };
 
   // 味スコアチップ＋ソムスターのワンセット描画。
-  //   wine: { tasteScore100, tasteScoreInternal, somStar, somPct, somPctNote } を含む任意オブジェクト
+  //   wine: { tasteScore100, tasteRank, somStar, somPct, somPctNote } を含む任意オブジェクト
   //   opts: { size=13, lang='ja', showPct=false }
   //     showPct: somPctがあれば「同価格帯で上位X%」の小さな補足行を付ける（詳細画面向け）
   // どちらも無ければ空文字（何も出さない＝no-lie）。
@@ -116,7 +106,7 @@
 
     let chip = '';
     if (t100 != null) {
-      const rank = rankOf(wine.tasteScoreInternal);
+      const rank = rankOf(wine.tasteRank);
       const rs = rank && RANK_STYLES[rank];
       const label = lang === 'en' ? 'Taste' : '味';
       const base = `display:inline-flex;align-items:baseline;gap:${Math.round(size*0.3)}px;`

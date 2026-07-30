@@ -1574,7 +1574,7 @@
         </div>
         <div style="display:flex;align-items:flex-start;gap:10px;">
           <div style="width:22px;height:22px;background:var(--line-green);color:white;border-radius:50%;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">2</div>
-          <div style="font-size:12px;color:var(--text);line-height:1.5;" data-i18n="line_step2">自動で届くメッセージからお店情報を登録</div>
+          <div style="font-size:12px;color:var(--text);line-height:1.5;" data-i18n="line_step2">表示される6桁の連携コードをLINEのトークで送信（連携完了はこの画面で確認できます）</div>
         </div>
         <div style="display:flex;align-items:flex-start;gap:10px;">
           <div style="width:22px;height:22px;background:var(--line-green);color:white;border-radius:50%;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">3</div>
@@ -2144,66 +2144,8 @@
   </div>
 </div>
 
-<!-- ==================== LINE 店舗登録フォーム（LIFF想定） ==================== -->
-<div class="line-modal-bg" id="lineRegBg" onclick="closeLineRegBg(event)">
-  <div class="line-modal-sheet" style="max-height:88vh;overflow-y:auto;">
-    <div class="line-modal-handle"></div>
-    <!-- LINEっぽいヘッダー -->
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
-      <div style="width:36px;height:36px;background:var(--line-green);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <svg width="22" height="22" viewBox="0 0 36 36" fill="none"><path d="M18 7C11.373 7 6 11.477 6 16.97c0 4.928 3.928 9.065 9.237 9.847.359.077.848.237.972.544.111.279.073.716.036 1l-.157 1.02c-.048.31-.22 1.21.955.66 1.175-.55 6.34-4.084 8.65-6.99C27.31 20.96 30 19.12 30 16.97 30 11.477 24.627 7 18 7z" fill="white"/></svg>
-      </div>
-      <div>
-        <div style="font-size:15px;font-weight:800;color:var(--text);" data-i18n="lreg_title">ソムリン 店舗登録</div>
-        <div style="font-size:11px;color:var(--text-sub);" data-i18n="lreg_sub">LINEで試飲会情報を受け取るための登録フォーム</div>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label" data-i18n="lreg_name_lbl">担当者名</label>
-      <input class="form-input" id="lreg-name" placeholder="例: 田中 太郎" data-i18n-ph="lreg_name_ph">
-    </div>
-    <div class="form-group">
-      <label class="form-label" data-i18n="lreg_role_lbl">担当者の役職</label>
-      <select class="form-select" id="lreg-role">
-        <option value="" data-i18n="lreg_role_select">選択してください</option>
-        <option value="sommelier" data-i18n="lreg_role_sommelier">ソムリエ / ワインアドバイザー</option>
-        <option value="chef" data-i18n="lreg_role_chef">シェフ / 料理長</option>
-        <option value="manager" data-i18n="lreg_role_manager">店長 / マネージャー</option>
-        <option value="owner" data-i18n="lreg_role_owner">オーナー</option>
-        <option value="buyer" data-i18n="lreg_role_buyer">バイヤー / 仕入れ担当</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label" data-i18n="lreg_regions_lbl">受け取りたい試飲会の産地（複数選択可）</label>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;" id="lreg-regions">
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;transition:all 0.15s;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;"><span data-i18n="lreg_burgundy">🇫🇷 ブルゴーニュ</span></label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;"><span data-i18n="lreg_bordeaux">🇫🇷 ボルドー</span></label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;"><span data-i18n="lreg_champagne">🥂 シャンパーニュ</span></label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;"><span data-i18n="lreg_italy">🇮🇹 イタリア全般</span></label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;"><span data-i18n="lreg_natural">🌿 自然派ワイン</span></label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;"><span data-i18n="lreg_all_regions">🌍 すべての産地</span></label>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label" data-i18n="lreg_types_lbl">通知を希望する種別</label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;"><span data-i18n="chip_tasting">🍷 試飲会</span></label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;"><span data-i18n="chip_seminar">📚 セミナー</span></label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;background:white;border:1.5px solid var(--border);border-radius:20px;padding:6px 12px;" onclick="toggleRegChip(this)"><input type="checkbox" style="display:none;"><span data-i18n="chip_fair_ex">🏆 フェア・展示会</span></label>
-      </div>
-    </div>
-
-    <button class="line-modal-save" onclick="submitLineReg()" data-i18n="lreg_submit">
-      登録を完了してLINEを連携する
-    </button>
-    <div style="text-align:center;margin-top:10px;">
-      <span style="font-size:11px;color:var(--text-sub);cursor:pointer;" onclick="closeLineReg()" data-i18n="cancel">キャンセル</span>
-    </div>
-  </div>
-</div>
+<!-- LINE店舗登録フォーム（LIFF想定）は撤去（2026-07-30・LINE-E）: 実体のない登録フローだった。
+     連携はワンタイムコード方式（/api/line-link）に一本化済み。 -->
 
 <!-- LINE設定モーダルは撤去（2026-07-22）: 種別/タイミング/産地は実データで絞れないため見せかけだった。
      受け取る設定は連携済みビューの「新着試飲会を受け取る」トグル1個（本物・/api/line-link/prefs）に一本化。 -->
@@ -2440,7 +2382,7 @@ const I18N = {
     line_connect_btn: 'LINE アカウントと連携する',
     line_unconnected_desc: '<strong>3ステップで設定完了。</strong>インポーターが配信する試飲会・セミナー情報をお店のLINEで受け取れます。',
     line_step1: '下のボタンをタップして「<strong>Sommelin</strong>」をLINEで友達追加',
-    line_step2: '自動で届くメッセージからお店情報を登録',
+    line_step2: '表示される6桁の連携コードをLINEのトークで送信（連携完了はこの画面で確認できます）',
     line_step3: '試飲会情報がLINEに届くようになります 🎉',
     line_add_friend_btn: 'LINEで友達追加する',
     line_add_friend_note: 'ソムリン公式LINE · タップするとLINEアプリが開きます',
@@ -2877,7 +2819,10 @@ const I18N = {
     toast_image_load_fail: '画像を読み込めませんでした',
     toast_label_read_fail: '銘柄を読み取れませんでした。近づいて撮り直してください',
     toast_line_settings_saved: 'LINE通知設定を保存しました ✓',
-    toast_line_test_sent: 'LINEにテスト通知を送信しました 💬',
+    toast_line_test_sent: 'テスト送信しました。LINEをご確認ください 💬',
+    toast_line_test_unlinked: 'LINE連携が完了していません',
+    toast_line_test_rate: '送信間隔を空けてください',
+    toast_line_test_fail: '⚠️ テスト送信に失敗しました',
     toast_list_private: 'ワインリストを非公開にしました 🔒',
     toast_list_public: 'ワインリストを公開しました 🔓',
     toast_login_unknown: 'ログイン情報を確認できませんでした',
@@ -2982,7 +2927,7 @@ const I18N = {
     line_connect_btn: 'Link your LINE account',
     line_unconnected_desc: '<strong>Set up in 3 steps.</strong> Receive tasting event and seminar announcements from importers on your store\'s LINE.',
     line_step1: 'Tap the button below to add "<strong>Sommelin</strong>" as a friend on LINE',
-    line_step2: 'Register your store info from the message that arrives automatically',
+    line_step2: 'Send the 6-digit link code shown here in the LINE chat (this screen confirms completion)',
     line_step3: 'Tasting event info will start arriving on LINE 🎉',
     line_add_friend_btn: 'Add as friend on LINE',
     line_add_friend_note: 'Sommelin official LINE · Tapping opens the LINE app',
@@ -3404,7 +3349,10 @@ const I18N = {
     toast_image_load_fail: 'Could not load the image',
     toast_label_read_fail: 'Could not read any wines. Please move closer and retake the photo',
     toast_line_settings_saved: 'LINE notification settings saved ✓',
-    toast_line_test_sent: 'Test notification sent to LINE 💬',
+    toast_line_test_sent: 'Test message sent. Please check LINE 💬',
+    toast_line_test_unlinked: 'LINE is not linked yet',
+    toast_line_test_rate: 'Please wait a moment before sending again',
+    toast_line_test_fail: '⚠️ Failed to send the test message',
     toast_list_private: 'Wine list is now private 🔒',
     toast_list_public: 'Wine list is now public 🔓',
     toast_login_unknown: 'Could not verify your login',
@@ -3511,6 +3459,7 @@ function uiToDb(w, uid){ return { owner_id:uid, cat:w.cat||null, name:w.name, pr
 // 📲 LINE連携（2026-07-12・R節）: ワンタイムコード方式。LIFF/OAuth不要
 // ============================================================
 let lineLinkPollTimer = null;
+let lineLinkCodeActive = false; // 発行中〜コード表示中はlineLinkInitで上書きしない
 
 async function lineLinkApiFetch(path, opts) {
   opts = opts || {};
@@ -3519,6 +3468,7 @@ async function lineLinkApiFetch(path, opts) {
 }
 
 function lineLinkRenderLinked(displayName) {
+  lineLinkCodeActive = false;
   document.getElementById('lineLinkBody').innerHTML =
     `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
       <span style="color:var(--text);font-weight:700;">${displayName ? t('line_linked_name').replace('{name}', escLineLink(displayName)) : t('line_linked')}</span>
@@ -3526,6 +3476,7 @@ function lineLinkRenderLinked(displayName) {
     </div>`;
 }
 function lineLinkRenderUnlinked() {
+  lineLinkCodeActive = false;
   document.getElementById('lineLinkBody').innerHTML =
     `<div>
       <div style="margin-bottom:8px;">${t('line_link_desc')}</div>
@@ -3560,6 +3511,7 @@ async function lineLinkCheckStatus() {
 }
 
 async function lineLinkStart() {
+  lineLinkCodeActive = true;
   document.getElementById('lineLinkBody').textContent = t('line_issuing');
   try {
     const r = await lineLinkApiFetch('/start', { method: 'POST' });
@@ -3580,15 +3532,17 @@ async function lineLinkUnlink() {
 }
 
 async function lineLinkInit() {
+  if (lineLinkCodeActive) return;
   if (lineLinkPollTimer) { clearInterval(lineLinkPollTimer); lineLinkPollTimer = null; }
   try {
     const r = await lineLinkApiFetch('/status');
     if (!r.ok) throw 0;
     const d = await r.json();
+    if (lineLinkCodeActive) return;
     if (d.linked) lineLinkRenderLinked(d.displayName);
     else lineLinkRenderUnlinked();
   } catch (e) {
-    lineLinkRenderUnlinked();
+    if (!lineLinkCodeActive) lineLinkRenderUnlinked();
   }
 }
 
@@ -4166,41 +4120,20 @@ function renderLineQr() {
   return;
 }
 
-// 登録フォームを開く
-function openLineRegForm() {
-  document.getElementById('lineRegBg').classList.add('open');
-}
-function closeLineReg() {
-  document.getElementById('lineRegBg').classList.remove('open');
-}
-function closeLineRegBg(e) {
-  if (e.target === document.getElementById('lineRegBg')) closeLineReg();
-}
-
-// 産地・種別チップのトグル
-function toggleRegChip(label) {
-  const active = label.classList.toggle('chip-active');
-  label.style.background = active ? 'var(--line-green-pale)' : 'white';
-  label.style.borderColor = active ? 'var(--line-green)' : 'var(--border)';
-  label.style.color = active ? 'var(--line-green-dark)' : '';
-  label.style.fontWeight = active ? '700' : '500';
-}
+// LIFF時代の登録フォーム（openLineRegForm/toggleRegChip等）は撤去（2026-07-30・LINE-E）
 
 // ── 2026-07-13（AI-2）: 偽の連携完了演出（simulateLineAdd/submitLineRegのsetTimeout）を廃止 ──
 // 実際には何も登録されないのに「連携完了✓」と表示され、通知が届かない誤認の温床だった。
 // 連携の実体はR節のワンタイムコード方式（/api/line-link）に一本化し、
 // このカードは実ステータスの表示と、実フローへの誘導だけを行う。
 
-// 実フロー（ワンタイムコード連携）へ誘導する
+// 実フロー（ワンタイムコード連携）へ誘導する。
+// コード表示先 #lineLinkBody は在庫パネル内にあるため、先にパネルを切り替える
 function goToRealLineLink() {
+  switchPanel('stock');
   lineLinkStart();
   const el = document.getElementById('lineLinkBody');
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
-
-function submitLineReg() {
-  closeLineReg();
-  goToRealLineLink();
 }
 
 function connectLine() {
@@ -4277,13 +4210,19 @@ function saveLinePref() {
     .then(r => { if (r.ok) showToast(t('line_pref_saved')); }).catch(() => {});
 }
 
-// テスト送信
-function sendLineTest() {
-  showLinePush(
-    t('push_test_title'),
-    t('push_test_sub')
-  );
-  showToast(t('toast_line_test_sent'));
+// テスト送信（実API: POST /api/line-link/test → 連携中のLINEへ1通push）
+async function sendLineTest() {
+  try {
+    const r = await lineLinkApiFetch('/test', { method: 'POST' });
+    if (r.status === 404) { showToast(t('toast_line_test_unlinked')); return; }
+    if (r.status === 429) { showToast(t('toast_line_test_rate')); return; }
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    if (!d.ok) throw 0;
+    showToast(t('toast_line_test_sent'));
+  } catch (e) {
+    showToast(t('toast_line_test_fail'));
+  }
 }
 
 // LINE プッシュ通知トースト

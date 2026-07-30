@@ -149,7 +149,7 @@
   .store-consult-btn {
     display: flex; align-items: center; justify-content: center; gap: 7px;
     width: 100%; box-sizing: border-box; text-decoration: none;
-    background: linear-gradient(135deg, #9B1B4B, #7a1339);
+    background: linear-gradient(135deg, var(--wine), var(--wine-dark));
     color: #fff; font-size: 14px; font-weight: 700;
     padding: 13px 16px; border-radius: 12px;
     box-shadow: 0 3px 10px rgba(155,27,75,0.25);
@@ -1352,7 +1352,7 @@
 
   /* ===== カメラ SCREEN ===== */
   .camera-hero {
-    background: linear-gradient(160deg, #5C0E2A 0%, #9B1B4B 100%);
+    background: linear-gradient(160deg, var(--wine-dark) 0%, var(--wine) 100%);
     padding: 32px 20px 28px;
     text-align: center;
   }
@@ -1541,7 +1541,7 @@
 
   /* ===== マイページ SCREEN ===== */
   .mypage-profile {
-    background: linear-gradient(160deg, #5C0E2A 0%, #9B1B4B 100%);
+    background: linear-gradient(160deg, var(--wine-dark) 0%, var(--wine) 100%);
     padding: 28px 20px 24px;
     display: flex;
     align-items: center;
@@ -1877,7 +1877,7 @@
 <link rel="stylesheet" href="assets/sommelin-ui.css?v=20260730">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="assets/bottle-svg.js"></script>
-<script src="assets/wine-display.js?v=20260718"></script>
+<script src="assets/wine-display.js?v=20260730"></script>
 </head>
 <body>
 
@@ -1887,7 +1887,7 @@
     <div class="restaurant-name" onclick="switchTab('wine')" style="cursor:pointer;">Bistrot Lumière</div>
     <div class="somurin-icon-small" onclick="toggleChat()">
       <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="20" cy="20" r="20" fill="#9B1B4B"/>
+        <circle cx="20" cy="20" r="20" style="fill:var(--wine);"/>
         <!-- 顔 -->
         <circle cx="20" cy="24" r="13" fill="#F2C090"/>
         <!-- ポンパドゥール -->
@@ -1934,7 +1934,7 @@
 <div class="sommelier-banner" onclick="toggleChat()">
   <div class="sommelier-avatar">
     <svg viewBox="0 0 40 40" width="40" height="40" fill="none">
-      <circle cx="20" cy="20" r="20" fill="#9B1B4B"/>
+      <circle cx="20" cy="20" r="20" style="fill:var(--wine);"/>
       <circle cx="20" cy="24" r="13" fill="#F2C090"/>
       <path d="M9 20 Q8 7 20 6 Q32 7 31 20 Q26 14 20 15 Q14 14 9 20Z" fill="#5C1020"/>
       <path d="M29 8 Q35 2 34 11 Q30 14 27 11 Q26 7 30 6" fill="#5C1020"/>
@@ -2372,7 +2372,7 @@
     </div>
 
     <a class="camera-mode-card" href="scouter.html" style="text-decoration:none;color:inherit;border:1.5px solid var(--burgundy);background:linear-gradient(135deg,#ffffff,#fbeef3);">
-      <div class="camera-mode-icon" style="background:linear-gradient(135deg,#9B1B4B,#5C0E2A);color:#fff;">🍷</div>
+      <div class="camera-mode-icon" style="background:linear-gradient(135deg,var(--wine),var(--wine-dark));color:#fff;">🍷</div>
       <div style="flex:1">
         <div class="camera-mode-title"><span data-i18n="cam_scouter_title">スカウター — かざしてコスパ</span><span style="font-size:9px;font-weight:800;color:#fff;background:var(--burgundy);padding:2px 7px;border-radius:10px;margin-left:6px;vertical-align:middle;" data-i18n="cam_badge_live">本番</span></div>
         <div class="camera-mode-desc" data-i18n="cam_scouter_desc">ラベルやワインリストにかざすと、その場でSP評価とコスパ（おすすめ度）を表示します</div>
@@ -2517,7 +2517,7 @@
     <div style="position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:430px;background:var(--bg);border-radius:20px 20px 0 0;padding:16px;max-height:82vh;overflow:auto;">
       <div style="width:40px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 12px;"></div>
       <div id="wineMapTitle" style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:2px;" data-i18n="wine_map_title">📍 どこで飲める？買える？</div>
-      <div style="font-size:11px;color:var(--text-sub);margin-bottom:10px;" data-i18n-html="map_legend"><span style="color:#9B1B4B;">●</span> レストラン（飲める）　<span style="color:#C9973A;">●</span> ワインショップ（買える）</div>
+      <div style="font-size:11px;color:var(--text-sub);margin-bottom:10px;" data-i18n-html="map_legend"><span style="color:var(--wine);">●</span> レストラン（飲める）　<span style="color:#C9973A;">●</span> ワインショップ（買える）</div>
       <div id="wineMapBody">
         <div style="text-align:center;padding:24px;color:var(--text-sub);font-size:13px;" data-i18n="searching">探しています…</div>
       </div>
@@ -3057,7 +3057,7 @@ const I18N = {
     good_wines_n: '⭐ 良いワイン <strong>{n}</strong>本', list_n: '🍷 リスト {n}本', score_pt: '点',
     places_footer: 'ワインリストの質（評価の信頼度加重平均）順。タップでお店のリスト・地図へ',
     wine_map_title: '📍 どこで飲める？買える？', wine_map_where: '📍 {n} はどこで？', this_wine: 'このワイン',
-    map_legend: '<span style="color:#9B1B4B;">●</span> レストラン（飲める）　<span style="color:#C9973A;">●</span> ワインショップ（買える）',
+    map_legend: '<span style="color:var(--wine);">●</span> レストラン（飲める）　<span style="color:#C9973A;">●</span> ワインショップ（買える）',
     sightings_empty_title: 'まだ目撃情報がありません',
     search_online_head: 'ネットで探す', search_on_rakuten: '🛒 楽天市場で検索', search_on_web: '🌐 Webで検索',
     word_buy_query: 'ワイン 購入', search_online_note: '外部サイトの検索結果が開きます（在庫・銘柄の一致は保証されません）',
@@ -3247,7 +3247,7 @@ const I18N = {
     good_wines_n: '⭐ <strong>{n}</strong> good wines', list_n: '🍷 {n} on the list', score_pt: 'pts',
     places_footer: 'Ranked by wine-list quality (confidence-weighted average of ratings). Tap for the list or map',
     wine_map_title: '📍 Where to drink or buy?', wine_map_where: '📍 Where to find {n}?', this_wine: 'this wine',
-    map_legend: '<span style="color:#9B1B4B;">●</span> Restaurant (drink)　<span style="color:#C9973A;">●</span> Wine shop (buy)',
+    map_legend: '<span style="color:var(--wine);">●</span> Restaurant (drink)　<span style="color:#C9973A;">●</span> Wine shop (buy)',
     sightings_empty_title: 'No sightings yet',
     search_online_head: 'Search online', search_on_rakuten: '🛒 Search on Rakuten', search_on_web: '🌐 Search the web',
     word_buy_query: 'wine buy', search_online_note: 'Opens external search results (availability and exact match not guaranteed)',
@@ -3568,8 +3568,8 @@ function openHistoryDetail(key) {
     <div class="hist-wine-row">
       <span class="hist-wine-emoji">${w.emoji}</span>
       <div class="hist-wine-info">
-        <div class="hist-wine-name">${w.name} ${w.vintage}</div>
-        <div class="hist-wine-sub">${w.region} &nbsp;·&nbsp; ${t('glass_price_n').replace('{n}', w.price.toLocaleString())}</div>
+        <div class="hist-wine-name">${escE(w.name)} ${escE(w.vintage)}</div>
+        <div class="hist-wine-sub">${escE(w.region)} &nbsp;·&nbsp; ${t('glass_price_n').replace('{n}', w.price.toLocaleString())}</div>
       </div>
       <span class="hist-wine-stars">${'⭐'.repeat(w.rating)}</span>
     </div>`).join('');
@@ -3823,7 +3823,7 @@ function loadMapLib() {
   return mapLibPromise;
 }
 
-const PIN_COLORS = { restaurant: '#9B1B4B', shop: '#C9973A' };
+const PIN_COLORS = { restaurant: 'var(--wine)', shop: '#C9973A' };
 const GPIN_ICONS = {
   restaurant: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
   shop: 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
@@ -3934,7 +3934,7 @@ function renderStoreMapPins() {
   const pts = [];
   items.forEach((it, i) => {
     const link = it.type === 'official'
-      ? `<a href="prototype.html?r=${encodeURIComponent(it.ownerId)}" style="color:#9B1B4B;font-weight:700;">${t('view_winelist_link')}</a>`
+      ? `<a href="prototype.html?r=${encodeURIComponent(it.ownerId)}" style="color:var(--wine);font-weight:700;">${t('view_winelist_link')}</a>`
       : '';
     addMapPin(storeMap, it.lat, it.lng, it.category,
       `<div style="font-size:13px;font-weight:700;">${t('rank_pos').replace('{n}', i + 1)} ${(it.name || '').replace(/</g, '&lt;')}</div>
@@ -4370,7 +4370,7 @@ async function loadRestaurantList(rid) {
     wines = classicWines.map(w => ({ name: w.name, producer: w.producer, note: '', flavors: [], mariage: [] }));
 
     // 2026-07-09: 一覧まとめてSP補完（Supabase直叩き・生sp/osuの漏洩経路）は削除。
-    // このリスト表示では評価バッジを省略する（w.sp未設定のままなら自然に非表示になる）。
+    // このリスト表示では評価バッジを省略する（2026-07-30: w.sp表示コード自体も撤去済み）。
 
     // 店舗ビュー（クラシックリスト）で表示
     isListView = true;
@@ -4463,7 +4463,7 @@ function renderCalendar() {
     ].filter(Boolean).join(' ');
 
     const dotsHtml = evs.map(ev =>
-      `<div class="cal-dot ${ev.dotClass}" title="${ev.name}"></div>`
+      `<div class="cal-dot ${ev.dotClass}" title="${escE(ev.name)}"></div>`
     ).join('');
 
     // 2026-07-13: 複数イベント日はリスト表示に（従来は1件目しか開けなかった）
@@ -4726,14 +4726,14 @@ function renderClassicList(filter) {
 
     Object.entries(byRegion).forEach(([region, wines]) => {
       if (Object.keys(byRegion).length > 1) {
-        html += `<div style="padding:8px 28px 2px;font-size:10px;font-weight:700;color:var(--text-sub);letter-spacing:1px;">${dj(region)}</div>`;
+        html += `<div style="padding:8px 28px 2px;font-size:10px;font-weight:700;color:var(--text-sub);letter-spacing:1px;">${escE(dj(region))}</div>`;
       }
       wines.forEach((w, i) => {
         html += `
           <div class="classic-row" onclick="openWine(${w.idx})">
             <div class="classic-row-left">
-              <div class="classic-wine-name">${w.name}${w.sp != null ? ` <span style="font-size:10px;font-weight:800;color:#C9973A;">⭐${Number(w.sp).toFixed(1)}</span>` : ''}</div>
-              <div class="classic-origin">${dj(w.producer)}</div>
+              <div class="classic-wine-name">${escE(w.name)}</div>
+              <div class="classic-origin">${escE(dj(w.producer))}</div>
             </div>
             <div class="classic-dots"></div>
             <div class="classic-prices">
@@ -5117,7 +5117,9 @@ function initMypageInvite() {
   if (input) input.value = link;
   if (qrWrap && window.QRCode && !qrWrap.dataset.rendered) {
     qrWrap.dataset.rendered = '1';
-    new QRCode(qrWrap, { text: link, width: 160, height: 160, colorDark: '#9B1B4B', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+    // canvas描画にはvar()が届かないため--wineの実値を渡す
+    const qrWine = (getComputedStyle(document.documentElement).getPropertyValue('--wine') || '').trim() || '#7A1F3D';
+    new QRCode(qrWrap, { text: link, width: 160, height: 160, colorDark: qrWine, colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
   }
 }
 function copyMypageInviteLink() {

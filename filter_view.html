@@ -70,7 +70,7 @@ async function load() {
     const r = await authFetch(API_BASE + '/api/filters/' + filterId + '/wines?limit=100');
     if (!r.ok) throw 0;
     const d = await r.json();
-    document.getElementById('fname').innerHTML = (d.emoji || '🍷') + ' ' + esc(d.name || 'フィルター');
+    document.getElementById('fname').innerHTML = esc([...String(d.emoji || '🍷')].slice(0, 8).join('')) + ' ' + esc(d.name || 'フィルター');
     if (d.instagram) {
       const a = document.getElementById('iglink');
       a.href = 'https://www.instagram.com/' + encodeURIComponent(d.instagram) + '/';
