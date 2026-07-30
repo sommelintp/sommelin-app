@@ -3886,7 +3886,7 @@ function renderBroadcastEventCard() {
       <div class="ev-date-w">${fmtDowLong(ev.date)}</div>
     </div>
     <div class="ev-info">
-      <span class="ev-tag">🍷 ${dispEvType(ev.typeLabel || '試飲会')}</span>
+      <span class="ev-tag">🍷 ${esc(dispEvType(ev.typeLabel || '試飲会'))}</span>
       <div class="ev-name">${esc(ev.name)}</div>
       <div class="ev-meta">⏰ ${esc(ev.time)} &nbsp;|&nbsp; 📍 ${esc(ev.venue)}</div>
     </div>
@@ -4608,7 +4608,7 @@ function renderCatalog() {
           <button class="cat-del" onclick="deleteCat('${it.id}')">✕</button>
         </div>
       </div>
-      ${it.desc ? `<div class="cat-desc">${dispDesc(it.desc)}</div>` : ''}
+      ${it.desc ? `<div class="cat-desc">${esc(dispDesc(it.desc))}</div>` : ''}
     </div>`).join('');
 }
 
