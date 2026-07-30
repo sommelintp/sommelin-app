@@ -1,7 +1,8 @@
 // ソムリン スカウター — 最小サービスワーカー（オフライン外殻＋更新）
 // 重要: Supabase(POST) や CDN/wasm はキャッシュせず素通し（GET・同一オリジンのみ扱う）
 // v2: ビジョンAI版。HTMLはネットワーク優先（更新が即届く）・オフライン時のみキャッシュ
-const CACHE = 'somm-scout-v2';
+// v3: 2026-07-30 UIトークン刷新。旧キャッシュ（?v=なしのsommelin-ui.css等）を破棄
+const CACHE = 'somm-scout-v3';
 const SHELL = ['./scouter.html', './manifest.webmanifest'];
 
 self.addEventListener('install', e => {

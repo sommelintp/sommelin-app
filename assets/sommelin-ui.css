@@ -29,6 +29,32 @@
   /* 書体 */
   --font-display: "Shippori Mincho", "Cormorant Garamond", "Hiragino Mincho ProN", serif;
   --font-body: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+
+  /* 追加トークン v1.1（2026-07-30。追加のみ・既存の改名/削除は禁止） */
+  --wine-dark: #5C0E2A;     /* ヘッダーグラデの最深部 */
+  --line-green: #06C755;    /* LINEブランド緑 */
+  --line-green-dark: #019A40;
+  --line-green-pale: #e8faf0;
+
+  /* セマンティック */
+  --ok: #16a34a;            /* 成功・在庫あり */
+  --danger-bg: #fee2e2;     /* 警告・エラーの淡背景 */
+
+  /* ワインタイプ4色 */
+  --red-wine: #9B1B4B;
+  --white-wine: #C9973A;
+  --rose-wine: #D4698A;
+  --sparkling-wine: #3D7AB5;
+
+  /* 角丸スケール */
+  --r-chip: 10px;
+  --r-card: 14px;
+  --r-sheet: 20px;
+  --r-pill: 999px;
+
+  /* 影 */
+  --shadow-card: 0 1px 4px rgba(42, 22, 27, .05);
+  --shadow-float: 0 4px 16px rgba(0, 0, 0, .15);
 }
 
 /* ── ベース ── */
@@ -115,6 +141,8 @@
 }
 .s-btn-primary { background: var(--wine); color: #fff; border-color: var(--wine); }
 .s-btn-gold { background: linear-gradient(135deg, var(--foil), #A07C2E); color: #fff; border: none; }
+.s-btn-line { background: var(--line-green); color: #fff; border-color: var(--line-green); }
+.s-btn-line:active { background: var(--line-green-dark); border-color: var(--line-green-dark); }
 
 /* ── セグメント切替（金の下線式）── */
 .s-segment { display: flex; border-bottom: 1px solid var(--line); background: var(--paper); }

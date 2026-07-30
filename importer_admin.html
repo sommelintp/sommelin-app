@@ -67,9 +67,9 @@
     --border: #ecdde2;
     --gold: #C9973A;
     --green: #16a34a;
-    --line: #06C755;
-    --line-dark: #019A40;
-    --line-pale: #e8faf0;
+    --line-green: #06C755;
+    --line-green-dark: #019A40;
+    --line-green-pale: #e8faf0;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -299,7 +299,7 @@
   .sr-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
 
   .line-badge {
-    background: var(--line-pale); color: var(--line-dark);
+    background: var(--line-green-pale); color: var(--line-green-dark);
     font-size: 10px; font-weight: 700;
     padding: 2px 7px; border-radius: 8px;
     white-space: nowrap;
@@ -392,7 +392,7 @@
   .sf-count-sub   { font-size: 11px; color: var(--text-sub); margin-left: auto; }
   .sf-send-btn {
     width: 100%;
-    background: linear-gradient(135deg, var(--line) 0%, #04a847 100%);
+    background: linear-gradient(135deg, var(--line-green) 0%, #04a847 100%);
     color: white; border: none;
     border-radius: 14px; padding: 15px;
     font-size: 15px; font-weight: 800;
@@ -454,7 +454,7 @@
   .cm-icon  { font-size: 48px; margin-bottom: 12px; }
   .cm-title { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
   .cm-count {
-    font-size: 36px; font-weight: 800; color: var(--line-dark);
+    font-size: 36px; font-weight: 800; color: var(--line-green-dark);
     margin: 12px 0 4px; line-height: 1;
   }
   .cm-count-label { font-size: 14px; color: var(--text-sub); margin-bottom: 16px; }
@@ -472,12 +472,12 @@
     cursor: pointer; font-family: inherit;
   }
   .cm-send {
-    flex: 2; background: var(--line); color: white;
+    flex: 2; background: var(--line-green); color: white;
     border: none; border-radius: 12px;
     padding: 13px; font-size: 14px; font-weight: 800;
     cursor: pointer; font-family: inherit;
   }
-  .cm-send:active { background: var(--line-dark); }
+  .cm-send:active { background: var(--line-green-dark); }
 
   /* ===== 送信中 オーバーレイ ===== */
   .sending-overlay {
@@ -491,7 +491,7 @@
   .sending-spinner {
     width: 64px; height: 64px;
     border: 5px solid rgba(255,255,255,0.2);
-    border-top-color: var(--line);
+    border-top-color: var(--line-green);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
@@ -505,7 +505,7 @@
   }
   .sending-progress-fill {
     height: 100%; width: 0%;
-    background: var(--line); border-radius: 2px;
+    background: var(--line-green); border-radius: 2px;
     transition: width 0.1s linear;
   }
 
@@ -521,21 +521,21 @@
   .done-overlay.open { display: flex; }
   .done-checkmark {
     width: 80px; height: 80px;
-    background: var(--line); border-radius: 50%;
+    background: var(--line-green); border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-size: 40px; margin-bottom: 8px;
     animation: popIn 0.4s ease;
   }
   .done-title { font-size: 22px; font-weight: 800; color: var(--text); }
-  .done-count { font-size: 48px; font-weight: 800; color: var(--line-dark); line-height: 1; }
+  .done-count { font-size: 48px; font-weight: 800; color: var(--line-green-dark); line-height: 1; }
   .done-label { font-size: 16px; color: var(--text-sub); }
   .done-stats {
     display: flex; gap: 20px;
-    background: var(--line-pale); border-radius: 14px;
+    background: var(--line-green-pale); border-radius: 14px;
     padding: 14px 24px; margin: 8px 0;
   }
   .done-stat { text-align: center; }
-  .done-stat-val   { font-size: 20px; font-weight: 800; color: var(--line-dark); }
+  .done-stat-val   { font-size: 20px; font-weight: 800; color: var(--line-green-dark); }
   .done-stat-label { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
   .done-back-btn {
     width: 100%; margin-top: 12px;
@@ -686,7 +686,7 @@
     border: none; cursor: pointer; font-family: inherit;
     white-space: nowrap;
   }
-  .imp-ev-btn.send { background: var(--line-pale); color: var(--line-dark); }
+  .imp-ev-btn.send { background: var(--line-green-pale); color: var(--line-green-dark); }
   .imp-ev-btn.mine { background: var(--burgundy-pale); color: var(--burgundy); }
   .imp-ev-btn.saved { background: var(--burgundy); color: #fff; }
 
@@ -809,7 +809,7 @@
   }
   .post-person-toggle input { width:18px; height:18px; accent-color:var(--burgundy); flex-shrink:0; }
   .post-person-toggle .ppt-text { flex:1; font-weight:700; }
-  .post-person-toggle .ppt-count { font-size:12px; font-weight:800; color:var(--line-dark); }
+  .post-person-toggle .ppt-count { font-size:12px; font-weight:800; color:var(--line-green-dark); }
 
   /* ===== 汎用ピッカー・ボトムシート（イベント / ワイン選択） ===== */
   .picker-bg {
@@ -1106,7 +1106,7 @@
     flex:1;padding:10px;border:1.5px solid var(--border);border-radius:12px;
     background:var(--white);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;
   }
-  .cat-act-btn.cat-line { background:var(--line);color:white;border-color:var(--line); }
+  .cat-act-btn.cat-line { background:var(--line-green);color:white;border-color:var(--line-green); }
   .cat-card {
     background:var(--white);border-radius:14px;padding:14px;
     margin-bottom:10px;box-shadow:0 1px 4px rgba(92,14,42,.07);
@@ -1450,7 +1450,7 @@
         <div class="stat-label" data-i18n="stat_total">全顧客</div>
       </div>
       <div class="stat-item">
-        <div class="stat-val" style="color:var(--line);" id="statLine">—</div>
+        <div class="stat-val" style="color:var(--line-green);" id="statLine">—</div>
         <div class="stat-label" data-i18n="stat_line">LINE連携済み</div>
       </div>
       <div class="stat-item">
