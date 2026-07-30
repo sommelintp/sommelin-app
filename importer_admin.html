@@ -1838,6 +1838,7 @@ const I18N = {
     plus_n: '+{n}名',
     note_line_billing: '💡 LINE配信は無料枠（月あたり一定通数）まで無料、超過分は従量課金です。将来、無料枠＋有料プランを用意予定。',
     note_bcast_preparing: '🚧 LINE一括配信は現在準備中です。表示中の店舗リストはサンプルで、実際の送信は行われません。',
+    note_att_line_preparing: '🚧 参加者へのLINE送信は現在準備中です（実際の送信は行われません）。',
     head_choose_recipients: '配信先を選ぶ',
     head_bcast_mode: '配信モード',
     mode_all: 'すべて',
@@ -2158,6 +2159,7 @@ const I18N = {
     plus_n: '+{n}',
     note_line_billing: '💡 LINE broadcasts are free up to a monthly quota; overages are pay-as-you-go. Free and paid plans are planned.',
     note_bcast_preparing: '🚧 LINE bulk broadcast is under preparation. The store list shown is sample data and no messages will actually be sent.',
+    note_att_line_preparing: '🚧 LINE sending to attendees is under preparation (no messages will actually be sent).',
     head_choose_recipients: 'Choose recipients',
     head_bcast_mode: 'Broadcast mode',
     mode_all: 'All',
@@ -3663,7 +3665,8 @@ function sendWineListLine(storeCount) {
   modal.innerHTML = `
     <div style="background:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:24px 20px 32px;">
       <div style="text-align:center;font-size:15px;font-weight:800;color:#2C1A1D;margin-bottom:4px;">${t('wl_modal_title')}</div>
-      <div style="text-align:center;font-size:12px;color:#7A5A62;margin-bottom:16px;">${tfmt('wl_modal_sub', { n: storeCount })}</div>
+      <div style="text-align:center;font-size:12px;color:#7A5A62;margin-bottom:8px;">${tfmt('wl_modal_sub', { n: storeCount })}</div>
+      <div style="text-align:center;font-size:11px;background:#fff4e5;border:1px solid #f0c98c;color:#8a5a1a;border-radius:10px;padding:8px 10px;margin-bottom:12px;">${t('note_att_line_preparing')}</div>
       <div style="background:#e8faf0;border:1.5px solid #06C755;border-radius:12px;padding:14px 16px;margin-bottom:16px;white-space:pre-line;font-size:12px;line-height:1.8;color:#1a3c2a;font-family:monospace;">${tfmt('wl_line_msg', { name: ev?.name || '', date: dateStr, venue: ev?.venue || '', list: wineLines, org: ev?.organizer || IMP_INFO.name })}</div>
       <button onclick="confirmSendWineLine(this,${storeCount})" style="width:100%;padding:14px;background:#06C755;color:#fff;font-size:15px;font-weight:800;border:none;border-radius:12px;cursor:pointer;margin-bottom:10px;">${tfmt('wl_send_btn', { n: storeCount })}</button>
       <button onclick="this.closest('[style*=fixed]').remove()" style="width:100%;padding:12px;background:#f5f3f0;color:#7A5A62;font-size:14px;font-weight:700;border:none;border-radius:12px;cursor:pointer;">${t('btn_cancel')}</button>
@@ -3672,13 +3675,11 @@ function sendWineListLine(storeCount) {
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 }
 
+// 準備中（2026-07-30裁定）: 実送信APIは未接続。参加者→LINE連携の対応付けが現アーキテクチャに
+// 無く、実体化はLINE L2（個別リマインド）の設計と一緒にやる。それまで偽の成功演出は出さない
+// （一括配信の準備中化と同じ扱い。モーダルは送信文面のプレビューとして残す）。
 function confirmSendWineLine(btn, count) {
-  btn.textContent = t('sending_short');
-  btn.disabled = true;
-  setTimeout(() => {
-    btn.closest('[style*=fixed]').remove();
-    showToast(tfmt('toast_winelist_sent', { n: count }));
-  }, 1000);
+  showToast(t('note_att_line_preparing'));
 }
 
 // ============================================================
@@ -3696,7 +3697,8 @@ function sendSurveyLine(storeCount) {
   modal.innerHTML = `
     <div style="background:#fff;width:100%;max-width:430px;border-radius:20px 20px 0 0;padding:24px 20px 32px;">
       <div style="text-align:center;font-size:15px;font-weight:800;color:#2C1A1D;margin-bottom:4px;">${t('sv_modal_title')}</div>
-      <div style="text-align:center;font-size:12px;color:#7A5A62;margin-bottom:16px;">${tfmt('sv_modal_sub', { n: storeCount })}</div>
+      <div style="text-align:center;font-size:12px;color:#7A5A62;margin-bottom:8px;">${tfmt('sv_modal_sub', { n: storeCount })}</div>
+      <div style="text-align:center;font-size:11px;background:#fff4e5;border:1px solid #f0c98c;color:#8a5a1a;border-radius:10px;padding:8px 10px;margin-bottom:12px;">${t('note_att_line_preparing')}</div>
       <div style="background:#e8faf0;border:1.5px solid #06C755;border-radius:12px;padding:14px 16px;margin-bottom:16px;white-space:pre-line;font-size:12px;line-height:1.8;color:#1a3c2a;font-family:monospace;">${tfmt('sv_line_msg', { name: ev?.name || '' })}</div>
       <button onclick="confirmSendSurveyLine(this,${storeCount})" style="width:100%;padding:14px;background:#06C755;color:#fff;font-size:15px;font-weight:800;border:none;border-radius:12px;cursor:pointer;margin-bottom:10px;">${tfmt('sv_send_btn', { n: storeCount })}</button>
       <button onclick="this.closest('[style*=fixed]').remove()" style="width:100%;padding:12px;background:#f5f3f0;color:#7A5A62;font-size:14px;font-weight:700;border:none;border-radius:12px;cursor:pointer;">${t('btn_cancel')}</button>
@@ -3705,25 +3707,10 @@ function sendSurveyLine(storeCount) {
   modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 }
 
+// 準備中（2026-07-30裁定・confirmSendWineLineと同じ）: 偽の成功トーストと架空の送信数記録
+// （ev.survey.sent）を出さない。実体化はLINE L2の設計と一緒に。
 function confirmSendSurveyLine(btn, count) {
-  btn.textContent = t('sending_short');
-  btn.disabled = true;
-  setTimeout(() => {
-    btn.closest('[style*=fixed]').remove();
-    showToast(tfmt('toast_survey_sent', { n: count }));
-    // アンケートタブに切り替えてデータ更新イメージ
-    const ev = industryEvents.find(e => e.id === currentAttEvId);
-    if (ev) {
-      if (!ev.survey) {
-        ev.survey = { sent: count, responded: 0, results: [] };
-      } else {
-        // 再送信: 送信数だけ更新し、既存の回答・集計結果（responded/results）は保持する
-        ev.survey.sent = count;
-        if (ev.survey.responded == null) ev.survey.responded = 0;
-        if (!Array.isArray(ev.survey.results)) ev.survey.results = [];
-      }
-    }
-  }, 1000);
+  showToast(t('note_att_line_preparing'));
 }
 
 // ============================================================
