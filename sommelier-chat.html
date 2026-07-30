@@ -712,6 +712,11 @@ let pendingPhoto = null; // 送信待ちの写真dataURL（長辺1024 JPEG）
 // サーバー側が写真の内容を覚えている状態を保つ（listContextと同じ往復パターン）。
 let chatPhotoContext = null;
 
+// 2026-07-30（答え方v2 §3-2）: 「登録への誘いは会話内1回」のエコーフラグ。サーバーが返した
+// invitedを次リクエストでそのまま送り返す（photoContextと同じ往復パターン）。これで判定が
+// 言語・会話長（直近8通の窓落ち）に依存しなくなる。ページ再読込＝新しい会話でリセット。
+let chatInvited = false;
+
 // Phase B: 今いる店のリスト文脈。QRリンク(?store=owner_id&storeName=…)、または
 // スキャナー(スキャン済みリスト)からsessionStorage 'somm_chat_list' で受け取る。
 let chatListContext = null;
@@ -881,6 +886,7 @@ async function sendMessage() {
     if (photo) body.image = photo;
     if (chatListContext) body.listContext = chatListContext;
     if (chatPhotoContext) body.photoContext = chatPhotoContext;
+    if (chatInvited) body.invited = true;
     const token = await getAnonAccessToken();
     const r = await fetch(CHAT_API + '/api/chat', {
       method: 'POST',
@@ -911,6 +917,7 @@ async function sendMessage() {
     const d = await r.json();
     if (d.quota) { quota = d.quota; updateUsageDisplay(); }
     chatPhotoContext = d.photoContext || null;
+    if (d.invited === true) chatInvited = true;
     chatHistory.push({ role: 'assistant', content: d.reply });
     addBotMessage({ text: d.reply, pairingMeta: d.pairingMeta || null });
   } catch (e) {
@@ -973,6 +980,7 @@ async function handleChatStream(r) {
   if (meta) {
     if (meta.quota) { quota = meta.quota; updateUsageDisplay(); }
     chatPhotoContext = meta.photoContext || null;
+    if (meta.invited === true) chatInvited = true;
   }
   chatHistory.push({ role: 'assistant', content: finalReply });
   addBotMessage({ text: finalReply, pairingMeta: (meta && meta.pairingMeta) || null });
