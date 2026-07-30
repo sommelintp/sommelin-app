@@ -1416,7 +1416,7 @@
 <!-- sommelin-ui.css: ブランドトークン（インライン<style>より後に読み込み、トークンを勝たせる） -->
 <link rel="stylesheet" href="assets/sommelin-ui.css?v=20260730">
 <script src="assets/oshi-card.js?v=20260722"></script>
-<script src="assets/wine-display.js?v=20260718"></script>
+<script src="assets/wine-display.js?v=20260730"></script>
 <script src="assets/arena-utils.js?v=1"></script>
 <!-- 招待の発行・一覧・承認（SommInvites）。承認画面の実体は共有アセット側に1つだけ置く
      （importer_admin.htmlにも同じものが要る。書き写すと必ず片方が古くなる） -->
@@ -3818,8 +3818,9 @@ function rsvpStateOfId(uuid) { return rsvpMapA()[uuid] || null; }
 
 function adminRsvpActionHtml(ev) {
   const st = rsvpStateOfId(ev.id);
-  const urlLink = ev.registrationUrl
-    ? `<a class="ev-url-link" href="${ev.registrationUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${ev.registrationUrl.replace(/^https?:\/\//, '')}</a>`
+  const safeRegUrl = /^https?:\/\//.test(ev.registrationUrl || '') ? ev.registrationUrl : '';
+  const urlLink = safeRegUrl
+    ? `<a class="ev-url-link" href="${evEsc(safeRegUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${evEsc(safeRegUrl.replace(/^https?:\/\//, ''))}</a>`
     : '';
   if (st === 'opened') {
     return `<div class="ev-confirm-strip">${t('rsvp_confirm_q')}
