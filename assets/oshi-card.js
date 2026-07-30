@@ -1,6 +1,6 @@
 /* ═════════════════════════════════════════════════════════════
    Sommelin 推しカード描画エンジン（2026-07-10 D-2切り出し）
-   scouter.html（fan）と restaurant_admin.html（store）が共用する。
+   scouter.html（fan）と restaurant_admin.html（store/reviewer）が共用する。
    グローバル変数を一切参照せず、すべて draw(opts) の引数から読む。
    公開API: window.OshiCard.draw(opts) → Promise<Blob>（1080×1920 PNG）
    ═════════════════════════════════════════════════════════════ */
@@ -49,12 +49,98 @@
     return lh;
   }
 
-  // ── fan: 写真ありカード（2026-07-24 v2全面刷新・エディトリアル装丁） ──
+  // ── v2共通（2026-07-24 額装エディトリアル装丁。2026-07-30 store/reviewerへ展開） ──
   // 設計原則（オーナーFB 2026-07-24）:
   //  ①写真は「撮ったまま全体」を見せる。cover/クロップ/ズームは一切しない（構図は撮った本人のもの）
   //  ②生産者に届くカード＝横文字ワイン名が主役。セリフ体で品格を出す（iOS=Didot/Bodoni 72、他=Georgia/明朝）
   //  ③写真の上に文字を重ねない（旧scrim廃止）。アイボリー台紙＋白マット額装＝縦横どんな構図でも絵になる
   const SERIF='"Didot","Bodoni 72","Playfair Display",Georgia,"Hiragino Mincho ProN","Yu Mincho",serif';
+  // 色は sommelin-ui.css のトークンと手動同期（CSS変数はCanvasに届かない。UI色を変えたらここも追従）:
+  // IVORY=--paper-warm / INK=--wine-ink / BURG=--wine / DEEP=--wine-deep
+  // GOLD=--foil / GOLDL=--foil-pale / FAINT=--text-sub（SUBのみトークン外＝台紙上の準本文色）
+  const IVORY='#F4ECE0', INK='#2A161B', BURG='#7A1F3D', DEEP='#4A1220',
+        GOLD='#B8923D', GOLDL='#E8C97A', SUB='#6B5147', FAINT='#8A7A6E';
+
+  // 台紙＋天地の飾り罫（ワインキャップのフォイル風）
+  function drawMat(ctx){
+    ctx.fillStyle=IVORY; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle=BURG; ctx.fillRect(0,0,W,10);   ctx.fillStyle=GOLD; ctx.fillRect(0,10,W,3);
+    ctx.fillStyle=BURG; ctx.fillRect(0,H-10,W,10); ctx.fillStyle=GOLD; ctx.fillRect(0,H-13,W,3);
+  }
+  // レターヘッド（ロゴ＋ワードマーク）。以降は中央揃えになり、本文を書き始められる y を返す
+  function drawLetterhead(ctx,logo,color){
+    let y=72;
+    if(logo){ const lw=84; const lh=drawLogo(ctx,logo,(W-lw)/2,y,lw); y+=lh+14; }
+    ctx.textAlign='center';
+    ctx.font=`800 25px ${FONT}`; ctx.fillStyle=color; ctx.letterSpacing='9px';
+    ctx.fillText('SOMMELIN',W/2,y+22); ctx.letterSpacing='0px';
+    return y+52;
+  }
+  // 金の罫＋中央ダイヤの飾り（items用）
+  function ruleDiamondItem(ctx){
+    return {h:52, draw:t=>{ const cy=t+26;
+      ctx.strokeStyle=GOLD; ctx.lineWidth=2.5;
+      ctx.beginPath(); ctx.moveTo(W/2-110,cy); ctx.lineTo(W/2-22,cy); ctx.moveTo(W/2+22,cy); ctx.lineTo(W/2+110,cy); ctx.stroke();
+      ctx.save(); ctx.translate(W/2,cy); ctx.rotate(Math.PI/4); ctx.fillStyle=GOLD; ctx.fillRect(-6,-6,12,12); ctx.restore(); }};
+  }
+  // セリフ体の銘柄名＋生産者・年の副行（fanNamePlanの結果をitemsへ積む）
+  function pushNamePlanItems(ctx,items,plan,inkColor,subColor){
+    const lh=Math.round(plan.nameSize*1.22);
+    items.push({h:lh*plan.nameLines.length+12, draw:t=>{ ctx.font=`700 ${plan.nameSize}px ${SERIF}`; ctx.fillStyle=inkColor;
+      plan.nameLines.forEach((ln,i)=>ctx.fillText(ln,W/2,t+lh*(i+1)-Math.round(plan.nameSize*0.18))); }});
+    if(plan.subLine) items.push({h:54, draw:t=>{ ctx.font=`600 36px ${FONT}`; ctx.fillStyle=subColor; ctx.fillText(plan.subLine,W/2,t+40); }});
+  }
+  // MY RATING（100点満点・1点刻み。内部ratingは0〜10のまま×10で整数化）
+  function scoreItem(ctx,rating,labelColor,numColor,unitColor){
+    const score100=Math.round(Number(rating)*10);
+    return {h:160, draw:t=>{
+      ctx.font=`800 26px ${FONT}`; ctx.fillStyle=labelColor; ctx.letterSpacing='6px'; ctx.fillText('MY RATING',W/2,t+30); ctx.letterSpacing='0px';
+      ctx.font=`700 104px ${SERIF}`; const nw=ctx.measureText(String(score100)).width;
+      ctx.font=`600 32px ${FONT}`;  const sw=ctx.measureText(' /100').width;
+      const x0=W/2-(nw+sw)/2;
+      ctx.textAlign='left';
+      ctx.font=`700 104px ${SERIF}`; ctx.fillStyle=numColor; ctx.fillText(String(score100),x0,t+140);
+      ctx.font=`600 32px ${FONT}`; ctx.fillStyle=unitColor; ctx.fillText(' /100',x0+nw,t+140);
+      ctx.textAlign='center'; }};
+  }
+  // 本人コメント（「」括り・語境界折り返し）
+  function commentItem(ctx,comment,color){
+    ctx.font=`600 40px ${FONT}`;
+    const clines=wrap(ctx,`「${comment}」`,880,4);
+    return {h:clines.length*58+18, draw:t=>{ ctx.font=`600 40px ${FONT}`; ctx.fillStyle=color;
+      clines.forEach((ln,i)=>ctx.fillText(ln,W/2,t+58*(i+1)-14)); }};
+  }
+  // ★列（部分星はclipで塗り分け。数字は出さない）
+  function drawStarRow(ctx,n5,ssize,sy){
+    const sgap=ssize*1.3, sx0=W/2-sgap*2;
+    ctx.font=`${ssize}px ${FONT}`; ctx.fillStyle=GOLD;
+    for(let i=0;i<5;i++){
+      const sx=sx0+sgap*i, fill=Math.max(0,Math.min(1,n5-i));
+      ctx.fillText('☆',sx,sy);
+      if(fill>=0.75){ ctx.fillText('★',sx,sy); }
+      else if(fill>=0.25){
+        const sw=ctx.measureText('★').width;
+        ctx.save(); ctx.beginPath(); ctx.rect(sx-sw/2,sy-ssize,sw/2,ssize*1.4); ctx.clip();
+        ctx.fillText('★',sx,sy); ctx.restore();
+      }
+    }
+  }
+  // 白地＋金罫のピル（額装様式の共通あしらい）
+  function pillItem(ctx,txt,fontPx,ph,spacing){
+    return {h:ph+20, draw:t=>{
+      ctx.font=`700 ${fontPx}px ${FONT}`; if(spacing) ctx.letterSpacing=spacing;
+      const tw=ctx.measureText(txt).width, pw=tw+96, px=(W-pw)/2;
+      ctx.fillStyle='#FFFFFF'; ctx.strokeStyle=GOLD; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.roundRect(px,t+8,pw,ph,ph/2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle=BURG; ctx.fillText(txt,W/2,t+8+ph/2+Math.round(fontPx*0.36)); ctx.letterSpacing='0px'; }};
+  }
+  // items を縦に積んで描く
+  function drawItems(ctx,items,top){ let t=top; for(const it of items){ it.draw(t); t+=it.h; } }
+  // フッター（#Sommelin＋アプリURL）
+  function drawFooterLine(ctx,opts,color){
+    ctx.font=`600 24px ${FONT}`; ctx.fillStyle=color;
+    ctx.fillText('#Sommelin　'+String(opts.appUrl||'').replace('https://','').replace(/\/$/,''),W/2,H-52);
+  }
 
   // 額装型・写真全面型で共有する文字組みの下ごしらえ（重複除去・自動縮小・語境界改行＝単一ソース）
   function fanNamePlan(ctx,opts){
@@ -78,58 +164,20 @@
       subLine: [producer?trunc(producer,30):null, vintage||null].filter(Boolean).join('   ·   ') };
   }
 
+  // ── fan: 額装型（v2既定。写真なしでも同じ装丁で成立＝旧classic廃止 2026-07-30 の受け皿） ──
   async function drawFanPhoto(ctx,opts,logo){
-    const IVORY='#F6F1E7', INK='#241812', BURG='#6E1230', GOLD='#A67C24', LINE='#C9973A', SUB='#6B5147', FAINT='#8A7360';
     const plan=fanNamePlan(ctx,opts);
-    const producer=plan.producer, nameSize=plan.nameSize, nameLines=plan.nameLines, subLine=plan.subLine;
-
-    // 台紙＋天地の飾り罫（ワインキャップのフォイル風）
-    ctx.fillStyle=IVORY; ctx.fillRect(0,0,W,H);
-    ctx.fillStyle=BURG; ctx.fillRect(0,0,W,10);   ctx.fillStyle=LINE; ctx.fillRect(0,10,W,3);
-    ctx.fillStyle=BURG; ctx.fillRect(0,H-10,W,10); ctx.fillStyle=LINE; ctx.fillRect(0,H-13,W,3);
-
-    // レターヘッド（ロゴ＋ワードマーク）
-    let y=72;
-    if(logo){ const lw=84; const lh=drawLogo(ctx,logo,(W-lw)/2,y,lw); y+=lh+14; }
-    ctx.textAlign='center';
-    ctx.font=`800 25px ${FONT}`; ctx.fillStyle=GOLD; ctx.letterSpacing='9px';
-    ctx.fillText('SOMMELIN',W/2,y+22); ctx.letterSpacing='0px';
-    y+=52;
-
-    const nameLineH=Math.round(nameSize*1.22);
+    drawMat(ctx);
+    const y=drawLetterhead(ctx,logo,GOLD);
 
     // 「このワイン、美味しかった！」の煽り文はオーナー指示で廃止（2026-07-24）＝銘柄名から始める
     const items=[];
-    items.push({h:nameLineH*nameLines.length+12, draw:t=>{ ctx.font=`700 ${nameSize}px ${SERIF}`; ctx.fillStyle=INK;
-      nameLines.forEach((ln,i)=>ctx.fillText(ln,W/2,t+nameLineH*(i+1)-Math.round(nameSize*0.18))); }});
-    if(subLine) items.push({h:54, draw:t=>{ ctx.font=`600 36px ${FONT}`; ctx.fillStyle=SUB; ctx.fillText(subLine,W/2,t+40); }});
+    pushNamePlanItems(ctx,items,plan,INK,SUB);
     if(opts.storeName) items.push({h:44, draw:t=>{ ctx.font=`600 30px ${FONT}`; ctx.fillStyle=FAINT; ctx.fillText('at '+trunc(opts.storeName,26),W/2,t+32); }});
-    // 金の罫＋中央ダイヤの飾り
-    items.push({h:52, draw:t=>{ const cy=t+26;
-      ctx.strokeStyle=LINE; ctx.lineWidth=2.5;
-      ctx.beginPath(); ctx.moveTo(W/2-110,cy); ctx.lineTo(W/2-22,cy); ctx.moveTo(W/2+22,cy); ctx.lineTo(W/2+110,cy); ctx.stroke();
-      ctx.save(); ctx.translate(W/2,cy); ctx.rotate(Math.PI/4); ctx.fillStyle=LINE; ctx.fillRect(-6,-6,12,12); ctx.restore(); }});
-    if(opts.showScore){
-      // 100点満点・1点刻み（内部ratingは0〜10のまま×10で整数化）
-      const score100=Math.round(Number(opts.rating)*10);
-      items.push({h:160, draw:t=>{
-        ctx.font=`800 26px ${FONT}`; ctx.fillStyle=GOLD; ctx.letterSpacing='6px'; ctx.fillText('MY RATING',W/2,t+30); ctx.letterSpacing='0px';
-        ctx.font=`700 104px ${SERIF}`; const nw=ctx.measureText(String(score100)).width;
-        ctx.font=`600 32px ${FONT}`;  const sw=ctx.measureText(' /100').width;
-        const x0=W/2-(nw+sw)/2;
-        ctx.textAlign='left';
-        ctx.font=`700 104px ${SERIF}`; ctx.fillStyle=INK; ctx.fillText(String(score100),x0,t+140);
-        ctx.font=`600 32px ${FONT}`; ctx.fillStyle=SUB; ctx.fillText(' /100',x0+nw,t+140);
-        ctx.textAlign='center'; }});
-    }
+    items.push(ruleDiamondItem(ctx));
+    if(opts.showScore) items.push(scoreItem(ctx,opts.rating,GOLD,INK,SUB));
     if(opts.producerHandle){
-      const txt=`@${opts.producerHandle}`;
-      items.push({h:104, draw:t=>{
-        ctx.font=`700 36px ${FONT}`; ctx.letterSpacing='2px';
-        const tw=ctx.measureText(txt).width, pw=tw+96, ph=84, px=(W-pw)/2;
-        ctx.fillStyle='#FFFFFF'; ctx.strokeStyle=LINE; ctx.lineWidth=3;
-        ctx.beginPath(); ctx.roundRect(px,t+8,pw,ph,42); ctx.fill(); ctx.stroke();
-        ctx.fillStyle=BURG; ctx.fillText(txt,W/2,t+63); ctx.letterSpacing='0px'; }});
+      items.push(pillItem(ctx,`@${opts.producerHandle}`,36,84,'2px'));
       items.push({h:42, draw:t=>{ ctx.font=`italic 600 26px Georgia,serif`; ctx.fillStyle=FAINT; ctx.fillText('Cheers from Japan 🍷',W/2,t+30); }});
     }else{
       items.push({h:58, draw:t=>{ ctx.font=`700 34px ${FONT}`; ctx.fillStyle=INK; ctx.fillText('ごちそうさまでした 🙏',W/2,t+40); }});
@@ -138,7 +186,7 @@
 
     // ── 写真: 残り空間へ「全体」を表示（contain）。白マット＋金罫の額装 ──
     const footerTop=H-104;
-    const photo=await loadImg(opts.photoDataUrl);
+    const photo=opts.photoDataUrl?await loadImg(opts.photoDataUrl):null;
     let textTop;
     if(photo){
       const availH=Math.max(300, footerTop-y-blockH-72);
@@ -149,19 +197,15 @@
       const extra=Math.max(0, footerTop-y-(dh+32)-blockH);
       const px=(W-dw)/2, py=y+16+Math.round(extra*0.30);
       ctx.fillStyle='#FFFFFF'; ctx.fillRect(px-16,py-16,dw+32,dh+32);
-      ctx.strokeStyle=LINE; ctx.lineWidth=2.5; ctx.strokeRect(px-16,py-16,dw+32,dh+32);
+      ctx.strokeStyle=GOLD; ctx.lineWidth=2.5; ctx.strokeRect(px-16,py-16,dw+32,dh+32);
       ctx.drawImage(photo,px,py,dw,dh);
       const photoBottom=py+dh+16;
       textTop=photoBottom+Math.max(28,Math.round(extra*0.42));
     }else{
       textTop=y+Math.max(40,(footerTop-y-blockH)/2);
     }
-    let t=textTop;
-    for(const it of items){ it.draw(t); t+=it.h; }
-
-    // フッター
-    ctx.font=`600 24px ${FONT}`; ctx.fillStyle=FAINT;
-    ctx.fillText('#Sommelin　'+String(opts.appUrl||'').replace('https://','').replace(/\/$/,''),W/2,H-52);
+    drawItems(ctx,items,textTop);
+    drawFooterLine(ctx,opts,FAINT);
   }
 
   // ── fan: 写真全面（オーバーレイ）型（2026-07-24 パターン第2案・オーナー要望「写真を全体に
@@ -170,10 +214,8 @@
   // （既定は額装型＝ノートリミング）。文字組みの体系（fanNamePlan・自動縮小・語境界改行・
   // 罫とダイヤ・スコア・ピル）は額装型と同一＝2パターンで印象だけが変わる。
   async function drawFanOverlay(ctx,opts,logo){
-    const GOLDL='#E8C97A', LINE='#C9973A', WHT='#FFFFFF';
+    const WHT='#FFFFFF';
     const plan=fanNamePlan(ctx,opts);
-    const nameSize=plan.nameSize, nameLines=plan.nameLines, subLine=plan.subLine;
-    const nameLineH=Math.round(nameSize*1.22);
 
     const photo=await loadImg(opts.photoDataUrl);
     if(photo){
@@ -186,44 +228,23 @@
     const gt=ctx.createLinearGradient(0,0,0,320);
     gt.addColorStop(0,'rgba(12,3,7,.74)'); gt.addColorStop(1,'rgba(12,3,7,0)');
     ctx.fillStyle=gt; ctx.fillRect(0,0,W,320);
-    let y=72;
-    ctx.textAlign='center';
-    if(logo){ const lw=84; const lh=drawLogo(ctx,logo,(W-lw)/2,y,lw); y+=lh+14; }
-    ctx.font=`800 25px ${FONT}`; ctx.fillStyle=GOLDL; ctx.letterSpacing='9px';
-    ctx.fillText('SOMMELIN',W/2,y+22); ctx.letterSpacing='0px';
+    drawLetterhead(ctx,logo,GOLDL);
 
     // ── 下部の文字ブロック（額装型と同じ構成・配色だけ夜仕様） ──
     // 「このワイン、美味しかった！」の煽り文はオーナー指示で廃止（2026-07-24）＝銘柄名から始める
     const items=[];
-    items.push({h:nameLineH*nameLines.length+12, draw:t=>{ ctx.font=`700 ${nameSize}px ${SERIF}`; ctx.fillStyle=WHT;
-      nameLines.forEach((ln,i)=>ctx.fillText(ln,W/2,t+nameLineH*(i+1)-Math.round(nameSize*0.18))); }});
-    if(subLine) items.push({h:54, draw:t=>{ ctx.font=`600 36px ${FONT}`; ctx.fillStyle='rgba(255,255,255,.88)'; ctx.fillText(subLine,W/2,t+40); }});
+    pushNamePlanItems(ctx,items,plan,WHT,'rgba(255,255,255,.88)');
     if(opts.storeName) items.push({h:44, draw:t=>{ ctx.font=`600 30px ${FONT}`; ctx.fillStyle='rgba(255,255,255,.66)'; ctx.fillText('at '+trunc(opts.storeName,26),W/2,t+32); }});
-    items.push({h:52, draw:t=>{ const cy=t+26;
-      ctx.strokeStyle=LINE; ctx.lineWidth=2.5;
-      ctx.beginPath(); ctx.moveTo(W/2-110,cy); ctx.lineTo(W/2-22,cy); ctx.moveTo(W/2+22,cy); ctx.lineTo(W/2+110,cy); ctx.stroke();
-      ctx.save(); ctx.translate(W/2,cy); ctx.rotate(Math.PI/4); ctx.fillStyle=LINE; ctx.fillRect(-6,-6,12,12); ctx.restore(); }});
-    if(opts.showScore){
-      // 100点満点・1点刻み（内部ratingは0〜10のまま×10で整数化）
-      const score100=Math.round(Number(opts.rating)*10);
-      items.push({h:160, draw:t=>{
-        ctx.font=`800 26px ${FONT}`; ctx.fillStyle=GOLDL; ctx.letterSpacing='6px'; ctx.fillText('MY RATING',W/2,t+30); ctx.letterSpacing='0px';
-        ctx.font=`700 104px ${SERIF}`; const nw=ctx.measureText(String(score100)).width;
-        ctx.font=`600 32px ${FONT}`;  const sw=ctx.measureText(' /100').width;
-        const x0=W/2-(nw+sw)/2;
-        ctx.textAlign='left';
-        ctx.font=`700 104px ${SERIF}`; ctx.fillStyle=WHT; ctx.fillText(String(score100),x0,t+140);
-        ctx.font=`600 32px ${FONT}`; ctx.fillStyle='rgba(255,255,255,.66)'; ctx.fillText(' /100',x0+nw,t+140);
-        ctx.textAlign='center'; }});
-    }
+    items.push(ruleDiamondItem(ctx));
+    if(opts.showScore) items.push(scoreItem(ctx,opts.rating,GOLDL,WHT,'rgba(255,255,255,.66)'));
     if(opts.producerHandle){
       const txt=`@${opts.producerHandle}`;
       items.push({h:104, draw:t=>{
         ctx.font=`700 36px ${FONT}`; ctx.letterSpacing='2px';
         const tw=ctx.measureText(txt).width, pw=tw+96, ph=84, px=(W-pw)/2;
-        ctx.fillStyle='#C9973A';
+        ctx.fillStyle=GOLD;
         ctx.beginPath(); ctx.roundRect(px,t+8,pw,ph,42); ctx.fill();
-        ctx.fillStyle='#3d0a1d'; ctx.fillText(txt,W/2,t+63); ctx.letterSpacing='0px'; }});
+        ctx.fillStyle=DEEP; ctx.fillText(txt,W/2,t+63); ctx.letterSpacing='0px'; }});
       items.push({h:42, draw:t=>{ ctx.font=`italic 600 26px Georgia,serif`; ctx.fillStyle='rgba(255,255,255,.78)'; ctx.fillText('Cheers from Japan 🍷',W/2,t+30); }});
     }else{
       items.push({h:58, draw:t=>{ ctx.font=`700 34px ${FONT}`; ctx.fillStyle='rgba(255,255,255,.92)'; ctx.fillText('ごちそうさまでした 🙏',W/2,t+40); }});
@@ -238,253 +259,75 @@
     sc.addColorStop(0,'rgba(14,3,8,0)'); sc.addColorStop(0.38,'rgba(14,3,8,.66)'); sc.addColorStop(1,'rgba(14,3,8,.96)');
     ctx.fillStyle=sc; ctx.fillRect(0,scrimTop,W,H-scrimTop);
 
-    let t=textTop;
-    for(const it of items){ it.draw(t); t+=it.h; }
-
-    // フッター
-    ctx.font=`600 24px ${FONT}`; ctx.fillStyle='rgba(255,255,255,.62)';
-    ctx.fillText('#Sommelin　'+String(opts.appUrl||'').replace('https://','').replace(/\/$/,''),W/2,H-52);
+    drawItems(ctx,items,textTop);
+    drawFooterLine(ctx,opts,'rgba(255,255,255,.62)');
   }
 
-  // ── fan: 写真なしカード（従来のバーガンディ基調。MY RATINGはONの時だけ縮小表示） ──
-  function drawFanClassic(ctx,opts,logo,chara){
-    const g=ctx.createLinearGradient(0,0,W*0.6,H);
-    g.addColorStop(0,'#3d0a1d'); g.addColorStop(0.5,'#5C0E2A'); g.addColorStop(1,'#9B1B4B');
-    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='rgba(255,255,255,0.045)';
-    ctx.beginPath(); ctx.arc(W*0.92,H*0.10,300,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(W*0.05,H*0.85,260,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='rgba(201,151,58,0.10)';
-    ctx.beginPath(); ctx.arc(W*0.85,H*0.78,200,0,Math.PI*2); ctx.fill();
+  // ── store: 店の推しカード（当店のおすすめ。SP/total等の評価数値は載せない。2026-07-30 v2額装様式へ統一） ──
+  function drawStore(ctx,opts,logo){
+    const plan=fanNamePlan(ctx,opts);
+    drawMat(ctx);
+    const y=drawLetterhead(ctx,logo,GOLD);
 
-    if(logo){ drawLogo(ctx,logo,(W-170)/2,90,170); }
-    ctx.fillStyle='#E8C97A'; ctx.textAlign='center';
-    ctx.font=`800 34px ${FONT}`; ctx.letterSpacing='10px';
-    ctx.fillText('SOMMELIN',W/2,320); ctx.letterSpacing='0px';
-
-    // 「このワイン、美味しかった！」の煽り文はオーナー指示で廃止（2026-07-24）＝銘柄名から始める
-    ctx.font=`800 82px ${FONT}`; ctx.fillStyle='#fff';
-    const lines=wrap(ctx,opts.name,920,3);
-    let y=530;
-    for(const ln of lines){ ctx.fillText(ln,W/2,y); y+=100; }
-    ctx.font=`700 46px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.85)';
-    const sub=[opts.producer,(opts.vintage&&opts.vintage!=='NV')?opts.vintage:''].filter(Boolean).join('　');
-    if(sub){ ctx.fillText(trunc(sub,26),W/2,y+16); y+=76; }
-    if(opts.storeName){
-      ctx.font=`600 32px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.6)';
-      ctx.fillText('at '+trunc(opts.storeName,24),W/2,y+8); y+=48;
-    }
-
-    ctx.strokeStyle='#C9973A'; ctx.lineWidth=3;
-    ctx.beginPath(); ctx.moveTo(W/2-110,y+30); ctx.lineTo(W/2+110,y+30); ctx.stroke();
-    y+=80;
-
-    if(opts.showScore){
-      ctx.font=`800 26px ${FONT}`; ctx.fillStyle='#E8C97A'; ctx.letterSpacing='7px';
-      ctx.fillText('MY RATING',W/2,y+40); ctx.letterSpacing='0px';
-      // 100点満点表示（2026-07-22 タスクC）。内部ratingは0〜10のまま×10で整数化。
-      ctx.font=`800 88px ${FONT}`; ctx.fillStyle='#fff';
-      ctx.fillText(String(Math.round(opts.rating*10)),W/2,y+150);
-      ctx.font=`700 30px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.6)';
-      ctx.fillText('/ 100',W/2,y+188);
-      const n5=opts.rating/2, ssize=40, sgap=ssize*1.35, sx0=W/2-sgap*2, sy=y+250;
-      ctx.font=`${ssize}px ${FONT}`; ctx.fillStyle='#C9973A';
-      for(let i=0;i<5;i++){
-        const sx=sx0+sgap*i, fill=Math.max(0,Math.min(1,n5-i));
-        ctx.fillText('☆',sx,sy);
-        if(fill>=0.75){ ctx.fillText('★',sx,sy); }
-        else if(fill>=0.25){
-          const sw=ctx.measureText('★').width;
-          ctx.save(); ctx.beginPath(); ctx.rect(sx-sw/2,sy-ssize,sw/2,ssize*1.4); ctx.clip();
-          ctx.fillText('★',sx,sy); ctx.restore();
-        }
-      }
-      y+=310;
-    }else{
-      y+=50;
-    }
-
-    if(opts.producerHandle){
-      const txt=`📸 @${opts.producerHandle}`;
-      ctx.font=`800 46px ${FONT}`;
-      const tw=ctx.measureText(txt).width, pw=tw+90, ph=92, px=(W-pw)/2, py=y;
-      ctx.fillStyle='#C9973A';
-      ctx.beginPath(); ctx.roundRect(px,py,pw,ph,46); ctx.fill();
-      ctx.fillStyle='#3d0a1d'; ctx.fillText(txt,W/2,py+62);
-      ctx.font=`600 32px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.75)';
-      ctx.fillText('ごちそうさまでした 🙏',W/2,py+160);
-    }else{
-      ctx.font=`700 42px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.9)';
-      ctx.fillText('ごちそうさまでした 🙏',W/2,y+50);
-    }
-
-    if(chara){ const chH=300,chW=chH*(chara.naturalWidth/chara.naturalHeight);
-      ctx.drawImage(chara,W-chW-30,H-chH-90,chW,chH); }
-
-    ctx.textAlign='left';
-    ctx.font=`700 34px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.85)';
-    ctx.fillText('#Sommelin',70,H-190);
-    if(opts.officialIg){ ctx.fillText('@'+opts.officialIg,70,H-140); }
-    ctx.font=`600 30px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.55)';
-    ctx.fillText(String(opts.appUrl||'').replace('https://',''),70,H-90);
-  }
-
-  // ── store: 店の推しカード（当店のおすすめ。SP/total等の評価数値は載せない） ──
-  function drawStore(ctx,opts){
-    const g=ctx.createLinearGradient(0,0,W*0.6,H);
-    g.addColorStop(0,'#3d0a1d'); g.addColorStop(0.5,'#5C0E2A'); g.addColorStop(1,'#9B1B4B');
-    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='rgba(255,255,255,0.045)';
-    ctx.beginPath(); ctx.arc(W*0.92,H*0.10,300,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(W*0.05,H*0.85,260,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='rgba(201,151,58,0.10)';
-    ctx.beginPath(); ctx.arc(W*0.85,H*0.78,200,0,Math.PI*2); ctx.fill();
-
-    ctx.textAlign='center';
-    ctx.fillStyle='#E8C97A';
-    ctx.font=`800 32px ${FONT}`; ctx.letterSpacing='8px';
-    ctx.fillText('当店のおすすめ',W/2,300); ctx.letterSpacing='0px';
-
-    ctx.font=`800 78px ${FONT}`; ctx.fillStyle='#fff';
-    const lines=wrap(ctx,opts.name,920,3);
-    let y=430;
-    for(const ln of lines){ ctx.fillText(ln,W/2,y); y+=96; }
-    ctx.font=`700 44px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.85)';
-    const sub=[opts.producer,(opts.vintage&&opts.vintage!=='NV')?opts.vintage:''].filter(Boolean).join('　');
-    if(sub){ ctx.fillText(trunc(sub,26),W/2,y+14); y+=70; }
-
-    ctx.strokeStyle='#C9973A'; ctx.lineWidth=3;
-    ctx.beginPath(); ctx.moveTo(W/2-110,y+30); ctx.lineTo(W/2+110,y+30); ctx.stroke();
-    y+=90;
-
-    if(opts.comment){
-      ctx.font=`700 44px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.92)';
-      const clines=wrap(ctx,`「${opts.comment}」`,900,4);
-      for(const ln of clines){ ctx.fillText(ln,W/2,y); y+=62; }
-      y+=30;
-    }else{
-      y+=20;
-    }
-
+    const items=[];
+    items.push({h:64, draw:t=>{ ctx.font=`800 30px ${FONT}`; ctx.fillStyle=BURG; ctx.letterSpacing='8px';
+      ctx.fillText('当店のおすすめ',W/2,t+34); ctx.letterSpacing='0px'; }});
+    pushNamePlanItems(ctx,items,plan,INK,SUB);
+    items.push(ruleDiamondItem(ctx));
+    if(opts.comment) items.push(commentItem(ctx,opts.comment,INK));
     if(opts.priceMode && opts.priceMode!=='none'){
       const pills=[];
       if((opts.priceMode==='glass'||opts.priceMode==='both') && opts.priceGlass) pills.push(`グラス ¥${Number(opts.priceGlass).toLocaleString('ja-JP')}`);
       if((opts.priceMode==='bottle'||opts.priceMode==='both') && opts.priceBottle) pills.push(`ボトル ¥${Number(opts.priceBottle).toLocaleString('ja-JP')}`);
       if(pills.length){
-        ctx.font=`800 36px ${FONT}`;
-        const gap=24, phH=76;
-        const widths=pills.map(p=>ctx.measureText(p).width+56);
-        const totalW=widths.reduce((a,b)=>a+b,0)+gap*(pills.length-1);
-        let px=(W-totalW)/2;
-        for(let i=0;i<pills.length;i++){
-          const pw=widths[i];
-          ctx.strokeStyle='#C9973A'; ctx.lineWidth=2.5;
-          ctx.beginPath(); ctx.roundRect(px,y,pw,phH,38); ctx.stroke();
-          ctx.fillStyle='#E8C97A'; ctx.fillText(pills[i],px+pw/2,y+50);
-          px+=pw+gap;
-        }
-        y+=phH+40;
+        items.push({h:100, draw:t=>{
+          ctx.font=`700 34px ${FONT}`;
+          const gap=24, ph=76;
+          const widths=pills.map(p=>ctx.measureText(p).width+64);
+          const totalW=widths.reduce((a,b)=>a+b,0)+gap*(pills.length-1);
+          let px=(W-totalW)/2;
+          for(let i=0;i<pills.length;i++){
+            const pw=widths[i];
+            ctx.fillStyle='#FFFFFF'; ctx.strokeStyle=GOLD; ctx.lineWidth=2.5;
+            ctx.beginPath(); ctx.roundRect(px,t+12,pw,ph,38); ctx.fill(); ctx.stroke();
+            ctx.fillStyle=BURG; ctx.fillText(pills[i],px+pw/2,t+62);
+            px+=pw+gap;
+          }
+        }});
       }
     }
-
-    y+=20;
-    ctx.font=`800 46px ${FONT}`; ctx.fillStyle='#fff';
-    ctx.fillText(trunc(opts.storeName||'',22),W/2,y);
-    y+=60;
-    if(opts.storeHandle){
-      const txt=`@${opts.storeHandle}`;
-      ctx.font=`700 34px ${FONT}`;
-      const tw=ctx.measureText(txt).width, pw=tw+56, ph=64, px=(W-pw)/2;
-      ctx.fillStyle='rgba(201,151,58,0.18)'; ctx.strokeStyle='#C9973A'; ctx.lineWidth=2;
-      ctx.beginPath(); ctx.roundRect(px,y,pw,ph,32); ctx.fill(); ctx.stroke();
-      ctx.fillStyle='#E8C97A'; ctx.fillText(txt,W/2,y+44);
-    }
-
-    ctx.textAlign='left';
-    ctx.font=`700 34px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.85)';
-    ctx.fillText('#Sommelin',70,H-140);
-    ctx.font=`600 30px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.55)';
-    ctx.fillText(String(opts.appUrl||'').replace('https://',''),70,H-90);
+    items.push({h:84, draw:t=>{ ctx.font=`700 46px ${FONT}`; ctx.fillStyle=INK; ctx.fillText(trunc(opts.storeName||'',22),W/2,t+60); }});
+    if(opts.storeHandle) items.push(pillItem(ctx,`@${opts.storeHandle}`,34,76,'2px'));
+    const blockH=items.reduce((a,b)=>a+b.h,0);
+    const footerTop=H-104;
+    drawItems(ctx,items,y+Math.max(40,(footerTop-y-blockH)/2));
+    drawFooterLine(ctx,opts,FAINT);
   }
 
-  // ── reviewer: レビュアー発信カード（私の推しワイン。本人の言葉と★のみ。SP/total/参考価格は載せない） ──
-  function drawReviewer(ctx,opts){
-    const g=ctx.createLinearGradient(0,0,W*0.6,H);
-    g.addColorStop(0,'#3d0a1d'); g.addColorStop(0.5,'#5C0E2A'); g.addColorStop(1,'#9B1B4B');
-    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='rgba(255,255,255,0.045)';
-    ctx.beginPath(); ctx.arc(W*0.92,H*0.10,300,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(W*0.05,H*0.85,260,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='rgba(201,151,58,0.10)';
-    ctx.beginPath(); ctx.arc(W*0.85,H*0.78,200,0,Math.PI*2); ctx.fill();
+  // ── reviewer: レビュアー発信カード（私の推しワイン。本人の言葉と★のみ。SP/total/参考価格は載せない。2026-07-30 v2額装様式へ統一） ──
+  function drawReviewer(ctx,opts,logo){
+    const plan=fanNamePlan(ctx,opts);
+    drawMat(ctx);
+    const y=drawLetterhead(ctx,logo,GOLD);
 
-    ctx.textAlign='center';
-    ctx.fillStyle='#E8C97A';
-    ctx.font=`800 32px ${FONT}`; ctx.letterSpacing='8px';
-    ctx.fillText('私の推しワイン',W/2,300); ctx.letterSpacing='0px';
-
-    ctx.font=`800 78px ${FONT}`; ctx.fillStyle='#fff';
-    const lines=wrap(ctx,opts.name,920,3);
-    let y=430;
-    for(const ln of lines){ ctx.fillText(ln,W/2,y); y+=96; }
-    ctx.font=`700 44px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.85)';
-    const sub=[opts.producer,(opts.vintage&&opts.vintage!=='NV')?opts.vintage:''].filter(Boolean).join('　');
-    if(sub){ ctx.fillText(trunc(sub,26),W/2,y+14); y+=70; }
-
-    ctx.strokeStyle='#C9973A'; ctx.lineWidth=3;
-    ctx.beginPath(); ctx.moveTo(W/2-110,y+30); ctx.lineTo(W/2+110,y+30); ctx.stroke();
-    y+=90;
-
-    if(opts.comment){
-      ctx.font=`700 44px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.92)';
-      const clines=wrap(ctx,`「${opts.comment}」`,900,4);
-      for(const ln of clines){ ctx.fillText(ln,W/2,y); y+=62; }
-      y+=30;
-    }else{
-      y+=20;
-    }
-
+    const items=[];
+    items.push({h:64, draw:t=>{ ctx.font=`800 30px ${FONT}`; ctx.fillStyle=BURG; ctx.letterSpacing='8px';
+      ctx.fillText('私の推しワイン',W/2,t+34); ctx.letterSpacing='0px'; }});
+    pushNamePlanItems(ctx,items,plan,INK,SUB);
+    items.push(ruleDiamondItem(ctx));
+    if(opts.comment) items.push(commentItem(ctx,opts.comment,INK));
     // 本人の★評価（1〜5・数字は出さない。ソムリンおすすめ度と混同させないため）
     if(opts.showRating && opts.rating){
       const n=Math.max(0,Math.min(5,Number(opts.rating)));
-      const ssize=48, sgap=ssize*1.3, sx0=W/2-sgap*2, sy=y+40;
-      ctx.font=`${ssize}px ${FONT}`; ctx.fillStyle='#C9973A';
-      for(let i=0;i<5;i++){
-        const sx=sx0+sgap*i, fill=Math.max(0,Math.min(1,n-i));
-        ctx.fillText('☆',sx,sy);
-        if(fill>=0.75){ ctx.fillText('★',sx,sy); }
-        else if(fill>=0.25){
-          const sw=ctx.measureText('★').width;
-          ctx.save(); ctx.beginPath(); ctx.rect(sx-sw/2,sy-ssize,sw/2,ssize*1.4); ctx.clip();
-          ctx.fillText('★',sx,sy); ctx.restore();
-        }
-      }
-      y+=90;
+      items.push({h:96, draw:t=>drawStarRow(ctx,n,48,t+62)});
     }
-
-    y+=30;
-    ctx.font=`800 46px ${FONT}`; ctx.fillStyle='#fff';
-    ctx.fillText(trunc(opts.reviewerName||'',22),W/2,y);
-    y+=54;
-    if(opts.tierLabel){
-      const txt=`${opts.tierIcon||''} ${opts.tierLabel}`.trim();
-      ctx.font=`700 32px ${FONT}`;
-      const tw=ctx.measureText(txt).width, pw=tw+56, ph=62, px=(W-pw)/2;
-      ctx.fillStyle='rgba(201,151,58,0.18)'; ctx.strokeStyle='#C9973A'; ctx.lineWidth=2;
-      ctx.beginPath(); ctx.roundRect(px,y,pw,ph,31); ctx.fill(); ctx.stroke();
-      ctx.fillStyle='#E8C97A'; ctx.fillText(txt,W/2,y+42);
-      y+=ph+16;
-    }
-    if(opts.reviewerIg){
-      ctx.font=`600 28px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.65)';
-      ctx.fillText('@'+opts.reviewerIg,W/2,y+18);
-    }
-
-    ctx.textAlign='left';
-    ctx.font=`700 34px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.85)';
-    ctx.fillText('#Sommelin',70,H-140);
-    ctx.font=`600 30px ${FONT}`; ctx.fillStyle='rgba(255,255,255,0.55)';
-    ctx.fillText(String(opts.appUrl||'').replace('https://',''),70,H-90);
+    items.push({h:84, draw:t=>{ ctx.font=`700 46px ${FONT}`; ctx.fillStyle=INK; ctx.fillText(trunc(opts.reviewerName||'',22),W/2,t+60); }});
+    if(opts.tierLabel) items.push(pillItem(ctx,`${opts.tierIcon||''} ${opts.tierLabel}`.trim(),32,68,''));
+    if(opts.reviewerIg) items.push({h:48, draw:t=>{ ctx.font=`600 28px ${FONT}`; ctx.fillStyle=FAINT; ctx.fillText('@'+opts.reviewerIg,W/2,t+34); }});
+    const blockH=items.reduce((a,b)=>a+b.h,0);
+    const footerTop=H-104;
+    drawItems(ctx,items,y+Math.max(40,(footerTop-y-blockH)/2));
+    drawFooterLine(ctx,opts,FAINT);
   }
 
   async function draw(opts){
@@ -492,22 +335,18 @@
     const assetBase=opts.assetBase||'assets/sommelin/';
     const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
     const ctx=cv.getContext('2d');
+    const logo=await loadImg(assetBase+'sommelin-logo.png');
 
     if(opts.template==='store'){
-      drawStore(ctx,opts);
+      drawStore(ctx,opts,logo);
     }else if(opts.template==='reviewer'){
-      drawReviewer(ctx,opts);
+      drawReviewer(ctx,opts,logo);
+    }else if(opts.photoStyle==='overlay' && opts.photoDataUrl){
+      // photoStyle: 'framed'(既定・額装=ノートリミング) | 'overlay'(写真全面=ユーザー選択時のみ)
+      await drawFanOverlay(ctx,opts,logo);
     }else{
-      const [logo,chara]=await Promise.all([
-        loadImg(assetBase+'sommelin-logo.png'),
-        loadImg(assetBase+'sommelin-delighted.png')]);
-      if(opts.photoDataUrl){
-        // photoStyle: 'framed'(既定・額装=ノートリミング) | 'overlay'(写真全面=ユーザー選択時のみ)
-        if(opts.photoStyle==='overlay') await drawFanOverlay(ctx,opts,logo);
-        else await drawFanPhoto(ctx,opts,logo);
-      }else{
-        drawFanClassic(ctx,opts,logo,chara);
-      }
+      // 写真なしでも額装型がそのまま成立するため旧classic（バーガンディ全面）は廃止（2026-07-30）
+      await drawFanPhoto(ctx,opts,logo);
     }
 
     return new Promise(res=>cv.toBlob(res,'image/png'));
