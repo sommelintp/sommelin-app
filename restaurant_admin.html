@@ -2348,6 +2348,7 @@ const I18N = {
     pr_no_guide: 'このお料理の合わせ方の手がかりが見つかりませんでした。',
     pr_llm_budget: '一度に見立てできる料理の数を超えました。この料理は数を分けてもう一度お試しください。',
     pr_hint_colors: 'リストに{colors}系が1本あると幅が出ます。',
+    pr_hint_sweet: 'このお料理には甘口のワインが向きます。リストに甘口が1本あると提案できます。',
     pr_color_red: '赤', pr_color_white: '白', pr_color_rose: 'ロゼ', pr_color_orange: 'オレンジ',
     pr_ref_title: '参考（お店の方だけに表示）',
     pr_ref_note: 'この内容は店ページには出ません。仕入れや接客の参考にどうぞ。',
@@ -2912,6 +2913,7 @@ const I18N = {
     pr_no_guide: "We couldn't find a reliable starting point for pairing this dish.",
     pr_llm_budget: 'Too many dishes to estimate at once. Please try this dish again in a smaller batch.',
     pr_hint_colors: 'Adding a {colors} wine to your list would widen your options.',
+    pr_hint_sweet: 'This dish calls for a sweet wine. Add one to your list and Sommelin can suggest it.',
     pr_color_red: 'red', pr_color_white: 'white', pr_color_rose: 'rosé', pr_color_orange: 'orange',
     pr_ref_title: 'Reference (visible to staff only)',
     pr_ref_note: "This never appears on your store page. It's for purchasing and service notes.",
@@ -5893,6 +5895,7 @@ function prColorLabel(c) {
   return slug ? t('pr_color_' + slug) : c;
 }
 function prHintText(s) {
+  if (s && s.hintSweet) return t('pr_hint_sweet');   // 甘口ゲート由来のno-fitは色でなく甘口を示唆
   const cols = (s && Array.isArray(s.hintColors)) ? s.hintColors.filter(Boolean) : [];
   if (cols.length) return t('pr_hint_colors').replace('{colors}', cols.map(prColorLabel).join('/'));
   return (s && s.hint) || '';   // 後方互換
