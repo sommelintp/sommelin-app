@@ -3468,8 +3468,27 @@ async function rwFetch(path, opts){
   opts.headers = Object.assign({ apikey:RW_SB_KEY, Authorization:'Bearer '+(rwToken()||RW_SB_KEY), 'Content-Type':'application/json' }, opts.headers||{});
   return fetch(RW_SB_URL+'/rest/v1/'+path, opts);
 }
-function dbToUi(r){ return { id:r.id, cat:r.cat||'red', name:r.name, producer:r.producer||'', vintage:r.vintage||'', region:r.region||'', grapes:r.grapes||'', priceGlass:r.price_glass||0, priceBottle:r.price_bottle||0, available:r.available!==false, stock:r.stock||0, wineId:r.wine_id||null, hasLabel:!!r.wine_id }; }
-function uiToDb(w, uid){ return { owner_id:uid, cat:w.cat||null, name:w.name, producer:w.producer||null, vintage:w.vintage||null, region:w.region||null, grapes:w.grapes||null, price_glass:w.priceGlass||null, price_bottle:w.priceBottle||null, available:w.available!==false, stock:w.stock||0, wine_id:w.wineId||null }; }
+function dbToUi(r){ return { id:r.id, cat:r.cat||'red', name:r.name, producer:r.producer||'', vintage:r.vintage||'', region:r.region||'', grapes:r.grapes||'', priceGlass:r.price_glass||0, priceBottle:r.price_bottle||0, available:r.available!==false, stock:r.stock||0, wineId:r.wine_id||null, labelImageUrl:r.label_image_url||null, hasLabel:!!(r.wine_id||r.label_image_url) }; }
+function uiToDb(w, uid){ return { owner_id:uid, cat:w.cat||null, name:w.name, producer:w.producer||null, vintage:w.vintage||null, region:w.region||null, grapes:w.grapes||null, price_glass:w.priceGlass||null, price_bottle:w.priceBottle||null, available:w.available!==false, stock:w.stock||0, wine_id:w.wineId||null, label_image_url:w.labelImageUrl||null }; }
+
+// 撮ったラベル写真を wine-labels バケットへ上げ、公開URLを返す（avatars と同型・:6394）。
+// パスは `<uid>/<時刻>-<乱数>.jpg`。**必ず uid 直下**に置くこと——バケットのポリシーが
+// (storage.foldername(name))[1] = auth.uid() で書き込みを本人フォルダに限っているため。
+// 失敗しても null を返すだけにする（写真が無くても登録は成立させる＝登録を人質に取らない）。
+async function uploadWineLabel(dataUrl, uid) {
+  if (!dataUrl || !uid) return null;
+  try {
+    const blob = await (await fetch(dataUrl)).blob();
+    const path = uid + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.jpg';
+    const r = await fetch(RW_SB_URL + '/storage/v1/object/wine-labels/' + path, {
+      method: 'POST',
+      headers: { apikey: RW_SB_KEY, Authorization: 'Bearer ' + (rwToken() || ''), 'Content-Type': 'image/jpeg', 'x-upsert': 'true' },
+      body: blob,
+    });
+    if (!r.ok) throw new Error('upload ' + r.status);
+    return RW_SB_URL + '/storage/v1/object/public/wine-labels/' + path;
+  } catch (e) { console.warn('label upload failed:', e.message); return null; }
+}
 
 // ============================================================
 // 📲 LINE連携（2026-07-12・R節）: ワンタイムコード方式。LIFF/OAuth不要
@@ -4281,6 +4300,15 @@ function renderWineTable(cat, search) {
   const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
   const labelThumb = w => {
+    // 撮った実物のラベル写真があればそれを出す（2026-08-03・wine-labels バケット）。
+    // 「写真を撮ったのにアイコンが絵文字」を解消する。読み込み失敗時は絵文字系に落とす。
+    if (w.labelImageUrl) {
+      return `<div class="wine-label-thumb scanned" title="${t('thumb_scanned_title')}" style="padding:0;overflow:hidden;background:#f4ece8;">
+        <img src="${esc(w.labelImageUrl)}" alt="" loading="lazy"
+             style="width:100%;height:100%;object-fit:cover;display:block;"
+             onerror="this.parentNode.innerHTML='${catEmoji[w.cat] || '🍷'}';this.parentNode.style.padding='';">
+      </div>`;
+    }
     if (w.hasLabel) {
       // スキャン済みラベルサムネイル — ミニラベルカード風
       const initials = w.name.split(' ').slice(0,2).map(s => s[0]).join('').toUpperCase().slice(0,3);
@@ -4589,6 +4617,7 @@ async function analyzeLabels() {
         grapes: (Array.isArray(idn.grape) && idn.grape.length ? idn.grape : ((w && w.grape) || [])).join(', '),
         priceGlass: 0, priceBottle: 0,
         wineId: w ? w.id : null,   // カタログ紐づけ（confirmBulkAdd → uiToDb が wine_id に運ぶ）
+        shot: capturedShots[i],    // 撮った写真そのもの。登録が確定した分だけアップロードする
         confidence: Math.round(((res.match && res.match.matchScore) || res.confidence || 0) * 100),
       });
     } catch (e) { failed++; }
@@ -4769,11 +4798,15 @@ async function confirmBulkAdd() {
   const uid = await rwUid();
   if (!uid) { alert(t('alert_relogin')); return; }
   try {
-    const payload = added.map(w => uiToDb({
+    // ラベル写真は「登録すると決めた分だけ」上げる（チェックを外した写真は残さない）。
+    // 失敗は null になるだけで登録は続行する（写真を人質にしない）。
+    const urls = await Promise.all(added.map(w => w.shot ? uploadWineLabel(w.shot, uid) : Promise.resolve(null)));
+    const payload = added.map((w, i) => uiToDb({
       cat: w.cat, name: w.name, producer: w.producer,
       vintage: w.vintage, region: w.region, grapes: w.grapes,
       priceGlass: w.priceGlass || 0, priceBottle: w.priceBottle || 0,
       stock: 0, available: true, wineId: w.wineId || null,
+      labelImageUrl: urls[i],
     }, uid));
     const r = await rwFetch('restaurant_wines',
       { method:'POST', headers:{ Prefer:'return=representation' }, body: JSON.stringify(payload) });
