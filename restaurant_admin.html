@@ -1995,19 +1995,8 @@
   <div class="analyzing-count" id="analyzingCount">0</div>
 </div>
 
-<!-- ==================== ワイン検索結果 シート ==================== -->
-<div class="wine-results-bg" id="wineResultsBg" onclick="closeWineResultsBg(event)">
-  <div class="wine-results-sheet">
-    <div class="wr-handle"></div>
-    <div class="wr-badge" id="wrBadge" data-i18n="wr_badge_default">📦 1本分の結果</div>
-    <div class="wr-title" data-i18n="wr_title">ラベルから検索しました</div>
-    <div class="wr-sub" data-i18n="wr_sub">タップしてワインを選んでください。情報は後から編集できます。</div>
-    <div id="wineResultsList"></div>
-    <div class="wr-manual" onclick="closeWineResults(); openWineModal(null, true)" data-i18n="wr_manual">
-      一覧にない場合は手動で入力する
-    </div>
-  </div>
-</div>
+<!-- （旧「ワイン検索結果」シートは撤去（2026-08-03）。デモ定数を解析結果と偽装して
+     表示するハリボテだった。実解析の結果は一括読み込みと同じ bulkResults シートに合流する） -->
 
 <!-- ==================== WINE EDIT MODAL ==================== -->
 <div class="modal-bg" id="wineModal" onclick="closeWineModalBg(event)">
@@ -2363,6 +2352,8 @@ const I18N = {
     pr_announce_btn: 'イベントとして告知する',
     pr_announce_default_title: 'おすすめペアリングフェア',
     pr_notify_note: 'ペアリングを公開しても、お知らせは飛びません。お客さまに知らせたいときは「イベントとして告知する」からどうぞ。',
+    cam_read_done: '📸 {n}本を読み取りました',
+    cam_read_partial: '{n}本は読み取れませんでした。撮り直すか、手動で追加してください。',
     loading: '読み込み中…',
     cancel: 'キャンセル',
     close: '閉じる',
@@ -2925,6 +2916,8 @@ const I18N = {
     pr_announce_btn: 'Announce as an event',
     pr_announce_default_title: 'Recommended Pairing Fair',
     pr_notify_note: 'Publishing pairings sends no notification. To let guests know, use "Announce as an event".',
+    cam_read_done: '📸 Read {n} bottles',
+    cam_read_partial: "{n} couldn't be read. Retake the photo or add them manually.",
     loading: 'Loading…',
     cancel: 'Cancel',
     close: 'Close',
@@ -4470,11 +4463,18 @@ function updateModalLabelPreview(show, cat, name) {
 // ============================================================
 // 📷 カメラキャプチャ フロー
 // ============================================================
-let capturedBottles = 0;
-const bottleEmojis = ['🍷','🥂','🤍','🍾','🍊','🌸'];
+// 2026-08-03 本物化: 旧実装はカメラに一切アクセスせず、絵文字カウンタ＋1.8秒の偽ローディングの後に
+// デモ定数（wineSearchCandidates）を「解析結果」として表示するハリボテだった（no-lie違反・
+// [[sommelin-fake-demo-ui-pattern]]）。現実装: 📸 1タップ＝ネイティブカメラで1本撮影
+// （一括読み込み captureList と同じ file input 方式。getUserMedia の常時ストリームは持たない——
+// 権限・電池・実装コストに見合う価値がこの画面には無く、ライブビューは scouter の領分）→
+// 「ラベルを解析する」で /api/identify を1枚ずつ順次呼び、結果は一括読み込みと同じ
+// bulkResults シートに合流する（confirmBulkAdd が wineId 付きで登録する実証済みの一本道。
+// wineId が付くと味スコア/★が出て、ペアリングの色判定もカタログ由来の正しい値になる）。
+let capturedShots = [];   // 撮影済み写真（圧縮後dataURL）
 
 function openCameraCapture() {
-  capturedBottles = 0;
+  capturedShots = [];
   document.getElementById('camCounter').textContent = t('cam_count_zero');
   document.getElementById('camAnalyzeBtn').disabled = true;
   document.getElementById('camThumbStrip').innerHTML = '<div class="cam-thumb-empty" id="camThumbEmpty">' + t('cam_thumb_empty') + '</div>';
@@ -4485,117 +4485,110 @@ function closeCameraCapture() {
   document.getElementById('camOverlay').classList.remove('open');
 }
 
+// 📸 = ネイティブカメラで1本撮る（captureList と同じ file input・canvas圧縮1568px/0.8）
 function captureBottle() {
-  // サムネイルストリップに追加
+  let inp = document.getElementById('rwBottleInput');
+  if (!inp) {
+    inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'image/*'; inp.capture = 'environment';
+    inp.id = 'rwBottleInput'; inp.style.display = 'none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change', e => {
+      const f = e.target.files[0]; e.target.value = '';
+      if (!f) return;
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        const sc = Math.min(1, 1568 / Math.max(img.naturalWidth, img.naturalHeight));
+        c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(img.src);
+        const dataUrl = c.toDataURL('image/jpeg', 0.8);
+        capturedShots.push(dataUrl);
+        addBottleThumb(dataUrl, capturedShots.length);
+        document.getElementById('camCounter').textContent = t('cam_count').replace('{n}', capturedShots.length);
+        document.getElementById('camAnalyzeBtn').disabled = false;
+      };
+      img.src = URL.createObjectURL(f);
+    });
+  }
+  inp.click();
+  // シャッターの触感演出（従来のまま）
+  const shutter = document.querySelector('.cam-shutter');
+  if (shutter) { shutter.style.transform = 'scale(0.88)'; setTimeout(() => shutter.style.transform = '', 120); }
+}
+
+// 実写サムネイルをストリップに追加（旧: 絵文字のプレースホルダーだった）
+function addBottleThumb(dataUrl, n) {
   const strip = document.getElementById('camThumbStrip');
   const empty = document.getElementById('camThumbEmpty');
   if (empty) empty.remove();
-
-  capturedBottles++;
   const thumb = document.createElement('div');
   thumb.className = 'cam-thumb';
-  const emoji = bottleEmojis[(capturedBottles - 1) % bottleEmojis.length];
-  thumb.innerHTML = `${emoji}<span class="cam-thumb-num">${capturedBottles}</span>`;
+  // overflow:hidden は使わない（枠の外に出る番号バッジ top:-6px が切られる）。imgに角丸を付ける
+  thumb.innerHTML = `<img src="${dataUrl}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px;"><span class="cam-thumb-num">${n}</span>`;
   strip.appendChild(thumb);
   strip.scrollLeft = strip.scrollWidth;
-
-  document.getElementById('camCounter').textContent = t('cam_count').replace('{n}', capturedBottles);
-  document.getElementById('camAnalyzeBtn').disabled = false;
-  // シャッターの触感演出
-  const shutter = document.querySelector('.cam-shutter');
-  shutter.style.transform = 'scale(0.88)';
-  setTimeout(() => shutter.style.transform = '', 120);
 }
 
-function analyzeLabels() {
+// ワインの色 → UIカテゴリ。match.wine.iro はマスター日本語、identification.color は vision英語
+// （サーバー側 IRO_JA の逆向き。API側と同じく、色とタイプを混ぜず泡系は sparkling へ）。
+const IRO_TO_CAT = { '赤':'red', '白':'white', '泡':'sparkling', '微発泡':'sparkling', 'ロゼ':'rose', 'オレンジ':'orange' };
+
+// 「ラベルを解析する」= /api/identify を1枚ずつ順次（scouterと同じ実解析・レート制限も同じ土俵）
+async function analyzeLabels() {
+  if (!capturedShots.length) return;
   closeCameraCapture();
   const overlay = document.getElementById('analyzingOverlay');
-  document.getElementById('analyzingCount').textContent = t('analyzing_count').replace('{n}', capturedBottles);
+  const counter = document.getElementById('analyzingCount');
   overlay.classList.add('open');
-  setTimeout(() => {
-    overlay.classList.remove('open');
-    showWineSearchResults(capturedBottles);
-  }, 1800);
-}
-
-// ============================================================
-// 🔍 ワイン検索結果（AI解析シミュレーション）
-// ============================================================
-
-// 解析結果の候補データ（ラベル読み取りを想定）
-const wineSearchCandidates = [
-  [
-    { cat:'red', emoji:'🍷', name:'Château Pichon Baron', producer:'Château Pichon Baron', vintage:'2019', region:'Pauillac, Bordeaux', grapes:'Cabernet Sauvignon 65%, Merlot 35%', priceGlass:0, priceBottle:0, score:'98%', note:'cand_note_high' },
-    { cat:'red', emoji:'🍷', name:'Château Pichon Baron', producer:'Château Pichon Baron', vintage:'2018', region:'Pauillac, Bordeaux', grapes:'Cabernet Sauvignon 65%, Merlot 35%', priceGlass:0, priceBottle:0, score:'94%', note:'cand_note_vintage' },
-    { cat:'red', emoji:'🍷', name:'Château Pichon Lalande', producer:'Château Pichon Lalande', vintage:'2019', region:'Pauillac, Bordeaux', grapes:'Cabernet Sauvignon 45%, Merlot 35%', priceGlass:0, priceBottle:0, score:'72%', note:'cand_note_similar' },
-  ],
-  [
-    { cat:'white', emoji:'🤍', name:'Chablis 1er Cru "Fourchaume"', producer:'William Fèvre', vintage:'2022', region:'Chablis, Bourgogne', grapes:'Chardonnay', priceGlass:0, priceBottle:0, score:'96%', note:'cand_note_producer' },
-    { cat:'white', emoji:'🤍', name:'Chablis Grand Cru "Valmur"', producer:'Domaine Raveneau', vintage:'2021', region:'Chablis, Bourgogne', grapes:'Chardonnay', priceGlass:0, priceBottle:0, score:'81%', note:'cand_note_grandcru' },
-    { cat:'sparkling', emoji:'🥂', name:'Blanc de Blancs Brut Nature', producer:'Jacques Selosse', vintage:'NV', region:'Champagne', grapes:'Chardonnay 100%', priceGlass:0, priceBottle:0, score:'58%', note:'cand_note_sparkling' },
-  ],
-  [
-    { cat:'orange', emoji:'🍊', name:'Ramato Pinot Grigio', producer:'Vodopivec', vintage:'2021', region:'Carso, Friuli', grapes:'Pinot Grigio', priceGlass:0, priceBottle:0, score:'97%', note:'cand_note_high' },
-    { cat:'orange', emoji:'🍊', name:'Skin Contact Gravner', producer:'Joško Gravner', vintage:'2015', region:'Oslavia, Friuli', grapes:'Ribolla Gialla', priceGlass:0, priceBottle:0, score:'68%', note:'cand_note_orange' },
-  ]
-];
-
-let currentCandidateSet = null;
-
-function showWineSearchResults(bottleCount) {
-  // 複数本のとき → 1本目の結果を代表表示（実際は複数タブ予定）
-  const candidateIdx = Math.min(bottleCount, wineSearchCandidates.length) - 1;
-  const candidates = wineSearchCandidates[Math.max(0, candidateIdx % wineSearchCandidates.length)];
-  currentCandidateSet = candidates;
-
-  document.getElementById('wrBadge').textContent = t('wr_badge').replace('{n}', bottleCount);
-
-  const list = document.getElementById('wineResultsList');
-  list.innerHTML = candidates.map((c, i) => `
-    <div class="wine-result-card" onclick="selectWineCandidate(${i})">
-      <span class="wine-result-emoji">${c.emoji}</span>
-      <div class="wine-result-info">
-        <div class="wine-result-name">${c.name}</div>
-        <div class="wine-result-meta">${c.producer} &nbsp;·&nbsp; ${c.vintage} &nbsp;·&nbsp; ${c.region}</div>
-        <div class="wine-result-meta" style="margin-top:2px;color:#9a7a55;">${c.grapes}</div>
-        <div style="font-size:11px;color:var(--text-sub);margin-top:4px;">💬 ${t(c.note)}</div>
-      </div>
-      <span class="wine-result-score">✓ ${c.score}</span>
-    </div>`).join('');
-
-  document.getElementById('wineResultsBg').classList.add('open');
-}
-
-function closeWineResultsBg(e) {
-  if (e && e.target !== document.getElementById('wineResultsBg')) return;
-  closeWineResults();
-}
-
-function closeWineResults() {
-  document.getElementById('wineResultsBg').classList.remove('open');
-}
-
-function selectWineCandidate(i) {
-  closeWineResults();
-  const c = currentCandidateSet[i];
-  // フォームに候補データをセット（hasLabel=true でラベル画像あり扱いにする）
-  pendingHasLabel = true;
-  editingWineId = null;
-  document.getElementById('wineModalTitle').textContent = t('wine_modal_confirm');
-  document.getElementById('fCat').value      = c.cat;
-  document.getElementById('fName').value     = c.name;
-  document.getElementById('fProducer').value = c.producer;
-  document.getElementById('fVintage').value  = c.vintage;
-  document.getElementById('fRegion').value   = c.region;
-  document.getElementById('fGrapes').value   = c.grapes;
-  document.getElementById('fPriceGlass').value  = '';
-  document.getElementById('fPriceBottle').value = '';
-  document.getElementById('fStock').value    = '';
-  document.getElementById('fAvailable').value = 'true';
-  // モーダル内のラベルプレビューを更新
-  updateModalLabelPreview(true, c.cat, c.name);
-  document.getElementById('wineModal').classList.add('open');
-  showToast(t('toast_autofilled').replace('{name}', c.name));
+  const uid = await rwUid();
+  const rows = []; let failed = 0; let limitMsg = null;
+  for (let i = 0; i < capturedShots.length; i++) {
+    counter.textContent = (i + 1) + ' / ' + capturedShots.length;
+    try {
+      const r = await fetch(RW_API + '/api/identify', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: capturedShots[i], userId: 'store-' + (uid || 'unknown'), locale: 'ja-JP' }),
+      });
+      if (r.status === 429 || r.status === 403) {
+        // レート/日次上限。残りを送っても弾かれるだけなので打ち切り、読めた分だけ正直に見せる
+        try { limitMsg = ((await r.json()).message) || t('toast_rate_limit'); } catch (_) { limitMsg = t('toast_rate_limit'); }
+        break;
+      }
+      if (!r.ok) { failed++; continue; }
+      const res = await r.json();
+      const idn = res.identification || {};
+      const w = res.match && res.match.wine;   // カタログ一致行（null = ソムリン未登録のワイン）
+      const name = (w && w.name) || idn.wine || null;
+      if (!name) { failed++; continue; }        // 名前が読めない写真は数えて飛ばす（偽の行を作らない）
+      const cat = (w && IRO_TO_CAT[w.iro]) || RW_CAT[idn.color] || 'red';
+      rows.push({
+        cat, emoji: RW_EMOJI[cat] || '🍷',
+        name,
+        producer: (w && w.producer) || idn.producer || '',
+        vintage: idn.vintage != null ? String(idn.vintage) : ((w && w.vintage) || ''),
+        region: w ? [w.kuni, w.chiiki].filter(v => v && v !== '不明').join(' ')
+                  : [idn.country, idn.region].filter(Boolean).join(' '),
+        grapes: (Array.isArray(idn.grape) && idn.grape.length ? idn.grape : ((w && w.grape) || [])).join(', '),
+        priceGlass: 0, priceBottle: 0,
+        wineId: w ? w.id : null,   // カタログ紐づけ（confirmBulkAdd → uiToDb が wine_id に運ぶ）
+        confidence: Math.round(((res.match && res.match.matchScore) || res.confidence || 0) * 100),
+      });
+    } catch (e) { failed++; }
+  }
+  overlay.classList.remove('open');
+  if (limitMsg) showToast(limitMsg);
+  if (!rows.length) {
+    if (!limitMsg) showToast(t('toast_label_read_fail'));
+    document.getElementById('camOverlay').classList.add('open');   // 撮影分は保持＝撮り直し・再解析できる
+    return;
+  }
+  capturedShots = [];
+  showBulkResults(rows, {
+    title: t('cam_read_done').replace('{n}', rows.length),
+    sub: failed ? t('cam_read_partial').replace('{n}', failed) : t('bulk_sub'),
+  });
 }
 
 // ============================================================
