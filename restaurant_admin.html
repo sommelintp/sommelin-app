@@ -1038,6 +1038,11 @@
   }
   .bulk-check.checked { background: var(--burgundy); border-color: var(--burgundy); color: white; }
   .bulk-wine-emoji { font-size: 20px; flex-shrink: 0; }
+  /* 撮影から来た行は、登録後にサムネイルになる「切り抜き後の写真」をそのまま出す
+     （2026-08-04・登録前に切り抜きの出来を確かめられるように）。リスト写真からの
+     一括読み込みには shot が無いので、その場合は従来どおり絵文字のまま */
+  .bulk-wine-shot { width: 34px; height: 34px; flex-shrink: 0; border-radius: 6px;
+                    object-fit: cover; background: #f4ece8; display: block; }
   .bulk-wine-info { flex: 1; min-width: 0; }
   .bulk-wine-name { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .bulk-wine-meta { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
@@ -4508,7 +4513,8 @@ function updateModalLabelPreview(show, cat, name) {
 // [[sommelin-fake-demo-ui-pattern]]）。現実装: 📸 1タップ＝ネイティブカメラで1本撮影
 // （一括読み込み captureList と同じ file input 方式。getUserMedia の常時ストリームは持たない——
 // 権限・電池・実装コストに見合う価値がこの画面には無く、ライブビューは scouter の領分）→
-// 「ラベルを解析する」で /api/identify を1枚ずつ順次呼び、結果は一括読み込みと同じ
+// 「ラベルを解析する」で /api/identify-shelf を1枚ずつ順次呼び（2026-08-04に identify から変更。
+// identify は「ボトル1本」専用で、2本写した写真でも1本しか返さなかった）、結果は一括読み込みと同じ
 // bulkResults シートに合流する（confirmBulkAdd が wineId 付きで登録する実証済みの一本道。
 // wineId が付くと味スコア/★が出て、ペアリングの色判定もカタログ由来の正しい値になる）。
 let capturedShots = [];   // 撮影済み写真（圧縮後dataURL）
@@ -4579,7 +4585,37 @@ function addBottleThumb(dataUrl, n) {
 // （サーバー側 IRO_JA の逆向き。API側と同じく、色とタイプを混ぜず泡系は sparkling へ）。
 const IRO_TO_CAT = { '赤':'red', '白':'white', '泡':'sparkling', '微発泡':'sparkling', 'ロゼ':'rose', 'オレンジ':'orange' };
 
-// 「ラベルを解析する」= /api/identify を1枚ずつ順次（scouterと同じ実解析・レート制限も同じ土俵）
+// 撮った1枚から「そのボトル1本」だけを切り抜く（2026-08-04・オーナー実機FB「2本写った写真が
+// そのままサムネイルになる。該当する1本だけにして」）。box は identify-shelf が返す 0-1 比率の
+// ボトル全体の矩形。作法はサーバー側 labelImageService.cropAndResize と同一に揃える——
+// **上下左右10%の余白**は7/12に「キャップの先端が切れる」とオーナーから指摘されて入った値で、
+// ここで別の数字を使うと同じ苦情が別経路から再発する。
+// 切り抜けなかったら写真全体をそのまま返す（サムネイルのために写真を失わせない）。
+const LABEL_CROP_PADDING = 0.10;
+function cropShotToBox(dataUrl, box) {
+  return new Promise(resolve => {
+    if (!dataUrl || !box || typeof box.cx !== 'number') { resolve(dataUrl); return; }
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const iw = img.naturalWidth, ih = img.naturalHeight;
+        const padW = (box.w || 0.1) * LABEL_CROP_PADDING, padH = (box.h || 0.3) * LABEL_CROP_PADDING;
+        const pw = Math.min(1, (box.w || 0.1) + padW * 2), ph = Math.min(1, (box.h || 0.3) + padH * 2);
+        const cw = Math.max(1, Math.round(pw * iw)), ch = Math.max(1, Math.round(ph * ih));
+        const left = Math.min(iw - cw, Math.max(0, Math.round((box.cx - pw / 2) * iw)));
+        const top  = Math.min(ih - ch, Math.max(0, Math.round((box.cy - ph / 2) * ih)));
+        const c = document.createElement('canvas');
+        c.width = cw; c.height = ch;
+        c.getContext('2d').drawImage(img, left, top, cw, ch, 0, 0, cw, ch);
+        resolve(c.toDataURL('image/jpeg', 0.85));
+      } catch (e) { console.warn('crop failed:', e.message); resolve(dataUrl); }
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+// 「ラベルを解析する」= /api/identify-shelf を1枚ずつ順次（scouterと同じ実解析・レート制限も同じ土俵）
 async function analyzeLabels() {
   if (!capturedShots.length) return;
   closeCameraCapture();
@@ -4591,7 +4627,10 @@ async function analyzeLabels() {
   for (let i = 0; i < capturedShots.length; i++) {
     counter.textContent = (i + 1) + ' / ' + capturedShots.length;
     try {
-      const r = await fetch(RW_API + '/api/identify', {
+      // 2026-08-04: /api/identify（宣言どおり「ボトル1本」しか返さない）から identify-shelf へ。
+      // オーナー実機FB「2本写るように撮ったのに1本しか認識しない」。shelf は1枚から最大12本を
+      // 位置(box)つきで返し、1本だけの写真も bottles が1件になるだけで壊れない（identify.js §L1584）。
+      const r = await fetch(RW_API + '/api/identify-shelf', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: capturedShots[i], userId: 'store-' + (uid || 'unknown'), locale: 'ja-JP' }),
       });
@@ -4602,24 +4641,31 @@ async function analyzeLabels() {
       }
       if (!r.ok) { failed++; continue; }
       const res = await r.json();
-      const idn = res.identification || {};
-      const w = res.match && res.match.wine;   // カタログ一致行（null = ソムリン未登録のワイン）
-      const name = (w && w.name) || idn.wine || null;
-      if (!name) { failed++; continue; }        // 名前が読めない写真は数えて飛ばす（偽の行を作らない）
-      const cat = (w && IRO_TO_CAT[w.iro]) || RW_CAT[idn.color] || 'red';
-      rows.push({
-        cat, emoji: RW_EMOJI[cat] || '🍷',
-        name,
-        producer: (w && w.producer) || idn.producer || '',
-        vintage: idn.vintage != null ? String(idn.vintage) : ((w && w.vintage) || ''),
-        region: w ? [w.kuni, w.chiiki].filter(v => v && v !== '不明').join(' ')
-                  : [idn.country, idn.region].filter(Boolean).join(' '),
-        grapes: (Array.isArray(idn.grape) && idn.grape.length ? idn.grape : ((w && w.grape) || [])).join(', '),
-        priceGlass: 0, priceBottle: 0,
-        wineId: w ? w.id : null,   // カタログ紐づけ（confirmBulkAdd → uiToDb が wine_id に運ぶ）
-        shot: capturedShots[i],    // 撮った写真そのもの。登録が確定した分だけアップロードする
-        confidence: Math.round(((res.match && res.match.matchScore) || res.confidence || 0) * 100),
-      });
+      const bottles = Array.isArray(res.bottles) ? res.bottles : [];
+      if (!bottles.length) { failed++; continue; }   // 1本も見つからなかった写真
+      for (const b of bottles) {
+        // readable:false のボトルは identification が null で返る（位置だけ分かって銘柄が読めない）。
+        // 行を作らず「読めなかった本数」に数える＝偽の行を作らない。文言も「{n}本」なので本数で合う
+        const idn = b.identification || {};
+        const w = b.match && b.match.wine;   // カタログ一致行（null = ソムリン未登録のワイン）
+        const name = (w && w.name) || idn.wine || null;
+        if (!name) { failed++; continue; }
+        const cat = (w && IRO_TO_CAT[w.iro]) || RW_CAT[idn.color] || 'red';
+        rows.push({
+          cat, emoji: RW_EMOJI[cat] || '🍷',
+          name,
+          producer: (w && w.producer) || idn.producer || '',
+          vintage: idn.vintage != null ? String(idn.vintage) : ((w && w.vintage) || ''),
+          region: w ? [w.kuni, w.chiiki].filter(v => v && v !== '不明').join(' ')
+                    : [idn.country, idn.region].filter(Boolean).join(' '),
+          grapes: (Array.isArray(idn.grape) && idn.grape.length ? idn.grape : ((w && w.grape) || [])).join(', '),
+          priceGlass: 0, priceBottle: 0,
+          wineId: w ? w.id : null,   // カタログ紐づけ（confirmBulkAdd → uiToDb が wine_id に運ぶ）
+          // このボトルの位置で切り抜いた写真。登録が確定した分だけアップロードする
+          shot: await cropShotToBox(capturedShots[i], b.box),
+          confidence: Math.round(((b.match && b.match.matchScore) || 0) * 100),
+        });
+      }
     } catch (e) { failed++; }
   }
   overlay.classList.remove('open');
@@ -4753,7 +4799,11 @@ function renderBulkList(wines) {
   list.innerHTML = wines.map((w, i) => `
     <div class="bulk-wine-row" onclick="toggleBulkCheck(${i}, this)">
       <div class="bulk-check checked" id="bcheck-${i}">✓</div>
-      <span class="bulk-wine-emoji">${w.emoji}</span>
+      ${w.shot
+        ? `<img class="bulk-wine-shot" src="${w.shot}" alt=""
+                onerror="this.nextElementSibling.style.display='inline';this.remove();"
+             ><span class="bulk-wine-emoji" style="display:none;">${w.emoji}</span>`
+        : `<span class="bulk-wine-emoji">${w.emoji}</span>`}
       <div class="bulk-wine-info">
         <div class="bulk-wine-name">${esc(w.name)} <span style="font-weight:400;color:var(--text-sub);">${esc(w.vintage)}</span></div>
         <div class="bulk-wine-meta">${esc(w.producer)} · ${esc(w.region)} · ${esc(w.grapes)}</div>
