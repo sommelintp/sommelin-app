@@ -2347,6 +2347,22 @@ const I18N = {
     pr_draft_badge: '下書き', pr_published_badge: '公開中',
     pr_publish_btn: '🌐 店ページに公開する', pr_unpublish_btn: '下書きに戻す',
     pr_published_toast: '店ページに公開しました', pr_unpublished_toast: '下書きに戻しました',
+    // C-3（2026-08-03）
+    pr_no_guide: 'このお料理の合わせ方の手がかりが見つかりませんでした。',
+    pr_llm_budget: '一度に見立てできる料理の数を超えました。この料理は数を分けてもう一度お試しください。',
+    pr_hint_colors: 'リストに{colors}系が1本あると幅が出ます。',
+    pr_color_red: '赤', pr_color_white: '白', pr_color_rose: 'ロゼ', pr_color_orange: 'オレンジ',
+    pr_ref_title: '参考（お店の方だけに表示）',
+    pr_ref_note: 'この内容は店ページには出ません。仕入れや接客の参考にどうぞ。',
+    pr_state_soldout: '品切れ中のため店ページには出ていません（リストで「提供中」に戻すと再表示されます）',
+    pr_state_unlisted: 'このワインが自店リストに見つかりません。店ページには出ていません',
+    pr_move_up: '上へ', pr_move_down: '下へ',
+    pr_update_reason_btn: '理由を更新',
+    pr_reason_saved: '理由を更新しました',
+    pr_preview_btn: '店ページで見る',
+    pr_announce_btn: 'イベントとして告知する',
+    pr_announce_default_title: 'おすすめペアリングフェア',
+    pr_notify_note: 'ペアリングを公開しても、お知らせは飛びません。お客さまに知らせたいときは「イベントとして告知する」からどうぞ。',
     loading: '読み込み中…',
     cancel: 'キャンセル',
     close: '閉じる',
@@ -2893,6 +2909,22 @@ const I18N = {
     pr_draft_badge: 'Draft', pr_published_badge: 'Published',
     pr_publish_btn: '🌐 Publish to store page', pr_unpublish_btn: 'Revert to draft',
     pr_published_toast: 'Published to your store page', pr_unpublished_toast: 'Reverted to draft',
+    // C-3 (2026-08-03)
+    pr_no_guide: "We couldn't find a reliable starting point for pairing this dish.",
+    pr_llm_budget: 'Too many dishes to estimate at once. Please try this dish again in a smaller batch.',
+    pr_hint_colors: 'Adding a {colors} wine to your list would widen your options.',
+    pr_color_red: 'red', pr_color_white: 'white', pr_color_rose: 'rosé', pr_color_orange: 'orange',
+    pr_ref_title: 'Reference (visible to staff only)',
+    pr_ref_note: "This never appears on your store page. It's for purchasing and service notes.",
+    pr_state_soldout: 'Out of stock, so this is hidden from your store page (set it back to available in your list to show it again)',
+    pr_state_unlisted: "This wine isn't on your list anymore, so it's hidden from your store page",
+    pr_move_up: 'Move up', pr_move_down: 'Move down',
+    pr_update_reason_btn: 'Update reason',
+    pr_reason_saved: 'Reason updated',
+    pr_preview_btn: 'View store page',
+    pr_announce_btn: 'Announce as an event',
+    pr_announce_default_title: 'Recommended Pairing Fair',
+    pr_notify_note: 'Publishing pairings sends no notification. To let guests know, use "Announce as an event".',
     loading: 'Loading…',
     cancel: 'Cancel',
     close: 'Close',
@@ -5840,6 +5872,45 @@ async function prGenerateSuggestions() {
 
 function prEsc(s) { return String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
+// no-fit の文言はサーバーの構造化コードから t() で組み立てる（設計§2-7。サーバーの日本語
+// ハードコードをそのまま出すと英語UIの店に日本語が混ざるため）。noFitCode が無い古い
+// レスポンスのときだけ、後方互換で文字列 noFitMessage に落ちる。
+const PR_NOFIT_KEY = {
+  empty_list: 'pr_no_list', no_match: 'pr_no_fit', no_guide: 'pr_no_guide',
+  llm_budget: 'pr_llm_budget', no_dish_name: 'pr_dish_required',
+};
+function prNoFitText(s) {
+  const key = s && s.noFitCode ? PR_NOFIT_KEY[s.noFitCode] : null;
+  return key ? t(key) : ((s && s.noFitMessage) || t('pr_no_fit'));
+}
+// 色名は「赤/白/ロゼ/オレンジ」をUI言語へ。辞書に無い色はそのまま出す（勝手に落とさない）。
+// t()は未知キーでキー名自体を返すため、必ず辞書に在ることを確かめてから引く。
+function prColorLabel(c) {
+  const slug = { '赤': 'red', '白': 'white', 'ロゼ': 'rose', 'オレンジ': 'orange' }[c];
+  return slug ? t('pr_color_' + slug) : c;
+}
+function prHintText(s) {
+  const cols = (s && Array.isArray(s.hintColors)) ? s.hintColors.filter(Boolean) : [];
+  if (cols.length) return t('pr_hint_colors').replace('{colors}', cols.map(prColorLabel).join('/'));
+  return (s && s.hint) || '';   // 後方互換
+}
+
+// avoid（避ける組合せ）と tips は**店主向けの参考**としてのみ出す（設計§2-7）。
+// 店ページには載せない — お客さんに「これは合いません」を店の名前で言わせないため。
+function prRefHtml(s) {
+  const rows = [
+    s && s.avoid ? `<div style="margin-top:4px;">⚠ ${prEsc(s.avoid)}</div>` : '',
+    s && s.tips ? `<div style="margin-top:4px;">💡 ${prEsc(s.tips)}</div>` : '',
+  ].filter(Boolean).join('');
+  if (!rows) return '';
+  return `<details style="margin-top:8px;">
+    <summary style="font-size:11.5px;font-weight:700;color:var(--text-sub);cursor:pointer;">📖 ${t('pr_ref_title')}</summary>
+    <div style="font-size:11.5px;color:var(--text-sub);line-height:1.6;padding:4px 2px 0;">${rows}
+      <div style="margin-top:6px;opacity:0.8;">${t('pr_ref_note')}</div>
+    </div>
+  </details>`;
+}
+
 function prCandidateLine(c) {
   if (!c) return '';
   return `<div style="font-size:14px;font-weight:800;color:var(--text);">${prEsc(c.wineName)}${c.producer ? ' <span style="font-weight:600;color:var(--text-sub);">/ ' + prEsc(c.producer) + '</span>' : ''}</div>
@@ -5855,8 +5926,8 @@ function renderPrSuggestions() {
     if (!chosen) {
       return `<div class="panel-section" style="margin-bottom:12px;padding:14px;">
         <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:6px;">${prEsc(s.dishName)}</div>
-        <div style="font-size:12.5px;color:var(--text-sub);">${prEsc(s.noFitMessage || t('pr_no_fit'))}</div>
-        ${s.hint ? `<div style="font-size:11.5px;color:var(--text-sub);margin-top:4px;">${prEsc(s.hint)}</div>` : ''}
+        <div style="font-size:12.5px;color:var(--text-sub);">${prEsc(prNoFitText(s))}</div>
+        ${prHintText(s) ? `<div style="font-size:11.5px;color:var(--text-sub);margin-top:4px;">${prEsc(prHintText(s))}</div>` : ''}
       </div>`;
     }
     const reasonVal = prEsc(useAlt ? (s.alt.reason || s.reason || '') : (s.reason || ''));
@@ -5869,6 +5940,7 @@ function renderPrSuggestions() {
       ${s.alt ? `<button onclick="prToggleAlt(${i})" style="margin-top:8px;background:#fff;color:var(--burgundy);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;">${useAlt ? t('pr_use_primary') : t('pr_use_alt') + '（' + prEsc(s.alt.wineName) + '）'}</button>` : ''}
       <label class="form-label" style="font-size:10.5px;margin-top:10px;">${t('pr_reason_label')}</label>
       <textarea id="prReason-${i}" class="form-input" rows="2" style="resize:vertical;font-size:12.5px;">${reasonVal}</textarea>
+      ${prRefHtml(s)}
       <button onclick="prSaveDraft(${i})" style="margin-top:8px;width:100%;background:var(--burgundy);color:#fff;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">${t('pr_save_btn')}</button>
     </div>`;
   }).join('');
@@ -5900,6 +5972,16 @@ async function prSaveDraft(i) {
   } catch (e) { showToast(t('pr_save_fail')); }
 }
 
+let prSavedItems = [];   // 並び替えの入れ替え相手を知るために保持（表示順＝sortOrder昇順）
+
+// 在庫連動の状態バッジ（設計§2-6）。店ページで非表示になっている行を店主に気づかせる。
+// **システムは勝手にstatusを変えない**ので、直すかどうかは店主が決める（D9）。
+function prListedBadge(p) {
+  if (p.listedState === 'soldout') return `<div style="font-size:11px;font-weight:700;color:#b45309;margin-top:4px;">⚠ ${t('pr_state_soldout')}</div>`;
+  if (p.listedState === 'unlisted') return `<div style="font-size:11px;font-weight:700;color:#b45309;margin-top:4px;">⚠ ${t('pr_state_unlisted')}</div>`;
+  return '';
+}
+
 async function prLoadSavedList() {
   const box = document.getElementById('prSavedList');
   if (!box) return;
@@ -5908,23 +5990,90 @@ async function prLoadSavedList() {
     if (!r.ok) throw 0;
     const res = await r.json();
     const items = res.pairings || [];
+    prSavedItems = items;
     if (!items.length) { box.innerHTML = `<div style="font-size:12.5px;color:var(--text-sub);padding:8px 0;">${t('pr_saved_empty')}</div>`; return; }
-    box.innerHTML = items.map(p => {
+    const anyPublished = items.some(p => p.status === 'published');
+    box.innerHTML = items.map((p, idx) => {
       const published = p.status === 'published';
       return `
       <div class="panel-section" style="margin-bottom:8px;padding:12px 14px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
           <div style="min-width:0;">
             <div style="font-size:13px;font-weight:800;color:var(--text);">${prEsc(p.dishName)} → ${prEsc(p.wineName)}</div>
-            <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">${published ? '🌐 ' + t('pr_published_badge') : '📝 ' + t('pr_draft_badge')} ・ ${prEsc(p.reason || '')}</div>
+            <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">${published ? '🌐 ' + t('pr_published_badge') : '📝 ' + t('pr_draft_badge')}</div>
+            ${prListedBadge(p)}
           </div>
-          <button onclick="prDeleteDraft('${p.id}')" style="flex-shrink:0;background:none;border:none;color:#bbb;font-size:16px;cursor:pointer;">✕</button>
+          <div style="flex-shrink:0;display:flex;align-items:center;gap:2px;">
+            <button onclick="prMove('${p.id}',-1)" ${idx === 0 ? 'disabled' : ''} title="${t('pr_move_up')}" style="background:none;border:none;color:${idx === 0 ? '#ddd' : 'var(--burgundy)'};font-size:15px;cursor:${idx === 0 ? 'default' : 'pointer'};padding:2px 4px;">↑</button>
+            <button onclick="prMove('${p.id}',1)" ${idx === items.length - 1 ? 'disabled' : ''} title="${t('pr_move_down')}" style="background:none;border:none;color:${idx === items.length - 1 ? '#ddd' : 'var(--burgundy)'};font-size:15px;cursor:${idx === items.length - 1 ? 'default' : 'pointer'};padding:2px 4px;">↓</button>
+            <button onclick="prDeleteDraft('${p.id}')" style="background:none;border:none;color:#bbb;font-size:16px;cursor:pointer;padding:2px 4px;">✕</button>
+          </div>
         </div>
-        <button onclick="prTogglePublish('${p.id}', ${!published})" style="margin-top:8px;background:${published ? '#fff' : 'var(--burgundy)'};color:${published ? 'var(--burgundy)' : '#fff'};border:1px solid var(--burgundy);border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:inherit;">${published ? t('pr_unpublish_btn') : t('pr_publish_btn')}</button>
+
+        <label class="form-label" style="font-size:10.5px;margin-top:8px;">${t('pr_reason_label')}</label>
+        <textarea id="prEditReason-${p.id}" class="form-input" rows="2" style="resize:vertical;font-size:12.5px;">${prEsc(p.reason || '')}</textarea>
+
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+          <button onclick="prSaveReason('${p.id}')" style="background:#fff;color:var(--burgundy);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:inherit;">${t('pr_update_reason_btn')}</button>
+          <button onclick="prTogglePublish('${p.id}', ${!published})" style="background:${published ? '#fff' : 'var(--burgundy)'};color:${published ? 'var(--burgundy)' : '#fff'};border:1px solid var(--burgundy);border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:800;cursor:pointer;font-family:inherit;">${published ? t('pr_unpublish_btn') : t('pr_publish_btn')}</button>
+        </div>
       </div>`;
     }).join('');
+
+    // 公開済みがあるときだけ、店ページ確認とイベント告知の導線を出す（設計§2-8）。
+    // 通知は作らない＝ペアリング公開でフォロワーには何も飛ばない、を店主の言葉で伝える。
+    if (anyPublished) {
+      box.innerHTML += `
+      <div class="panel-section" style="margin-top:12px;padding:14px;">
+        <div style="font-size:11.5px;color:var(--text-sub);line-height:1.6;margin-bottom:10px;">${t('pr_notify_note')}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button onclick="prOpenStorePage()" style="flex:1;min-width:130px;background:#fff;color:var(--burgundy);border:1.5px solid var(--burgundy);border-radius:10px;padding:9px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;">👀 ${t('pr_preview_btn')}</button>
+          <button onclick="prAnnounceEvent()" style="flex:1;min-width:130px;background:#fff;color:var(--burgundy);border:1.5px solid var(--burgundy);border-radius:10px;padding:9px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;">📅 ${t('pr_announce_btn')}</button>
+        </div>
+      </div>`;
+    }
   } catch (e) { box.innerHTML = `<div style="font-size:12.5px;color:var(--text-sub);padding:8px 0;">${t('pr_saved_empty')}</div>`; }
 }
+
+// ① 理由文の編集（PATCH reason）。店の言葉が正なので、AIの下書きを後から直せる導線を必ず置く。
+async function prSaveReason(id) {
+  const el = document.getElementById('prEditReason-' + id);
+  if (!el) return;
+  try {
+    const r = await prApiFetch('/api/store-pairings/' + id, {
+      method: 'PATCH', body: JSON.stringify({ reason: el.value.trim() }),
+    });
+    if (!r.ok) throw 0;
+    showToast(t('pr_reason_saved'));
+    prLoadSavedList();
+  } catch (e) { showToast(t('pr_save_fail')); }
+}
+
+// ② 並び替え（PATCH sortOrder）。隣と sortOrder を入れ替えるだけ＝専用APIは作らない。
+async function prMove(id, dir) {
+  const idx = prSavedItems.findIndex(p => p.id === id);
+  const other = prSavedItems[idx + dir];
+  if (idx < 0 || !other) return;
+  const me = prSavedItems[idx];
+  try {
+    const rs = await Promise.all([
+      prApiFetch('/api/store-pairings/' + me.id, { method: 'PATCH', body: JSON.stringify({ sortOrder: other.sortOrder }) }),
+      prApiFetch('/api/store-pairings/' + other.id, { method: 'PATCH', body: JSON.stringify({ sortOrder: me.sortOrder }) }),
+    ]);
+    if (rs.some(r => !r.ok)) throw 0;
+    prLoadSavedList();
+  } catch (e) { showToast(t('pr_save_fail')); }
+}
+
+// ③ 店ページのプレビュー（QRと同じURL＝お客さんが見るのと同じ画面）
+function prOpenStorePage() {
+  if (!restaurant.qrUrl) { showToast(t('pr_save_fail')); return; }
+  window.open(restaurant.qrUrl, '_blank', 'noopener');
+}
+
+// ⑦ イベント告知のショートカット（設計§2-8）。既存のイベント作成モーダルを既定タイトルで
+// 開くだけ＝サーバー変更ゼロ。配信は既存のフォロー→フィード／QR店ページに乗る。
+function prAnnounceEvent() { openStoreEventModal(t('pr_announce_default_title')); }
 
 async function prDeleteDraft(id) {
   if (!confirm(t('pr_delete_confirm'))) return;
@@ -6141,9 +6290,14 @@ setTimeout(markPendingInvites, 2000);   // 入口ガードがトークンを整�
 
 // ── 店イベント作成・一覧・削除（E2 2026-07-21） ──
 let sevDates = [];
-function openStoreEventModal(){
+// defaultTitle: ペアリングタブの「📅 イベントとして告知する」から既定タイトルを渡す（設計§2-8）。
+// 通常の「＋ イベント作成」からは従来どおり空で開く。
+function openStoreEventModal(defaultTitle){
   sevDates = [];
   ['sev-title','sev-date','sev-start','sev-end','sev-desc','sev-cost','sev-url'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  if (typeof defaultTitle === 'string' && defaultTitle) {
+    const tt = document.getElementById('sev-title'); if (tt) tt.value = defaultTitle;
+  }
   let name=''; try{ const p=JSON.parse(localStorage.getItem('sommelin_profile')||'{}'); name=p.display_name||''; }catch(e){}
   document.getElementById('sev-venue').value=name;
   renderSevChips();
