@@ -433,8 +433,8 @@
   .wine-row {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
+    gap: 9px;
+    padding: 8px 12px;
     border-bottom: 1px solid var(--border);
     transition: background 0.1s;
   }
@@ -452,7 +452,7 @@
   .wine-row { flex-wrap: wrap; }
   .wine-row-tail { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: auto; }
   @media (max-width: 640px) {
-    .wine-row-tail { flex-basis: 100%; justify-content: flex-end; margin-left: 0; }
+    .wine-row-tail { flex-basis: 100%; justify-content: flex-end; margin-left: 0; margin-top: 2px; gap: 8px; }
   }
   .edit-btn, .del-btn {
     width: 28px; height: 28px;
@@ -903,8 +903,8 @@
 
   /* ===== ラベルサムネイル ===== */
   .wine-label-thumb {
-    width: 48px;
-    height: 58px;
+    width: 42px;
+    height: 50px;
     border-radius: 6px;
     flex-shrink: 0;
     display: flex;
@@ -1145,19 +1145,23 @@
     white-space: nowrap;
   }
 
-  .cam-thumb-strip {
+  /* 撮った写真を並べる領域（旧: 横1列の細いストリップ）。ビューファインダー撤去で空いた
+     縦を使い、撮ったものが大きく確認できるグリッドにする */
+  .cam-shots {
     width: 100%;
-    padding: 10px 16px;
+    flex: 1;
+    padding: 14px 16px;
     display: flex;
-    gap: 8px;
-    overflow-x: auto;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 10px;
+    overflow-y: auto;
     background: #0d0d0d;
-    min-height: 70px;
-    align-items: center;
     scrollbar-width: none;
-    border-top: 1px solid rgba(255,255,255,0.08);
   }
-  .cam-thumb-strip::-webkit-scrollbar { display: none; }
+  .cam-shots::-webkit-scrollbar { display: none; }
+  .cam-shots .cam-thumb { width: 88px; height: 88px; font-size: 26px; }
+  .cam-thumb-empty { width: 100%; text-align: center; align-self: center; }
   .cam-thumb {
     width: 52px; height: 52px;
     border-radius: 10px;
@@ -1902,22 +1906,10 @@
     <button class="cam-close-btn" onclick="closeListCapture()" data-i18n="cancel">キャンセル</button>
   </div>
 
-  <!-- ビューファインダー（横長） -->
-  <div class="cam-viewfinder">
-    <div style="width:310px;height:220px;border:2px solid rgba(255,255,255,0.4);border-radius:16px;position:relative;background:rgba(255,255,255,0.03);">
-      <div class="cam-fc tl"></div><div class="cam-fc tr"></div>
-      <div class="cam-fc bl"></div><div class="cam-fc br"></div>
-      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:0.35;">
-        <div style="width:80%;height:2px;background:white;border-radius:1px;"></div>
-        <div style="width:80%;height:2px;background:white;border-radius:1px;"></div>
-        <div style="width:80%;height:2px;background:white;border-radius:1px;"></div>
-        <div style="width:60%;height:2px;background:white;border-radius:1px;"></div>
-        <div style="width:70%;height:2px;background:white;border-radius:1px;"></div>
-      </div>
-      <div style="position:absolute;bottom:-38px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.55);font-size:12px;white-space:nowrap;" data-i18n="lc_frame_hint">
-        ワインリスト全体をフレームに収めてください
-      </div>
-    </div>
+  <!-- 2026-08-03: ボトル撮影と同じ理由で飾りのビューファインダーを撤去（file input なので
+       ここに映像は出ない）。撮った写真のプレビューを出す領域に置き換える -->
+  <div class="cam-shots" id="listShotBox">
+    <div class="cam-thumb-empty" id="listShotEmpty" data-i18n="lc_frame_hint">ワインリスト全体が入るように撮ってください</div>
   </div>
 
   <!-- サムネイル不要なのでスリム帯 -->
@@ -1964,19 +1956,10 @@
     <button class="cam-close-btn" onclick="closeCameraCapture()" data-i18n="cancel">キャンセル</button>
   </div>
 
-  <!-- ビューファインダー -->
-  <div class="cam-viewfinder">
-    <div class="cam-frame">
-      <div class="cam-fc tl"></div>
-      <div class="cam-fc tr"></div>
-      <div class="cam-fc bl"></div>
-      <div class="cam-fc br"></div>
-      <div class="cam-frame-hint" data-i18n="cam_frame_hint">ボトルをフレームに合わせてください</div>
-    </div>
-  </div>
-
-  <!-- サムネイルストリップ -->
-  <div class="cam-thumb-strip" id="camThumbStrip">
+  <!-- 2026-08-03: 飾りのビューファインダー枠を撤去。撮影はOS標準カメラ（file input）なので
+       ここに映像は出ない＝「映るように見えて映らない」枠は正直でない。この画面は
+       「撮った結果を並べて、続けるか解析するかを選ぶ」だけの役に徹する -->
+  <div class="cam-shots" id="camThumbStrip">
     <div class="cam-thumb-empty" id="camThumbEmpty" data-i18n="cam_thumb_empty">撮影したボトルがここに表示されます</div>
   </div>
 
@@ -2083,6 +2066,10 @@
         </select>
       </div>
     </div>
+
+    <!-- 推しカード導線（2026-08-03）: 行から📣を外した代わりの入口。登録済みのワインを
+         編集で開いたときだけ出す（新規追加中はまだ対象が無い） -->
+    <button id="wineModalOshiBtn" onclick="oshiFromWineModal()" style="display:none;width:100%;margin-bottom:10px;background:#fff;color:var(--burgundy);border:1.5px solid var(--burgundy);border-radius:10px;padding:10px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;" data-i18n="oshi_btn_title">📣 推しカードを作る</button>
 
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeWineModal()" data-i18n="cancel">キャンセル</button>
@@ -2627,7 +2614,7 @@ const I18N = {
     toast_autofilled: '「{name}」の情報を自動入力しました ✓',
     // リスト一括読み込み
     lc_title: '📋 ワインリストを読み込む',
-    lc_frame_hint: 'ワインリスト全体をフレームに収めてください',
+    lc_frame_hint: 'ワインリスト全体が入るように撮ってください',
     lc_tip: '📄 メニュー・手書きリスト・印刷リスト、どれでも読み込めます',
     lc_analyze_btn: '📖 ワインリストを読み込む',
     lc_captured: '✅ リストを撮影しました。「読み込む」を押してください',
@@ -3183,7 +3170,7 @@ const I18N = {
     cand_note_orange: 'Similar match as an orange wine',
     toast_autofilled: 'Details for "{name}" auto-filled ✓',
     lc_title: '📋 Scan Wine List',
-    lc_frame_hint: 'Fit the entire wine list in the frame',
+    lc_frame_hint: 'Capture the whole wine list in one shot',
     lc_tip: '📄 Menus, handwritten lists, printed lists — all can be read',
     lc_analyze_btn: '📖 Read wine list',
     lc_captured: '✅ List captured. Tap "Read wine list"',
@@ -4299,17 +4286,21 @@ function renderWineTable(cat, search) {
       const initials = w.name.split(' ').slice(0,2).map(s => s[0]).join('').toUpperCase().slice(0,3);
       const bgColors = { sparkling:'#f8f0ff', white:'#f0f8ff', red:'#fff0f0', rose:'#fff0f5', orange:'#fff8f0' };
       const fgColors = { sparkling:'#6B3FA0', white:'#1d4ed8', red:'#9B1B4B', rose:'#be185d', orange:'#92400e' };
-      return `<div class="wine-label-thumb scanned" onclick="openWineModal('${w.id}')" title="${t('thumb_scanned_title')}" style="background:linear-gradient(160deg,#fff8f4,#fceee8);">
+      // 行全体が編集を開くので、サムネイル自身の onclick は外す（同じ動作の二重定義を残さない）
+      return `<div class="wine-label-thumb scanned" title="${t('thumb_scanned_title')}" style="background:linear-gradient(160deg,#fff8f4,#fceee8);">
         <span class="label-emoji">${catEmoji[w.cat]}</span>
         <span class="label-name">${esc(w.name.split(' ').slice(0,3).join(' '))}</span>
         <span class="label-cam-badge">📷</span>
       </div>`;
     }
-    return `<div class="wine-label-thumb placeholder" onclick="openWineModal('${w.id}')" title="${t('thumb_placeholder_title')}">${catEmoji[w.cat]}</div>`;
+    return `<div class="wine-label-thumb placeholder" title="${t('thumb_placeholder_title')}">${catEmoji[w.cat]}</div>`;
   };
 
+  // 行のどこを触っても編集が開く（✏️を探させない）。トグル・削除は onclick で
+  // stopPropagation して行タップに巻き込まれないようにする。📣推しカードは編集画面から出せるので
+  // 行からは外した（1行に並ぶ操作を減らす＝押し間違いと窮屈さの両方に効く）。
   body.innerHTML = filtered.map(w => `
-    <div class="wine-row ${w.available ? '' : 'unavailable'}" style="padding:10px 12px 10px 14px;">
+    <div class="wine-row ${w.available ? '' : 'unavailable'}" onclick="openWineModal('${w.id}')" style="cursor:pointer;">
       ${labelThumb(w)}
       <div class="wine-row-info">
         <div class="wine-row-name">${esc(w.name)} ${esc(w.vintage)}</div>
@@ -4322,13 +4313,11 @@ function renderWineTable(cat, search) {
         </div>
         <span class="stock-chip ${stockClass(w.stock ?? 0)}">${stockLabel(w.stock ?? 0)}</span>
         <div class="wine-row-actions">
-          <label class="toggle" title="${w.available ? t('toggle_on_title') : t('toggle_off_title')}">
+          <label class="toggle" onclick="event.stopPropagation()" title="${w.available ? t('toggle_on_title') : t('toggle_off_title')}">
             <input type="checkbox" ${w.available ? 'checked' : ''} onchange="toggleAvailability('${w.id}', this.checked)">
             <span class="toggle-slider"></span>
           </label>
-          <button class="edit-btn" onclick="openOshiCardModal('${w.id}')" title="${t('oshi_btn_title')}">📣</button>
-          <button class="edit-btn" onclick="openWineModal('${w.id}')" title="${t('edit_title')}">✏️</button>
-          <button class="del-btn" onclick="deleteWine('${w.id}')" title="${t('delete_title')}">🗑</button>
+          <button class="del-btn" onclick="event.stopPropagation(); deleteWine('${w.id}')" title="${t('delete_title')}">🗑</button>
         </div>
       </div>
     </div>`).join('') || `<div style="text-align:center;padding:32px;color:var(--text-sub);font-size:13px;">${t('no_matching_wines')}</div>`;
@@ -4460,7 +4449,18 @@ function openWineModal(id, skipCamera) {
     document.getElementById('fAvailable').value = 'true';
     updateModalLabelPreview(false);
   }
+  // 推しカードは登録済みのワインにだけ出す（新規追加中は対象がまだ無い）
+  const oshiBtn = document.getElementById('wineModalOshiBtn');
+  if (oshiBtn) oshiBtn.style.display = id ? 'block' : 'none';
   modal.classList.add('open');
+}
+
+// 編集モーダルから推しカードへ（行の📣を外した代わりの入口・2026-08-03）
+function oshiFromWineModal() {
+  const id = editingWineId;
+  if (!id) return;
+  closeWineModal();
+  openOshiCardModal(id);
 }
 
 // モーダル内ラベルプレビューの更新
@@ -4490,7 +4490,11 @@ function openCameraCapture() {
   document.getElementById('camCounter').textContent = t('cam_count_zero');
   document.getElementById('camAnalyzeBtn').disabled = true;
   document.getElementById('camThumbStrip').innerHTML = '<div class="cam-thumb-empty" id="camThumbEmpty">' + t('cam_thumb_empty') + '</div>';
+  // 「＋追加」→ ワンタップでOS標準カメラまで届かせる（間に空の待機画面を挟まない）。
+  // オーバーレイは裏で開いておく: カメラをキャンセルしても「📸 もう1本」「手動で入力する」に
+  // 着地でき、行き止まりにならない。
   document.getElementById('camOverlay').classList.add('open');
+  captureBottle();
 }
 
 function closeCameraCapture() {
@@ -4614,7 +4618,11 @@ function openListCapture() {
   _listDataUrl = null;
   document.getElementById('listAnalyzeBtn').disabled = true;
   document.getElementById('listCaptureTip').textContent = t('lc_tip');
+  document.getElementById('listShotBox').innerHTML =
+    '<div class="cam-thumb-empty" id="listShotEmpty">' + t('lc_frame_hint') + '</div>';
+  // ボトル撮影と同じ: 待機画面を挟まず即カメラ。キャンセルしてもこの画面に着地する
   document.getElementById('listCamOverlay').classList.add('open');
+  captureList();
 }
 
 function closeListCapture() {
@@ -4642,6 +4650,9 @@ function captureList() {
         URL.revokeObjectURL(img.src);
         document.getElementById('listAnalyzeBtn').disabled = false;
         document.getElementById('listCaptureTip').textContent = t('lc_captured');
+        // 撮ったものを見せる（読めない写真のまま解析に進ませない）
+        document.getElementById('listShotBox').innerHTML =
+          '<img src="' + _listDataUrl + '" alt="" style="width:100%;max-height:100%;object-fit:contain;border-radius:10px;">';
       };
       img.src = URL.createObjectURL(f);
     });
