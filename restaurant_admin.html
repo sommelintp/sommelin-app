@@ -446,6 +446,14 @@
   .wine-row-sub { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
   .wine-row-price { font-size: 12px; font-weight: 700; color: var(--burgundy); white-space: nowrap; flex-shrink: 0; }
   .wine-row-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  /* 2026-08-03: 価格・在庫・操作を1つの器（tail）に。スマホ幅では右側の flex-shrink:0 群が
+     幅を使い切り、名前欄が0pxに潰れて1文字ずつ縦積みになっていた。640px以下では tail を
+     全幅の2段目に折り返す（1段目=ラベル+名前、2段目=価格+在庫+操作） */
+  .wine-row { flex-wrap: wrap; }
+  .wine-row-tail { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: auto; }
+  @media (max-width: 640px) {
+    .wine-row-tail { flex-basis: 100%; justify-content: flex-end; margin-left: 0; }
+  }
   .edit-btn, .del-btn {
     width: 28px; height: 28px;
     border: none; border-radius: 8px;
@@ -1653,7 +1661,7 @@
     <button class="btn-primary" onclick="openWineModal(null)" data-i18n="wl_add_btn">＋ 追加</button>
   </div>
   <div class="wl-toolbar2">
-    <button class="btn-import" onclick="openListCapture()" data-i18n="wl_bulk_btn">📋 リストを写真で一括読み込み</button>
+    <button class="btn-import" onclick="openListCapture()" data-i18n="wl_bulk_btn">📋 写真から一括登録</button>
     <button class="btn-import" onclick="openPrintList()" data-i18n="wl_print_btn">🖨 印刷用リストを開く</button>
   </div>
 
@@ -1874,7 +1882,7 @@
     <textarea id="prDishInput" class="form-input" rows="4" data-i18n-ph="pr_dish_ph" style="margin-bottom:10px;resize:vertical;"></textarea>
 
     <div style="display:flex;gap:8px;margin-bottom:14px;">
-      <button onclick="prCaptureMenu()" style="flex:1;background:#fff;color:var(--burgundy);border:1.5px solid var(--burgundy);border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;" data-i18n="pr_menu_photo_btn">📷 メニュー写真から読み込む</button>
+      <button onclick="prCaptureMenu()" style="flex:1;background:#fff;color:var(--burgundy);border:1.5px solid var(--burgundy);border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;" data-i18n="pr_menu_photo_btn">📷 メニュー写真を読む</button>
       <button onclick="prGenerateSuggestions()" id="prGenerateBtn" style="flex:1;background:var(--burgundy);color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;" data-i18n="pr_generate_btn">提案を作る</button>
     </div>
 
@@ -2314,7 +2322,7 @@ const I18N = {
     pr_intro: 'お料理を入力（または写真から読み込み）すると、自店のワインリストから合う1本をAIが下書き提案します。お店の言葉に直して保存してください。',
     pr_dish_label: '料理名（1行に1品）',
     pr_dish_ph: '例:\nビーフシチュー\n白身魚のポワレ\nクレームブリュレ',
-    pr_menu_photo_btn: '📷 メニュー写真から読み込む',
+    pr_menu_photo_btn: '📷 メニュー写真を読む',
     pr_menu_reading: 'メニューを読み込み中…',
     pr_generate_btn: '提案を作る',
     pr_generating: '考え中…',
@@ -2520,7 +2528,7 @@ const I18N = {
     // ワインリスト
     wl_search_ph: 'ワインを検索...',
     wl_add_btn: '＋ 追加',
-    wl_bulk_btn: '📋 リストを写真で一括読み込み',
+    wl_bulk_btn: '📋 写真から一括登録',
     wl_print_btn: '🖨 印刷用リストを開く',
     cat_all: 'すべて',
     cat_sparkling: '🥂 泡',
@@ -3079,7 +3087,7 @@ const I18N = {
     lset_unlink: 'Unlink LINE',
     wl_search_ph: 'Search wines...',
     wl_add_btn: '＋ Add',
-    wl_bulk_btn: '📋 Import list from a photo',
+    wl_bulk_btn: '📋 Import from photo',
     wl_print_btn: '🖨 Open print list',
     cat_all: 'All',
     cat_sparkling: '🥂 Sparkling',
@@ -4305,19 +4313,21 @@ function renderWineTable(cat, search) {
         <div class="wine-row-name">${esc(w.name)} ${esc(w.vintage)}</div>
         <div class="wine-row-sub">${esc(w.producer)} · ${esc(w.region)}</div>
       </div>
-      <div style="text-align:right;flex-shrink:0;">
-        <div class="wine-row-price">G ¥${w.priceGlass.toLocaleString()}</div>
-        <div style="font-size:10px;color:var(--text-sub);">B ¥${w.priceBottle.toLocaleString()}</div>
-      </div>
-      <span class="stock-chip ${stockClass(w.stock ?? 0)}">${stockLabel(w.stock ?? 0)}</span>
-      <div class="wine-row-actions">
-        <label class="toggle" title="${w.available ? t('toggle_on_title') : t('toggle_off_title')}">
-          <input type="checkbox" ${w.available ? 'checked' : ''} onchange="toggleAvailability('${w.id}', this.checked)">
-          <span class="toggle-slider"></span>
-        </label>
-        <button class="edit-btn" onclick="openOshiCardModal('${w.id}')" title="${t('oshi_btn_title')}">📣</button>
-        <button class="edit-btn" onclick="openWineModal('${w.id}')" title="${t('edit_title')}">✏️</button>
-        <button class="del-btn" onclick="deleteWine('${w.id}')" title="${t('delete_title')}">🗑</button>
+      <div class="wine-row-tail">
+        <div style="text-align:right;flex-shrink:0;">
+          <div class="wine-row-price">G ¥${w.priceGlass.toLocaleString()}</div>
+          <div style="font-size:10px;color:var(--text-sub);">B ¥${w.priceBottle.toLocaleString()}</div>
+        </div>
+        <span class="stock-chip ${stockClass(w.stock ?? 0)}">${stockLabel(w.stock ?? 0)}</span>
+        <div class="wine-row-actions">
+          <label class="toggle" title="${w.available ? t('toggle_on_title') : t('toggle_off_title')}">
+            <input type="checkbox" ${w.available ? 'checked' : ''} onchange="toggleAvailability('${w.id}', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+          <button class="edit-btn" onclick="openOshiCardModal('${w.id}')" title="${t('oshi_btn_title')}">📣</button>
+          <button class="edit-btn" onclick="openWineModal('${w.id}')" title="${t('edit_title')}">✏️</button>
+          <button class="del-btn" onclick="deleteWine('${w.id}')" title="${t('delete_title')}">🗑</button>
+        </div>
       </div>
     </div>`).join('') || `<div style="text-align:center;padding:32px;color:var(--text-sub);font-size:13px;">${t('no_matching_wines')}</div>`;
 }
