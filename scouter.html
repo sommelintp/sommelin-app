@@ -1641,13 +1641,29 @@ async function identifyBack(b, dataUrl){
 async function loadSimilar(b){
   try{
     const w=b.match.wine; const id=b.identification||{};
-    const q=w ? ('wineId='+w.id)
-              : ('color='+encodeURIComponent(id.color||'')+'&country='+encodeURIComponent(id.country||''));
-    const r=await authFetch(API_BASE+'/api/similar?'+q);
+    // 2026-08-04: 旧実装は wineId **だけ**を送っていた。サーバー側が旧テーブル wines で
+    // それを引けないと色・国・価格が全部 null になり、色の絞り込みが素通りして
+    // 「全体のコスパ上位」が「近い系統のおすすめ」の見出しで出ていた（実利用で発覚：
+    // 辛口の白を撮って、ポルトガルの酒精強化ワインが3件・うち2件は同じもの）。
+    // 手元にある材料は全部渡す＝サーバーが1つ引けなくても絞り込みを失わない。
+    const p=new URLSearchParams();
+    if(w){
+      if(w.id!=null) p.set('wineId', w.id);
+      if(w.catalogId!=null) p.set('catalogId', w.catalogId);   // 現行の正キー
+      if(w.iro) p.set('iro', w.iro);                            // 日本語・カタログ由来＝最も確か
+      if(w.kuni) p.set('kuni', w.kuni);
+      if(w.price!=null) p.set('price', w.price);
+    }
+    if(id.color) p.set('color', id.color);                      // 英語・ラベル読み由来＝保険
+    if(id.country) p.set('country', id.country);
+    const r=await authFetch(API_BASE+'/api/similar?'+p.toString());
     if(!r.ok) return;
     const d=await r.json();
     const box=document.getElementById('simBox');
     if(!box || !d.items || !d.items.length) return;
+    // tier='none' ＝ 色も国も見ずに全体上位を返した＝「近い系統」ではない。名乗れないなら出さない
+    // （見出しを作り替えるかどうかは★の分布再設計と一緒に決める。それまでは黙る側に倒す）。
+    if(d.tier==='none'){ box.innerHTML=''; return; }
     box.innerHTML=`<div class="cand-h">${t('similar_heading')}</div>`+d.items.map(x=>{
       return `<div class="cand-row" onclick="buy('${escAttr(x.name||'')}', ${x.id})">
         <div><div class="cn">${esc(trunc(x.name||'',26))}</div><div class="cr">${esc([dispKuni(x.kuni),x.chiiki].filter(v=>v&&v!=='不明').join(' '))}　${fmtPrice(x.price)}</div></div>
