@@ -1041,8 +1041,14 @@
   /* 撮影から来た行は、登録後にサムネイルになる「切り抜き後の写真」をそのまま出す
      （2026-08-04・登録前に切り抜きの出来を確かめられるように）。リスト写真からの
      一括読み込みには shot が無いので、その場合は従来どおり絵文字のまま */
+  /* 切り抜きは「ボトル全体」＝縦長（およそ1:4）。それを正方形の枠に cover で入れると
+     上下が切られて“まん中”＝肩から首だけが残る（オーナー実機FB: シャンパーニュの
+     ネックが写っていた。首の長い瓶ほどズレる）。ラベルは中央より下にあるので、
+     見せる帯を下へずらす。切り抜き自体は正しいので、直すのは表示位置だけ
+     ——こうすると保存済みの写真も撮り直さずに直る。数値は寄せ具合の調整点 */
   .bulk-wine-shot { width: 34px; height: 34px; flex-shrink: 0; border-radius: 6px;
-                    object-fit: cover; background: #f4ece8; display: block; }
+                    object-fit: cover; object-position: 50% var(--label-band, 68%);
+                    background: #f4ece8; display: block; }
   .bulk-wine-info { flex: 1; min-width: 0; }
   .bulk-wine-name { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .bulk-wine-meta { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
@@ -1235,6 +1241,12 @@
     flex-shrink: 0;
   }
   .cam-shutter:active { transform: scale(0.9); box-shadow: 0 0 0 3px rgba(255,255,255,0.15); }
+  /* 📸の対になる「選ぶ」道。シャッターより一段控えめ＝主役は撮影のまま */
+  .cam-pick-btn { min-width: 60px; background: rgba(255,255,255,0.12); color: #fff;
+                  border: 1px solid rgba(255,255,255,0.35); border-radius: 9px;
+                  padding: 7px 9px; font-size: 11px; font-weight: 700; cursor: pointer;
+                  font-family: inherit; line-height: 1.3; }
+  .cam-pick-btn:active { transform: scale(0.94); }
   .cam-counter {
     color: rgba(255,255,255,0.6);
     font-size: 13px;
@@ -1973,7 +1985,8 @@
     <div class="cam-controls">
       <div class="cam-counter" id="camCounter" data-i18n="cam_count_zero">0本撮影済み</div>
       <button class="cam-shutter" onclick="captureBottle()" title="撮影" data-i18n-title="shutter_title">📸</button>
-      <div style="min-width:60px;"></div>
+      <!-- 先に撮っておいた写真から選ぶ道（2026-08-04）。📸の即カメラ起動は残したまま足す -->
+      <button class="cam-pick-btn" onclick="pickBottlePhotos()" data-i18n="cam_pick_btn">📁 写真から選ぶ</button>
     </div>
     <button class="cam-analyze-btn" id="camAnalyzeBtn" onclick="analyzeLabels()" disabled data-i18n="cam_analyze_btn">
       ✨ ラベルを解析する
@@ -2601,6 +2614,9 @@ const I18N = {
     cam_count: '{n}本撮影済み',
     cam_analyze_btn: '✨ ラベルを解析する',
     cam_manual_link: '手動で入力する',
+    cam_pick_btn: '📁 写真から選ぶ',
+    cam_pick_over: '一度に選べる写真は{n}枚までです。{n}枚だけ読み込みました。',
+    cam_pick_bad: '{n}枚は画像として読めなかったため飛ばしました。',
     shutter_title: '撮影',
     analyzing_title: 'ラベルを解析中…',
     analyzing_count: '{n}本分',
@@ -2635,6 +2651,8 @@ const I18N = {
     bulk_sub: '追加するワインを選択してください（すべてチェック済み）',
     bulk_add_n: '✓ {n}本を追加する',
     bulk_accuracy: '読取精度 {n}%',
+    bulk_linked: 'ソムリン',
+    bulk_linked_title: 'ソムリンのワインデータと一致しました。味スコア・ソムスターが表示されます',
     bulk_select: '選択してください',
     toast_register_fail: '⚠️ 登録に失敗しました（通信環境をご確認ください）',
     toast_bulk_added: '{n}本のワインを追加しました ✓',
@@ -3158,6 +3176,9 @@ const I18N = {
     cam_count: '{n} captured',
     cam_analyze_btn: '✨ Analyze labels',
     cam_manual_link: 'Enter manually',
+    cam_pick_btn: '📁 Choose photos',
+    cam_pick_over: 'You can add up to {n} photos at a time. Loaded {n} of them.',
+    cam_pick_bad: 'Skipped {n} file(s) that could not be read as images.',
     shutter_title: 'Capture',
     analyzing_title: 'Analyzing labels…',
     analyzing_count: '{n} bottle(s)',
@@ -3191,6 +3212,8 @@ const I18N = {
     bulk_sub: 'Select the wines to add (all checked)',
     bulk_add_n: '✓ Add {n} wines',
     bulk_accuracy: 'Read accuracy {n}%',
+    bulk_linked: 'Sommelin',
+    bulk_linked_title: 'Matched to Sommelin wine data. Taste score and Sommelin stars will be shown',
     bulk_select: 'Select wines',
     toast_register_fail: '⚠️ Registration failed (please check your connection)',
     toast_bulk_added: '{n} wines added ✓',
@@ -4310,7 +4333,7 @@ function renderWineTable(cat, search) {
     if (w.labelImageUrl) {
       return `<div class="wine-label-thumb scanned" title="${t('thumb_scanned_title')}" style="padding:0;overflow:hidden;background:#f4ece8;">
         <img src="${esc(w.labelImageUrl)}" alt="" loading="lazy"
-             style="width:100%;height:100%;object-fit:cover;display:block;"
+             style="width:100%;height:100%;object-fit:cover;object-position:50% var(--label-band, 68%);display:block;"
              onerror="this.parentNode.innerHTML='${catEmoji[w.cat] || '🍷'}';this.parentNode.style.padding='';">
       </div>`;
     }
@@ -4518,6 +4541,11 @@ function updateModalLabelPreview(show, cat, name) {
 // bulkResults シートに合流する（confirmBulkAdd が wineId 付きで登録する実証済みの一本道。
 // wineId が付くと味スコア/★が出て、ペアリングの色判定もカタログ由来の正しい値になる）。
 let capturedShots = [];   // 撮影済み写真（圧縮後dataURL）
+// 1回の選択で積める枚数の上限。写真1枚＝identify-shelf 1回＝サーバーの「日次スキャン30回」を
+// 1つ消費する（identify.js DAILY_LIMITS.scan=30・分間30回）。ライブラリから何十枚も選べる
+// ようになったので、枠を一度に食い潰して「途中で止まる」体験にならない位置で切る。
+// 1枚から最大12本読めるので、12枚あれば実務上は足りる。
+const BOTTLE_SHOTS_MAX = 12;
 
 function openCameraCapture() {
   capturedShots = [];
@@ -4535,7 +4563,31 @@ function closeCameraCapture() {
   document.getElementById('camOverlay').classList.remove('open');
 }
 
-// 📸 = ネイティブカメラで1本撮る（captureList と同じ file input・canvas圧縮1568px/0.8）
+// 1枚を圧縮して撮影済みに積む（1568px長辺 / 0.8）。📸とライブラリ選択の**共通の1本道**。
+// ここを2つに分けると、片方だけ圧縮率や上限が変わって静かにズレる（同じ形の事故を避ける）。
+function addShotFile(f) {
+  return new Promise(resolve => {
+    if (!f) { resolve(false); return; }
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      const sc = Math.min(1, 1568 / Math.max(img.naturalWidth, img.naturalHeight));
+      c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src);
+      const dataUrl = c.toDataURL('image/jpeg', 0.8);
+      capturedShots.push(dataUrl);
+      addBottleThumb(dataUrl, capturedShots.length);
+      document.getElementById('camCounter').textContent = t('cam_count').replace('{n}', capturedShots.length);
+      document.getElementById('camAnalyzeBtn').disabled = false;
+      resolve(true);
+    };
+    img.onerror = () => { URL.revokeObjectURL(img.src); resolve(false); };  // 読めない画像は静かに飛ばさず数える側へ
+    img.src = URL.createObjectURL(f);
+  });
+}
+
+// 📸 = ネイティブカメラで1本撮る（captureList と同じ file input）
 function captureBottle() {
   let inp = document.getElementById('rwBottleInput');
   if (!inp) {
@@ -4543,29 +4595,43 @@ function captureBottle() {
     inp.type = 'file'; inp.accept = 'image/*'; inp.capture = 'environment';
     inp.id = 'rwBottleInput'; inp.style.display = 'none';
     document.body.appendChild(inp);
-    inp.addEventListener('change', e => {
+    inp.addEventListener('change', async e => {
       const f = e.target.files[0]; e.target.value = '';
-      if (!f) return;
-      const img = new Image();
-      img.onload = () => {
-        const c = document.createElement('canvas');
-        const sc = Math.min(1, 1568 / Math.max(img.naturalWidth, img.naturalHeight));
-        c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        URL.revokeObjectURL(img.src);
-        const dataUrl = c.toDataURL('image/jpeg', 0.8);
-        capturedShots.push(dataUrl);
-        addBottleThumb(dataUrl, capturedShots.length);
-        document.getElementById('camCounter').textContent = t('cam_count').replace('{n}', capturedShots.length);
-        document.getElementById('camAnalyzeBtn').disabled = false;
-      };
-      img.src = URL.createObjectURL(f);
+      await addShotFile(f);
     });
   }
   inp.click();
   // シャッターの触感演出（従来のまま）
   const shutter = document.querySelector('.cam-shutter');
   if (shutter) { shutter.style.transform = 'scale(0.88)'; setTimeout(() => shutter.style.transform = '', 120); }
+}
+
+// 📁 = 先に撮っておいた写真から選ぶ（複数可）。2026-08-04 オーナー要望
+// 「先に写真を撮影しておいて、そこから選べるようにしてあげたい」。
+// capture属性を**付けない**のが要点——付いているとOSがカメラを強制起動し、
+// ライブラリを開く道が塞がれる。試飲メモの取り込み（:5476/:5558）と同じ作法に揃えた。
+// 📸のワンタップ起動は壊さない（別ボタンとして足す）。
+async function pickBottlePhotos() {
+  let inp = document.getElementById('rwBottlePickInput');
+  if (!inp) {
+    inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true;
+    inp.id = 'rwBottlePickInput'; inp.style.display = 'none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change', async e => {
+      const files = [...(e.target.files || [])]; e.target.value = '';
+      if (!files.length) return;
+      // 1枚ずつ順に積む（並列にすると番号バッジと配列の順が入れ替わる）。
+      // 上限は解析側のレート制限に任せず、ここで正直に切る＝黙って捨てない
+      const over = Math.max(0, capturedShots.length + files.length - BOTTLE_SHOTS_MAX);
+      const take = files.slice(0, files.length - over);
+      let bad = 0;
+      for (const f of take) { if (!(await addShotFile(f))) bad++; }
+      if (over) showToast(t('cam_pick_over').replace('{n}', BOTTLE_SHOTS_MAX));
+      else if (bad) showToast(t('cam_pick_bad').replace('{n}', bad));
+    });
+  }
+  inp.click();
 }
 
 // 実写サムネイルをストリップに追加（旧: 絵文字のプレースホルダーだった）
@@ -4613,6 +4679,25 @@ function cropShotToBox(dataUrl, box) {
     img.onerror = () => resolve(dataUrl);
     img.src = dataUrl;
   });
+}
+
+// ラベルから「そのワインの情報をどこまで読み取れたか」を0-100で表す（2026-08-04・オーナー判断）。
+// 旧実装は match.matchScore（＝ソムリンDBとの照合一致度）を「読取精度」と名乗らせていた。
+// ラベルが完璧に読めていてもDB未登録なら低く出る＝名前と中身が食い違っていた。
+// ここで見るのは identification（＝ラベルから読めた値）だけ。カタログ由来の値で埋めない
+// ——それをすると「読み取れた」ことにならないため。DBと繋がったかは linked（ソムリン印）が別に示す。
+// 重みは「店主が値札・リストを作るのに要る順」。ヴィンテージが裏ラベルにしか無い等で
+// 落ちるのは正常（読めなかったものは読めなかったと出す）。
+function readCompleteness(idn) {
+  const has = v => v != null && String(v).trim() !== '';
+  let s = 0;
+  if (has(idn.wine))     s += 30;   // 銘柄
+  if (has(idn.producer)) s += 25;   // 生産者
+  if (has(idn.vintage))  s += 15;   // 年
+  if (has(idn.country) || has(idn.region)) s += 10;  // 産地
+  if (has(idn.color))    s += 10;   // 色
+  if (Array.isArray(idn.grape) && idn.grape.length) s += 10;  // 品種
+  return s;
 }
 
 // 「ラベルを解析する」= /api/identify-shelf を1枚ずつ順次（scouterと同じ実解析・レート制限も同じ土俵）
@@ -4663,7 +4748,8 @@ async function analyzeLabels() {
           wineId: w ? w.id : null,   // カタログ紐づけ（confirmBulkAdd → uiToDb が wine_id に運ぶ）
           // このボトルの位置で切り抜いた写真。登録が確定した分だけアップロードする
           shot: await cropShotToBox(capturedShots[i], b.box),
-          confidence: Math.round(((b.match && b.match.matchScore) || 0) * 100),
+          confidence: readCompleteness(idn),
+          linked: !!w,   // ソムリンDBと繋がった＝味スコア・★が出る。小さく印を添えるだけに留める
         });
       }
     } catch (e) { failed++; }
@@ -4807,7 +4893,10 @@ function renderBulkList(wines) {
       <div class="bulk-wine-info">
         <div class="bulk-wine-name">${esc(w.name)} <span style="font-weight:400;color:var(--text-sub);">${esc(w.vintage)}</span></div>
         <div class="bulk-wine-meta">${esc(w.producer)} · ${esc(w.region)} · ${esc(w.grapes)}</div>
-        <div style="display:inline-block;margin-top:3px;font-size:10px;font-weight:700;color:#15803d;background:#dcfce7;padding:1px 7px;border-radius:6px;">${t('bulk_accuracy').replace('{n}', w.confidence)}</div>
+        <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap;">
+          <span style="display:inline-block;font-size:10px;font-weight:700;color:#15803d;background:#dcfce7;padding:1px 7px;border-radius:6px;">${t('bulk_accuracy').replace('{n}', w.confidence)}</span>
+          ${w.linked ? `<span title="${t('bulk_linked_title')}" style="display:inline-block;font-size:9.5px;font-weight:700;color:var(--burgundy);border:1px solid var(--burgundy);opacity:.55;padding:0 5px;border-radius:5px;letter-spacing:.2px;">🍷 ${t('bulk_linked')}</span>` : ''}
+        </div>
       </div>
     </div>`).join('');
 }
