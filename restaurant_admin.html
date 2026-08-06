@@ -1513,14 +1513,16 @@
 
     <label class="form-label" style="font-size:11px;" data-i18n="sev_dates">開催日 ✳︎（複数OK）</label>
     <div style="display:flex;gap:8px;margin-bottom:6px;">
-      <input id="sev-date" type="date" class="form-input" style="flex:1;">
+      <input id="sev-date" type="date" class="form-input" style="flex:1;min-width:0;">
       <button onclick="sevAddDate()" style="background:#fff;color:var(--burgundy);border:1.5px solid var(--burgundy);border-radius:10px;padding:0 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;" data-i18n="sev_add">＋追加</button>
     </div>
     <div id="sevDateChips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
 
     <div style="display:flex;gap:8px;margin-bottom:12px;">
-      <div style="flex:1;"><label class="form-label" style="font-size:11px;" data-i18n="sev_start">開始</label><input id="sev-start" type="time" class="form-input"></div>
-      <div style="flex:1;"><label class="form-label" style="font-size:11px;" data-i18n="sev_end">終了</label><input id="sev-end" type="time" class="form-input"></div>
+      <!-- min-width:0 が無いと、iOSの time 入力の固有幅が flex:1 を押し広げて
+           「終了」が画面外へはみ出す（2026-08-05 実地検証で崩れ確認） -->
+      <div style="flex:1;min-width:0;"><label class="form-label" style="font-size:11px;" data-i18n="sev_start">開始</label><input id="sev-start" type="time" class="form-input" style="width:100%;min-width:0;"></div>
+      <div style="flex:1;min-width:0;"><label class="form-label" style="font-size:11px;" data-i18n="sev_end">終了</label><input id="sev-end" type="time" class="form-input" style="width:100%;min-width:0;"></div>
     </div>
 
     <label class="form-label" style="font-size:11px;" data-i18n="sev_venue">会場</label>
@@ -2363,8 +2365,8 @@ const I18N = {
     pr_update_reason_btn: '理由を更新',
     pr_reason_saved: '理由を更新しました',
     pr_preview_btn: '店ページで見る',
+    pr_open_fail: '店ページのURLを取得できませんでした。ページを再読み込みしてからお試しください。',
     pr_announce_btn: 'イベントとして告知する',
-    pr_announce_default_title: 'おすすめペアリングフェア',
     pr_notify_note: 'ペアリングを公開しても、お知らせは飛びません。お客さまに知らせたいときは「イベントとして告知する」からどうぞ。',
     cam_read_done: '📸 {n}本を読み取りました',
     cam_read_partial: '{n}本は読み取れませんでした。撮り直すか、手動で追加してください。',
@@ -2933,8 +2935,8 @@ const I18N = {
     pr_update_reason_btn: 'Update reason',
     pr_reason_saved: 'Reason updated',
     pr_preview_btn: 'View store page',
+    pr_open_fail: 'Could not open your store page. Please reload this page and try again.',
     pr_announce_btn: 'Announce as an event',
-    pr_announce_default_title: 'Recommended Pairing Fair',
     pr_notify_note: 'Publishing pairings sends no notification. To let guests know, use "Announce as an event".',
     cam_read_done: '📸 Read {n} bottles',
     cam_read_partial: "{n} couldn't be read. Retake the photo or add them manually.",
@@ -3472,6 +3474,12 @@ const restaurant = {
   listUpdatedAt: '2026-05-19'
 };
 
+// 実店名（restaurant_settings.display_name）。上の restaurant.name はプロトタイプ期の
+// デモ定数（'Bistrot Lumière'）なので、実データが要る場面ではこちらを使う（2026-08-05）。
+let storeDisplayName = null;
+// 客用店ページのURL組み立てを1箇所に（loadWineDataとprOpenStorePageで共用＝二重定義でズレない）
+function rwStorePageUrl(uid){ return 'https://sommelintp.github.io/sommelin-app/prototype.html?r=' + uid; }
+
 // ── 店内ワインリスト（実データ: Supabase restaurant_wines。旧デモ配列は廃止） ──
 const RW_SB_URL = 'https://gkhdpzfmqraliwaiubwl.supabase.co';
 const RW_SB_KEY = 'sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
@@ -3496,7 +3504,7 @@ async function rwFetch(path, opts){
   opts.headers = Object.assign({ apikey:RW_SB_KEY, Authorization:'Bearer '+(rwToken()||RW_SB_KEY), 'Content-Type':'application/json' }, opts.headers||{});
   return fetch(RW_SB_URL+'/rest/v1/'+path, opts);
 }
-function dbToUi(r){ return { id:r.id, cat:r.cat||'red', name:r.name, producer:r.producer||'', vintage:r.vintage||'', region:r.region||'', grapes:r.grapes||'', priceGlass:r.price_glass||0, priceBottle:r.price_bottle||0, available:r.available!==false, stock:r.stock||0, wineId:r.wine_id||null, labelImageUrl:r.label_image_url||null, hasLabel:!!(r.wine_id||r.label_image_url) }; }
+function dbToUi(r){ return { id:r.id, cat:r.cat||null, name:r.name, producer:r.producer||'', vintage:r.vintage||'', region:r.region||'', grapes:r.grapes||'', priceGlass:r.price_glass||0, priceBottle:r.price_bottle||0, available:r.available!==false, stock:r.stock||0, wineId:r.wine_id||null, labelImageUrl:r.label_image_url||null, hasLabel:!!(r.wine_id||r.label_image_url) }; }
 function uiToDb(w, uid){ return { owner_id:uid, cat:w.cat||null, name:w.name, producer:w.producer||null, vintage:w.vintage||null, region:w.region||null, grapes:w.grapes||null, price_glass:w.priceGlass||null, price_bottle:w.priceBottle||null, available:w.available!==false, stock:w.stock||0, wine_id:w.wineId||null, label_image_url:w.labelImageUrl||null }; }
 
 // 撮ったラベル写真を wine-labels バケットへ上げ、公開URLを返す（avatars と同型・:6394）。
@@ -3611,6 +3619,12 @@ async function lineLinkInit() {
 
 async function loadWineData(){
   const uid = await rwUid(); if(!uid) return;
+  // QR: 客用ページの実URL。**通信より先に**組み立てる（2026-08-05）。以前はこの関数の
+  // 末尾にあり、途中のfetchが1つでも失敗すると catch(e){} に呑まれて qrUrl が空のまま
+  // だった（実地検証:「👀店ページで見る」が押せない遠因。沈黙が成功に化ける型）。
+  restaurant.qrUrl = rwStorePageUrl(uid);
+  { const qt = document.getElementById('qrUrlText'); if (qt) qt.textContent = restaurant.qrUrl; }
+  qrRendered = false;   // 次にQRパネルを開いた時に実URLで描画
   try{
     const r = await rwFetch('restaurant_wines?owner_id=eq.'+uid+'&order=created_at.asc&limit=500');
     if (r.ok){
@@ -3632,12 +3646,10 @@ async function loadWineData(){
       if (rows.length){
         const nEl = document.getElementById('stkStoreName'); if (nEl && rows[0].display_name) nEl.value = rows[0].display_name;
         const aEl = document.getElementById('stkStoreAddr'); if (aEl && rows[0].address) aEl.value = rows[0].address;
+        if (rows[0].display_name) storeDisplayName = rows[0].display_name;   // イベント会場の初期値等で使う実店名
       }
     }
-    // QR: 客用ページの実URL
-    restaurant.qrUrl = 'https://sommelintp.github.io/sommelin-app/prototype.html?r=' + uid;
-    const qt = document.getElementById('qrUrlText'); if (qt) qt.textContent = restaurant.qrUrl;
-    qrRendered = false;   // 次にQRパネルを開いた時に実URLで描画
+    // qrUrl はこの関数の冒頭で設定済み（fetch失敗に巻き込まれない位置へ移動・2026-08-05）
   }catch(e){}
 }
 
@@ -4344,12 +4356,12 @@ function renderWineTable(cat, search) {
       const fgColors = { sparkling:'#6B3FA0', white:'#1d4ed8', red:'#9B1B4B', rose:'#be185d', orange:'#92400e' };
       // 行全体が編集を開くので、サムネイル自身の onclick は外す（同じ動作の二重定義を残さない）
       return `<div class="wine-label-thumb scanned" title="${t('thumb_scanned_title')}" style="background:linear-gradient(160deg,#fff8f4,#fceee8);">
-        <span class="label-emoji">${catEmoji[w.cat]}</span>
+        <span class="label-emoji">${catEmoji[w.cat] || '🍷'}</span>
         <span class="label-name">${esc(w.name.split(' ').slice(0,3).join(' '))}</span>
         <span class="label-cam-badge">📷</span>
       </div>`;
     }
-    return `<div class="wine-label-thumb placeholder" title="${t('thumb_placeholder_title')}">${catEmoji[w.cat]}</div>`;
+    return `<div class="wine-label-thumb placeholder" title="${t('thumb_placeholder_title')}">${catEmoji[w.cat] || '🍷'}</div>`;
   };
 
   // 行のどこを触っても編集が開く（✏️を探させない）。トグル・削除は onclick で
@@ -4735,7 +4747,11 @@ async function analyzeLabels() {
         const w = b.match && b.match.wine;   // カタログ一致行（null = ソムリン未登録のワイン）
         const name = (w && w.name) || idn.wine || null;
         if (!name) { failed++; continue; }
-        const cat = (w && IRO_TO_CAT[w.iro]) || RW_CAT[idn.color] || 'red';
+        // 色が分からないボトルを黙って「赤」にしない（2026-08-05）。実地検証で白のシャルドネ
+        // (00 WGW・読取8%)が赤として登録され、ペアリングの赤ゲートを通って和牛の第一候補に
+        // 出た。不明は不明(null)のまま登録し、色ゲートには乗せない（サーバー側はiro無しを
+        // 土俵外にする＝「嘘の危険がある側だけ塞ぐ」非対称ゲートと同じ姿勢）。行編集で直せる
+        const cat = (w && IRO_TO_CAT[w.iro]) || RW_CAT[idn.color] || null;
         rows.push({
           cat, emoji: RW_EMOJI[cat] || '🍷',
           name,
@@ -6255,14 +6271,25 @@ async function prMove(id, dir) {
 }
 
 // ③ 店ページのプレビュー（QRと同じURL＝お客さんが見るのと同じ画面）
-function prOpenStorePage() {
-  if (!restaurant.qrUrl) { showToast(t('pr_save_fail')); return; }
-  window.open(restaurant.qrUrl, '_blank', 'noopener');
+// 店ページを開く。qrUrlはloadWineData冒頭で組まれるが、初期化に失敗していても
+// ここでuidから組み直せるようにする（2026-08-05）。以前は失敗時に「保存に失敗しました」を
+// 流用表示していた——保存していないのに保存の失敗を名乗るのは二重に嘘なので専用文言に。
+// iOSはawait後のwindow.openを塞ぐため、先に空タブを確保してからURLを流し込む。
+async function prOpenStorePage() {
+  if (restaurant.qrUrl) { window.open(restaurant.qrUrl, '_blank', 'noopener'); return; }
+  const win = window.open('', '_blank');
+  const uid = await rwUid();
+  if (uid) restaurant.qrUrl = rwStorePageUrl(uid);
+  if (!restaurant.qrUrl) { if (win) win.close(); showToast(t('pr_open_fail')); return; }
+  if (win) { try { win.opener = null; } catch (e) {} win.location = restaurant.qrUrl; }
+  else { location.href = restaurant.qrUrl; }
 }
 
 // ⑦ イベント告知のショートカット（設計§2-8）。既存のイベント作成モーダルを既定タイトルで
 // 開くだけ＝サーバー変更ゼロ。配信は既存のフォロー→フィード／QR店ページに乗る。
-function prAnnounceEvent() { openStoreEventModal(t('pr_announce_default_title')); }
+// 既定タイトルは入れない（2026-08-05 オーナー実機FB「最初から入っているのは要らない」）。
+// イベント名はお店が自分の言葉で書く欄なので、空で開く。
+function prAnnounceEvent() { openStoreEventModal(); }
 
 async function prDeleteDraft(id) {
   if (!confirm(t('pr_delete_confirm'))) return;
@@ -6487,8 +6514,11 @@ function openStoreEventModal(defaultTitle){
   if (typeof defaultTitle === 'string' && defaultTitle) {
     const tt = document.getElementById('sev-title'); if (tt) tt.value = defaultTitle;
   }
-  let name=''; try{ const p=JSON.parse(localStorage.getItem('sommelin_profile')||'{}'); name=p.display_name||''; }catch(e){}
-  document.getElementById('sev-venue').value=name;
+  // 会場の初期値は実店名（restaurant_settings.display_name）。以前は個人プロフィールの
+  // 表示名を入れており、会場欄にオーナーの氏名が出ていた（2026-08-05 実地検証）。
+  // 店名がまだ読めていなければ空欄＝間違った初期値より、書いてもらうほうが正しい。
+  // restaurant.name はデモ定数（'Bistrot Lumière'）なので使わない。
+  document.getElementById('sev-venue').value = storeDisplayName || '';
   renderSevChips();
   document.getElementById('sevBackdrop').style.display='block';
   document.getElementById('sevSheet').style.display='block';

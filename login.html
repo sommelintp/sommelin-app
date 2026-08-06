@@ -127,6 +127,10 @@ body {
   transition: opacity 0.15s; margin-bottom: 12px;
 }
 .btn-line:active { opacity: 0.85; }
+/* LINEログインは未実装（LINE Login channel + OIDCが必要）。実装まで「押せそうな主役」に
+   見せない＝偽の成功演出をやめる（2026-08-05 オーナー実機FB「LINEでログインができない」）。
+   ボタン自体は残す: 予定の告知＋タップ時の正直な案内(準備中トースト)は既存のまま */
+.btn-line.is-preparing { opacity: 0.5; filter: grayscale(0.4); }
 .btn-google {
   width: 100%; background: #fff; color: #3c4043;
   border: 1.5px solid #dadce0; border-radius: var(--r-card); padding: 15px;
@@ -545,11 +549,11 @@ body {
 
     <!-- LINE（業務者のみ表示。個人ユーザーにはLINE機能を一切出さない方針） -->
     <div id="lineRegBlock">
-      <button class="btn-line" onclick="lineRegister()">
+      <button class="btn-line is-preparing" onclick="lineRegister()">
         <svg width="22" height="22" viewBox="0 0 36 36" fill="none">
           <path d="M18 7C11.373 7 6 11.477 6 16.97c0 4.928 3.928 9.065 9.237 9.847.359.077.848.237.972.544.111.279.073.716.036 1l-.157 1.02c-.048.31-.22 1.21.955.66 1.175-.55 6.34-4.084 8.65-6.99C27.31 20.96 30 19.12 30 16.97 30 11.477 24.627 7 18 7z" fill="white"/>
         </svg>
-        LINEで登録（推奨）
+        LINEで登録（準備中）
       </button>
       <div style="font-size:11px;color:var(--text-sub);text-align:center;margin-top:-6px;margin-bottom:14px;">登録後すぐに通知を受け取れます</div>
     </div>
@@ -885,11 +889,11 @@ body {
     <div class="pg-lead">ログイン</div>
     <div class="pg-sub">LINEアカウントでかんたんにログインできます。</div>
 
-    <button class="btn-line" onclick="lineLogin()">
+    <button class="btn-line is-preparing" onclick="lineLogin()">
       <svg width="22" height="22" viewBox="0 0 36 36" fill="none">
         <path d="M18 7C11.373 7 6 11.477 6 16.97c0 4.928 3.928 9.065 9.237 9.847.359.077.848.237.972.544.111.279.073.716.036 1l-.157 1.02c-.048.31-.22 1.21.955.66 1.175-.55 6.34-4.084 8.65-6.99C27.31 20.96 30 19.12 30 16.97 30 11.477 24.627 7 18 7z" fill="white"/>
       </svg>
-      LINEでログイン
+      LINEでログイン（準備中）
     </button>
 
     <button class="btn-google" onclick="googleLogin()">
