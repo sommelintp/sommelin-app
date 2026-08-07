@@ -423,12 +423,26 @@
     cursor: pointer;
     white-space: nowrap;
     transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
   }
   .cat-tab.active {
     background: var(--burgundy);
     border-color: var(--burgundy);
     color: white;
   }
+  /* 色チップ: 絵文字(🥂🤍🍷🌸🍊)をやめ、実際のワインの色に近い丸に
+     （2026-08-07 オーナー実機FB「桜とかオレンジとかいらない。色だけで表現して」）。
+     枠線は白背景でも見えるように薄いグレーを常時敷く（白・泡の丸が地に溶けないため） */
+  .cat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+             border: 1px solid rgba(0,0,0,0.15); }
+  .cat-dot-sparkling { background: #d4af37; }              /* シャンパンゴールド */
+  .cat-dot-white     { background: #f3ecd2; }               /* 淡い生成り */
+  .cat-dot-red       { background: #6b1f2a; }                /* ワインレッド */
+  .cat-dot-rose      { background: #e8a0a8; }                /* サーモンピンク */
+  .cat-dot-orange    { background: #d98a3d; }                /* 琥珀 */
+  .cat-tab.active .cat-dot { border-color: rgba(255,255,255,0.6); }
 
   .wine-row {
     display: flex;
@@ -1684,18 +1698,21 @@
     <button class="btn-primary" onclick="openWineModal(null)" data-i18n="wl_add_btn">＋ 追加</button>
   </div>
   <div class="wl-toolbar2">
-    <button class="btn-import" onclick="openListCapture()" data-i18n="wl_bulk_btn">📋 写真から一括登録</button>
+    <button class="btn-import" onclick="openListCapture()" data-i18n="wl_bulk_btn">📋 ワインリストを読み込む</button>
     <button class="btn-import" onclick="openPrintList()" data-i18n="wl_print_btn">🖨 印刷用リストを開く</button>
   </div>
 
-  <!-- カテゴリタブ -->
+  <!-- カテゴリタブ。2026-08-07オーナー実機FB「桜とかオレンジとかいらない。色だけで表現して」
+       ＝絵文字(🥂🤍🍷🌸🍊)をやめ、実際のワインの色に近い丸(cat-dot)へ。文字はdata-i18nで
+       差し替わるのでdotとlabelを別spanに分ける（絵文字混在の文字列を丸ごと置換していた
+       旧実装だとdotだけを残せない）。 -->
   <div class="cat-tabs">
     <div class="cat-tab active" onclick="filterCat('all',this)" data-i18n="cat_all">すべて</div>
-    <div class="cat-tab" onclick="filterCat('sparkling',this)" data-i18n="cat_sparkling">🥂 泡</div>
-    <div class="cat-tab" onclick="filterCat('white',this)" data-i18n="cat_white">🤍 白</div>
-    <div class="cat-tab" onclick="filterCat('red',this)" data-i18n="cat_red">🍷 赤</div>
-    <div class="cat-tab" onclick="filterCat('rose',this)" data-i18n="cat_rose">🌸 ロゼ</div>
-    <div class="cat-tab" onclick="filterCat('orange',this)" data-i18n="cat_orange">🍊 オレンジ</div>
+    <div class="cat-tab" onclick="filterCat('sparkling',this)"><span class="cat-dot cat-dot-sparkling"></span><span data-i18n="cat_sparkling">泡</span></div>
+    <div class="cat-tab" onclick="filterCat('white',this)"><span class="cat-dot cat-dot-white"></span><span data-i18n="cat_white">白</span></div>
+    <div class="cat-tab" onclick="filterCat('red',this)"><span class="cat-dot cat-dot-red"></span><span data-i18n="cat_red">赤</span></div>
+    <div class="cat-tab" onclick="filterCat('rose',this)"><span class="cat-dot cat-dot-rose"></span><span data-i18n="cat_rose">ロゼ</span></div>
+    <div class="cat-tab" onclick="filterCat('orange',this)"><span class="cat-dot cat-dot-orange"></span><span data-i18n="cat_orange">オレンジ</span></div>
   </div>
 
   <!-- リスト -->
@@ -2034,11 +2051,11 @@
     <div class="form-group">
       <label class="form-label" data-i18n="f_cat">カテゴリ</label>
       <select class="form-select" id="fCat">
-        <option value="sparkling" data-i18n="f_cat_sparkling">🥂 泡・スパークリング</option>
-        <option value="white" data-i18n="f_cat_white">🤍 白ワイン</option>
-        <option value="red" selected data-i18n="f_cat_red">🍷 赤ワイン</option>
-        <option value="rose" data-i18n="f_cat_rose">🌸 ロゼ</option>
-        <option value="orange" data-i18n="f_cat_orange">🍊 オレンジワイン</option>
+        <option value="sparkling" data-i18n="f_cat_sparkling">泡・スパークリング</option>
+        <option value="white" data-i18n="f_cat_white">白ワイン</option>
+        <option value="red" selected data-i18n="f_cat_red">赤ワイン</option>
+        <option value="rose" data-i18n="f_cat_rose">ロゼ</option>
+        <option value="orange" data-i18n="f_cat_orange">オレンジワイン</option>
       </select>
     </div>
     <div class="form-group">
@@ -2536,14 +2553,14 @@ const I18N = {
     // ワインリスト
     wl_search_ph: 'ワインを検索...',
     wl_add_btn: '＋ 追加',
-    wl_bulk_btn: '📋 写真から一括登録',
+    wl_bulk_btn: '📋 ワインリストを読み込む',
     wl_print_btn: '🖨 印刷用リストを開く',
     cat_all: 'すべて',
-    cat_sparkling: '🥂 泡',
-    cat_white: '🤍 白',
-    cat_red: '🍷 赤',
-    cat_rose: '🌸 ロゼ',
-    cat_orange: '🍊 オレンジ',
+    cat_sparkling: '泡',
+    cat_white: '白',
+    cat_red: '赤',
+    cat_rose: 'ロゼ',
+    cat_orange: 'オレンジ',
     wine_count_zero: '全 0 種',
     wine_count: '全 {n} 種（表示: {m}）',
     wl_publish_btn: 'リストを公開する',
@@ -2587,11 +2604,13 @@ const I18N = {
     modal_label_scanned_sub: 'カメラで撮影したラベル情報が反映されています',
     modal_label_check: '情報を確認・修正してから保存してください',
     f_cat: 'カテゴリ',
-    f_cat_sparkling: '🥂 泡・スパークリング',
-    f_cat_white: '🤍 白ワイン',
-    f_cat_red: '🍷 赤ワイン',
-    f_cat_rose: '🌸 ロゼ',
-    f_cat_orange: '🍊 オレンジワイン',
+    // ネイティブselectには色丸(cat-dot)を描けないので、ここは文字だけにする
+    // （2026-08-07 オーナーFBのスクリーンショットはこのピッカーが開いた状態だった）
+    f_cat_sparkling: '泡・スパークリング',
+    f_cat_white: '白ワイン',
+    f_cat_red: '赤ワイン',
+    f_cat_rose: 'ロゼ',
+    f_cat_orange: 'オレンジワイン',
     f_name: 'ワイン名', f_name_ph: '例: Château Margaux',
     f_producer: '生産者',
     f_vintage: 'ヴィンテージ',
@@ -2609,7 +2628,7 @@ const I18N = {
     toast_added: '追加しました ✓',
     toast_save_fail: '⚠️ 保存に失敗しました（通信環境をご確認ください）',
     // カメラ・解析
-    cam_title: '📷 ボトルを撮影',
+    cam_title: 'ワインを追加',
     cam_frame_hint: 'ボトルをフレームに合わせてください',
     cam_thumb_empty: '撮影したボトルがここに表示されます',
     cam_count_zero: '0本撮影済み',
@@ -3101,14 +3120,14 @@ const I18N = {
     lset_unlink: 'Unlink LINE',
     wl_search_ph: 'Search wines...',
     wl_add_btn: '＋ Add',
-    wl_bulk_btn: '📋 Import from photo',
+    wl_bulk_btn: '📋 Scan your wine list',
     wl_print_btn: '🖨 Open print list',
     cat_all: 'All',
-    cat_sparkling: '🥂 Sparkling',
-    cat_white: '🤍 White',
-    cat_red: '🍷 Red',
-    cat_rose: '🌸 Rosé',
-    cat_orange: '🍊 Orange',
+    cat_sparkling: 'Sparkling',
+    cat_white: 'White',
+    cat_red: 'Red',
+    cat_rose: 'Rosé',
+    cat_orange: 'Orange',
     wine_count_zero: 'All: 0 wines',
     wine_count: 'All: {n} wines (showing {m})',
     wl_publish_btn: 'Publish list',
@@ -3150,11 +3169,11 @@ const I18N = {
     modal_label_scanned_sub: 'Details from the scanned label have been filled in',
     modal_label_check: 'Please check and correct the details before saving',
     f_cat: 'Category',
-    f_cat_sparkling: '🥂 Sparkling',
-    f_cat_white: '🤍 White wine',
-    f_cat_red: '🍷 Red wine',
-    f_cat_rose: '🌸 Rosé',
-    f_cat_orange: '🍊 Orange wine',
+    f_cat_sparkling: 'Sparkling',
+    f_cat_white: 'White wine',
+    f_cat_red: 'Red wine',
+    f_cat_rose: 'Rosé',
+    f_cat_orange: 'Orange wine',
     f_name: 'Wine name', f_name_ph: 'e.g. Château Margaux',
     f_producer: 'Producer',
     f_vintage: 'Vintage',
@@ -3171,7 +3190,7 @@ const I18N = {
     toast_updated: 'Updated ✓',
     toast_added: 'Added ✓',
     toast_save_fail: '⚠️ Save failed (please check your connection)',
-    cam_title: '📷 Photograph Bottles',
+    cam_title: 'Add a wine',
     cam_frame_hint: 'Fit the bottle in the frame',
     cam_thumb_empty: 'Captured bottles will appear here',
     cam_count_zero: '0 captured',
@@ -4564,11 +4583,12 @@ function openCameraCapture() {
   document.getElementById('camCounter').textContent = t('cam_count_zero');
   document.getElementById('camAnalyzeBtn').disabled = true;
   document.getElementById('camThumbStrip').innerHTML = '<div class="cam-thumb-empty" id="camThumbEmpty">' + t('cam_thumb_empty') + '</div>';
-  // 「＋追加」→ ワンタップでOS標準カメラまで届かせる（間に空の待機画面を挟まない）。
-  // オーバーレイは裏で開いておく: カメラをキャンセルしても「📸 もう1本」「手動で入力する」に
-  // 着地でき、行き止まりにならない。
+  // 2026-08-07 オーナー実機FB: 「＋追加」を押すと問答無用でカメラが起動するのが
+  // 「予想外・変な動き」だった。ワンタップ起動自体も8/3のオーナー実機FBで入れたもの
+  // （d86a08c）——依頼どおり作っても、使ってみて違うなら直すのが正。この画面には既に
+  // 📸撮影／📁写真から選ぶ／手動で入力する、の3択が揃っているので、
+  // 開くだけにしてどれを選ぶかは店主に委ねる。
   document.getElementById('camOverlay').classList.add('open');
-  captureBottle();
 }
 
 function closeCameraCapture() {
