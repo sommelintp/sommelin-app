@@ -4880,18 +4880,33 @@ async function analyzeList() {
     if (!items.length) { showToast(t('toast_label_read_fail')); return; }
     const rows = items.map(it => {
       const inp = it.input, w = it.match && it.match.wine;
-      const cat = RW_CAT[inp.color] || 'red';
+      // 2026-08-07: 8/4〜8/5に棚スキャン(analyzeLabels)側だけ直していた3点を、こちらにも揃える。
+      // 同じ確認シート(renderBulkList)に合流する2経路が別の作法で値を作っていた＝「片方だけ直した」型。
+      //  ①色: RW_CAT[inp.color] || 'red' で色不明を黙って赤にしていた。リストは色を書かない店が多く
+      //    inp.color は null で返りうる(identify.js buildListItem)。棚側と同じく カタログの色 → 読めた色
+      //    → null（＝不明のまま。色ゲートに乗せない）の順に倒す。
+      //    ※「肉に白」を色で弾くためではない（白も正解になりうる）。塞ぐのは"不明を赤と偽る"側だけ
+      const cat = (w && IRO_TO_CAT[w.iro]) || RW_CAT[inp.color] || null;
       return {
         cat, emoji: RW_EMOJI[cat] || '🍷',
         name: inp.name || inp.rawText,
         producer: (w && w.producer) || inp.producer || '',
         vintage: inp.vintage != null ? String(inp.vintage) : (w && w.vintage) || '',
         region: w ? [w.kuni, w.chiiki].filter(v=>v&&v!=='不明').join(' ') : (inp.country || ''),
-        grapes: '',
+        grapes: ((w && w.grape) || []).join(', '),   // リストに品種は書かれない。一致した時だけカタログから
         priceGlass: inp.byGlass && inp.listPrice ? inp.listPrice : 0,
         priceBottle: !inp.byGlass && inp.listPrice ? inp.listPrice : 0,
         wineId: w ? w.id : null,
-        confidence: w ? Math.round((it.match.matchScore || 0) * 100) : Math.round((res.confidence || 0) * 100),
+        //  ②読取精度: 旧実装は match.matchScore（＝ソムリンDBとの照合一致度）を「読取精度」の見出しで
+        //    出していた。棚側は 8/4 に readCompleteness へ置換済みで、こちらだけ残っていた。
+        //    定義は棚と1本に揃える（同じ見出しで中身が違う、を作らない）。リスト写真は品種・詳細産地を
+        //    構造的に持てないので満点には届かないが、それは「本当に情報が少ない」事実そのもの。
+        //    低く出た行ほど店主に確認してほしい行なので、丸めずそのまま出す
+        confidence: readCompleteness({
+          wine: inp.name || inp.rawText, producer: inp.producer,
+          vintage: inp.vintage, country: inp.country, color: inp.color, grape: null,
+        }),
+        linked: !!w,   //  ③ソムリン印。棚側にしか無く、この経路では一度も出ていなかった
       };
     });
     showBulkResults(rows);
@@ -4930,7 +4945,7 @@ function renderBulkList(wines) {
         <div class="bulk-wine-name">${esc(w.name)} <span style="font-weight:400;color:var(--text-sub);">${esc(w.vintage)}</span></div>
         <div class="bulk-wine-meta">${esc(w.producer)} · ${esc(w.region)} · ${esc(w.grapes)}</div>
         <div style="display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap;">
-          <span style="display:inline-block;font-size:10px;font-weight:700;color:#15803d;background:#dcfce7;padding:1px 7px;border-radius:6px;">${t('bulk_accuracy').replace('{n}', w.confidence)}</span>
+          ${w.confidence != null ? `<span style="display:inline-block;font-size:10px;font-weight:700;color:#15803d;background:#dcfce7;padding:1px 7px;border-radius:6px;">${t('bulk_accuracy').replace('{n}', w.confidence)}</span>` : ''}
           ${w.linked ? `<span title="${t('bulk_linked_title')}" style="display:inline-block;font-size:9.5px;font-weight:700;color:var(--burgundy);border:1px solid var(--burgundy);opacity:.55;padding:0 5px;border-radius:5px;letter-spacing:.2px;">🍷 ${t('bulk_linked')}</span>` : ''}
         </div>
       </div>
@@ -5476,7 +5491,13 @@ async function checkVenueClaim(googlePlaceId) {
     if (!d.found || !d.items || !d.items.length) return;
     if (window.sommLog) sommLog('venue_claim_shown', { n: d.items.length });
     const rows = d.items.map(it => {
-      const cat = RW_CAT[it.color] || 'red';
+      // 2026-08-07: ここは showBulkResults に入る3本目の経路（棚スキャン・リスト読みに続く）で、
+      // 上2本と作法が食い違っていた。
+      //  ①色: || 'red' で色不明を黙って赤にしていた → 不明は null のまま（他2経路と同じ）
+      //  ②読取精度: `it.wine_id ? 95 : 60` は写真を1枚も読んでいないのに出していた作り値だった。
+      //    この経路のデータはお客様の記録がクラウドに貯まったもので、そもそも"読み取り"が存在しない。
+      //    無い指標を数字で名乗らない＝null にして、チップごと出さない（renderBulkList側で分岐）
+      const cat = RW_CAT[it.color] || null;
       return {
         cat, emoji: RW_EMOJI[cat] || '🍷',
         name: it.name_raw || t('unknown_wine'), producer: it.producer_raw || '',
@@ -5484,7 +5505,8 @@ async function checkVenueClaim(googlePlaceId) {
         priceGlass: it.by_glass && it.list_price ? it.list_price : 0,
         priceBottle: !it.by_glass && it.list_price ? it.list_price : 0,
         wineId: it.wine_id || null,
-        confidence: it.wine_id ? 95 : 60,
+        confidence: null,
+        linked: !!it.wine_id,   // 紐づきの有無は事実として分かる。印はこちらで示す
       };
     });
     showBulkResults(rows, {
