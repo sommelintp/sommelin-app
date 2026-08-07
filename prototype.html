@@ -3072,7 +3072,7 @@ const I18N = {
     rank_load_err: 'ランキングを読み込めませんでした（通信環境をご確認ください）',
     shop_list_unpublished: 'このお店のワインリストはまだ公開されていません 🍷',
     // クラシックビュー
-    cls_sparkling: '泡・スパークリング', cls_white: '白ワイン', cls_rose: 'ロゼ', cls_orange: 'オレンジワイン', cls_red: '赤ワイン',
+    cls_sparkling: '泡・スパークリング', cls_white: '白ワイン', cls_rose: 'ロゼ', cls_orange: 'オレンジワイン', cls_red: '赤ワイン', cls_other: 'その他',
     kinds_n: '{n}種', title_has_mariage: 'マリアージュあり',
     // マイページ
     guest: 'ゲスト', member: 'ソムリン会員', member_with: 'ソムリン会員 ・ {f} {l}', lv1: 'たまごソムリン',
@@ -3262,7 +3262,7 @@ const I18N = {
     rank_load_err: 'Could not load the ranking (check your connection)',
     shop_list_unpublished: 'This restaurant has not published its wine list yet 🍷',
     // Classic view
-    cls_sparkling: 'Sparkling', cls_white: 'White Wine', cls_rose: 'Rosé', cls_orange: 'Orange Wine', cls_red: 'Red Wine',
+    cls_sparkling: 'Sparkling', cls_white: 'White Wine', cls_rose: 'Rosé', cls_orange: 'Orange Wine', cls_red: 'Red Wine', cls_other: 'Other',
     kinds_n: '{n} wines', title_has_mariage: 'Pairing available',
     // My Page
     guest: 'Guest', member: 'Sommelin Member', member_with: 'Sommelin Member ・ {f} {l}', lv1: 'Egg Sommelin',
@@ -4357,7 +4357,9 @@ async function loadRestaurantList(rid) {
     // デモデータを実店舗リストへ差し替え
     classicWines = rows.map((r, i) => ({
       idx: i,
-      cat: r.cat || 'red',
+      // 2026-08-07: 色が読めなかった行を黙って赤に倒さない。'other' は下の「その他」セクションで拾う。
+      // ここを null にすると renderClassicList のどのセクションにも該当せず、店の商品が客に見えなくなる。
+      cat: r.cat || 'other',
       name: r.name + (r.vintage && r.vintage !== 'NV' ? ' ' + r.vintage : ''),
       producer: [r.region, r.grapes].filter(Boolean).join(' / ') || r.producer || '',
       region: r.region || t('word_other'),
@@ -4695,6 +4697,8 @@ function renderClassicList(filter) {
     { key: 'rose',      label: t('cls_rose') },
     { key: 'orange',    label: t('cls_orange') },
     { key: 'red',       label: t('cls_red') },
+    // 色が未設定の行の受け皿（2026-08-07）。色チップで絞ったときは出さない＝色を名乗らない。
+    { key: 'other',     label: t('cls_other') },
   ];
 
   const activeCategories = filter === 'all'
