@@ -2110,7 +2110,7 @@
 
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeWineModal()" data-i18n="cancel">キャンセル</button>
-      <button class="btn-primary" onclick="saveWine()" data-i18n="save">保存する</button>
+      <button class="btn-primary" id="wineSaveBtn" onclick="saveWine()" data-i18n="save">保存する</button>
     </div>
   </div>
 </div>
@@ -2671,6 +2671,7 @@ const I18N = {
     bulk_found: '📖 {n}本のワインが見つかりました',
     bulk_sub: '追加するワインを選択してください（すべてチェック済み）',
     bulk_add_n: '✓ {n}本を追加する',
+    bulk_adding: '追加中…',
     bulk_accuracy: '読取精度 {n}%',
     bulk_linked: 'ソムリン',
     bulk_linked_title: 'ソムリンのワインデータと一致しました。味スコア・ソムスターが表示されます',
@@ -3232,6 +3233,7 @@ const I18N = {
     bulk_found: '📖 Found {n} wines',
     bulk_sub: 'Select the wines to add (all checked)',
     bulk_add_n: '✓ Add {n} wines',
+    bulk_adding: 'Adding…',
     bulk_accuracy: 'Read accuracy {n}%',
     bulk_linked: 'Sommelin',
     bulk_linked_title: 'Matched to Sommelin wine data. Taste score and Sommelin stars will be shown',
@@ -4953,6 +4955,7 @@ function renderBulkList(wines) {
 }
 
 function toggleBulkCheck(i, row) {
+  if (bulkAdding) return;   // 登録中は選択を変えさせない。ここは brAddBtn を再有効化する経路でもある
   const check = document.getElementById('bcheck-' + i);
   const idx = bulkChecked.indexOf(i);
   if (idx >= 0) {
@@ -4970,6 +4973,7 @@ function toggleBulkCheck(i, row) {
 }
 
 function toggleAllBulk() {
+  if (bulkAdding) return;   // 同上（ボタン文言を書き換える経路）
   const total = window._bulkWines.length;
   const allChecked = bulkChecked.length === total;
   bulkChecked = allChecked ? [] : window._bulkWines.map((_, i) => i);
@@ -4982,12 +4986,27 @@ function toggleAllBulk() {
   document.getElementById('brAddBtn').textContent = n > 0 ? t('bulk_add_n').replace('{n}', n) : t('bulk_select');
 }
 
+// 二重送信で同じワインが2行入るのを塞ぐ（2026-08-07・C-1ラウンドA）。
+// 旧実装は、押してから登録が終わるまでボタンが生きたままだった。しかもその間に
+// ラベル写真をN枚アップロードする await が挟まるので、押せる窓が秒単位で開く。
+// POSTは素のinsert（upsertでも冪等キーでもない）ため、2回通れば2行入る。
+// フラグ＋ボタン無効化の両方でやる：行タップ(toggleBulkCheck)がボタンを
+// 再有効化してしまう別の入口があるため、フラグだけでは塞ぎきれない。
+let bulkAdding = false;
 async function confirmBulkAdd() {
+  if (bulkAdding) return;
   const added = bulkChecked.map(i => window._bulkWines[i]);
   if (!added.length) return;
-  const uid = await rwUid();
-  if (!uid) { alert(t('alert_relogin')); return; }
+  // ★フラグは「最初のawaitより前」に立てる。`await rwUid()` の後に置くと、連打の2回目が
+  // まだ false のガードをすり抜けて2回ともPOSTされる（実際に再現テストで2回入った）。
+  // ガードを書いたつもりで効いていない状態になるので、ここの順番を動かさないこと。
+  const btn = document.getElementById('brAddBtn');
+  const btnLabel = btn ? btn.textContent : '';
+  bulkAdding = true;
+  if (btn) { btn.disabled = true; btn.textContent = t('bulk_adding'); }
   try {
+    const uid = await rwUid();
+    if (!uid) { alert(t('alert_relogin')); return; }
     // ラベル写真は「登録すると決めた分だけ」上げる（チェックを外した写真は残さない）。
     // 失敗は null になるだけで登録は続行する（写真を人質にしない）。
     const urls = await Promise.all(added.map(w => w.shot ? uploadWineLabel(w.shot, uid) : Promise.resolve(null)));
@@ -5002,7 +5021,13 @@ async function confirmBulkAdd() {
       { method:'POST', headers:{ Prefer:'return=representation' }, body: JSON.stringify(payload) });
     if (!r.ok) throw 0;
     (await r.json()).forEach(row => wineData.push(dbToUi(row)));
-  } catch (e) { showToast(t('toast_register_fail')); return; }
+  } catch (e) {
+    showToast(t('toast_register_fail'));
+    return;   // 失敗時は下のfinallyでボタンを元に戻す＝もう一度押して再試行できる
+  } finally {
+    bulkAdding = false;
+    if (btn) { btn.disabled = false; btn.textContent = btnLabel; }
+  }
   closeBulkResults();
   renderWineTable(currentCat, currentSearch);
   showToast(t('toast_added_n').replace('{n}', added.length));
@@ -5203,7 +5228,12 @@ async function shareOshiStoreCard() {
   showToast(t('toast_share_unsupported'));
 }
 
+// 一括登録(confirmBulkAdd)と同じ二重送信対策。新規追加はPOSTなので2回通れば2行入る
+// （編集はidを指定したPATCHなので2回通っても同じ結果＝実害なし）。窓は短いが、
+// `await rwUid()` でイベントループを手放すため、モバイルのダブルタップは2回とも入る。
+let savingWine = false;
 async function saveWine() {
+  if (savingWine) return;
   if(window.sommLog) sommLog('wine_add');
   const data = {
     cat: document.getElementById('fCat').value,
@@ -5220,10 +5250,14 @@ async function saveWine() {
   };
   if (!data.name) { alert(t('toast_need_wine_name')); return; }
 
-  const uid = await rwUid();
-  if (!uid) { alert(t('alert_login_again')); return; }
-
+  // confirmBulkAdd と同じく、フラグは最初のawait（rwUid）より前に立てる
+  const saveBtn = document.getElementById('wineSaveBtn');
+  const saveLabel = saveBtn ? saveBtn.textContent : '';
+  savingWine = true;
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = t('bulk_adding'); }
   try {
+    const uid = await rwUid();
+    if (!uid) { alert(t('alert_login_again')); return; }
     if (editingWineId) {
       const w = wineData.find(w => w.id === editingWineId);
       data.hasLabel = w.hasLabel || pendingHasLabel;   // 編集時はhasLabelを維持
@@ -5240,7 +5274,13 @@ async function saveWine() {
       wineData.push(dbToUi(rows[0]));
       showToast(t('toast_added'));
     }
-  } catch (e) { showToast(t('toast_save_fail')); return; }
+  } catch (e) {
+    showToast(t('toast_save_fail'));
+    return;   // 失敗時はfinallyでボタンが戻る＝もう一度押して再試行できる
+  } finally {
+    savingWine = false;
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = saveLabel; }
+  }
   pendingHasLabel = false;
   closeWineModal();
   renderWineTable(currentCat, currentSearch);
