@@ -2379,6 +2379,8 @@ const I18N = {
     pr_state_soldout: '品切れ中のため店ページには出ていません（リストで「提供中」に戻すと再表示されます）',
     pr_state_unlisted: 'このワインが自店リストに見つかりません。店ページには出ていません',
     pr_move_up: '上へ', pr_move_down: '下へ',
+    pr_move_fail: '並び替えできませんでした（並びは元のままです）',
+    pr_move_partial: '⚠️ 並び替えが途中までしか反映されませんでした。最新の並びを読み込みました',
     pr_update_reason_btn: '理由を更新',
     pr_reason_saved: '理由を更新しました',
     pr_preview_btn: '店ページで見る',
@@ -2952,6 +2954,8 @@ const I18N = {
     pr_state_soldout: 'Out of stock, so this is hidden from your store page (set it back to available in your list to show it again)',
     pr_state_unlisted: "This wine isn't on your list anymore, so it's hidden from your store page",
     pr_move_up: 'Move up', pr_move_down: 'Move down',
+    pr_move_fail: "Couldn't reorder (the order is unchanged)",
+    pr_move_partial: '⚠️ The reorder was only partly applied. The latest order has been reloaded',
     pr_update_reason_btn: 'Update reason',
     pr_reason_saved: 'Reason updated',
     pr_preview_btn: 'View store page',
@@ -6337,19 +6341,40 @@ async function prSaveReason(id) {
 }
 
 // ② 並び替え（PATCH sortOrder）。隣と sortOrder を入れ替えるだけ＝専用APIは作らない。
+//
+// 2026-08-08: Promise.all で2本同時に投げていたため、**片方だけ失敗すると入れ替えが半分だけ
+// 残り**（A と B の sort_order が同値になって一覧順が不定になる）、その状態で「保存に失敗
+// しました」と名乗っていた。保存されているのに失敗と言うのは no-lie 違反。しかも画面を
+// 引き直さないので、次の↑↓が古い sortOrder の上で走って傷が広がる。
+//   → ①順番に投げる（1本目が失敗すれば2本目は走らない＝完全な無変更）
+//     ②2本目が失敗したら1本目を元に戻す
+//     ③戻せなかったときだけ「途中までしか反映されていない」と正直に名乗る
+//     ④どの道を通っても最後に一覧を引き直す（画面とDBを合わせる）
+let prMoving = false;
 async function prMove(id, dir) {
+  if (prMoving) return;   // ★フラグは最初のawaitより前（8/7の二重送信と同じ型）
   const idx = prSavedItems.findIndex(p => p.id === id);
   const other = prSavedItems[idx + dir];
   if (idx < 0 || !other) return;
   const me = prSavedItems[idx];
+  const patch = (pid, sortOrder) => prApiFetch('/api/store-pairings/' + pid, {
+    method: 'PATCH', body: JSON.stringify({ sortOrder }),
+  });
+  prMoving = true;
   try {
-    const rs = await Promise.all([
-      prApiFetch('/api/store-pairings/' + me.id, { method: 'PATCH', body: JSON.stringify({ sortOrder: other.sortOrder }) }),
-      prApiFetch('/api/store-pairings/' + other.id, { method: 'PATCH', body: JSON.stringify({ sortOrder: me.sortOrder }) }),
-    ]);
-    if (rs.some(r => !r.ok)) throw 0;
+    const r1 = await patch(me.id, other.sortOrder);
+    if (!r1.ok) { showToast(t('pr_move_fail')); return; }   // 何も変わっていない
+    const r2 = await patch(other.id, me.sortOrder);
+    if (!r2.ok) {
+      const back = await patch(me.id, me.sortOrder).catch(() => ({ ok: false }));
+      showToast(t(back.ok ? 'pr_move_fail' : 'pr_move_partial'));
+    }
+  } catch (e) {
+    showToast(t('pr_move_partial'));   // どこまで通ったか分からない＝分からないと名乗る
+  } finally {
+    prMoving = false;
     prLoadSavedList();
-  } catch (e) { showToast(t('pr_save_fail')); }
+  }
 }
 
 // ③ 店ページのプレビュー（QRと同じURL＝お客さんが見るのと同じ画面）
