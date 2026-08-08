@@ -2362,6 +2362,7 @@ const I18N = {
     pr_no_list: 'いまのワインリストが空か、掲載可能なワインがありません。まず「ワインリスト」タブでリストを登録してください。',
     pr_saved_title: '保存済み（下書き）',
     pr_saved_empty: 'まだ保存された下書きはありません。',
+    pr_saved_load_fail: '⚠️ 保存済みの一覧を読み込めませんでした（通信環境をご確認ください）。消えたわけではありません',
     pr_delete_confirm: 'この下書きを削除しますか？',
     pr_dish_required: '料理名を1つ以上入力してください。',
     pr_read_fail: 'メニューの読み取りに失敗しました。',
@@ -2937,6 +2938,7 @@ const I18N = {
     pr_no_list: 'Your wine list is empty or has no available wines. Please add wines in the "Wine List" tab first.',
     pr_saved_title: 'Saved drafts',
     pr_saved_empty: 'No saved drafts yet.',
+    pr_saved_load_fail: "⚠️ Couldn't load your saved list (please check your connection). Nothing has been lost",
     pr_delete_confirm: 'Delete this draft?',
     pr_dish_required: 'Please enter at least one dish.',
     pr_read_fail: 'Failed to read the menu.',
@@ -6323,7 +6325,11 @@ async function prLoadSavedList() {
         </div>
       </div>`;
     }
-  } catch (e) { box.innerHTML = `<div style="font-size:12.5px;color:var(--text-sub);padding:8px 0;">${t('pr_saved_empty')}</div>`; }
+  } catch (e) {
+    // 2026-08-08: 読み込みに失敗したときも「まだありません」と出していた＝下書きが消えたと
+    // 誤解させる嘘。取れなかったのか空なのかは店主にとって全く別の話なので言い分ける。
+    box.innerHTML = `<div style="font-size:12.5px;color:#b45309;padding:8px 0;">${t('pr_saved_load_fail')}</div>`;
+  }
 }
 
 // ① 理由文の編集（PATCH reason）。店の言葉が正なので、AIの下書きを後から直せる導線を必ず置く。
