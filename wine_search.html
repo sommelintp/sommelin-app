@@ -548,7 +548,7 @@ applyI18n(); // 静的な見出し・ボタン文言を反映（renderInitialの
 </script>
 
 <script src="assets/bottle-svg.js"></script>
-<script src="assets/wine-display.js?v=20260730"></script>
+<script src="assets/wine-display.js?v=20260818"></script>
 <script>
 // ================================================================
 // dispKuni: 国名の日本語→英語表示ヘルパー（EN表示時のみ変換。DB値は日本語のまま）
@@ -704,7 +704,12 @@ async function loadMaster(q){
           ? `<img src="${escHtml(top.imageUrl)}" alt="${t('bottle_image_alt')}" style="flex-shrink:0;height:56px;width:auto;max-width:44px;object-fit:contain;border-radius:4px;">`
           : window.BottleSvg?`<div style="flex-shrink:0;line-height:0;">${window.BottleSvg.render(top,56)}</div>`:''}
         <div style="min-width:0;">
-          <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#2C1810;line-height:1.3;">${escHtml(dispWName(top))}${escHtml(vint)}</div>
+          <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#2C1810;line-height:1.3;">${(function(){
+            // 2026-08-18オーナー決定: 銘柄名タップ→同一銘柄の全ヴィンテージ一覧(wine.html)
+            const txt = escHtml(dispWName(top)) + escHtml(vint);
+            const href = (window.WineDisplay && window.WineDisplay.wineHref) ? window.WineDisplay.wineHref(top) : null;
+            return href ? `<a href="${href}" style="color:inherit;text-decoration:underline;text-decoration-color:#e6d9de;">${txt}</a>` : txt;
+          })()}</div>
           <div style="font-size:12px;color:#888;margin:3px 0 10px;">${escHtml(region)}${top.producer?(' / '+escHtml(dispWProducer(top))):''}</div>
         </div>
       </div>

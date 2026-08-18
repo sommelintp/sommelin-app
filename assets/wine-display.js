@@ -6,9 +6,9 @@
    あり、おすすめ度の数値スコアではない。整数1〜5のみ・半星なし。
    星なし(null)は基本状態（全体の約70%）で、称号なしなだけ＝低評価でも
    集計中でもない。空スロットも「収集中」文言も出さない（DBさん合意）。
-   公開API: window.WineDisplay = { starsHtml, flagOf, ratingLabel, scoreBlock, rankOf }
-   【重要】このファイルを変更したら、読み込み側5ページ（scouter/wine_search/
-   producer/prototype/restaurant_admin）の <script src="assets/wine-display.js?v=日付">
+   公開API: window.WineDisplay = { starsHtml, flagOf, ratingLabel, scoreBlock, rankOf, wineHref }
+   【重要】このファイルを変更したら、読み込み側6ページ（scouter/wine_search/
+   producer/prototype/restaurant_admin/wine）の <script src="assets/wine-display.js?v=日付">
    の ?v= も必ず上げること。素のsrcだとスマホのキャッシュに旧版が残り、
    新HTML×旧JSの組合せで壊れる（2026-07-18: scoreBlock未定義でスカウターの
    詳細カードが開けなくなる実害が発生した）。
@@ -142,5 +142,25 @@
     return pctLine ? `<span style="display:inline-block;">${row}${pctLine}</span>` : row;
   }
 
-  window.WineDisplay = { starsHtml, flagOf, ratingLabel, scoreBlock, rankOf };
+  // ─────────────────────────────────────────────
+  // 2026-08-18: ワイン名タップ → 同一銘柄の全ヴィンテージ一覧（wine.html）
+  //   オーナー決定「各ワインをクリックしたらいろんなヴィンテージの評価が
+  //   出てくるべきである」。1VT=1代表値で並ぶので、同じ年を何度試飲していても
+  //   見せる数字は1つ。
+  //   URLの組み立てはここに集約する（各ページで組むとパラメータ名がずれる）。
+  //   【重要】APIは producer_ja / name_ja の完全一致で引く。英語UIでも
+  //   表示名(nameEn/producerEn)ではなく日本語名を渡すこと。
+  //   値が無ければ null を返す＝リンクにしない（「銘柄が指定されていません」の
+  //   壊れたページに飛ばさない）。
+  // ─────────────────────────────────────────────
+  function wineHref(wine){
+    if (!wine) return null;
+    const producer = wine.producer || wine.producerJa || null;
+    const name     = wine.name     || wine.nameJa     || null;
+    if (!producer || !name) return null;
+    return 'wine.html?producer=' + encodeURIComponent(producer)
+         + '&name=' + encodeURIComponent(name);
+  }
+
+  window.WineDisplay = { starsHtml, flagOf, ratingLabel, scoreBlock, rankOf, wineHref };
 })();

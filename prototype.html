@@ -1877,7 +1877,7 @@
 <link rel="stylesheet" href="assets/sommelin-ui.css?v=20260730">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="assets/bottle-svg.js"></script>
-<script src="assets/wine-display.js?v=20260730"></script>
+<script src="assets/wine-display.js?v=20260818"></script>
 </head>
 <body>
 
@@ -4236,6 +4236,13 @@ async function loadTopWines() {
       const producerLink = w.producer
         ? ` / <a href="producer.html?p=${encodeURIComponent(w.producer)}" style="color:inherit;text-decoration:underline;text-decoration-color:var(--border);">${escR(dispProducer)}</a>`
         : '';
+      // 2026-08-18オーナー決定: ワイン名タップ→同一銘柄の全ヴィンテージ一覧(wine.html)。
+      // URLは WineDisplay.wineHref に集約（日本語名で引く。英語UIでも dispName は渡さない）。
+      const rankNameTxt = escR(dispName) + (w.vintage && w.vintage!=='NV' ? ' ' + escR(w.vintage) : '');
+      const rankHref = (window.WineDisplay && window.WineDisplay.wineHref) ? window.WineDisplay.wineHref(w) : null;
+      const rankNameHtml = rankHref
+        ? `<a href="${rankHref}" style="color:inherit;text-decoration:underline;text-decoration-color:var(--border);">${rankNameTxt}</a>`
+        : rankNameTxt;
       // 表示体系第4版(2026-07-16): 味スコア＋ソムスター。旧コスパ/五つ星バッジは廃止
       const starsHtml = window.WineDisplay
         ? window.WineDisplay.scoreBlock(it, { size: 14, lang: LANG })
@@ -4250,7 +4257,7 @@ async function loadTopWines() {
             : window.BottleSvg ? `<div style="line-height:0;">${window.BottleSvg.render(w,72)}</div>` : ''}
         </div>
         <div class="rank-wine-info">
-          <div class="rank-wine-name">${escR(dispName)}${w.vintage && w.vintage!=='NV' ? ' ' + escR(w.vintage) : ''}</div>
+          <div class="rank-wine-name">${rankNameHtml}</div>
           <div class="rank-wine-region">${flag} ${escR(region)}${producerLink}</div>
           <div class="rank-wine-stats" style="margin-top:4px;align-items:center;">${starsHtml}</div>
           <div class="rank-wine-stats" style="margin-top:4px;">

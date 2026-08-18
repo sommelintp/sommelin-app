@@ -335,7 +335,7 @@ body{
 </style>
 <link rel="stylesheet" href="assets/sommelin-ui.css?v=20260730">
 <script src="assets/oshi-card.js?v=20260724e"></script>
-<script src="assets/wine-display.js?v=20260730"></script>
+<script src="assets/wine-display.js?v=20260818"></script>
 <script src="assets/arena-utils.js?v=1"></script>
 <!-- 2026-07-27 セキュリティ監査対応: getAnonAccessToken/authFetch/linkDeviceIfLoggedInの単一ソース -->
 <script src="assets/somm-auth.js"></script>
@@ -1488,7 +1488,12 @@ function renderShelfCard(b){
       ${listBackBtn()}
       <div class="sh-pill" style="background:var(--burgundy)">${lowConf?t('match_pill_confirm'):t('match_pill_done')}</div>
       ${arenaHitHtml}${arenaNoteHtml}
-      <div class="sh-name">${esc(w.name||'—')}${w.vintage&&w.vintage!=='NV'?` <span class="sh-vintage-badge">${esc(w.vintage)}</span>`:''}</div>
+      <div class="sh-name">${(function(){
+        // 2026-08-18オーナー決定: 銘柄名タップ→同一銘柄の全ヴィンテージ一覧(wine.html)
+        const txt = esc(w.name||'—') + (w.vintage&&w.vintage!=='NV'?` <span class="sh-vintage-badge">${esc(w.vintage)}</span>`:'');
+        const href = (window.WineDisplay && window.WineDisplay.wineHref) ? window.WineDisplay.wineHref(w) : null;
+        return href ? `<a href="${href}" style="color:inherit;text-decoration:underline;text-decoration-color:var(--border);">${txt}</a>` : txt;
+      })()}</div>
       <div class="sh-producer">${esc(w.producer||'')}</div>
       <div class="sh-region">${esc([dispKuni(w.kuni),w.chiiki].filter(v=>v&&v!=='不明').join(' '))}</div>
       ${score?`<div style="margin:12px 16px 2px;text-align:center;">${score}<div style="font-size:10px;color:var(--text-sub,#8a7a7d);margin-top:3px;">${t('score_caption')}</div></div>`:''}
