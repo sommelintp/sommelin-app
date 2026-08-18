@@ -110,7 +110,7 @@ async function load() {
           ${stars}
         </div>
         <div class="vrow"><span class="vprice">${price}</span></div>
-        ${v.importer ? `<div class="vimporter">輸入元: ${esc(v.importer)}${v.multipleForVintage ? '（この年は複数の取扱いがあります）' : ''}</div>` : ''}
+        ${v.importer ? `<div class="vimporter">輸入元: ${esc(v.importer)}${v.importerOthers > 0 ? ` ほか${v.importerOthers}社` : ''}</div>` : ''}
         ${vintageNote}
         ${community}
         ${tech}
