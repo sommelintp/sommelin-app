@@ -1490,7 +1490,9 @@ function renderShelfCard(b){
       ${arenaHitHtml}${arenaNoteHtml}
       <div class="sh-name">${(function(){
         // 2026-08-18オーナー決定: 銘柄名タップ→同一銘柄の全ヴィンテージ一覧(wine.html)
-        const txt = esc(w.name||'—') + (w.vintage&&w.vintage!=='NV'?` <span class="sh-vintage-badge">${esc(w.vintage)}</span>`:'');
+        // 2026-08-18(DB No.31): 画面の年は vintageDisplay（[2020]→2020・NV(2022)はロット年を残す）
+        const shVt = w.vintageDisplay || w.vintage;
+        const txt = esc(w.name||'—') + (shVt&&shVt!=='NV'?` <span class="sh-vintage-badge">${esc(shVt)}</span>`:'');
         const href = (window.WineDisplay && window.WineDisplay.wineHref) ? window.WineDisplay.wineHref(w) : null;
         return href ? `<a href="${href}" style="color:inherit;text-decoration:underline;text-decoration-color:var(--border);">${txt}</a>` : txt;
       })()}</div>
@@ -1555,7 +1557,9 @@ function renderResultsList(){
     if(b._pending || st==='detecting'){ badge='⋯'; badgeCls='pending'; title=t('list_pending_label'); }
     else if(st==='known' && w){
       badge=(w.tasteScore100!=null?w.tasteScore100:'—'); badgeCls='known'; tappable=true;
-      title=esc(w.name||'—')+(w.vintage&&w.vintage!=='NV'?` <span class="rl-vin">${esc(w.vintage)}</span>`:'');
+      // 2026-08-18(DB No.31): 画面の年は vintageDisplay（[2020]→2020・NV(2022)はロット年を残す）
+      const rlVt = w.vintageDisplay || w.vintage;
+      title=esc(w.name||'—')+(rlVt&&rlVt!=='NV'?` <span class="rl-vin">${esc(rlVt)}</span>`:'');
       sub=[esc(w.producer||''), w.importer?('🚢 '+esc(w.importer)):''].filter(Boolean).join('　・　');
     }
     else if(st==='unlisted'){
@@ -1704,6 +1708,10 @@ function oshiWineInfo(){
     name:    w ? (w.nameEn||w.name)         : ([id.producer,id.wine].filter(Boolean).join(' ')||'このワイン'),
     producer:w ? (w.producerEn||w.producer) : (id.producer||''),
     vintage: (w ? w.vintage : id.vintage)||'',
+    // 2026-08-18(DB No.31): 画面の年は vintageDisplay（[2020]→2020・NV(2022)はロット年を残す）
+    // 送信値(vintage)は変えない。APIに渡る値と画面の見た目を勝手に食い違わせないため、
+    // 表示専用のフィールドを別に持つ。ラベル読み取り(id)側は読んだ字をそのまま出す。
+    vintageDisp: (w ? (w.vintageDisplay||w.vintage) : id.vintage)||'',
   };
 }
 
@@ -1721,7 +1729,7 @@ function oshiStart(){
   document.getElementById('sheetBody').innerHTML=`
     <div class="oshi-step">
       <div class="oshi-title">${t('oshi_rate_title')}</div>
-      <div class="oshi-sub">${esc(trunc(info.name,30))}${info.vintage&&info.vintage!=='NV'?' '+esc(info.vintage):''}<br>${t('oshi_rate_sub')}</div>
+      <div class="oshi-sub">${esc(trunc(info.name,30))}${info.vintageDisp&&info.vintageDisp!=='NV'?' '+esc(info.vintageDisp):''}<br>${t('oshi_rate_sub')}</div>
       <div class="oshi-score"><span id="oshiScoreV">80</span><small> /100</small></div>
       <input type="range" class="oshi-slider" id="oshiSlider" min="0" max="10" step="0.1" value="8.0"
         oninput="oshiRating=parseFloat(this.value);oshiPaintScore()">
@@ -1790,7 +1798,7 @@ async function cellarAddStart(){
   document.getElementById('sheetBody').innerHTML=`
     <div class="oshi-step">
       <div class="oshi-title">${t('cellar_add_title')}</div>
-      <div class="oshi-sub">${esc(trunc(info.name,30))}${info.vintage&&info.vintage!=='NV'?' '+esc(info.vintage):''}<br>${t('cellar_add_sub')}</div>
+      <div class="oshi-sub">${esc(trunc(info.name,30))}${info.vintageDisp&&info.vintageDisp!=='NV'?' '+esc(info.vintageDisp):''}<br>${t('cellar_add_sub')}</div>
       <div style="text-align:left;margin-top:12px;">
         <label style="font-size:12px;font-weight:700;color:#555;">${t('cellar_add_which')}</label>
         <select id="caCellar" style="width:100%;margin-top:4px;padding:10px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;font-family:inherit;">${options}</select>
@@ -2373,7 +2381,7 @@ async function oshiMakeCard(){
 
 function oshiBuildCaption(info){
   const L=[];
-  L.push(`🍷 ${info.name}${info.vintage&&info.vintage!=='NV'?' '+info.vintage:''}`);
+  L.push(`🍷 ${info.name}${info.vintageDisp&&info.vintageDisp!=='NV'?' '+info.vintageDisp:''}`);
   if(info.producer) L.push(`👨‍🌾 ${info.producer}`);
   const store=oshiStoreResolved;
   if(store) L.push(store.ig ? t('caption_store_ig').replace('{n}', store.ig) : t('caption_store_name').replace('{n}', store.name));

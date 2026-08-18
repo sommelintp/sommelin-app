@@ -4238,7 +4238,9 @@ async function loadTopWines() {
         : '';
       // 2026-08-18オーナー決定: ワイン名タップ→同一銘柄の全ヴィンテージ一覧(wine.html)。
       // URLは WineDisplay.wineHref に集約（日本語名で引く。英語UIでも dispName は渡さない）。
-      const rankNameTxt = escR(dispName) + (w.vintage && w.vintage!=='NV' ? ' ' + escR(w.vintage) : '');
+      // 2026-08-18(DB No.31): 画面の年は vintageDisplay（[2020]→2020・NV(2022)はロット年を残す）
+      const rankVt = w.vintageDisplay || w.vintage;
+      const rankNameTxt = escR(dispName) + (rankVt && rankVt!=='NV' ? ' ' + escR(rankVt) : '');
       const rankHref = (window.WineDisplay && window.WineDisplay.wineHref) ? window.WineDisplay.wineHref(w) : null;
       const rankNameHtml = rankHref
         ? `<a href="${rankHref}" style="color:inherit;text-decoration:underline;text-decoration-color:var(--border);">${rankNameTxt}</a>`
