@@ -4370,7 +4370,11 @@ async function loadRestaurantList(rid) {
       // ここを null にすると renderClassicList のどのセクションにも該当せず、店の商品が客に見えなくなる。
       cat: r.cat || 'other',
       name: r.name + (r.vintage && r.vintage !== 'NV' ? ' ' + r.vintage : ''),
-      producer: [r.region, r.grapes].filter(Boolean).join(' / ') || r.producer || '',
+      // 2026-08-18オーナー指摘「生産者の名前が出ない」。産地・品種があると生産者が
+      // 隠れる作りだった（|| は両方とも無いときしか生産者に落ちない）。実測でも
+      // restaurant_wines の8行は生産者が8本とも入っていて、出ていないだけだった。
+      // 生産者を先頭に置き、産地・品種はその後ろに続ける。
+      producer: [r.producer, r.region, r.grapes].filter(Boolean).join(' / '),
       region: r.region || t('word_other'),
       priceGlass: r.price_glass || 0,
       priceBottle: r.price_bottle || 0,
