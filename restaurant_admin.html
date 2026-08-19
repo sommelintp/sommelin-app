@@ -3531,8 +3531,11 @@ async function rwFetch(path, opts){
   opts.headers = Object.assign({ apikey:RW_SB_KEY, Authorization:'Bearer '+(rwToken()||RW_SB_KEY), 'Content-Type':'application/json' }, opts.headers||{});
   return fetch(RW_SB_URL+'/rest/v1/'+path, opts);
 }
-function dbToUi(r){ return { id:r.id, cat:r.cat||null, name:r.name, producer:r.producer||'', vintage:r.vintage||'', region:r.region||'', grapes:r.grapes||'', priceGlass:r.price_glass||0, priceBottle:r.price_bottle||0, available:r.available!==false, stock:r.stock||0, wineId:r.wine_id||null, labelImageUrl:r.label_image_url||null, hasLabel:!!(r.wine_id||r.label_image_url) }; }
-function uiToDb(w, uid){ return { owner_id:uid, cat:w.cat||null, name:w.name, producer:w.producer||null, vintage:w.vintage||null, region:w.region||null, grapes:w.grapes||null, price_glass:w.priceGlass||null, price_bottle:w.priceBottle||null, available:w.available!==false, stock:w.stock||0, wine_id:w.wineId||null, label_image_url:w.labelImageUrl||null }; }
+function dbToUi(r){ return { id:r.id, cat:r.cat||null, name:r.name, producer:r.producer||'', vintage:r.vintage||'', region:r.region||'', grapes:r.grapes||'', priceGlass:r.price_glass||0, priceBottle:r.price_bottle||0, available:r.available!==false, stock:r.stock||0, wineId:r.wine_id||null, catalogId:r.catalog_id||null, labelImageUrl:r.label_image_url||null, hasLabel:!!(r.catalog_id||r.wine_id||r.label_image_url) }; }
+// 2026-08-18: 鍵は catalog_id が正。wine_id は旧winesのbigintでカタログの22%しか覆わず、
+// 照合が当たっても w.id が null で保存され、8/4の実地検証では8本中8本が繋がらなかった。
+// catalog_id 列は 2026-08-07(No.20)で適用済み。wine_id は互換のため残す。
+function uiToDb(w, uid){ return { owner_id:uid, cat:w.cat||null, name:w.name, producer:w.producer||null, vintage:w.vintage||null, region:w.region||null, grapes:w.grapes||null, price_glass:w.priceGlass||null, price_bottle:w.priceBottle||null, available:w.available!==false, stock:w.stock||0, wine_id:w.wineId||null, catalog_id:w.catalogId||null, label_image_url:w.labelImageUrl||null }; }
 
 // 撮ったラベル写真を wine-labels バケットへ上げ、公開URLを返す（avatars と同型・:6394）。
 // パスは `<uid>/<時刻>-<乱数>.jpg`。**必ず uid 直下**に置くこと——バケットのポリシーが
@@ -4789,11 +4792,14 @@ async function analyzeLabels() {
                     : [idn.country, idn.region].filter(Boolean).join(' '),
           grapes: (Array.isArray(idn.grape) && idn.grape.length ? idn.grape : ((w && w.grape) || [])).join(', '),
           priceGlass: 0, priceBottle: 0,
-          wineId: w ? w.id : null,   // カタログ紐づけ（confirmBulkAdd → uiToDb が wine_id に運ぶ）
+          wineId: w ? w.id : null,
+          catalogId: w ? (w.catalogId || null) : null,   // ★本命の鍵（confirmBulkAdd → uiToDb）
           // このボトルの位置で切り抜いた写真。登録が確定した分だけアップロードする
           shot: await cropShotToBox(capturedShots[i], b.box),
           confidence: readCompleteness(idn),
-          linked: !!w,   // ソムリンDBと繋がった＝味スコア・★が出る。小さく印を添えるだけに留める
+          // 印は「照合が当たったか」ではなく「保存できる鍵があるか」で出す。
+          // 旧 !!w は w.id が null でも true になり、繋がっていないのに繋がった印が出ていた。
+          linked: !!(w && (w.catalogId || w.id)),
         });
       }
     } catch (e) { failed++; }
@@ -4905,6 +4911,7 @@ async function analyzeList() {
         priceGlass: inp.byGlass && inp.listPrice ? inp.listPrice : 0,
         priceBottle: !inp.byGlass && inp.listPrice ? inp.listPrice : 0,
         wineId: w ? w.id : null,
+        catalogId: w ? (w.catalogId || null) : null,   // ★本命の鍵（2026-08-18）
         //  ②読取精度: 旧実装は match.matchScore（＝ソムリンDBとの照合一致度）を「読取精度」の見出しで
         //    出していた。棚側は 8/4 に readCompleteness へ置換済みで、こちらだけ残っていた。
         //    定義は棚と1本に揃える（同じ見出しで中身が違う、を作らない）。リスト写真は品種・詳細産地を
@@ -4914,7 +4921,7 @@ async function analyzeList() {
           wine: inp.name || inp.rawText, producer: inp.producer,
           vintage: inp.vintage, country: inp.country, color: inp.color, grape: null,
         }),
-        linked: !!w,   //  ③ソムリン印。棚側にしか無く、この経路では一度も出ていなかった
+        linked: !!(w && (w.catalogId || w.id)),   //  ③ソムリン印。保存できる鍵がある時だけ
       };
     });
     showBulkResults(rows);
@@ -5020,7 +5027,7 @@ async function confirmBulkAdd() {
       cat: w.cat, name: w.name, producer: w.producer,
       vintage: w.vintage, region: w.region, grapes: w.grapes,
       priceGlass: w.priceGlass || 0, priceBottle: w.priceBottle || 0,
-      stock: 0, available: true, wineId: w.wineId || null,
+      stock: 0, available: true, wineId: w.wineId || null, catalogId: w.catalogId || null,
       labelImageUrl: urls[i],
     }, uid));
     const r = await rwFetch('restaurant_wines',
@@ -5438,7 +5445,7 @@ async function addStockItem() {
     cat: null, name, producer: '', vintage, region, grapes: '',
     priceGlass:  (type === 'glass' || type === 'both') ? price : 0,
     priceBottle: (type === 'bottle' || type === 'both') ? price : 0,
-    stock: qty, available: true, wineId: null,
+    stock: qty, available: true, wineId: null, catalogId: null,   // 手入力＝照合していない
   };
   try {
     const r = await rwFetch('restaurant_wines',
@@ -5551,8 +5558,9 @@ async function checkVenueClaim(googlePlaceId) {
         priceGlass: it.by_glass && it.list_price ? it.list_price : 0,
         priceBottle: !it.by_glass && it.list_price ? it.list_price : 0,
         wineId: it.wine_id || null,
+        catalogId: it.catalog_id || null,
         confidence: null,
-        linked: !!it.wine_id,   // 紐づきの有無は事実として分かる。印はこちらで示す
+        linked: !!(it.catalog_id || it.wine_id),   // 紐づきの有無は事実として分かる。印はこちらで示す
       };
     });
     showBulkResults(rows, {
