@@ -970,6 +970,28 @@ const I18N = {
     share_qr_fail: 'QRコードを表示できませんでした',
     share_line_text: '「{name}」のワインリストです🍷',
     journal_from_cellar: '🍾 セラーから',
+    field_drink_photo: '写真（任意）',
+    drink_photo_add: '📷 写真を添える',
+    drink_photo_remove: '外す',
+    giver_fallback: '贈ってくれた人',
+    drink_thank_giver: '🎁 {name}にも写真とひとことを届ける',
+    drink_thank_sub: '届けると、{name}の「おくりもの」に写真とひとことが出ます。届けるかは毎回えらべます。',
+    drink_done_title: '記録に残しました 🍷',
+    drink_thanked: '🎁 {name}に届けました',
+    drink_share_btn_to: '📤 {name}に写真を送る（LINEなど）',
+    drink_share_btn: '📤 写真を送る（LINEなど）',
+    close: '閉じる',
+    share_drink_text_from: '{name}、いただいた「{wine}」を開けました🍷',
+    share_drink_text: '「{wine}」を開けました🍷',
+    share_photo_saved: '写真を保存し、文をコピーしました。LINE などに貼って送ってください',
+    toast_photo_unsaved: '1本減らしました（写真は保存できませんでした）',
+    toast_thanks_unsent: '1本減らしました（贈ってくれた人には、まだ届けられません）',
+    toast_thanks_sent: '🍷 記録して、{name}に届けました',
+    dp_keep_photo: '📷 この写真を飲んだ記録に残す',
+    dp_thank: '🎁 {name}にも届ける',
+    dp_send: '📤 送る',
+    gift_thanks_head: '💌 {name}が飲んで、届けてくれました',
+    gift_thanked: '💌 飲んだ写真・ひとことを届けました',
   },
   en: {
     header_title: 'My Cellar',
@@ -1210,6 +1232,28 @@ const I18N = {
     share_qr_fail: 'Could not show the QR code',
     share_line_text: 'The wine list of "{name}" 🍷',
     journal_from_cellar: '🍾 From cellar',
+    field_drink_photo: 'Photo (optional)',
+    drink_photo_add: '📷 Add a photo',
+    drink_photo_remove: 'Remove',
+    giver_fallback: 'the giver',
+    drink_thank_giver: '🎁 Also send the photo and note to {name}',
+    drink_thank_sub: 'If you send it, it appears in {name}\'s Gifts. You choose every time.',
+    drink_done_title: 'Saved to your journal 🍷',
+    drink_thanked: '🎁 Sent to {name}',
+    drink_share_btn_to: '📤 Send the photo to {name} (LINE etc.)',
+    drink_share_btn: '📤 Send the photo (LINE etc.)',
+    close: 'Close',
+    share_drink_text_from: 'Opened the "{wine}" you gave me 🍷',
+    share_drink_text: 'Opened "{wine}" 🍷',
+    share_photo_saved: 'Saved the photo and copied the text. Paste them into LINE or any messenger.',
+    toast_photo_unsaved: 'One bottle removed (the photo could not be saved)',
+    toast_thanks_unsent: 'One bottle removed (it cannot be sent to the giver yet)',
+    toast_thanks_sent: '🍷 Saved and sent to {name}',
+    dp_keep_photo: '📷 Keep this photo in the journal',
+    dp_thank: '🎁 Also send to {name}',
+    dp_send: '📤 Send',
+    gift_thanks_head: '💌 {name} opened it and sent this',
+    gift_thanked: '💌 You sent your photo and note',
   },
 };
 let LANG = (() => { try { return localStorage.getItem('somm_lang') || (navigator.language && navigator.language.startsWith('ja') ? 'ja' : 'en'); } catch (e) { return 'ja'; } })();
@@ -1532,26 +1576,36 @@ async function sbChangeStock(id, delta){
     showToast(t('sb_update_fail'));
   }
 }
-// 1本飲んだ（POST /api/cellar/bottles/:id/consume）。note = 誰と飲んだ・ひとこと（任意）。成功で true
+// 1本飲んだ（POST /api/cellar/bottles/:id/consume）。note = 誰と飲んだ・ひとこと（任意）。
+// opts.photo = 飲んだときの写真（JPEG の dataURL・記録のサムネイルになる）。opts.thankGiver = アプリ経由で
+// もらったワインなら、贈り主の「おくりもの」に写真とひとことを届ける（本人が選んだときだけ）。
+// 成功でサーバーの返り値（{ bottles, status, noteSaved, photoSaved, thanked }）、失敗で false。
 const drinkInflight = new Set();
-async function sbDrinkOne(id, note){
+async function sbDrinkOne(id, note, opts){
+  opts = opts || {};
   const b = serverBottles.find(x => String(x.id) === String(id));
   const uid = myUid();
   if (!b || !uid || drinkInflight.has(String(id))) return false;
   drinkInflight.add(String(id));   // 連打で2本減らさない
   try{
     const r = await authFetch(CELLAR_API_BASE+'/api/cellar/bottles/'+encodeURIComponent(id)+'/consume', {
-      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ userId: uid, note: note || null })
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ userId: uid, note: note || null, photo: opts.photo || null, thankGiver: !!opts.thankGiver })
     });
     if (!r.ok) throw new Error('consume failed: ' + r.status);
     const d = await r.json();
     b.bottles = d.bottles != null ? d.bottles : Math.max(0, (b.bottles||0) - 1);
     if (d.status) b.status = d.status;
-    if (note && d.noteSaved === false) showToast(t('toast_drank_note_unsaved'));
+    const giver = b.acquired_from_name || t('giver_fallback');
+    // 残らなかったものがあれば、それを先に正直に出す
+    if (opts.photo && d.photoSaved === false) showToast(t('toast_photo_unsaved'));
+    else if (note && d.noteSaved === false) showToast(t('toast_drank_note_unsaved'));
+    else if (opts.thankGiver && d.thanked === false) showToast(t('toast_thanks_unsent'));
+    else if (opts.thankGiver && d.thanked) showToast(t('toast_thanks_sent', { name: giver }));
     else showToast(b.bottles === 0 ? t('toast_last') : t('toast_minus1'));
     renderSummary(); renderCellar(); renderStats();
     loadJournal();   // 記録タブに1行増える
-    return true;
+    return d;
   }catch(e){
     showToast(t('sb_update_fail'));
     await loadServerBottles();
@@ -2228,27 +2282,98 @@ function openServerDetail(id){
   document.body.style.overflow = 'hidden';
 }
 
-// ── B. 1本飲んだ（誰と・ひとこと） ──
+// ── B. 1本飲んだ（誰と・ひとこと・写真。もらったワインなら贈り主へ届ける／LINE などで送る） ──
+let drinkPhoto = null;   // シートで添えた写真（JPEG の dataURL）
+let drinkShare = null;   // 送るボタン用 { photo, text }
+// もらったワインか（アプリ経由＝届けられる／名前だけ＝LINE などで送れる）
+const isGiftBottle = b => !!(b && (b.gift_id || b.acquired_how === 'gift' || b.acquired_from_name));
+function drinkShareText(b, note){
+  const wine = [b.name, b.vintage].filter(Boolean).join(' ');
+  const head = b.acquired_from_name ? t('share_drink_text_from', { name: b.acquired_from_name, wine }) : t('share_drink_text', { wine });
+  return note ? head + '\n' + note : head;
+}
 function openDrinkNote(id){
   const b = serverBottles.find(x => String(x.id) === String(id));
   if (!b) return;
   closeDetail();
+  drinkPhoto = null;
+  const giver = b.acquired_from_name || t('giver_fallback');
   openSheet(t('drink_title'), `
-    <div class="sheet-sub" style="margin-bottom:12px;">${esc(b.name || '')} ${esc(b.vintage || '')}</div>
+    <div class="sheet-sub" style="margin-bottom:12px;">${esc(b.name || '')} ${esc(b.vintage || '')}${provenanceText(b) ? '<br>' + esc(provenanceText(b)) : ''}</div>
     <div class="field-label">${esc(t('field_drink_with'))}</div>
     <input class="field-input" id="dr-with" maxlength="60" placeholder="${esc(t('ph_drink_with'))}">
     <div class="field-label">${esc(t('field_drink_note'))}</div>
     <input class="field-input" id="dr-note" maxlength="200" placeholder="${esc(t('ph_drink_note'))}">
+    <div class="field-label">${esc(t('field_drink_photo'))}</div>
+    <div id="dr-photo-box" style="margin-bottom:16px;"></div>
+    ${b.gift_id ? `<label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;font-weight:700;margin-bottom:16px;line-height:1.5;">
+      <input type="checkbox" id="dr-thank" style="margin-top:3px;accent-color:var(--burgundy);">
+      <span>${esc(t('drink_thank_giver', { name: giver }))}<br><span class="sheet-sub" style="font-weight:500;">${esc(t('drink_thank_sub', { name: giver }))}</span></span>
+    </label>` : ''}
     <button class="save-btn" id="dr-save" onclick="submitDrinkNote('${esc(String(b.id))}')">${esc(t('drink_one_btn'))}</button>`);
+  renderDrinkPhotoBox();
+}
+function renderDrinkPhotoBox(){
+  const box = document.getElementById('dr-photo-box');
+  if (!box) return;
+  box.innerHTML = drinkPhoto
+    ? `<div style="display:flex;align-items:center;gap:10px;"><img src="${drinkPhoto}" alt="" style="width:72px;height:96px;object-fit:cover;border-radius:10px;">
+        <button class="cellar-manage-btn" onclick="drinkPhoto=null;renderDrinkPhotoBox()">${esc(t('drink_photo_remove'))}</button></div>`
+    : `<button class="cellar-action-btn" style="width:100%;" onclick="pickDrinkPhoto()">${esc(t('drink_photo_add'))}</button>`;
+}
+function pickDrinkPhoto(){
+  choosePhotos('drinkNotePhotoInput', false, async files => {
+    const dataUrl = await fileToDataUrl(files[0], 1280);
+    if (!dataUrl) { showToast(t('scan_failed')); return; }
+    drinkPhoto = dataUrl;
+    renderDrinkPhotoBox();
+  });
 }
 async function submitDrinkNote(id){
+  const b = serverBottles.find(x => String(x.id) === String(id));
   const who = inputVal('dr-with'), memo = inputVal('dr-note');
   const note = [who ? t('fmt_drink_with', { who }) : '', memo].filter(Boolean).join(' / ');
+  const thankGiver = !!(document.getElementById('dr-thank') || {}).checked;
+  const photo = drinkPhoto;
   const btn = document.getElementById('dr-save');
   if (btn) { btn.disabled = true; btn.style.opacity = '.55'; }
-  const ok = await sbDrinkOne(id, note);
-  if (ok) closeSheetModal();
-  else if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  const d = await sbDrinkOne(id, note, { photo, thankGiver });
+  if (!d) { if (btn) { btn.disabled = false; btn.style.opacity = '1'; } return; }
+  drinkPhoto = null;
+  if (!photo || !b) { closeSheetModal(); return; }
+  // 写真を添えたときは、そのまま送れるように見せる（もらったワインなら贈ってくれた人の名前で）
+  const giver = b.acquired_from_name || t('giver_fallback');
+  drinkShare = { photo, text: drinkShareText(b, note) };
+  setSheetBody(`
+    <div style="text-align:center;margin-bottom:12px;">
+      <img src="${photo}" alt="" style="max-width:100%;max-height:260px;border-radius:12px;">
+      <div style="font-size:14px;font-weight:800;margin-top:8px;">${esc(t('drink_done_title'))}</div>
+      ${d.thanked ? `<div class="sheet-sub" style="color:var(--wine-dark);font-weight:700;">${esc(t('drink_thanked', { name: giver }))}</div>` : ''}
+    </div>
+    <button class="save-btn" onclick="shareDrinkPhoto()">${esc(isGiftBottle(b) && b.acquired_from_name ? t('drink_share_btn_to', { name: b.acquired_from_name }) : t('drink_share_btn'))}</button>
+    <button class="cellar-action-btn" style="width:100%;margin-top:8px;" onclick="closeSheetModal()">${esc(t('close'))}</button>`);
+}
+// 写真を LINE などで送る（端末の共有シート）。共有シートはボタンを押したその場で呼ぶ必要があるので、
+// dataURL → File の変換も同期で行う。写真つきの共有ができない端末（PC など）は、写真を保存して文をコピー。
+function dataUrlToFile(dataUrl, name){
+  const bin = atob(String(dataUrl).split(',')[1] || '');
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new File([arr], name, { type: 'image/jpeg' });
+}
+function shareDrinkPhoto(){
+  if (!drinkShare) return;
+  let file = null;
+  try { file = dataUrlToFile(drinkShare.photo, 'sommelin.jpg'); } catch (e) {}
+  if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+    navigator.share({ files: [file], text: drinkShare.text }).catch(() => {});
+    return;
+  }
+  try {
+    const a = document.createElement('a'); a.href = drinkShare.photo; a.download = 'sommelin.jpg';
+    document.body.appendChild(a); a.click(); a.remove();
+  } catch (e) {}
+  copyText(drinkShare.text).then(() => showToast(t('share_photo_saved')));
 }
 
 // ── 写真の読み取り（identify-shelf。1枚から最大12本・位置つき） ──
@@ -2382,16 +2507,25 @@ function startDrinkPhoto(){
       if (window.sommLog) sommLog('cellar_drink_photo');
       const read = (await readShelfPhoto(dataUrl)).map(shelfWine).filter(w => w.name);
       if (!read.length) { setSheetBody(`<div class="sheet-sub">${esc(t('scan_none'))}</div>`, seq); return; }
-      setSheetBody(`<div class="sheet-sub" style="margin-bottom:4px;">${esc(t('drink_photo_lead'))}</div>` + read.map(w => {
+      drinkScanPhoto = dataUrl;
+      let k = 0;
+      setSheetBody(`<div class="sheet-sub" style="margin-bottom:8px;">${esc(t('drink_photo_lead'))}</div>
+        <label style="display:flex;gap:8px;align-items:center;font-size:12.5px;font-weight:700;margin-bottom:4px;">
+          <input type="checkbox" id="dp-keep" checked style="accent-color:var(--burgundy);"> ${esc(t('dp_keep_photo'))}
+        </label>` + read.map(w => {
         const cands = drinkCandidates(w);
-        const body = cands.length ? cands.map(c => `
+        const body = cands.length ? cands.map(c => { const i = k++; return `
           <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
             <div style="flex:1;min-width:0;">
               <div style="font-size:12.5px;font-weight:700;">${esc(c.b.name || '')} ${esc(c.b.vintage || '')}</div>
-              <div class="sheet-sub">${esc([cellarNameOf(c.b.cellar_id), t('fmt_stock', { n: c.b.bottles }), c.how === 'name' ? t('match_by_name') : ''].filter(Boolean).join(' · '))}</div>
+              <div class="sheet-sub">${esc([cellarNameOf(c.b.cellar_id), t('fmt_stock', { n: c.b.bottles }), c.how === 'name' ? t('match_by_name') : '', provenanceText(c.b)].filter(Boolean).join(' · '))}</div>
+              ${c.b.gift_id ? `<label class="sheet-sub" style="display:flex;gap:6px;align-items:center;margin-top:4px;font-weight:700;color:var(--wine-dark);">
+                <input type="checkbox" id="dp-thank-${i}" style="accent-color:var(--burgundy);"> ${esc(t('dp_thank', { name: c.b.acquired_from_name || t('giver_fallback') }))}</label>` : ''}
             </div>
-            <button class="sheet-btn" onclick="drinkFromPhoto(this,'${esc(String(c.b.id))}')">${esc(t('drink_this'))}</button>
-          </div>`).join('')
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:stretch;" id="dp-act-${i}">
+              <button class="sheet-btn" onclick="drinkFromPhoto(this,'${esc(String(c.b.id))}',${i})">${esc(t('drink_this'))}</button>
+            </div>
+          </div>`; }).join('')
           : `<div class="sheet-sub" style="margin-top:6px;color:#b03a3a;font-weight:700;">${esc(t('drink_not_in_cellar'))}</div>`;
         return `<div class="sheet-row">
           <div style="font-size:12px;font-weight:800;">📷 ${esc(w.name)}${w.vintage ? ' ' + esc(w.vintage) : ''}</div>
@@ -2402,11 +2536,27 @@ function startDrinkPhoto(){
     }
   });
 }
-async function drinkFromPhoto(btn, id){
+let drinkScanPhoto = null;   // 写真で外すときに撮った写真（記録に残すかはチェックで選ぶ）
+async function drinkFromPhoto(btn, id, i){
+  const keep = !!(document.getElementById('dp-keep') || {}).checked;
+  const thank = !!(document.getElementById('dp-thank-' + i) || {}).checked;
+  const photo = keep ? drinkScanPhoto : null;
   btn.disabled = true; btn.textContent = '…';
-  const ok = await sbDrinkOne(id);
-  if (ok) { btn.textContent = t('drink_done'); btn.classList.add('done'); }
-  else { btn.disabled = false; btn.textContent = t('drink_this'); }
+  const d = await sbDrinkOne(id, null, { photo, thankGiver: thank });
+  if (!d) { btn.disabled = false; btn.textContent = t('drink_this'); return; }
+  btn.textContent = t('drink_done'); btn.classList.add('done');
+  const tl = document.getElementById('dp-thank-' + i);
+  if (tl) tl.disabled = true;
+  // もらったワインで写真を残したなら、その場で送れるように
+  const b = serverBottles.find(x => String(x.id) === String(id));
+  const box = document.getElementById('dp-act-' + i);
+  if (photo && b && isGiftBottle(b) && box) {
+    const send = document.createElement('button');
+    send.className = 'sheet-btn';
+    send.textContent = t('dp_send');
+    send.onclick = () => { drinkShare = { photo, text: drinkShareText(b, null) }; shareDrinkPhoto(); };
+    box.appendChild(send);
+  }
 }
 
 // ── C. 写真からまとめて追加（店の管理画面の一括追加と同じ形） ──
@@ -2667,6 +2817,7 @@ function renderGifts(){
         <div class="gift-head"><div class="gift-who">🎁 ${esc(t('gift_from', { name: g.fromName || t('gift_noname') }))}</div><span class="sheet-sub">${esc(day(g.acceptedAt || g.sentAt))}</span></div>
         <div style="font-size:12.5px;margin-top:4px;">${wine(g)}</div>
         ${g.message ? `<div class="journal-note" style="margin-top:6px;">${esc(g.message)}</div>` : ''}
+        ${g.thankedAt ? `<div class="sheet-sub" style="margin-top:6px;color:var(--wine-dark);font-weight:700;">${esc(t('gift_thanked'))}・${esc(day(g.thankedAt))}</div>` : ''}
       </div>`).join('');
   }
   if (gifts.sent.length) {
@@ -2676,6 +2827,11 @@ function renderGifts(){
         <div class="gift-head"><div class="gift-who">${esc(t('gift_to', { name: g.toName || t('gift_noname') }))}</div><span class="gift-status ${esc(g.status)}">${esc(t('gift_st_' + g.status))}</span></div>
         <div style="font-size:12.5px;margin-top:4px;">${wine(g)}</div>
         <div class="sheet-sub">${esc(day(g.sentAt))}${g.acceptedAt ? ' → ' + esc(day(g.acceptedAt)) : ''}</div>
+        ${g.thanks ? `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);">
+          <div style="font-size:12px;font-weight:800;color:var(--wine-dark);">${esc(t('gift_thanks_head', { name: g.toName || t('gift_noname') }))}<span class="sheet-sub" style="font-weight:500;">・${esc(day(g.thanks.at))}</span></div>
+          ${g.thanks.photoUrl ? `<a href="${esc(g.thanks.photoUrl)}" target="_blank" rel="noopener"><img src="${esc(g.thanks.photoUrl)}" alt="" loading="lazy" style="width:100%;max-height:260px;object-fit:cover;border-radius:10px;margin-top:6px;"></a>` : ''}
+          ${g.thanks.message ? `<div class="journal-note" style="margin-top:6px;">${esc(g.thanks.message)}</div>` : ''}
+        </div>` : ''}
         ${g.status === 'sent' && g.claimToken ? `<div style="display:flex;gap:8px;margin-top:8px;">
           <button class="sheet-btn" style="flex:1;" data-url="${esc(giftUrl(g.claimToken))}" onclick="copyText(this.dataset.url)">${esc(t('copy_link'))}</button>
           <button class="sheet-btn" style="flex:1;border-color:var(--border);color:#b03a3a;" onclick="cancelGift('${esc(String(g.id))}')">${esc(t('gift_cancel'))}</button>
