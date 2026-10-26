@@ -1189,7 +1189,8 @@ function destForRole(role) { return roleHome[role] || 'prototype.html'; }
 
 // ?return= 対応（2026-07-20・BYO接続導線）: ログイン後に元のページへ戻す。
 // オープンリダイレクト防止のため、許可した相対パスのホワイトリストのみ受け付ける。
-const RETURN_WHITELIST = ['byo_connect.html'];
+// gift.html: おくりものの受け取りリンク（未登録の人が登録してから受け取る・2026-10-26）
+const RETURN_WHITELIST = ['byo_connect.html', 'gift.html'];
 function returnDest() {
   try {
     const raw = new URLSearchParams(location.search).get('return');

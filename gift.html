@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ソムリン — ワインが届きました</title>
+<meta name="robots" content="noindex, nofollow">
+<!--
+  gift.html — おくりものの受け取りページ（2026-10-26・アプリ5への依頼 E-2）
+  設計: sommelin-wine docs/journal/2026-10/設計_セラー管理代行_ラボQ_アウェイク_松本家_2026-10-26.md
+  cellar.html の「🎁 贈る」で作った受け取りリンク（gift.html?t=<claim_token>）で開く。ログインなしで中身を見られる。
+  受け取るにはログイン（未登録なら登録）→ セラーを選ぶ → POST /api/gift/:token/accept。
+  受け取ると相手のセラーに「〇〇さんから」の来歴つきで1本入り、リンクは使えなくなる。
+  GET /api/gift/:token が返すのは 贈り主の名前・ワイン・ひとこと だけ（相手の名前・uid・値段は返さない）。
+-->
+<style>
+  :root{ --burgundy:var(--wine,#9B1B4B); --bg:var(--paper,#fbf7f4); --text:var(--wine-ink,#2C1810); --sub:var(--text-sub,#8a7a7d); --border:var(--line,#ecdfe3); }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:460px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; padding:calc(28px + env(safe-area-inset-top)) 22px 28px; }
+  .brand{ text-align:center; margin-bottom:22px; }
+  .brand .logo{ font-size:40px; }
+  .brand .name{ font-size:15px; font-weight:800; letter-spacing:.5px; margin-top:2px; }
+  .card{ background:#fff; border:1px solid var(--border); border-radius:20px; padding:24px 22px; box-shadow:0 6px 24px rgba(155,27,75,.06); }
+  h1{ font-size:19px; font-weight:800; margin:0 0 14px; line-height:1.5; text-align:center; }
+  .wine{ background:#faf3f6; border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-bottom:14px; }
+  .wine .n{ font-size:16px; font-weight:800; line-height:1.4; }
+  .wine .p{ font-size:12.5px; color:var(--sub); margin-top:3px; }
+  .msg{ font-size:14px; line-height:1.8; white-space:pre-wrap; padding:4px 2px 14px; border-bottom:1px dashed var(--border); margin-bottom:16px; }
+  .lead{ font-size:12.5px; color:var(--sub); line-height:1.7; margin-bottom:16px; }
+  label{ font-size:12px; font-weight:700; color:var(--sub); display:block; margin-bottom:6px; }
+  select{ width:100%; padding:12px; border:1.5px solid var(--border); border-radius:12px; font-size:14px; font-family:inherit; margin-bottom:16px; background:#fff; color:var(--text); }
+  .btns{ display:flex; flex-direction:column; gap:10px; }
+  .btn{ border:none; border-radius:14px; padding:15px; font-size:15px; font-weight:800; cursor:pointer; font-family:inherit; text-align:center; text-decoration:none; display:block; }
+  .btn-main{ background:var(--burgundy); color:#fff; }
+  .btn-main:disabled{ opacity:.6; cursor:default; }
+  .btn-sub{ background:#fff; color:var(--sub); border:1.5px solid var(--border); }
+  .err{ display:none; background:#fdecec; color:#b3261e; border-radius:12px; padding:12px 14px; font-size:12.5px; line-height:1.6; margin-bottom:14px; }
+  .foot{ text-align:center; font-size:11px; color:var(--sub); margin-top:20px; line-height:1.7; }
+  .center{ text-align:center; }
+</style>
+<link rel="stylesheet" href="assets/sommelin-ui.css?v=20260730">
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><div class="logo">🎁</div><div class="name">Sommelin</div></div>
+  <div class="card" id="card"><div class="lead center" id="loading">読み込み中…</div></div>
+  <div class="foot" id="foot"></div>
+</div>
+
+<script src="assets/somm-auth.js"></script>
+<script>
+const API_BASE = 'https://sommelin-trade-platform-1076605563046.asia-northeast1.run.app';
+const TOKEN = new URLSearchParams(location.search).get('t') || '';
+const esc = s => (s == null ? '' : String(s)).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const LANG = (() => { try { return localStorage.getItem('somm_lang') || (navigator.language && navigator.language.startsWith('ja') ? 'ja' : 'en'); } catch (e) { return 'ja'; } })();
+const I18N = {
+  ja: {
+    title_from: '{name}から<br>ワインが届きました',
+    title_anon: 'ワインが届きました',
+    gone_title: 'このリンクは使えません',
+    gone_lead: 'すでに受け取ったか、贈った人が取り消したか、リンクが途中で切れている可能性があります。贈ってくれた人に確かめてください。',
+    load_fail: '読み込めませんでした。電波の良い場所で、もう一度開いてください。',
+    login_lead: 'ソムリンにログインすると、このワインを自分のセラーに入れられます。<br>まだ使っていない方も、無料で登録して受け取れます。',
+    login_btn: 'ログイン・登録して受け取る',
+    login_after: '登録のあと、このページに戻らなかったときは、もう一度このリンクを開いてください。',
+    pick_cellar: 'どのセラーに入れますか',
+    accept_btn: '自分のセラーに入れる',
+    accepting: '入れています…',
+    default_cellar: 'マイセラー',
+    done_title: 'セラーに入れました 🍷',
+    done_lead: '「{from}から」の記録つきで、セラーに1本入りました。飲んだときは、セラーの「🍷 飲んだ」で外せます。',
+    done_someone: '贈ってくれた人',
+    open_cellar: 'マイセラーを開く',
+    err_own: '自分で贈ったワインは受け取れません。',
+    err_gone: 'このおくりものは、すでに受け取られたか取り消されています。',
+    err_cellar: 'セラーを確かめられませんでした。ページを開き直して、もう一度お試しください。',
+    err_generic: 'うまくいきませんでした。もう一度お試しください。',
+    foot: 'ソムリン — ワインの思い出を残すアプリ',
+  },
+  en: {
+    title_from: 'A wine from<br>{name}',
+    title_anon: 'A wine for you',
+    gone_title: 'This link cannot be used',
+    gone_lead: 'It may already have been received, been cancelled by the sender, or the link may be incomplete. Please check with the person who sent it.',
+    load_fail: 'Could not load. Please open the link again with a better connection.',
+    login_lead: 'Log in to Sommelin to put this wine in your cellar.<br>New here? Sign up for free and receive it.',
+    login_btn: 'Log in / sign up to receive',
+    login_after: 'If you are not brought back here after signing up, please open this link again.',
+    pick_cellar: 'Which cellar?',
+    accept_btn: 'Put it in my cellar',
+    accepting: 'Adding…',
+    default_cellar: 'My Cellar',
+    done_title: 'Added to your cellar 🍷',
+    done_lead: 'One bottle was added with a note that it came from {from}. When you drink it, remove it with "🍷 Drank it" in your cellar.',
+    done_someone: 'the sender',
+    open_cellar: 'Open My Cellar',
+    err_own: 'You cannot receive a gift you sent yourself.',
+    err_gone: 'This gift has already been received or cancelled.',
+    err_cellar: 'Could not check your cellar. Please reload the page and try again.',
+    err_generic: 'Something went wrong. Please try again.',
+    foot: 'Sommelin — keep your wine memories',
+  },
+};
+function t(key, vars){
+  const d = I18N[LANG] || I18N.ja;
+  let s = d[key] != null ? d[key] : (I18N.ja[key] != null ? I18N.ja[key] : key);
+  if (vars) for (const k in vars) s = s.split('{' + k + '}').join(String(vars[k]));
+  return s;
+}
+document.documentElement.lang = LANG;
+document.getElementById('loading').textContent = LANG === 'en' ? 'Loading…' : '読み込み中…';
+document.getElementById('foot').textContent = t('foot');
+
+function sommUid(){
+  try {
+    let u = localStorage.getItem('somm_uid');
+    if (!u) { u = crypto.randomUUID(); localStorage.setItem('somm_uid', u); }
+    return u;
+  } catch (e) { return null; }
+}
+function session(){
+  try {
+    const s = JSON.parse(localStorage.getItem('sommelin_session') || 'null');
+    return s && s.access_token && (!s.expires_at || s.expires_at * 1000 > Date.now() + 60000) ? s : null;
+  } catch (e) { return null; }
+}
+const card = document.getElementById('card');
+let gift = null;
+
+function wineHtml(g){
+  return `<div class="wine"><div class="n">${esc([g.name, g.vintage].filter(Boolean).join(' '))}</div>${g.producer ? `<div class="p">${esc(g.producer)}</div>` : ''}</div>
+    ${g.message ? `<div class="msg">${esc(g.message)}</div>` : ''}`;
+}
+function showGone(){
+  card.innerHTML = `<h1>${esc(t('gone_title'))}</h1><div class="lead">${esc(t('gone_lead'))}</div>`;
+}
+function showError(msg){
+  const el = document.getElementById('err');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+
+async function load(){
+  if (!/^[0-9a-f-]{36}$/i.test(TOKEN)) { showGone(); return; }
+  try {
+    const r = await fetch(API_BASE + '/api/gift/' + encodeURIComponent(TOKEN));
+    if (r.status === 404) { showGone(); return; }
+    if (!r.ok) throw new Error('gift ' + r.status);
+    gift = (await r.json()).gift;
+  } catch (e) { card.innerHTML = `<div class="lead center">${esc(t('load_fail'))}</div>`; return; }
+  const title = gift.fromName ? t('title_from', { name: esc(gift.fromName) }) : esc(t('title_anon'));
+  const head = `<h1>${title}</h1>${wineHtml(gift)}<div class="err" id="err"></div>`;
+  if (!session()) {
+    const ret = 'gift.html?t=' + encodeURIComponent(TOKEN);
+    card.innerHTML = head + `<div class="lead">${t('login_lead')}</div>
+      <div class="btns"><a class="btn btn-main" href="login.html?return=${encodeURIComponent(ret)}">${esc(t('login_btn'))}</a></div>
+      <div class="lead" style="margin:12px 0 0;font-size:11px;">${esc(t('login_after'))}</div>`;
+    return;
+  }
+  card.innerHTML = head + `<label for="cellarSel">${esc(t('pick_cellar'))}</label><select id="cellarSel"><option>…</option></select>
+    <div class="btns"><button class="btn btn-main" id="acceptBtn" disabled>${esc(t('accept_btn'))}</button></div>`;
+  document.getElementById('acceptBtn').onclick = accept;
+  await loadCellars();
+}
+
+// ログイン中の端末をアカウントに結び付けてから（自分の別端末のセラーも選べるように）セラーを読む
+async function loadCellars(){
+  const uid = sommUid(), sess = session();
+  if (!uid || !sess) return;
+  try {
+    await fetch(API_BASE + '/api/link-device', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: sess.access_token, sommUid: uid }) });
+  } catch (e) {}
+  let cellars = [];
+  try {
+    const r = await authFetch(API_BASE + '/api/cellars?userId=' + encodeURIComponent(uid));
+    if (r.ok) cellars = (await r.json()).items || [];
+    if (!cellars.length) {
+      const cr = await authFetch(API_BASE + '/api/cellars', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: uid, name: t('default_cellar'), emoji: '🍾' }) });
+      if (cr.ok) { const d = await cr.json(); if (d.cellar) cellars = [d.cellar]; }
+    }
+  } catch (e) {}
+  const sel = document.getElementById('cellarSel');
+  if (!cellars.length) { sel.innerHTML = ''; showError(t('err_cellar')); return; }
+  sel.innerHTML = cellars.map(c => `<option value="${esc(c.id)}">${esc(c.emoji || '🍾')} ${esc(c.name)}</option>`).join('');
+  document.getElementById('acceptBtn').disabled = false;
+}
+
+let accepting = false;
+async function accept(){
+  if (accepting) return;
+  const uid = sommUid();
+  const cellarId = (document.getElementById('cellarSel') || {}).value;
+  if (!uid || !cellarId) return;
+  accepting = true;
+  const btn = document.getElementById('acceptBtn');
+  btn.disabled = true; btn.textContent = t('accepting');
+  try {
+    const r = await authFetch(API_BASE + '/api/gift/' + encodeURIComponent(TOKEN) + '/accept', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: uid, cellarId }),
+    });
+    let d = {}; try { d = await r.json(); } catch (e) {}
+    if (r.ok) {
+      try { if (window.sommLog) sommLog('gift_accept'); } catch (e) {}
+      card.innerHTML = `<h1>${esc(t('done_title'))}</h1>${wineHtml(gift)}
+        <div class="lead">${esc(t('done_lead', { from: gift.fromName || t('done_someone') }))}</div>
+        <div class="btns"><a class="btn btn-main" href="cellar.html">${esc(t('open_cellar'))}</a></div>`;
+      return;
+    }
+    if (r.status === 404) showError(t('err_gone'));
+    else if (d.error === 'own_gift') showError(t('err_own'));
+    else if (d.error === 'forbidden_cellar') showError(t('err_cellar'));
+    else showError(t('err_generic'));
+  } catch (e) { showError(t('err_generic')); }
+  accepting = false;
+  btn.disabled = false; btn.textContent = t('accept_btn');
+}
+
+load();
+</script>
+<script>
+/* ===== 利用ログ（app_events・書き込み専用。読み取り不可） ===== */
+(function(){
+  var PAGE='gift';
+  var U='https://gkhdpzfmqraliwaiubwl.supabase.co/rest/v1/app_events';
+  var K='sb_publishable_p-8MZjT4azg59TAtQgChhA___PLMlDV';
+  var uid='na';
+  try{
+    uid=localStorage.getItem('somm_uid');
+    if(!uid){ uid=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2)); localStorage.setItem('somm_uid',uid); }
+  }catch(e){}
+  window.sommLog=function(event,meta){
+    try{
+      var role=null,auth=null;
+      try{ role=localStorage.getItem('sommelin_role')||null; }catch(e){}
+      try{ var t=JSON.parse(localStorage.getItem('sb-gkhdpzfmqraliwaiubwl-auth-token')||'null'); auth=(t&&t.user&&t.user.id)||null; }catch(e){}
+      fetch(U,{method:'POST',keepalive:true,headers:{'Content-Type':'application/json','apikey':K,'Authorization':'Bearer '+K,'Prefer':'return=minimal'},
+        body:JSON.stringify({uid:uid,auth_uid:auth,role:role,page:PAGE,event:event,meta:meta||null})}).catch(function(){});
+    }catch(e){}
+  };
+  sommLog('page_view');
+})();
+</script>
+</body>
+</html>

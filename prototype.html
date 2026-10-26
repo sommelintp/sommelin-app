@@ -3071,6 +3071,7 @@ const I18N = {
     rank_footer_note: '星が付いているワインはすべてソムリンのおすすめです。星の数は同価格帯での稀少度を表します',
     rank_load_err: 'ランキングを読み込めませんでした（通信環境をご確認ください）',
     shop_list_unpublished: 'このお店のワインリストはまだ公開されていません 🍷',
+    cellar_list_fallback: 'ワインリスト', cellar_list_gone: 'このワインリストは見られなくなりました 🍷<br>リンクを送った人に、新しいリンクを聞いてください。', cellar_list_empty: 'このセラーには、いまワインが入っていません 🍷', cellar_list_error: '読み込めませんでした。少し時間をおいて、もう一度開いてください。',
     // クラシックビュー
     cls_sparkling: '泡・スパークリング', cls_white: '白ワイン', cls_rose: 'ロゼ', cls_orange: 'オレンジワイン', cls_red: '赤ワイン', cls_other: 'その他',
     kinds_n: '{n}種', title_has_mariage: 'マリアージュあり',
@@ -3261,6 +3262,7 @@ const I18N = {
     rank_footer_note: 'Every starred wine is a Sommelin pick. The number of stars shows rarity within its price range',
     rank_load_err: 'Could not load the ranking (check your connection)',
     shop_list_unpublished: 'This restaurant has not published its wine list yet 🍷',
+    cellar_list_fallback: 'Wine List', cellar_list_gone: 'This wine list is no longer available 🍷<br>Please ask the person who sent you the link for a new one.', cellar_list_empty: 'There are no wines in this cellar right now 🍷', cellar_list_error: 'Could not load. Please try again in a moment.',
     // Classic view
     cls_sparkling: 'Sparkling', cls_white: 'White Wine', cls_rose: 'Rosé', cls_orange: 'Orange Wine', cls_red: 'Red Wine', cls_other: 'Other',
     kinds_n: '{n} wines', title_has_mariage: 'Pairing available',
@@ -4417,6 +4419,55 @@ async function loadRestaurantList(rid) {
   } catch (e) {}
 }
 
+// ===== 個人のワインリスト（共有リンク: prototype.html?cl=<トークン> → /api/cellar-list・2026-10-26） =====
+// 店のリスト（?r=）と同じ見た目（renderClassicList）で並べる。値段・本数・持ち主・メモはサーバーが返さない。
+// catalog_id がある行は、タップでワインのページ（評価・解説）へ。
+let classicListKind = 'store';   // 'store'（店のリスト・値段あり）| 'cellar'（個人のリスト・値段なし）
+async function loadCellarShareList(token) {
+  // リンクを知っている人だけが見る一覧なので、検索エンジンに載せない
+  try { const m = document.createElement('meta'); m.name = 'robots'; m.content = 'noindex, nofollow'; document.head.appendChild(m); } catch (e) {}
+  classicListKind = 'cellar';
+  classicWines = [];
+  isListView = true;
+  switchTab('wine');
+  document.getElementById('wineList').style.display = 'none';
+  document.getElementById('wineList').classList.add('hidden');
+  const cl = document.getElementById('classicList');
+  cl.style.display = 'block'; cl.classList.add('active');
+  cl.innerHTML = '';
+  document.querySelectorAll('.restaurant-name').forEach(el => el.textContent = t('cellar_list_fallback'));
+  try {
+    const r = await fetch(CHAT_API_BASE + '/api/cellar-list/' + encodeURIComponent(token));
+    if (!r.ok) {
+      // 404 = 止めた・作り直した・無いリンク。それ以外（回数制限・通信）は開き直せば見られる
+      cl.innerHTML = '<div style="text-align:center;padding:50px 20px;color:var(--text-sub);font-size:13px;line-height:1.8;">' + t(r.status === 404 ? 'cellar_list_gone' : 'cellar_list_error') + '</div>';
+      return;
+    }
+    const d = await r.json();
+    const name = (d.cellar && d.cellar.name) || t('cellar_list_fallback');
+    document.querySelectorAll('.restaurant-name').forEach(el => el.textContent = name);
+    if (window.sommLog) sommLog('cellar_list_view', {});
+    classicWines = (d.items || []).map((w, i) => ({
+      idx: i,
+      cat: w.cat || 'other',
+      name: (w.name || '') + (w.vintage && w.vintage !== 'NV' ? ' ' + w.vintage : ''),
+      producer: [w.producer, w.region].filter(Boolean).join(' / '),
+      region: w.region || t('word_other'),
+      priceGlass: 0, priceBottle: 0, hasMarriage: false, soldOut: false,
+      href: (w.link && window.WineDisplay && window.WineDisplay.wineHref) ? window.WineDisplay.wineHref(w.link) : null,
+    }));
+    wines = classicWines.map(w => ({ name: w.name, producer: w.producer, note: '', flavors: [], mariage: [] }));
+    renderClassicList('all');
+    if (!classicWines.length) {
+      cl.innerHTML = '<div style="text-align:center;padding:50px 20px;color:var(--text-sub);font-size:13px;">' + t('cellar_list_empty') + '</div>';
+    }
+  } catch (e) {}
+}
+function openClassicHref(idx) {
+  const w = classicWines[idx];
+  if (w && w.href) location.href = w.href;
+}
+
 let currentCalYear  = new Date().getFullYear();
 let currentCalMonth = new Date().getMonth();
 let selectedEventId = null;
@@ -4721,9 +4772,14 @@ function renderClassicList(filter) {
   let html = '';
 
   activeCategories.forEach(cat => {
+    const isCellar = classicListKind === 'cellar';
     const items = classicWines
       .filter(w => w.cat === cat.key && !w.soldOut)
-      .sort((a, b) => a.priceGlass - b.priceGlass);
+      .sort((a, b) => isCellar
+        // 産地 → 生産者。産地が分からない行（「その他」）は最後
+        ? ((a.region === t('word_other')) - (b.region === t('word_other')))
+          || String(a.region).localeCompare(String(b.region), 'ja') || String(a.producer).localeCompare(String(b.producer), 'ja')
+        : a.priceGlass - b.priceGlass);
 
     if (items.length === 0) return;
 
@@ -4746,6 +4802,17 @@ function renderClassicList(filter) {
         html += `<div style="padding:8px 28px 2px;font-size:10px;font-weight:700;color:var(--text-sub);letter-spacing:1px;">${escE(dj(region))}</div>`;
       }
       wines.forEach((w, i) => {
+        if (isCellar) {
+          html += `
+          <div class="classic-row" ${w.href ? `onclick="openClassicHref(${w.idx})"` : 'style="cursor:default;"'}>
+            <div class="classic-row-left">
+              <div class="classic-wine-name">${escE(w.name)}</div>
+              <div class="classic-origin">${escE(dj(w.producer))}</div>
+            </div>
+            ${w.href ? '<div style="color:var(--text-sub);font-size:14px;padding-left:8px;">›</div>' : ''}
+          </div>`;
+          return;
+        }
         html += `
           <div class="classic-row" onclick="openWine(${w.idx})">
             <div class="classic-row-left">
@@ -5891,6 +5958,9 @@ function handleEnter(e) {
   // QRから開いた場合は実店舗のワインリストを表示
   const _rid = new URLSearchParams(location.search).get('r');
   if (_rid) loadRestaurantList(_rid);
+  // 個人のワインリスト（共有リンク・2026-10-26）
+  const _cl = new URLSearchParams(location.search).get('cl');
+  if (_cl && !_rid) loadCellarShareList(_cl);
   // wine_search.htmlの「価格・産地で探す」導線から開いた場合はランキング＋詳細検索を前面に
   const _qs = new URLSearchParams(location.search);
   if (_qs.get('tab') === 'ranking') {

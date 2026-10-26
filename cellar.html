@@ -454,6 +454,46 @@ body {
   pointer-events: none; white-space: nowrap;
 }
 .toast.show { opacity: 1; }
+
+/* ── セラーを写真で管理する（2026-10-26・アプリ5への依頼 A〜E） ── */
+.value-bar { background: white; padding: 12px 20px 14px; border-bottom: 1px solid var(--border); }
+.value-main { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.value-label { font-size: 11px; font-weight: 700; color: var(--text-sub); }
+.value-num { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--burgundy); }
+.value-count { font-size: 11px; color: var(--text); font-weight: 700; margin-top: 2px; }
+.value-note { font-size: 10px; color: var(--text-sub); margin-top: 4px; line-height: 1.5; }
+.cellar-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 16px 0; }
+.cellar-action-btn {
+  padding: 11px 8px; border-radius: 12px; border: 1.5px solid var(--border); background: white;
+  font-size: 12.5px; font-weight: 800; color: var(--wine-dark); cursor: pointer; font-family: inherit;
+}
+.cellar-action-btn.primary { background: var(--wine-dark); border-color: var(--wine-dark); color: white; }
+.cellar-ref { font-size: 10.5px; color: var(--text-sub); margin-bottom: 4px; }
+.cellar-prov { font-size: 10.5px; color: var(--wine-dark); font-weight: 700; margin-bottom: 4px; }
+.sheet-row { padding: 12px 0; border-bottom: 1px solid var(--bg); }
+.sheet-row:last-child { border-bottom: none; }
+.sheet-sub { font-size: 11.5px; color: var(--text-sub); line-height: 1.6; }
+.sheet-btn {
+  padding: 8px 12px; border-radius: 10px; border: 1.5px solid var(--burgundy); background: white;
+  color: var(--burgundy); font-size: 12px; font-weight: 800; cursor: pointer; font-family: inherit; flex-shrink: 0;
+}
+.sheet-btn.done { border-color: var(--border); color: var(--text-sub); pointer-events: none; }
+.bulk-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--bg); }
+.bulk-row img { width: 40px; height: 54px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+.bulk-check { width: 20px; height: 20px; flex-shrink: 0; accent-color: var(--burgundy); }
+.bulk-info { flex: 1; min-width: 0; }
+.bulk-name { font-size: 13px; font-weight: 800; color: var(--text); }
+.bulk-meta { font-size: 11px; color: var(--text-sub); }
+.bulk-n { width: 56px; padding: 6px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; text-align: center; font-family: inherit; }
+.db-badge { display: inline-block; font-size: 9.5px; font-weight: 700; color: var(--burgundy); border: 1px solid var(--burgundy); opacity: .6; padding: 0 5px; border-radius: 5px; margin-left: 4px; }
+.gift-card { background: white; border-radius: var(--r-card); border: 1px solid var(--border); box-shadow: var(--shadow-card); padding: 12px 14px; }
+.gift-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.gift-who { font-size: 13px; font-weight: 800; color: var(--text); }
+.gift-status { font-size: 10.5px; font-weight: 700; border-radius: 6px; padding: 1px 7px; background: var(--bg); color: var(--text-sub); white-space: nowrap; }
+.gift-status.sent { background: var(--gold-light); color: var(--gold); }
+.gift-status.accepted { background: #e8f5e9; color: #16a34a; }
+.share-box { margin: 4px 0 10px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); }
+.share-url { width: 100%; font-size: 11.5px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: white; font-family: inherit; color: var(--text); }
 </style>
 <link rel="stylesheet" href="assets/sommelin-ui.css?v=20260730">
 </head>
@@ -476,6 +516,7 @@ body {
   <button class="tab-btn active" id="tab-cellar"  onclick="switchTab('cellar')" data-i18n="tab_cellar">🍾 セラー</button>
   <button class="tab-btn"        id="tab-journal" onclick="switchTab('journal')" data-i18n="tab_journal">📖 記録</button>
   <button class="tab-btn"        id="tab-stats"   onclick="switchTab('stats')" data-i18n="tab_stats">📊 レポート</button>
+  <button class="tab-btn"        id="tab-gifts"   onclick="switchTab('gifts')" data-i18n="tab_gifts">🎁 おくりもの</button>
 </div>
 
 <!-- ===== CELLAR SWITCHER（AG節・2026-07-13: 複数セラー対応） ===== -->
@@ -485,6 +526,13 @@ body {
 <div class="panel active" id="panel-cellar">
   <!-- Summary -->
   <div class="summary-row" id="summaryRow"></div>
+  <!-- 参考価格の合計（依頼 A）。中身は renderSummary -->
+  <div class="value-bar" id="valueBar" style="display:none;"></div>
+  <!-- 写真で外す（依頼 B）・写真からまとめて追加（依頼 C） -->
+  <div class="cellar-actions">
+    <button class="cellar-action-btn primary" onclick="startDrinkPhoto()" data-i18n="act_drink_photo">🍷 飲んだ（写真で外す）</button>
+    <button class="cellar-action-btn" onclick="startBulkPhoto()" data-i18n="act_bulk_add">📷 写真からまとめて追加</button>
+  </div>
   <!-- Filters -->
   <div class="filter-row">
     <div class="filter-chip active" onclick="filterCat('all',this)" data-i18n="filter_all">すべて</div>
@@ -493,6 +541,7 @@ body {
     <div class="filter-chip" onclick="filterCat('red',this)" data-i18n="cat_chip_red">🍷 赤</div>
     <div class="filter-chip" onclick="filterCat('rose',this)" data-i18n="cat_chip_rose">🌸 ロゼ</div>
     <div class="filter-chip" onclick="filterCat('orange',this)" data-i18n="cat_chip_orange">🟠 橙</div>
+    <div class="filter-chip" onclick="filterCat('gift',this)" data-i18n="filter_gift">🎁 もらった</div>
   </div>
   <div class="sort-row">
     <select class="sort-select" id="sortSelect" onchange="setSort(this.value)">
@@ -511,6 +560,11 @@ body {
 <!-- ===== JOURNAL PANEL ===== -->
 <div class="panel" id="panel-journal">
   <div class="journal-list" id="journalList"></div>
+</div>
+
+<!-- ===== GIFTS PANEL（依頼 E-2: 贈った・もらった。見えるのは当事者だけ） ===== -->
+<div class="panel" id="panel-gifts">
+  <div class="journal-list" id="giftList"></div>
 </div>
 
 <!-- ===== STATS PANEL ===== -->
@@ -622,8 +676,10 @@ body {
           <input class="field-input" id="f-date" type="date">
         </div>
       </div>
+      <!-- 来歴（依頼 E-1）。どれも任意。中身は openAddModal で provenanceFieldsHtml から作る -->
+      <div id="addProvFields"></div>
       <div class="field-label" data-i18n="field_note">メモ</div>
-      <input class="field-input" id="f-note" data-i18n-ph="ph_note" placeholder="購入場所・試飲メモなど">
+      <input class="field-input" id="f-note" data-i18n-ph="ph_note" placeholder="思い出・試飲メモなど">
       <button class="save-btn" onclick="saveWine()" data-i18n="save_btn">セラーに追加</button>
     </div>
   </div>
@@ -652,6 +708,18 @@ body {
       <button class="save-btn" onclick="createOrRenameCellar()" id="cellarModalSaveBtn" data-i18n="cellar_create_btn">セラーを作成</button>
       <div class="cellar-manage-list" id="cellarManageList" style="margin-top:18px;"></div>
     </div>
+  </div>
+</div>
+
+<!-- ===== SHEET（2026-10-26: 写真で外す・まとめて追加・飲んだひとこと・贈る・来歴を直す） ===== -->
+<div class="modal-bg" id="sheetModalBg" onclick="closeSheetModal(event)">
+  <div class="modal" id="sheetModal">
+    <div class="modal-handle"></div>
+    <div class="modal-head">
+      <h3 id="sheetTitle"></h3>
+      <button class="modal-close-btn" onclick="closeSheetModal()">✕</button>
+    </div>
+    <div class="modal-body-pad" id="sheetBody"></div>
   </div>
 </div>
 
@@ -698,13 +766,13 @@ const I18N = {
     field_region: '産地',
     field_grapes: '品種',
     field_price: '購入価格（¥）',
-    field_date: '購入日',
+    field_date: '入手日',
     field_note: 'メモ',
     ph_name: '例: Gevrey-Chambertin',
     ph_producer: '例: Rossignol-Trapet',
     ph_region: '例: ブルゴーニュ, フランス',
     ph_grapes: '例: ピノ・ノワール',
-    ph_note: '購入場所・試飲メモなど',
+    ph_note: '思い出・試飲メモなど',
     save_btn: 'セラーに追加',
     cat_sparkling: 'スパークリング',
     cat_white: '白ワイン',
@@ -731,14 +799,14 @@ const I18N = {
     fmt_date_md: '{m}月{d}日 ({w})',
     fmt_n_bottles: '{n}本',
     spend_year: '2026年 合計',
-    spend_value: 'セラー時価総額',
+    spend_value: '購入額の合計（入力した分）',
     spend_wines: '銘柄数',
     fmt_n_kinds: '{n}種類',
     spend_recorded: '記録した本数',
     toast_last: '🍷 最後の1本を飲みました！',
     toast_plus1: '＋1本 追加',
-    sb_delete: '削除',
-    sb_delete_confirm: 'この在庫を削除しますか？',
+    sb_delete: '登録の間違いを削除',
+    sb_delete_confirm: 'この登録を削除しますか？\n（飲んだときは「−」か「🍷 1本飲んだ」を使うと、記録タブに残ります）',
     sb_deleted: '削除しました',
     sb_update_fail: '在庫の更新に失敗しました。もう一度お試しください',
     sb_photos_n: '写真{n}枚',
@@ -787,6 +855,121 @@ const I18N = {
     sort_price_desc: '価格が高い順',
     sort_bottles_desc: '本数が多い順',
     sort_region: '産地順',
+    // 2026-10-26: セラーを写真で管理する（アプリ5への依頼 A〜E）
+    tab_gifts: '🎁 おくりもの',
+    act_drink_photo: '🍷 飲んだ（写真で外す）',
+    act_bulk_add: '📷 写真からまとめて追加',
+    filter_gift: '🎁 もらった',
+    value_label: '参考価格の合計',
+    value_counts: '価格が分かる {k}本 / 分からない {u}本',
+    value_note: '参考価格は輸入元の希望小売で、市場の相場ではありません。年が違うワイン・ソムリンのDBに無いワインは足していません。',
+    ref_price: '参考 {p}',
+    ref_price_other: '別の年の参考価格 {p}（DBは{v}）',
+    ref_price_unknown: '参考価格 不明',
+    detail_ref: '参考価格',
+    detail_market: '楽天の実売',
+    market_other_year: '（DBの年の商品）',
+    detail_prov: '来歴',
+    prov_from: '{name}から',
+    prov_gift: 'もらった',
+    prov_shop: '{shop}で購入',
+    prov_bought: '購入',
+    fmt_ym: '{y}年{m}月',
+    drink_title: '🍷 1本飲んだ',
+    field_drink_with: '誰と飲んだ（任意）',
+    ph_drink_with: '例: 家族・友人の名前',
+    field_drink_note: 'ひとこと（任意）',
+    ph_drink_note: '例: 誕生日に開けた',
+    drink_one_btn: '🍷 1本飲んだ',
+    fmt_drink_with: '{who}と',
+    toast_drank_note_unsaved: '1本減らしました（ひとことはまだ保存できません）',
+    drink_photo_title: '🍷 飲んだワインを外す',
+    drink_photo_lead: '写っていたワインと、セラーの在庫を並べました。飲んだ1本を押してください（押すまで減りません）。',
+    drink_this: 'これを1本飲んだ',
+    drink_done: '✓ 減らしました',
+    drink_not_in_cellar: 'このセラーに見つかりません',
+    drink_no_stock: 'セラーに在庫がありません',
+    match_by_name: '名前が近い',
+    reading: '読み取り中…',
+    reading_n: '読み取り中… {i} / {n}枚',
+    scan_failed: '読み取りに失敗しました。もう一度お試しください',
+    scan_none: 'ワインが見つかりませんでした。ラベルが写るように撮ってください',
+    toast_scan_limit: '読み取りの回数上限に達しました。しばらくしてからお試しください',
+    bulk_title: '📷 写真からまとめて追加',
+    bulk_lead: '{n}件のワインが見つかりました。追加しないものはチェックを外し、本数を直してください。',
+    bulk_failed: '（読めなかったもの {n}本）',
+    bulk_prov_line: '＋ どこで買った・誰からもらった（入れなくても登録できます）',
+    bulk_add_n: '{n}件をセラーに追加',
+    bulk_select: '追加するワインを選んでください',
+    bulk_adding: '追加中…',
+    bulk_added: '🍾 {n}件をセラーに追加しました',
+    bulk_over: '一度に読めるのは{n}枚までです。残りはもう一度選んでください',
+    bulk_partial: '途中で失敗しました。残りをもう一度追加してください',
+    field_acq_how: '入手のしかた',
+    acq_none: '（入れなくてOK）',
+    acq_bought: '🛒 買った',
+    acq_gift: '🎁 もらった',
+    acq_other: 'その他',
+    field_acq_shop: 'どこで買った',
+    ph_acq_shop: '店名・サイト名',
+    field_acq_from: 'くれた人',
+    ph_acq_from: '例: 田中さん',
+    edit_btn: '✏️ 来歴・メモを直す',
+    edit_title: '✏️ 来歴・メモを直す',
+    edit_save: '保存する',
+    edit_saved: '保存しました',
+    give_open: '🎁 贈る',
+    give_title: '🎁 このワインを贈る',
+    give_lead: '贈るとセラーから1本減り、「おくりもの」に記録が残ります。',
+    field_give_to: '相手の名前',
+    ph_give_to: '例: 田中さん',
+    field_give_from: 'あなたの名前（相手に表示）',
+    ph_give_from: '例: たろう',
+    field_give_msg: 'ひとこと（任意）',
+    ph_give_msg: '例: 昇進おめでとう！',
+    give_with_link: '受け取りリンクを作る',
+    give_with_link_sub: '相手がソムリンで受け取ると、相手のセラーに「あなたから」と残ります。ソムリンを使っていない人も、リンクから登録して受け取れます。外すと「渡した」記録だけが残ります。',
+    give_btn: '贈る',
+    give_link_ready: '受け取りリンクができました。LINE などで相手に送ってください。',
+    give_line_text: '{from}からワインが届きました🍷「{wine}」\n受け取りはこちら:',
+    give_someone: 'ソムリンの友人',
+    give_recorded: '🎁 贈った記録を残しました',
+    copy_link: 'リンクをコピー',
+    send_line: 'LINEで送る',
+    copied: 'コピーしました',
+    gifts_received: 'もらった',
+    gifts_sent: '贈った',
+    gifts_empty: 'まだおくりものの記録はありません。<br>セラーのワインを開いて「🎁 贈る」から贈れます。',
+    gift_to: '{name}へ',
+    gift_from: '{name}から',
+    gift_noname: '（名前なし）',
+    gift_st_sent: '受け取り待ち',
+    gift_st_accepted: '受け取り済み',
+    gift_st_recorded: '記録のみ',
+    gift_st_cancelled: '取り消し',
+    gift_cancel: '取り消す',
+    gift_cancel_confirm: 'このおくりものを取り消しますか？\n（受け取りリンクは使えなくなり、セラーに1本戻ります）',
+    gift_cancelled: '取り消しました。セラーに1本戻しました',
+    gift_cancelled_norestore: '取り消しました（元の在庫が削除されていたため、本数は戻せませんでした）',
+    gift_not_cancellable: '受け取り済みか、すでに取り消したおくりものです',
+    gift_fail: 'うまくいきませんでした。もう一度お試しください',
+    share_btn: '🔗 リストで見せる',
+    share_lead: 'このセラーのワインを、お店のワインリストのような一覧にしてリンクで見せられます。値段・本数・メモ・誰からもらったかは出ません。',
+    share_on: 'ワインリストとして見せる',
+    share_is_on: 'ワインリストとして見せています',
+    share_hidden_note: 'リンクを知っている人だけが見られます。値段・本数・メモ・来歴は出ません。',
+    share_qr: 'QRコード',
+    share_regen: '作り直す',
+    share_off: '止める',
+    share_regen_confirm: 'リンクを作り直すと、いまのリンクとQRコードは使えなくなります。よろしいですか？',
+    share_off_confirm: '止めると、リンクとQRコードは使えなくなります。よろしいですか？',
+    share_turned_on: 'ワインリストのリンクができました',
+    share_turned_off: '止めました',
+    share_regenerated: '新しいリンクにしました',
+    share_fail: '切り替えられませんでした。もう一度お試しください',
+    share_qr_fail: 'QRコードを表示できませんでした',
+    share_line_text: '「{name}」のワインリストです🍷',
+    journal_from_cellar: '🍾 セラーから',
   },
   en: {
     header_title: 'My Cellar',
@@ -823,13 +1006,13 @@ const I18N = {
     field_region: 'Region',
     field_grapes: 'Grapes',
     field_price: 'Purchase price (¥)',
-    field_date: 'Purchase date',
+    field_date: 'Date acquired',
     field_note: 'Notes',
     ph_name: 'e.g. Gevrey-Chambertin',
     ph_producer: 'e.g. Rossignol-Trapet',
     ph_region: 'e.g. Burgundy, France',
     ph_grapes: 'e.g. Pinot Noir',
-    ph_note: 'Where you bought it, tasting notes, etc.',
+    ph_note: 'Memories, tasting notes, etc.',
     save_btn: 'Add to Cellar',
     cat_sparkling: 'Sparkling',
     cat_white: 'White',
@@ -856,14 +1039,14 @@ const I18N = {
     fmt_date_md: '{mon} {d} ({w})',
     fmt_n_bottles: '{n}',
     spend_year: '2026 total',
-    spend_value: 'Cellar value',
+    spend_value: 'Purchase total (entered)',
     spend_wines: 'Wines',
     fmt_n_kinds: '{n}',
     spend_recorded: 'Bottles logged',
     toast_last: '🍷 That was the last bottle!',
     toast_plus1: '+1 bottle added',
-    sb_delete: 'Delete',
-    sb_delete_confirm: 'Delete this stock?',
+    sb_delete: 'Delete (entered by mistake)',
+    sb_delete_confirm: 'Delete this entry?\n(When you drink it, use "−" or "🍷 Drank one" so it stays in your Journal.)',
     sb_deleted: 'Deleted',
     sb_update_fail: 'Could not update the stock. Please try again.',
     sb_photos_n: '{n} photos',
@@ -912,6 +1095,121 @@ const I18N = {
     sort_price_desc: 'Highest price first',
     sort_bottles_desc: 'Most bottles first',
     sort_region: 'By region',
+    // 2026-10-26: managing the cellar with photos
+    tab_gifts: '🎁 Gifts',
+    act_drink_photo: '🍷 Drank it (photo)',
+    act_bulk_add: '📷 Add many from photos',
+    filter_gift: '🎁 Gifts',
+    value_label: 'Reference price total',
+    value_counts: 'Price known: {k} / unknown: {u} bottles',
+    value_note: 'Reference prices are importers\' suggested retail prices, not market prices. Wines of a different vintage or not in the Sommelin DB are not included.',
+    ref_price: 'Ref. {p}',
+    ref_price_other: 'Ref. price of another vintage {p} (DB: {v})',
+    ref_price_unknown: 'Ref. price unknown',
+    detail_ref: 'Reference price',
+    detail_market: 'Rakuten price',
+    market_other_year: '(item for the DB vintage)',
+    detail_prov: 'Provenance',
+    prov_from: 'From {name}',
+    prov_gift: 'Gift',
+    prov_shop: 'Bought at {shop}',
+    prov_bought: 'Bought',
+    fmt_ym: '{m}/{y}',
+    drink_title: '🍷 Drank one',
+    field_drink_with: 'Who with (optional)',
+    ph_drink_with: 'e.g. family, a friend',
+    field_drink_note: 'A note (optional)',
+    ph_drink_note: 'e.g. opened for a birthday',
+    drink_one_btn: '🍷 Drank one',
+    fmt_drink_with: 'with {who}',
+    toast_drank_note_unsaved: 'One bottle removed (the note cannot be saved yet)',
+    drink_photo_title: '🍷 Remove what you drank',
+    drink_photo_lead: 'Here are the wines in the photo next to your stock. Tap the bottle you drank (nothing changes until you tap).',
+    drink_this: 'Drank this one',
+    drink_done: '✓ Removed',
+    drink_not_in_cellar: 'Not found in this cellar',
+    drink_no_stock: 'Your cellar has no stock',
+    match_by_name: 'similar name',
+    reading: 'Reading…',
+    reading_n: 'Reading… {i} / {n}',
+    scan_failed: 'Could not read the photo. Please try again.',
+    scan_none: 'No wine found. Please make the labels visible.',
+    toast_scan_limit: 'Scan limit reached. Please try again later.',
+    bulk_title: '📷 Add many from photos',
+    bulk_lead: 'Found {n} wines. Uncheck any you do not want and fix the bottle counts.',
+    bulk_failed: '({n} could not be read)',
+    bulk_prov_line: '+ Where bought / who gave it (optional)',
+    bulk_add_n: 'Add {n} to the cellar',
+    bulk_select: 'Choose the wines to add',
+    bulk_adding: 'Adding…',
+    bulk_added: '🍾 Added {n} to your cellar',
+    bulk_over: 'Up to {n} photos at a time. Please choose the rest again.',
+    bulk_partial: 'Stopped partway. Please add the rest again.',
+    field_acq_how: 'How you got it',
+    acq_none: '(optional)',
+    acq_bought: '🛒 Bought',
+    acq_gift: '🎁 Gift',
+    acq_other: 'Other',
+    field_acq_shop: 'Where bought',
+    ph_acq_shop: 'Shop or website',
+    field_acq_from: 'Given by',
+    ph_acq_from: 'e.g. Ms. Tanaka',
+    edit_btn: '✏️ Edit provenance / notes',
+    edit_title: '✏️ Edit provenance / notes',
+    edit_save: 'Save',
+    edit_saved: 'Saved',
+    give_open: '🎁 Give',
+    give_title: '🎁 Give this wine',
+    give_lead: 'Giving removes one bottle from your cellar and keeps a record under Gifts.',
+    field_give_to: 'Recipient\'s name',
+    ph_give_to: 'e.g. Ms. Tanaka',
+    field_give_from: 'Your name (shown to them)',
+    ph_give_from: 'e.g. Taro',
+    field_give_msg: 'A message (optional)',
+    ph_give_msg: 'e.g. Congratulations!',
+    give_with_link: 'Create a link to receive it',
+    give_with_link_sub: 'If they receive it on Sommelin, their cellar will show it came from you. People who do not use Sommelin yet can sign up from the link. Uncheck to keep only a record that you gave it.',
+    give_btn: 'Give',
+    give_link_ready: 'The link is ready. Send it via LINE or any messenger.',
+    give_line_text: 'A wine from {from} 🍷 "{wine}"\nReceive it here:',
+    give_someone: 'a Sommelin friend',
+    give_recorded: '🎁 Recorded as given',
+    copy_link: 'Copy link',
+    send_line: 'Send via LINE',
+    copied: 'Copied',
+    gifts_received: 'Received',
+    gifts_sent: 'Given',
+    gifts_empty: 'No gifts yet.<br>Open a wine in your cellar and tap "🎁 Give".',
+    gift_to: 'To {name}',
+    gift_from: 'From {name}',
+    gift_noname: '(no name)',
+    gift_st_sent: 'Waiting',
+    gift_st_accepted: 'Received',
+    gift_st_recorded: 'Record only',
+    gift_st_cancelled: 'Cancelled',
+    gift_cancel: 'Cancel',
+    gift_cancel_confirm: 'Cancel this gift?\n(The link stops working and one bottle returns to your cellar.)',
+    gift_cancelled: 'Cancelled. One bottle is back in your cellar.',
+    gift_cancelled_norestore: 'Cancelled (the original entry was deleted, so the count could not be restored).',
+    gift_not_cancellable: 'This gift was already received or cancelled.',
+    gift_fail: 'Something went wrong. Please try again.',
+    share_btn: '🔗 Share as a list',
+    share_lead: 'Show the wines in this cellar as a wine list via a link. Prices, bottle counts, notes and who gave them are not shown.',
+    share_on: 'Share as a wine list',
+    share_is_on: 'Shared as a wine list',
+    share_hidden_note: 'Only people with the link can see it. Prices, bottle counts, notes and provenance are hidden.',
+    share_qr: 'QR code',
+    share_regen: 'New link',
+    share_off: 'Stop',
+    share_regen_confirm: 'Creating a new link disables the current link and QR code. Continue?',
+    share_off_confirm: 'Stopping disables the link and QR code. Continue?',
+    share_turned_on: 'Your wine list link is ready',
+    share_turned_off: 'Stopped sharing',
+    share_regenerated: 'Created a new link',
+    share_fail: 'Could not switch. Please try again.',
+    share_qr_fail: 'Could not show the QR code',
+    share_line_text: 'The wine list of "{name}" 🍷',
+    journal_from_cellar: '🍾 From cellar',
   },
 };
 let LANG = (() => { try { return localStorage.getItem('somm_lang') || (navigator.language && navigator.language.startsWith('ja') ? 'ja' : 'en'); } catch (e) { return 'ja'; } })();
@@ -1026,10 +1324,12 @@ function renderCellarManageList(){
   if(!cellars.length){ box.innerHTML = ''; return; }
   box.innerHTML = cellars.map(c => `
     <div class="cellar-manage-item">
-      <div class="cellar-manage-name">${esc(c.emoji||'🍾')} ${esc(c.name)}</div>
+      <div class="cellar-manage-name">${esc(c.emoji||'🍾')} ${esc(c.name)}${c.share_token ? ' 🔗' : ''}</div>
       <button class="cellar-manage-btn" onclick="startRenameCellar('${c.id}','${esc(c.name).replace(/'/g,"\\'")}')">${esc(t('cellar_rename'))}</button>
       <button class="cellar-manage-btn danger" onclick="deleteCellarById('${c.id}')">${esc(t('cellar_delete'))}</button>
-    </div>`).join('');
+    </div>
+    <button class="cellar-manage-btn" style="margin:6px 0 4px;" onclick="toggleSharePanel('${c.id}')">${esc(t('share_btn'))}</button>
+    ${openShareId === c.id ? sharePanelHtml(c) : ''}`).join('');
 }
 function startRenameCellar(id, name){
   cellarModalRenameId = id;
@@ -1158,14 +1458,17 @@ async function loadServerBottles(){
 }
 // 表示対象（現在のセラー絞り込み＋カテゴリ絞り込みに従う）
 function serverBottlesScoped(){
-  let arr = serverBottles.filter(b => (b.bottles||0) > 0);
+  // 2026-10-26: 在庫は status='in_stock' だけ。飲み終わった行は consumed で残る（記録タブに出る）
+  let arr = serverBottles.filter(b => (b.bottles||0) > 0 && (!b.status || b.status === 'in_stock'));
   if (currentCellarId !== null) arr = arr.filter(b => b.cellar_id === currentCellarId);
   return arr;
 }
 function renderServerBottleCards(){
   let arr = serverBottlesScoped();
-  // カテゴリ絞り込み: catがある在庫はそのcatで、cat未設定の在庫は「すべて」時のみ表示
-  if (currentCat !== 'all') arr = arr.filter(b => b.cat === currentCat);
+  // カテゴリ絞り込み: catがある在庫はそのcatで、cat未設定の在庫は「すべて」時のみ表示。
+  // 'gift' は色ではなく来歴（もらったワイン）で絞る（依頼 E-1-3）
+  if (currentCat === 'gift') arr = arr.filter(b => b.acquired_how === 'gift');
+  else if (currentCat !== 'all') arr = arr.filter(b => b.cat === currentCat);
   if (!arr.length) return '';
   const showBadge = currentCellarId === null && cellars.length > 1;
   return arr.map(b => {
@@ -1175,9 +1478,10 @@ function renderServerBottleCards(){
       ? `<img src="${esc(photo.url)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`
       : `<span>${cfg ? cfg.emoji : '🍷'}</span>`;
     const price = b.price_jpy != null ? '¥' + Number(b.price_jpy).toLocaleString() : '—';
+    const prov = provenanceText(b);
     return `
       <div class="cellar-card">
-        <div class="cellar-card-inner">
+        <div class="cellar-card-inner" onclick="openServerDetail('${esc(b.id)}')">
           <div class="cellar-card-label ${photo?'photo':''}" style="overflow:hidden;">${thumb}</div>
           <div class="cellar-card-body">
             <div class="cellar-card-top">
@@ -1187,11 +1491,13 @@ function renderServerBottleCards(){
             <div class="cellar-producer">${esc(b.producer||'—')}</div>
             ${b.region?`<div class="cellar-region">📍 ${esc(b.region)}</div>`:''}
             ${(b.photos&&b.photos.length>1)?`<div class="cellar-region">🏷 ${t('sb_photos_n', { n: b.photos.length })}</div>`:''}
+            ${prov ? `<div class="cellar-prov">${esc(prov)}</div>` : ''}
+            <div class="cellar-ref">${esc(refPriceText(b))}</div>
             ${showBadge && b.cellar_id ? `<div class="cellar-badge">${esc(cellarNameOf(b.cellar_id))}</div>` : ''}
             <div class="cellar-bottom">
               <div class="cellar-purchase">${price}</div>
               <div class="cellar-stock">
-                <button class="stock-minus" onclick="event.stopPropagation();sbChangeStock('${esc(b.id)}',-1)">−</button>
+                <button class="stock-minus" onclick="event.stopPropagation();sbDrinkOne('${esc(b.id)}')">−</button>
                 <div class="stock-badge">${t('fmt_stock', { n: b.bottles })}</div>
                 <button class="stock-plus"  onclick="event.stopPropagation();sbChangeStock('${esc(b.id)}',+1)">＋</button>
               </div>
@@ -1202,35 +1508,55 @@ function renderServerBottleCards(){
       </div>`;
   }).join('');
 }
+// 2026-10-26: −1 と最後の1本は DELETE ではなく consume（依頼 B）。行は 0本・consumed で残り、
+// taste_items に1行入る＝記録タブに「いつ何を飲んだか」が残る。DELETE は登録の間違いを消すときだけ（sbDelete）。
 async function sbChangeStock(id, delta){
+  if (delta < 0) return sbDrinkOne(id);
   const b = serverBottles.find(x => String(x.id) === String(id));
   if (!b) return;
   const newVal = (b.bottles||0) + delta;
-  if (newVal < 0) return;
-  const previousRows = serverBottles.slice();
   const previousStock = b.bottles;
-  let uid=null; try{ uid=localStorage.getItem('somm_uid'); }catch(e){}
+  const uid = myUid();
   b.bottles = newVal; // 楽観更新
-  if (newVal === 0) { serverBottles = serverBottles.filter(x => String(x.id)!==String(id)); showToast(t('toast_last')); }
-  else showToast(delta > 0 ? t('toast_plus1') : t('toast_minus1'));
+  showToast(t('toast_plus1'));
   renderSummary(); renderCellar();
   try{
-    let response;
-    if (newVal === 0) {
-      response = await authFetch(CELLAR_API_BASE+'/api/cellar/bottles/'+encodeURIComponent(id)+'?userId='+encodeURIComponent(uid), { method:'DELETE' });
-    } else {
-      response = await authFetch(CELLAR_API_BASE+'/api/cellar/bottles/'+encodeURIComponent(id), {
-        method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ userId:uid, bottles:newVal })
-      });
-    }
+    const response = await authFetch(CELLAR_API_BASE+'/api/cellar/bottles/'+encodeURIComponent(id), {
+      method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ userId:uid, bottles:newVal })
+    });
     if (!response.ok) throw new Error('stock update failed: ' + response.status);
   }catch(e){
     b.bottles = previousStock;
-    serverBottles = previousRows;
     renderSummary(); renderCellar();
     await loadServerBottles();
     showToast(t('sb_update_fail'));
   }
+}
+// 1本飲んだ（POST /api/cellar/bottles/:id/consume）。note = 誰と飲んだ・ひとこと（任意）。成功で true
+const drinkInflight = new Set();
+async function sbDrinkOne(id, note){
+  const b = serverBottles.find(x => String(x.id) === String(id));
+  const uid = myUid();
+  if (!b || !uid || drinkInflight.has(String(id))) return false;
+  drinkInflight.add(String(id));   // 連打で2本減らさない
+  try{
+    const r = await authFetch(CELLAR_API_BASE+'/api/cellar/bottles/'+encodeURIComponent(id)+'/consume', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ userId: uid, note: note || null })
+    });
+    if (!r.ok) throw new Error('consume failed: ' + r.status);
+    const d = await r.json();
+    b.bottles = d.bottles != null ? d.bottles : Math.max(0, (b.bottles||0) - 1);
+    if (d.status) b.status = d.status;
+    if (note && d.noteSaved === false) showToast(t('toast_drank_note_unsaved'));
+    else showToast(b.bottles === 0 ? t('toast_last') : t('toast_minus1'));
+    renderSummary(); renderCellar(); renderStats();
+    loadJournal();   // 記録タブに1行増える
+    return true;
+  }catch(e){
+    showToast(t('sb_update_fail'));
+    await loadServerBottles();
+    return false;
+  }finally{ drinkInflight.delete(String(id)); }
 }
 async function sbDelete(id){
   if (!confirm(t('sb_delete_confirm'))) return;
@@ -1314,6 +1640,20 @@ function renderSummary() {
   const kinds = scoped.length + sb.length;
   const cats = [...new Set([...scoped.map(w => w.cat), ...sb.map(b => b.cat).filter(Boolean)])].length;
   const avgPrice = kinds ? Math.round(totalSpend / kinds) : 0;
+  // 参考価格の合計（依頼 A）。決まりはサーバーの services/cellarValue.js と同じ: サーバーが refPrice を
+  // 付けた行（in_stock・catalog_id あり・年が一致）だけを 参考価格×本数 で足す。それ以外は「分からない」に
+  // 本数で数え、0円として黙って足さない。楽天の実売は混ぜない（1本ごとの詳細にだけ出す）。
+  let refTotal = 0, refKnown = 0, refUnknown = 0;
+  sb.forEach(b => { const n = b.bottles||0; if (b.refPrice != null) { refTotal += b.refPrice * n; refKnown += n; } else refUnknown += n; });
+  scoped.forEach(w => { refUnknown += (w.bottles||0); });   // 端末キャッシュの旧在庫はカタログと繋がっていない
+  const vb = document.getElementById('valueBar');
+  if (vb) {
+    vb.style.display = (refKnown + refUnknown) ? 'block' : 'none';
+    vb.innerHTML = `
+      <div class="value-main"><span class="value-label">${t('value_label')}</span><span class="value-num">${refKnown ? '¥' + refTotal.toLocaleString() : '—'}</span></div>
+      <div class="value-count">${t('value_counts', { k: refKnown, u: refUnknown })}</div>
+      <div class="value-note">${t('value_note')}</div>`;
+  }
   document.getElementById('summaryRow').innerHTML = `
     <div class="summary-item">
       <div class="summary-val">${total}</div>
@@ -1516,9 +1856,11 @@ function renderJournal() {
             <div class="journal-card-info">
               <div class="journal-wine-name">${esc(j.name) || '—'}${j.vintage ? ' ' + esc(j.vintage) : ''}</div>
               <div class="journal-wine-sub">${esc([j.producer, region].filter(Boolean).join(' · '))}</div>
+              ${j.source === 'cellar' ? `<div class="cellar-badge">${esc(t('journal_from_cellar'))}</div>` : ''}
             </div>
             <button onclick="journalDelete('${esc(String(j.id))}')" title="${esc(t('sb_delete'))}" style="flex-shrink:0;background:none;border:none;color:#bbb;font-size:15px;cursor:pointer;padding:4px 6px;">🗑</button>
           </div>
+          ${j.note ? `<div class="journal-note">${esc(j.note)}</div>` : ''}
           <div class="jp-row"><button class="jp-btn" onclick="toggleJournalPairing('${esc(String(j.id))}')">🍽 ${esc(jpDict().recBtn)}</button></div>
           <div class="jp-slot" id="jp-slot-${esc(String(j.id))}"></div>
         </div>`;
@@ -1605,10 +1947,11 @@ function renderStats() {
 
 // ── INTERACTIONS ──
 function switchTab(tab) {
-  ['cellar','journal','stats'].forEach(t => {
+  ['cellar','journal','stats','gifts'].forEach(t => {
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
     document.getElementById('panel-' + t).classList.toggle('active', t === tab);
   });
+  if (tab === 'gifts') loadGifts();
 }
 
 function filterCat(cat, el) {
@@ -1643,6 +1986,8 @@ function openAddModal() {
   // set today's date
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('f-date').value = today;
+  const prov = document.getElementById('addProvFields');
+  if (prov && !prov.firstChild) prov.innerHTML = provenanceFieldsHtml('f', {}, false);
   // AG節: セラー選択肢を用意（デフォルトは今見ているセラー。無ければ先頭のセラー）
   const sel = document.getElementById('f-cellar');
   if (sel) {
@@ -1694,11 +2039,12 @@ async function saveWine() {
         price: document.getElementById('f-price').value !== '' ? (parseInt(document.getElementById('f-price').value) || 0) : null,
         purchaseDate: document.getElementById('f-date').value || null,
         note: note || null,
+        ...readProvenance('f'),
       }),
     });
     if (!r.ok) throw 0;
     // reset form
-    ['f-name','f-producer','f-vintage','f-region','f-grapes','f-note'].forEach(id => document.getElementById(id).value = '');
+    ['f-name','f-producer','f-vintage','f-region','f-grapes','f-note','f-acq-how','f-acq-shop','f-acq-from'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     document.getElementById('f-bottles').value = '1';
     document.getElementById('f-price').value = '';
     closeAddModal();
@@ -1751,6 +2097,669 @@ function closeDetail(e) {
 function drinkOne(id) {
   closeDetail();
   changeStock(id, -1);
+}
+
+// ═══════════════════════════════════════════════════════════
+// セラーを写真で管理する（2026-10-26・アプリ5への依頼 A〜E。DDL No.37）
+//   A 参考価格（サーバーが行ごとに refPrice・refPriceOtherYear・marketPrice を付けて返す）
+//   B 飲んだら写真で外す（identify-shelf → 在庫の候補 → 本人が1タップで確かめてから consume）
+//   C 写真からまとめて追加（identify-shelf を1枚ずつ → 一覧で確認 → /api/cellar/bottles/bulk）
+//   D ワインリストとして見せる（/api/cellars/:id/share → prototype.html?cl=<token>）
+//   E 来歴（どこで買った・誰からもらった）とおくりもの（贈る・受け取りリンク・取り消し・履歴）
+// ═══════════════════════════════════════════════════════════
+const yen = n => '¥' + Number(n).toLocaleString();
+function fmtYearMonth(d){
+  const m = String(d || '').match(/^(\d{4})-(\d{2})/);
+  return m ? t('fmt_ym', { y: m[1], m: Number(m[2]) }) : '';
+}
+// カードの来歴1行: 「🎁 〇〇さんから・2025年12月」「🛒 〇〇で購入・2026年3月」
+function provenanceText(b){
+  const ym = fmtYearMonth(b.purchase_date);
+  const tail = ym ? '・' + ym : '';
+  if (b.acquired_how === 'gift') return '🎁 ' + (b.acquired_from_name ? t('prov_from', { name: b.acquired_from_name }) : t('prov_gift')) + tail;
+  if (b.acquired_shop) return '🛒 ' + t('prov_shop', { shop: b.acquired_shop }) + tail;
+  if (b.acquired_how === 'bought') return '🛒 ' + t('prov_bought') + tail;
+  return '';
+}
+function refPriceText(b){
+  if (b.refPrice != null) return t('ref_price', { p: yen(b.refPrice) });
+  if (b.refPriceOtherYear) return t('ref_price_other', { p: yen(b.refPriceOtherYear.price), v: b.refPriceOtherYear.vintage || '—' });
+  return t('ref_price_unknown');
+}
+
+// ── 汎用シート（長い処理は seq を見て、閉じた/別のシートに替わった後は書かない） ──
+let sheetSeq = 0;
+function openSheet(title, html){
+  sheetSeq++;
+  document.getElementById('sheetTitle').textContent = title;
+  document.getElementById('sheetBody').innerHTML = html;
+  document.getElementById('sheetModalBg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  return sheetSeq;
+}
+function setSheetBody(html, seq){
+  if (seq != null && seq !== sheetSeq) return;
+  document.getElementById('sheetBody').innerHTML = html;
+}
+function closeSheetModal(e){
+  if (e && e.target !== document.getElementById('sheetModalBg')) return;
+  sheetSeq++;
+  document.getElementById('sheetModalBg').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function inputVal(id){ const el = document.getElementById(id); return el ? String(el.value || '').trim() : ''; }
+async function copyText(text){
+  try { await navigator.clipboard.writeText(text); showToast(t('copied')); return; } catch (e) {}
+  try {
+    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); ta.remove(); showToast(t('copied'));
+  } catch (e) {}
+}
+// リンクのコピー＋LINE で送る（受け取りリンク・ワインリストで共通）。URL は data 属性で渡す（引用符で壊れない）
+function shareLinkHtml(url, lineText){
+  return `<input class="share-url" readonly value="${esc(url)}" onclick="this.select()">
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="sheet-btn" style="flex:1;" data-url="${esc(url)}" onclick="copyText(this.dataset.url)">${esc(t('copy_link'))}</button>
+      <a class="sheet-btn" style="flex:1;text-align:center;text-decoration:none;" href="https://line.me/R/share?text=${encodeURIComponent(lineText + '\n' + url)}" target="_blank" rel="noopener">${esc(t('send_line'))}</a>
+    </div>`;
+}
+
+// ── 来歴の入力欄（追加・まとめて追加・直す で共通）。どれも任意 ──
+function provenanceFieldsHtml(p, v, withDate){
+  v = v || {};
+  const opt = (val, key) => `<option value="${val}"${(v.acquired_how || '') === val ? ' selected' : ''}>${esc(t(key))}</option>`;
+  return `
+    <div class="field-label">${esc(t('field_acq_how'))}</div>
+    <select class="field-input" id="${p}-acq-how">${opt('', 'acq_none')}${opt('bought', 'acq_bought')}${opt('gift', 'acq_gift')}${opt('other', 'acq_other')}</select>
+    <div class="field-row">
+      <div><div class="field-label">${esc(t('field_acq_shop'))}</div><input class="field-input" id="${p}-acq-shop" maxlength="200" value="${esc(v.acquired_shop || '')}" placeholder="${esc(t('ph_acq_shop'))}"></div>
+      <div><div class="field-label">${esc(t('field_acq_from'))}</div><input class="field-input" id="${p}-acq-from" maxlength="200" value="${esc(v.acquired_from_name || '')}" placeholder="${esc(t('ph_acq_from'))}"></div>
+    </div>
+    ${withDate ? `<div class="field-label">${esc(t('field_date'))}</div><input class="field-input" id="${p}-date" type="date" value="${esc(v.purchase_date || '')}">` : ''}`;
+}
+// 入手のしかたが空でも、くれた人を書いたら「もらった」、店を書いたら「買った」とみなす
+function readProvenance(p){
+  const shop = inputVal(p + '-acq-shop'), from = inputVal(p + '-acq-from');
+  let how = inputVal(p + '-acq-how');
+  if (!how && from) how = 'gift';
+  else if (!how && shop) how = 'bought';
+  const out = { acquiredHow: how || null, acquiredShop: shop || null, acquiredFromName: from || null };
+  if (document.getElementById(p + '-date')) out.purchaseDate = inputVal(p + '-date') || null;
+  return out;
+}
+
+// ── 在庫1本の詳細（参考価格・楽天・来歴。飲んだ・贈る・直す・登録の間違いを削除） ──
+function openServerDetail(id){
+  const b = serverBottles.find(x => String(x.id) === String(id));
+  if (!b) return;
+  const cfg = catCfg[b.cat] || { emoji: '🍷', label: '', bg: 'var(--burgundy-pale)' };
+  const photo = (b.photos || []).find(p => p.url);
+  const mp = b.marketPrice;
+  const prov = provenanceText(b);
+  const row = (label, val) => `<div class="detail-row"><span class="detail-label">${esc(label)}</span><span class="detail-val">${val}</span></div>`;
+  const sid = esc(String(b.id));
+  document.getElementById('detailContent').innerHTML = `
+    <div class="modal-handle"></div>
+    <div class="detail-section" style="padding-top:24px;display:flex;gap:12px;align-items:flex-start;">
+      ${photo ? `<img src="${esc(photo.url)}" alt="" style="width:64px;height:86px;object-fit:cover;border-radius:10px;flex-shrink:0;">` : `<span style="background:${cfg.bg};border-radius:10px;padding:6px 10px;font-size:18px;">${cfg.emoji}</span>`}
+      <div style="flex:1;min-width:0;padding-right:28px;">
+        <div style="font-size:18px;font-weight:900;color:var(--text);line-height:1.3;margin-bottom:4px;">${esc(b.name || '—')}</div>
+        <div style="font-size:13px;color:var(--text-sub);">${esc(b.producer || '')}</div>
+      </div>
+    </div>
+    <div class="detail-section">
+      ${row(t('detail_vintage'), esc(b.vintage || '—'))}
+      ${b.region ? row(t('detail_region'), esc(b.region)) : ''}
+      ${row(t('detail_stock'), `<span style="color:var(--burgundy);font-size:16px;">${esc(t('fmt_stock', { n: b.bottles }))}</span>`)}
+      ${row(t('detail_ref'), esc(b.refPrice != null ? yen(b.refPrice) : refPriceText(b)))}
+      ${mp && mp.price != null ? row(t('detail_market'), `<a href="${esc(mp.url)}" target="_blank" rel="noopener" style="color:inherit;">楽天 ${esc(yen(mp.price))}${mp.shopName ? '（' + esc(mp.shopName) + '）' : ''}</a>${b.refPrice == null ? `<div style="font-size:10px;color:var(--text-sub);font-weight:500;">${esc(t('market_other_year'))}</div>` : ''}`) : ''}
+      ${b.price_jpy != null ? row(t('detail_price'), esc(yen(b.price_jpy))) : ''}
+      ${b.purchase_date ? row(t('field_date'), esc(b.purchase_date)) : ''}
+      ${prov ? row(t('detail_prov'), esc(prov)) : ''}
+      ${b.note ? row(t('detail_note'), `<span style="font-size:12px;">${esc(b.note)}</span>`) : ''}
+    </div>
+    <div class="detail-section" style="display:flex;flex-direction:column;gap:8px;">
+      <button class="drink-btn" onclick="openDrinkNote('${sid}')">${esc(t('drink_one_btn'))}</button>
+      <button class="cellar-action-btn" onclick="openGiveSheet('${sid}')">${esc(t('give_open'))}</button>
+      <button class="cellar-action-btn" onclick="openEditProvenance('${sid}')">${esc(t('edit_btn'))}</button>
+      <button onclick="closeDetail();sbDelete('${sid}')" style="padding:8px;border-radius:10px;border:1px solid var(--border);background:#fff;color:#b03a3a;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;">🗑 ${esc(t('sb_delete'))}</button>
+    </div>`;
+  document.getElementById('detailModalBg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+// ── B. 1本飲んだ（誰と・ひとこと） ──
+function openDrinkNote(id){
+  const b = serverBottles.find(x => String(x.id) === String(id));
+  if (!b) return;
+  closeDetail();
+  openSheet(t('drink_title'), `
+    <div class="sheet-sub" style="margin-bottom:12px;">${esc(b.name || '')} ${esc(b.vintage || '')}</div>
+    <div class="field-label">${esc(t('field_drink_with'))}</div>
+    <input class="field-input" id="dr-with" maxlength="60" placeholder="${esc(t('ph_drink_with'))}">
+    <div class="field-label">${esc(t('field_drink_note'))}</div>
+    <input class="field-input" id="dr-note" maxlength="200" placeholder="${esc(t('ph_drink_note'))}">
+    <button class="save-btn" id="dr-save" onclick="submitDrinkNote('${esc(String(b.id))}')">${esc(t('drink_one_btn'))}</button>`);
+}
+async function submitDrinkNote(id){
+  const who = inputVal('dr-with'), memo = inputVal('dr-note');
+  const note = [who ? t('fmt_drink_with', { who }) : '', memo].filter(Boolean).join(' / ');
+  const btn = document.getElementById('dr-save');
+  if (btn) { btn.disabled = true; btn.style.opacity = '.55'; }
+  const ok = await sbDrinkOne(id, note);
+  if (ok) closeSheetModal();
+  else if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+}
+
+// ── 写真の読み取り（identify-shelf。1枚から最大12本・位置つき） ──
+function choosePhotos(inputId, multiple, onFiles){
+  let inp = document.getElementById(inputId);
+  if (!inp) {
+    inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'image/*'; inp.id = inputId; inp.style.display = 'none';
+    if (multiple) inp.multiple = true;   // capture は付けない＝カメラでもライブラリでも選べる
+    document.body.appendChild(inp);
+  }
+  inp.onchange = e => { const files = [...(e.target.files || [])]; e.target.value = ''; if (files.length) onFiles(files); };
+  inp.click();
+}
+function fileToDataUrl(f, maxEdge){
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const sc = Math.min(1, (maxEdge || 1568) / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * sc); c.height = Math.round(img.naturalHeight * sc);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src);
+      resolve(c.toDataURL('image/jpeg', 0.8));
+    };
+    img.onerror = () => { URL.revokeObjectURL(img.src); resolve(null); };
+    img.src = URL.createObjectURL(f);
+  });
+}
+// 写真からそのボトル1本を切り抜く（restaurant_admin.html の cropShotToBox と同じ上下左右10%の余白）
+function cropToBox(dataUrl, box, maxEdge){
+  return new Promise(resolve => {
+    if (!dataUrl || !box || typeof box.cx !== 'number') { resolve(null); return; }
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const iw = img.naturalWidth, ih = img.naturalHeight;
+        const padW = (box.w || 0.1) * 0.10, padH = (box.h || 0.3) * 0.10;
+        const pw = Math.min(1, (box.w || 0.1) + padW * 2), ph = Math.min(1, (box.h || 0.3) + padH * 2);
+        const cw = Math.max(1, Math.round(pw * iw)), ch = Math.max(1, Math.round(ph * ih));
+        const left = Math.min(iw - cw, Math.max(0, Math.round((box.cx - pw / 2) * iw)));
+        const top = Math.min(ih - ch, Math.max(0, Math.round((box.cy - ph / 2) * ih)));
+        const sc = Math.min(1, (maxEdge || 800) / Math.max(cw, ch));
+        const c = document.createElement('canvas');
+        c.width = Math.round(cw * sc); c.height = Math.round(ch * sc);
+        c.getContext('2d').drawImage(img, left, top, cw, ch, 0, 0, c.width, c.height);
+        resolve(c.toDataURL('image/jpeg', 0.82));
+      } catch (e) { resolve(null); }
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
+  });
+}
+async function readShelfPhoto(dataUrl){
+  const r = await authFetch(CELLAR_API_BASE + '/api/identify-shelf', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: dataUrl, userId: myUid(), locale: LANG === 'en' ? 'en-US' : 'ja-JP' }),
+  });
+  if (r.status === 429 || r.status === 403) {
+    let m = null; try { m = (await r.json()).message; } catch (e) {}
+    const err = new Error('limit'); err.limit = m || t('toast_scan_limit'); throw err;
+  }
+  if (!r.ok) throw new Error('scan ' + r.status);
+  const d = await r.json();
+  return Array.isArray(d.bottles) ? d.bottles : [];
+}
+// 色 → セラーのカテゴリ（scouter.html cellarCatFromColor と同じ）
+function catFromColor(c){
+  const s = String(c || '').toLowerCase();
+  if (/泡|スパークリング|sparkl|spumante|cava|champagne|シャンパ/.test(s)) return 'sparkling';
+  if (/ロゼ|ros[eé]/.test(s)) return 'rose';
+  if (/オレンジ|橙|amber|orange/.test(s)) return 'orange';
+  if (/白|white|blanc|bianco/.test(s)) return 'white';
+  if (/赤|red|rouge|rosso/.test(s)) return 'red';
+  return null;
+}
+// スキャン1本 → 在庫に入れる形。年はラベルから読めた値を先に使う（照合先のカタログ行は別の年のことがある）
+function shelfWine(b){
+  const w = b.match && b.match.wine; const idn = b.identification || {};
+  const vt = idn.vintage != null && idn.vintage !== '' ? idn.vintage : (w && w.vintage);
+  return {
+    catalogId: (w && (w.catalogId || w.catalog_id)) || null,
+    name: (w && w.name) || idn.wine || '',
+    producer: (w && w.producer) || idn.producer || '',
+    vintage: vt != null ? String(vt) : '',
+    region: w ? [w.kuni, w.chiiki].filter(v => v && v !== '不明').join(' ') : [idn.country, idn.region].filter(Boolean).join(' '),
+    cat: catFromColor(w ? (w.iro || w.color) : idn.color),
+  };
+}
+
+// ── B. 飲んだら写真で外す ──
+function normName(s){ return String(s || '').normalize('NFKC').toLowerCase().replace(/[\s・·\-‐–—'’"“”.,()（）「」]/g, ''); }
+function nameSim(a, b){
+  a = normName(a); b = normName(b);
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+  const grams = s => { const g = []; for (let i = 0; i < s.length - 1; i++) g.push(s.slice(i, i + 2)); return g; };
+  const A = grams(a), B = grams(b);
+  if (!A.length || !B.length) return 0;
+  const m = new Map(); A.forEach(x => m.set(x, (m.get(x) || 0) + 1));
+  let hit = 0; B.forEach(x => { const c = m.get(x) || 0; if (c > 0) { hit++; m.set(x, c - 1); } });
+  return 2 * hit / (A.length + B.length);
+}
+function sameYear(a, b){
+  const ya = String(a || '').match(/(19|20)\d{2}/), yb = String(b || '').match(/(19|20)\d{2}/);
+  if (ya && yb) return ya[0] === yb[0];
+  return /^nv/i.test(String(a || '').trim()) && /^nv/i.test(String(b || '').trim());
+}
+// 写ったワインに当たる在庫の候補: 同じ catalog_id → 無ければ名前の近さ（catalog_id が無い行・読めたワインに無いとき）
+function drinkCandidates(info){
+  const stock = serverBottlesScoped();
+  const out = [];
+  if (info.catalogId) stock.filter(b => b.catalog_id === info.catalogId)
+    .forEach(b => out.push({ b, how: 'catalog', score: 2 + (sameYear(b.vintage, info.vintage) ? 0.5 : 0) }));
+  const key = [info.producer, info.name].filter(Boolean).join(' ');
+  stock.forEach(b => {
+    if (out.some(o => o.b.id === b.id)) return;
+    if (info.catalogId && b.catalog_id) return;   // どちらもカタログに繋がっていて違う＝別のワイン
+    const sim = nameSim(key, [b.producer, b.name].filter(Boolean).join(' '));
+    if (sim >= 0.5) out.push({ b, how: 'name', score: sim + (sameYear(b.vintage, info.vintage) ? 0.2 : 0) });
+  });
+  return out.sort((x, y) => y.score - x.score).slice(0, 4);
+}
+function startDrinkPhoto(){
+  if (!serverBottlesScoped().length) { showToast(t('drink_no_stock')); return; }
+  choosePhotos('drinkPhotoInput', false, async files => {
+    const seq = openSheet(t('drink_photo_title'), `<div class="sheet-sub">${esc(t('reading'))}</div>`);
+    try {
+      const dataUrl = await fileToDataUrl(files[0], 1568);
+      if (!dataUrl) throw new Error('image');
+      if (window.sommLog) sommLog('cellar_drink_photo');
+      const read = (await readShelfPhoto(dataUrl)).map(shelfWine).filter(w => w.name);
+      if (!read.length) { setSheetBody(`<div class="sheet-sub">${esc(t('scan_none'))}</div>`, seq); return; }
+      setSheetBody(`<div class="sheet-sub" style="margin-bottom:4px;">${esc(t('drink_photo_lead'))}</div>` + read.map(w => {
+        const cands = drinkCandidates(w);
+        const body = cands.length ? cands.map(c => `
+          <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:12.5px;font-weight:700;">${esc(c.b.name || '')} ${esc(c.b.vintage || '')}</div>
+              <div class="sheet-sub">${esc([cellarNameOf(c.b.cellar_id), t('fmt_stock', { n: c.b.bottles }), c.how === 'name' ? t('match_by_name') : ''].filter(Boolean).join(' · '))}</div>
+            </div>
+            <button class="sheet-btn" onclick="drinkFromPhoto(this,'${esc(String(c.b.id))}')">${esc(t('drink_this'))}</button>
+          </div>`).join('')
+          : `<div class="sheet-sub" style="margin-top:6px;color:#b03a3a;font-weight:700;">${esc(t('drink_not_in_cellar'))}</div>`;
+        return `<div class="sheet-row">
+          <div style="font-size:12px;font-weight:800;">📷 ${esc(w.name)}${w.vintage ? ' ' + esc(w.vintage) : ''}</div>
+          <div class="sheet-sub">${esc(w.producer || '')}</div>${body}</div>`;
+      }).join(''), seq);
+    } catch (e) {
+      setSheetBody(`<div class="sheet-sub">${esc(e.limit || t('scan_failed'))}</div>`, seq);
+    }
+  });
+}
+async function drinkFromPhoto(btn, id){
+  btn.disabled = true; btn.textContent = '…';
+  const ok = await sbDrinkOne(id);
+  if (ok) { btn.textContent = t('drink_done'); btn.classList.add('done'); }
+  else { btn.disabled = false; btn.textContent = t('drink_this'); }
+}
+
+// ── C. 写真からまとめて追加（店の管理画面の一括追加と同じ形） ──
+// 写真1枚＝identify-shelf 1回＝サーバーの日次スキャン上限を1つ使う（restaurant_admin.html BOTTLE_SHOTS_MAX と同じ12枚）
+const BULK_SHOTS_MAX = 12;
+const BULK_CHUNK = 30;   // サーバーの一括追加の上限（account.js CELLAR_BULK_MAX）
+let bulkRows = [], bulkAdding = false;
+async function ensureCellar(){
+  if (cellars.length) return true;
+  const uid = myUid();
+  if (!uid) return false;
+  try {
+    const r = await authFetch(CELLAR_API_BASE + '/api/cellars', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: uid, name: t('cellar_default_name'), emoji: '🍾' }),
+    });
+    if (!r.ok) return false;
+    await loadCellarsFromServer();
+    return cellars.length > 0;
+  } catch (e) { return false; }
+}
+function startBulkPhoto(){
+  choosePhotos('bulkPhotoInput', true, async files => {
+    const take = files.slice(0, BULK_SHOTS_MAX);
+    const seq = openSheet(t('bulk_title'), `<div class="sheet-sub" id="bulkProgress">${esc(t('reading'))}</div>`);
+    if (files.length > BULK_SHOTS_MAX) showToast(t('bulk_over', { n: BULK_SHOTS_MAX }));
+    if (window.sommLog) sommLog('cellar_bulk_scan', { photos: take.length });
+    const rows = []; let failed = 0, limitMsg = null;
+    for (let i = 0; i < take.length; i++) {
+      if (seq !== sheetSeq) return;   // 途中で閉じた
+      const prog = document.getElementById('bulkProgress');
+      if (prog) prog.textContent = t('reading_n', { i: i + 1, n: take.length });
+      const dataUrl = await fileToDataUrl(take[i], 1568);
+      if (!dataUrl) { failed++; continue; }
+      try {
+        const bottles = await readShelfPhoto(dataUrl);
+        if (!bottles.length) { failed++; continue; }
+        for (const b of bottles) {
+          const w = shelfWine(b);
+          if (!w.name) { failed++; continue; }   // 位置だけ分かって銘柄が読めない＝偽の行を作らない
+          w.bottles = 1; w.checked = true;
+          w.photo = await cropToBox(dataUrl, b.box, 800);
+          rows.push(w);
+        }
+      } catch (e) {
+        if (e.limit) { limitMsg = e.limit; break; }   // 残りを送っても弾かれるだけ。読めた分だけ見せる
+        failed++;
+      }
+    }
+    if (seq !== sheetSeq) return;
+    // 同じ写真・別の写真に同じワインが写っていたら1行にまとめて本数を足す（本数は一覧で直せる）
+    const byKey = new Map(); bulkRows = [];
+    rows.forEach(r => {
+      const k = (r.catalogId || normName(r.producer + ' ' + r.name)) + '|' + normName(r.vintage);
+      const hit = byKey.get(k);
+      if (hit) hit.bottles += 1; else { byKey.set(k, r); bulkRows.push(r); }
+    });
+    if (!bulkRows.length) { setSheetBody(`<div class="sheet-sub">${esc(limitMsg || t('scan_none'))}</div>`, seq); return; }
+    await ensureCellar();
+    renderBulkSheet(failed, limitMsg, seq);
+  });
+}
+function renderBulkSheet(failed, limitMsg, seq){
+  const options = cellars.map(c => `<option value="${esc(c.id)}">${esc(c.emoji || '🍾')} ${esc(c.name)}</option>`).join('');
+  setSheetBody(`
+    ${limitMsg ? `<div class="sheet-sub" style="color:#b03a3a;font-weight:700;margin-bottom:6px;">${esc(limitMsg)}</div>` : ''}
+    <div class="sheet-sub" style="margin-bottom:6px;">${esc(t('bulk_lead', { n: bulkRows.length }))}${failed ? ' ' + esc(t('bulk_failed', { n: failed })) : ''}</div>
+    <div>${bulkRows.map((w, i) => `
+      <div class="bulk-row">
+        <input type="checkbox" class="bulk-check" ${w.checked ? 'checked' : ''} onchange="bulkRows[${i}].checked=this.checked;updateBulkBtn()">
+        ${w.photo ? `<img src="${w.photo}" alt="">` : ''}
+        <div class="bulk-info">
+          <div class="bulk-name">${esc(w.name)} <span style="font-weight:400;color:var(--text-sub);">${esc(w.vintage || '')}</span>${w.catalogId ? '<span class="db-badge">DB</span>' : ''}</div>
+          <div class="bulk-meta">${esc([w.producer, w.region].filter(Boolean).join(' · '))}</div>
+        </div>
+        <input type="number" min="1" inputmode="numeric" class="bulk-n" value="${w.bottles}" aria-label="${esc(t('field_bottles'))}"
+          onchange="bulkRows[${i}].bottles=Math.max(1,parseInt(this.value,10)||1);this.value=bulkRows[${i}].bottles">
+      </div>`).join('')}</div>
+    <div class="field-label" style="margin-top:14px;">${esc(t('field_cellar'))}</div>
+    <select class="field-input" id="bulkCellar">${options}</select>
+    <details style="margin-bottom:14px;">
+      <summary style="font-size:12.5px;font-weight:700;color:var(--wine-dark);cursor:pointer;">${esc(t('bulk_prov_line'))}</summary>
+      <div style="margin-top:10px;">${provenanceFieldsHtml('bk', {}, true)}</div>
+    </details>
+    <button class="save-btn" id="bulkAddBtn" onclick="confirmBulkAdd()"></button>`, seq);
+  const sel = document.getElementById('bulkCellar');
+  if (sel && currentCellarId && cellars.some(c => c.id === currentCellarId)) sel.value = currentCellarId;
+  updateBulkBtn();
+}
+function updateBulkBtn(){
+  const btn = document.getElementById('bulkAddBtn');
+  if (!btn || bulkAdding) return;
+  const n = bulkRows.filter(w => w.checked).length;
+  btn.textContent = n ? t('bulk_add_n', { n }) : t('bulk_select');
+  btn.disabled = !n; btn.style.opacity = n ? '1' : '.55';
+}
+async function confirmBulkAdd(){
+  if (bulkAdding) return;
+  const uid = myUid();
+  const cellarId = inputVal('bulkCellar');
+  const picked = bulkRows.filter(w => w.checked);
+  if (!picked.length) return;
+  if (!uid || !cellarId) { showToast(t('toast_add_fail')); return; }
+  bulkAdding = true;   // 最初の await より前に立てる（連打で同じワインが2行入らないように）
+  const btn = document.getElementById('bulkAddBtn');
+  if (btn) { btn.disabled = true; btn.textContent = t('bulk_adding'); }
+  const prov = readProvenance('bk');
+  let added = 0;
+  try {
+    for (let i = 0; i < picked.length; i += BULK_CHUNK) {
+      const chunk = picked.slice(i, i + BULK_CHUNK);
+      const r = await authFetch(CELLAR_API_BASE + '/api/cellar/bottles/bulk', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: uid, cellarId, items: chunk.map(w => ({
+          catalogId: w.catalogId, name: w.name, producer: w.producer || null, vintage: w.vintage || null,
+          region: w.region || null, cat: w.cat || null, bottles: w.bottles, photo: w.photo || null, ...prov,
+        })) }),
+      });
+      if (!r.ok) throw new Error('bulk ' + r.status);
+      chunk.forEach(w => { w.checked = false; w.added = true; });   // 入った分は送り直さない
+      added += chunk.length;
+    }
+  } catch (e) {
+    bulkAdding = false;
+    bulkRows = bulkRows.filter(w => !w.added);
+    showToast(added ? t('bulk_partial') : t('toast_add_fail'));
+    if (added) { renderBulkSheet(0, null); loadServerBottles(); } else updateBulkBtn();
+    return;
+  }
+  bulkAdding = false;
+  bulkRows = [];
+  closeSheetModal();
+  await loadServerBottles();
+  showToast(t('bulk_added', { n: added }));
+}
+
+// ── E-1. 来歴・メモを直す ──
+function openEditProvenance(id){
+  const b = serverBottles.find(x => String(x.id) === String(id));
+  if (!b) return;
+  closeDetail();
+  openSheet(t('edit_title'), `
+    <div class="sheet-sub" style="margin-bottom:12px;">${esc(b.name || '')} ${esc(b.vintage || '')}</div>
+    ${provenanceFieldsHtml('ed', b, true)}
+    <div class="field-label">${esc(t('field_price'))}</div>
+    <input class="field-input" id="ed-price" type="number" min="0" inputmode="numeric" value="${b.price_jpy != null ? esc(b.price_jpy) : ''}">
+    <div class="field-label">${esc(t('field_note'))}</div>
+    <input class="field-input" id="ed-note" maxlength="2000" value="${esc(b.note || '')}" placeholder="${esc(t('ph_note'))}">
+    <button class="save-btn" id="ed-save" onclick="saveEditProvenance('${esc(String(b.id))}')">${esc(t('edit_save'))}</button>`);
+}
+async function saveEditProvenance(id){
+  const uid = myUid();
+  if (!uid) return;
+  const prov = readProvenance('ed');
+  const btn = document.getElementById('ed-save');
+  if (btn) { btn.disabled = true; btn.style.opacity = '.55'; }
+  try {
+    const r = await authFetch(CELLAR_API_BASE + '/api/cellar/bottles/' + encodeURIComponent(id), {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      // 空欄は '' で送る＝サーバーが null にする（消せるように）
+      body: JSON.stringify({ userId: uid, acquiredHow: prov.acquiredHow || '', acquiredShop: prov.acquiredShop || '',
+        acquiredFromName: prov.acquiredFromName || '', purchaseDate: prov.purchaseDate || '',
+        price: inputVal('ed-price'), note: inputVal('ed-note') }),
+    });
+    if (!r.ok) throw new Error('patch ' + r.status);
+    closeSheetModal();
+    await loadServerBottles();
+    showToast(t('edit_saved'));
+  } catch (e) {
+    showToast(t('sb_update_fail'));
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  }
+}
+
+// ── E-2. 贈る ──
+function giftUrl(token){ return new URL('gift.html?t=' + encodeURIComponent(token), location.href).href; }
+function openGiveSheet(id){
+  const b = serverBottles.find(x => String(x.id) === String(id));
+  if (!b) return;
+  closeDetail();
+  let nick = ''; try { nick = localStorage.getItem('sommelin_nickname') || ''; } catch (e) {}
+  openSheet(t('give_title'), `
+    <div class="sheet-sub" style="margin-bottom:12px;"><b>${esc(b.name || '')} ${esc(b.vintage || '')}</b><br>${esc(t('give_lead'))}</div>
+    <div class="field-label">${esc(t('field_give_to'))}</div>
+    <input class="field-input" id="gv-to" maxlength="60" placeholder="${esc(t('ph_give_to'))}">
+    <div class="field-label">${esc(t('field_give_from'))}</div>
+    <input class="field-input" id="gv-from" maxlength="60" value="${esc(nick)}" placeholder="${esc(t('ph_give_from'))}">
+    <div class="field-label">${esc(t('field_give_msg'))}</div>
+    <textarea class="field-input" id="gv-msg" maxlength="500" rows="3" placeholder="${esc(t('ph_give_msg'))}"></textarea>
+    <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;font-weight:700;margin-bottom:16px;line-height:1.5;">
+      <input type="checkbox" id="gv-link" checked style="margin-top:3px;accent-color:var(--burgundy);">
+      <span>${esc(t('give_with_link'))}<br><span class="sheet-sub" style="font-weight:500;">${esc(t('give_with_link_sub'))}</span></span>
+    </label>
+    <button class="save-btn" id="gv-save" onclick="submitGive('${esc(String(b.id))}')">${esc(t('give_btn'))}</button>`);
+}
+let giveInflight = false;
+async function submitGive(id){
+  if (giveInflight) return;
+  const uid = myUid();
+  const b = serverBottles.find(x => String(x.id) === String(id));
+  if (!uid || !b) return;
+  const withLink = !!(document.getElementById('gv-link') || {}).checked;
+  const fromName = inputVal('gv-from');
+  giveInflight = true;
+  const btn = document.getElementById('gv-save');
+  if (btn) { btn.disabled = true; btn.style.opacity = '.55'; }
+  try {
+    const r = await authFetch(CELLAR_API_BASE + '/api/cellar/bottles/' + encodeURIComponent(id) + '/give', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: uid, toName: inputVal('gv-to') || null, fromName: fromName || null, message: inputVal('gv-msg') || null, withLink }),
+    });
+    if (!r.ok) throw new Error('give ' + r.status);
+    const d = await r.json();
+    giftsLoaded = false;
+    loadServerBottles();
+    if (d.claimToken) {
+      const url = giftUrl(d.claimToken);
+      const lineText = t('give_line_text', { from: fromName || t('give_someone'), wine: [b.name, b.vintage].filter(Boolean).join(' ') });
+      setSheetBody(`<div class="sheet-sub" style="margin-bottom:10px;">${esc(t('give_link_ready'))}</div>${shareLinkHtml(url, lineText)}`);
+    } else {
+      closeSheetModal();
+      showToast(t('give_recorded'));
+    }
+  } catch (e) {
+    showToast(t('gift_fail'));
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  } finally { giveInflight = false; }
+}
+
+// ── E-2. おくりものの履歴（贈った・もらった。見えるのは当事者だけ） ──
+let gifts = { sent: [], received: [] }, giftsLoaded = false;
+async function loadGifts(){
+  const uid = myUid();
+  const box = document.getElementById('giftList');
+  if (!uid || !box) return;
+  if (!giftsLoaded) box.innerHTML = `<div style="text-align:center;padding:32px 16px;color:var(--text-sub);font-size:13px;">${esc(t('journal_loading'))}</div>`;
+  try {
+    const r = await authFetch(CELLAR_API_BASE + '/api/gifts?userId=' + encodeURIComponent(uid));
+    if (r.ok) { const d = await r.json(); gifts = { sent: d.sent || [], received: d.received || [] }; }
+  } catch (e) {}
+  giftsLoaded = true;
+  renderGifts();
+}
+function renderGifts(){
+  const box = document.getElementById('giftList');
+  if (!box) return;
+  if (!gifts.sent.length && !gifts.received.length) {
+    box.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--text-sub);"><div style="font-size:36px;margin-bottom:12px;">🎁</div><div style="font-size:13px;line-height:1.8;">${t('gifts_empty')}</div></div>`;
+    return;
+  }
+  const day = iso => (iso ? String(iso).split('T')[0] : '');
+  const wine = g => esc([g.name, g.vintage].filter(Boolean).join(' '));
+  let html = '';
+  if (gifts.received.length) {
+    html += `<div class="journal-date-header">${esc(t('gifts_received'))}</div>`;
+    html += gifts.received.map(g => `
+      <div class="gift-card">
+        <div class="gift-head"><div class="gift-who">🎁 ${esc(t('gift_from', { name: g.fromName || t('gift_noname') }))}</div><span class="sheet-sub">${esc(day(g.acceptedAt || g.sentAt))}</span></div>
+        <div style="font-size:12.5px;margin-top:4px;">${wine(g)}</div>
+        ${g.message ? `<div class="journal-note" style="margin-top:6px;">${esc(g.message)}</div>` : ''}
+      </div>`).join('');
+  }
+  if (gifts.sent.length) {
+    html += `<div class="journal-date-header">${esc(t('gifts_sent'))}</div>`;
+    html += gifts.sent.map(g => `
+      <div class="gift-card">
+        <div class="gift-head"><div class="gift-who">${esc(t('gift_to', { name: g.toName || t('gift_noname') }))}</div><span class="gift-status ${esc(g.status)}">${esc(t('gift_st_' + g.status))}</span></div>
+        <div style="font-size:12.5px;margin-top:4px;">${wine(g)}</div>
+        <div class="sheet-sub">${esc(day(g.sentAt))}${g.acceptedAt ? ' → ' + esc(day(g.acceptedAt)) : ''}</div>
+        ${g.status === 'sent' && g.claimToken ? `<div style="display:flex;gap:8px;margin-top:8px;">
+          <button class="sheet-btn" style="flex:1;" data-url="${esc(giftUrl(g.claimToken))}" onclick="copyText(this.dataset.url)">${esc(t('copy_link'))}</button>
+          <button class="sheet-btn" style="flex:1;border-color:var(--border);color:#b03a3a;" onclick="cancelGift('${esc(String(g.id))}')">${esc(t('gift_cancel'))}</button>
+        </div>` : ''}
+      </div>`).join('');
+  }
+  box.innerHTML = html;
+}
+async function cancelGift(id){
+  const uid = myUid();
+  if (!uid || !confirm(t('gift_cancel_confirm'))) return;
+  try {
+    const r = await authFetch(CELLAR_API_BASE + '/api/gifts/' + encodeURIComponent(id) + '/cancel', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: uid }),
+    });
+    if (r.status === 409) { showToast(t('gift_not_cancellable')); }
+    else if (!r.ok) throw new Error('cancel ' + r.status);
+    else { const d = await r.json(); showToast(d.restored ? t('gift_cancelled') : t('gift_cancelled_norestore')); }
+  } catch (e) { showToast(t('gift_fail')); }
+  giftsLoaded = false;
+  loadGifts();
+  loadServerBottles();
+}
+
+// ── D. ワインリストとして見せる（セラーの管理の中。リンクのコピーが主・QR は求められたときだけ読む） ──
+let openShareId = null;
+function cellarListUrl(token){ return new URL('prototype.html?cl=' + encodeURIComponent(token), location.href).href; }
+function toggleSharePanel(id){ openShareId = openShareId === id ? null : id; renderCellarManageList(); }
+function sharePanelHtml(c){
+  if (!c.share_token) {
+    return `<div class="share-box"><div class="sheet-sub" style="margin-bottom:8px;">${esc(t('share_lead'))}</div>
+      <button class="sheet-btn" onclick="setShare('${c.id}','on')">${esc(t('share_on'))}</button></div>`;
+  }
+  const url = cellarListUrl(c.share_token);
+  return `<div class="share-box">
+    <div style="font-size:12px;font-weight:800;margin-bottom:6px;">🔗 ${esc(t('share_is_on'))}</div>
+    ${shareLinkHtml(url, t('share_line_text', { name: c.name }))}
+    <div class="sheet-sub" style="margin:8px 0;">${esc(t('share_hidden_note'))}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="cellar-manage-btn" onclick="showShareQr('${c.id}')">${esc(t('share_qr'))}</button>
+      <button class="cellar-manage-btn" onclick="setShare('${c.id}','regenerate')">${esc(t('share_regen'))}</button>
+      <button class="cellar-manage-btn danger" onclick="setShare('${c.id}','off')">${esc(t('share_off'))}</button>
+    </div>
+    <div id="qr-${c.id}" style="margin-top:10px;display:flex;justify-content:center;"></div>
+  </div>`;
+}
+async function setShare(id, action){
+  const uid = myUid();
+  if (!uid) return;
+  if (action === 'regenerate' && !confirm(t('share_regen_confirm'))) return;
+  if (action === 'off' && !confirm(t('share_off_confirm'))) return;
+  try {
+    const r = await authFetch(CELLAR_API_BASE + '/api/cellars/' + encodeURIComponent(id) + '/share', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: uid, action }),
+    });
+    if (!r.ok) throw new Error('share ' + r.status);
+    const d = await r.json();
+    const c = cellars.find(x => x.id === id);
+    if (c) c.share_token = d.shareToken || null;
+    openShareId = id;
+    renderCellarManageList();
+    showToast(t(action === 'off' ? 'share_turned_off' : action === 'regenerate' ? 'share_regenerated' : 'share_turned_on'));
+  } catch (e) { showToast(t('share_fail')); }
+}
+let qrLibPromise = null;
+function loadQrLib(){
+  if (window.QRCode) return Promise.resolve();
+  if (!qrLibPromise) qrLibPromise = new Promise((resolve, reject) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';   // restaurant_admin.html と同じ
+    sc.onload = resolve;
+    sc.onerror = () => { qrLibPromise = null; reject(new Error('qr lib')); };
+    document.head.appendChild(sc);
+  });
+  return qrLibPromise;
+}
+function showShareQr(id){
+  const c = cellars.find(x => x.id === id);
+  const box = document.getElementById('qr-' + id);
+  if (!c || !c.share_token || !box) return;
+  loadQrLib().then(() => {
+    box.innerHTML = '';
+    new QRCode(box, { text: cellarListUrl(c.share_token), width: 180, height: 180 });
+  }).catch(() => showToast(t('share_qr_fail')));
 }
 
 // ── TOAST ──
