@@ -417,7 +417,7 @@ body {
   padding: 9px 0; border-bottom: 1px solid var(--bg); font-size: 13px;
 }
 .detail-row:last-child { border-bottom: none; }
-.detail-label { color: var(--text-sub); font-weight: 600; }
+.detail-label { color: var(--text-sub); font-weight: 600; flex-shrink: 0; margin-right: 12px; }
 .detail-val { color: var(--text); font-weight: 700; }
 .drink-btn {
   width: 100%; background: var(--wine-dark); color: white;
@@ -860,10 +860,18 @@ const I18N = {
     act_drink_photo: '🍷 飲んだ（写真で外す）',
     act_bulk_add: '📷 写真からまとめて追加',
     filter_gift: '🎁 もらった',
-    value_label: '参考価格の合計',
-    value_counts: '価格が分かる {k}本 / 分からない {u}本',
-    value_note: '参考価格は輸入元の希望小売で、市場の相場ではありません。年が違うワイン・ソムリンのDBに無いワインは足していません。',
+    value_label: '目安の合計',
+    value_counts: '値段が分かる {k}本 / 分からない {u}本',
+    value_breakdown: 'うち 参考価格 {r}本・相場 {m}本',
+    value_note: '目安は1本ごとに、ソムリンのDBにある同じ年の参考価格（輸入元の希望小売）を先に使い、無ければ Google・Wine-Searcher・楽天などで調べた相場を使います。どちらも無いワインは足していません。',
     ref_price: '参考 {p}',
+    market_ref: '相場 {p}',
+    market_ref_size: '相場 {p}（{s}ml）',
+    detail_market_ref: '相場',
+    market_meta: '確かさ {c}・{d} 調べ',
+    market_src: '出所',
+    market_ref_note: 'お店やネットで売られている値段を調べた目安です（買った値段ではありません）。',
+    conf_high: '高', conf_mid: '中', conf_low: '低',
     ref_price_other: '別の年の参考価格 {p}（DBは{v}）',
     ref_price_unknown: '参考価格 不明',
     detail_ref: '参考価格',
@@ -1122,10 +1130,18 @@ const I18N = {
     act_drink_photo: '🍷 Drank it (photo)',
     act_bulk_add: '📷 Add many from photos',
     filter_gift: '🎁 Gifts',
-    value_label: 'Reference price total',
+    value_label: 'Estimated total',
     value_counts: 'Price known: {k} / unknown: {u} bottles',
-    value_note: 'Reference prices are importers\' suggested retail prices, not market prices. Wines of a different vintage or not in the Sommelin DB are not included.',
+    value_breakdown: 'Ref. price: {r} · market price: {m}',
+    value_note: 'For each bottle, the Sommelin DB reference price for the same vintage (importer\'s suggested retail) is used first; otherwise a market price researched on Google, Wine-Searcher, Rakuten, etc. Wines with neither are not included.',
     ref_price: 'Ref. {p}',
+    market_ref: 'Market {p}',
+    market_ref_size: 'Market {p} ({s}ml)',
+    detail_market_ref: 'Market price',
+    market_meta: 'Confidence: {c} · checked {d}',
+    market_src: 'Source',
+    market_ref_note: 'An estimate from prices in shops and online (not what you paid).',
+    conf_high: 'high', conf_mid: 'medium', conf_low: 'low',
     ref_price_other: 'Ref. price of another vintage {p} (DB: {v})',
     ref_price_unknown: 'Ref. price unknown',
     detail_ref: 'Reference price',
@@ -1694,11 +1710,17 @@ function renderSummary() {
   const kinds = scoped.length + sb.length;
   const cats = [...new Set([...scoped.map(w => w.cat), ...sb.map(b => b.cat).filter(Boolean)])].length;
   const avgPrice = kinds ? Math.round(totalSpend / kinds) : 0;
-  // 参考価格の合計（依頼 A）。決まりはサーバーの services/cellarValue.js と同じ: サーバーが refPrice を
-  // 付けた行（in_stock・catalog_id あり・年が一致）だけを 参考価格×本数 で足す。それ以外は「分からない」に
-  // 本数で数え、0円として黙って足さない。楽天の実売は混ぜない（1本ごとの詳細にだけ出す）。
-  let refTotal = 0, refKnown = 0, refUnknown = 0;
-  sb.forEach(b => { const n = b.bottles||0; if (b.refPrice != null) { refTotal += b.refPrice * n; refKnown += n; } else refUnknown += n; });
+  // 目安の合計（依頼 A・2026-10-30 相場を追加）。決まりはサーバーの services/cellarValue.js と同じ: 1本ごとに
+  // 参考価格（refPrice: in_stock・catalog_id あり・年が一致）→ 無ければ相場（marketRef）の1つだけを ×本数 で足す。
+  // どちらも無い行は「分からない」に本数で数え、0円として黙って足さない。楽天の実売は混ぜない（1本ごとの詳細にだけ出す）。
+  let refTotal = 0, refKnown = 0, refUnknown = 0, refOnly = 0, marketOnly = 0;
+  sb.forEach(b => {
+    const n = b.bottles||0;
+    const mp = b.marketRef && Number(b.marketRef.price);
+    if (b.refPrice != null) { refTotal += b.refPrice * n; refKnown += n; refOnly += n; }
+    else if (mp > 0) { refTotal += mp * n; refKnown += n; marketOnly += n; }
+    else refUnknown += n;
+  });
   scoped.forEach(w => { refUnknown += (w.bottles||0); });   // 端末キャッシュの旧在庫はカタログと繋がっていない
   const vb = document.getElementById('valueBar');
   if (vb) {
@@ -1706,6 +1728,7 @@ function renderSummary() {
     vb.innerHTML = `
       <div class="value-main"><span class="value-label">${t('value_label')}</span><span class="value-num">${refKnown ? '¥' + refTotal.toLocaleString() : '—'}</span></div>
       <div class="value-count">${t('value_counts', { k: refKnown, u: refUnknown })}</div>
+      ${marketOnly ? `<div class="value-note" style="margin-top:2px;">${t('value_breakdown', { r: refOnly, m: marketOnly })}</div>` : ''}
       <div class="value-note">${t('value_note')}</div>`;
   }
   document.getElementById('summaryRow').innerHTML = `
@@ -2175,11 +2198,26 @@ function provenanceText(b){
   if (b.acquired_how === 'bought') return '🛒 ' + t('prov_bought') + tail;
   return '';
 }
+// カードの1行: 参考価格（同じ年）→ 相場 → 別の年の参考価格 → 不明。合計に入るのは前の2つだけ
 function refPriceText(b){
   if (b.refPrice != null) return t('ref_price', { p: yen(b.refPrice) });
+  if (b.marketRef && b.marketRef.price != null) return marketRefText(b.marketRef);
+  return refOnlyText(b);
+}
+// 詳細の「参考価格」行（相場は別の行に出す）
+function refOnlyText(b){
+  if (b.refPrice != null) return yen(b.refPrice);
   if (b.refPriceOtherYear) return t('ref_price_other', { p: yen(b.refPriceOtherYear.price), v: b.refPriceOtherYear.vintage || '—' });
   return t('ref_price_unknown');
 }
+// 相場: 容量はその年の行が 375ml などだけのとき（在庫に容量の欄が無いので、行の容量を出して知らせる）
+function marketRefText(m){
+  return m.sizeFromRow && m.sizeMl && m.sizeMl !== 750
+    ? t('market_ref_size', { p: yen(m.price), s: m.sizeMl }) : t('market_ref', { p: yen(m.price) });
+}
+const CONF_KEY = { 高: 'conf_high', 中: 'conf_mid', 低: 'conf_low' };
+// 出所のリンクは http(s) だけ
+function safeHttpUrl(u){ return /^https?:\/\//i.test(String(u || '')) ? String(u) : ''; }
 
 // ── 汎用シート（長い処理は seq を見て、閉じた/別のシートに替わった後は書かない） ──
 let sheetSeq = 0;
@@ -2249,6 +2287,7 @@ function openServerDetail(id){
   const cfg = catCfg[b.cat] || { emoji: '🍷', label: '', bg: 'var(--burgundy-pale)' };
   const photo = (b.photos || []).find(p => p.url);
   const mp = b.marketPrice;
+  const mr = b.marketRef;
   const prov = provenanceText(b);
   const row = (label, val) => `<div class="detail-row"><span class="detail-label">${esc(label)}</span><span class="detail-val">${val}</span></div>`;
   const sid = esc(String(b.id));
@@ -2265,7 +2304,8 @@ function openServerDetail(id){
       ${row(t('detail_vintage'), esc(b.vintage || '—'))}
       ${b.region ? row(t('detail_region'), esc(b.region)) : ''}
       ${row(t('detail_stock'), `<span style="color:var(--burgundy);font-size:16px;">${esc(t('fmt_stock', { n: b.bottles }))}</span>`)}
-      ${row(t('detail_ref'), esc(b.refPrice != null ? yen(b.refPrice) : refPriceText(b)))}
+      ${row(t('detail_ref'), esc(refOnlyText(b)))}
+      ${mr && mr.price != null ? row(t('detail_market_ref'), `<div style="text-align:right;">${esc(marketRefText(mr).replace(/^[^¥]*/, ''))}<div style="font-size:10px;color:var(--text-sub);font-weight:500;line-height:1.5;">${esc(t('market_meta', { c: CONF_KEY[mr.confidence] ? t(CONF_KEY[mr.confidence]) : (mr.confidence || '—'), d: mr.observedOn || '—' }))}${mr.method ? '・' + esc(mr.method) : ''}${safeHttpUrl(mr.url) ? ` · <a href="${esc(safeHttpUrl(mr.url))}" target="_blank" rel="noopener" style="color:inherit;">${esc(t('market_src'))}</a>` : ''}<br>${esc(t('market_ref_note'))}</div></div>`) : ''}
       ${mp && mp.price != null ? row(t('detail_market'), `<a href="${esc(mp.url)}" target="_blank" rel="noopener" style="color:inherit;">楽天 ${esc(yen(mp.price))}${mp.shopName ? '（' + esc(mp.shopName) + '）' : ''}</a>${b.refPrice == null ? `<div style="font-size:10px;color:var(--text-sub);font-weight:500;">${esc(t('market_other_year'))}</div>` : ''}`) : ''}
       ${b.price_jpy != null ? row(t('detail_price'), esc(yen(b.price_jpy))) : ''}
       ${b.purchase_date ? row(t('field_date'), esc(b.purchase_date)) : ''}
